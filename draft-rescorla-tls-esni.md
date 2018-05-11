@@ -387,7 +387,18 @@ This document has no IANA actions.
 As noted in {{hidden-server-behavior}}, in Fronting Mode the hidden
 server will generally not know the true SNI. It is possible for
 the fronting server to communicate the true SNI to the hidden server,
-at the cost of the hidden server
+but at the cost of having that communication not be unmodified TLS 1.3.
+The basic idea is to have a shared key between the fronting server
+and the hidden server (this can be a symmetric key) and use it to
+send Z at the beginning of the connection before
+the ClientHello. The hidden server can then decrypt ESNI to recover
+the true SNI.
+
+An obvious alternative here would be to have the fronting server
+forward the true SNI, but that would allow the fronting server to
+lie. In this design, the attacker would need to be able to find a
+Z which would expand into a key that would validly AEAD-encrypt
+a message of his choice, which should be intractable (Hand-waving alert!).
 
 
 # Alternate Encryption Design
