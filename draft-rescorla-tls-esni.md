@@ -296,6 +296,24 @@ it executes the steps in the following section, or forwards
 the TLS connection to the hidden server (if in Fronting Mode).
 
 
+## Hidden Server Behavior
+
+The Hidden Server ignores both the "encrypted_server_name" and the
+"server_name" (if any) and completes the handshake as usual. If in
+Shared Mode, the server will still know the true SNI, and can use it
+for certificate selection. In Fronting Mode, it may not know the true
+SNI and so will generally be configured to use a single certificate
+(though see XXX for methods for communicating the true SNI to the
+hidden server).
+
+If the "encrypted_server_name" extension was present, the server
+MUST insert an empty (zero-length) "encrypted_server_name" extension
+in its own EncryptedExtensions message.
+[[TODO: Do we need this?]]
+
+
+
+
 
 
 
