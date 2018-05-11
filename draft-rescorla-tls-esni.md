@@ -186,12 +186,129 @@ keys
 : The list of keys which can be used by the client to encrypt the SNI.
 {:br}
 
+The semantics of this structure are simple: any of the listed keys may
+be used to encrypt the SNI for the associated domain name.
+The cipher suite list is orthogonal to the
+list of keys, so each key may be used with any cipher suite.
+
 [[OPEN ISSUE: Do we need more Expiration dates, IP address limitations, etc.]]
 
 [[TODO: How to shove this in a TXT record]]
 
-
 # The "encrypted_server_name" extension {#esni-extension}
+
+The encrypted SNI is carried in an "encrypted_server_name"
+extension, which contains an EncryptedSNI structure:
+
+~~~~
+   struct {
+       opaque label<0..2^8-1>;
+       opaque nonce[16];
+       CipherSuite suite;
+       opaque encrypted_sni<0..2^16-1>;
+   } EncryptedSNI;
+~~~~
+
+label
+: The label associated with the SNI encryption key.
+
+nonce
+: A cryptographically random 128-bit nonce
+
+suite
+: The cipher suite used to encrypt the SNI.
+
+encrypted_sni
+: The original ServerNameList from the "server_name" extension,
+  AEAD-encrypted using cipher suite "suite" and with the key
+  generated as described below.
+{:br}
+
+
+## Client Behavior
+
+In order to send an encrypted SNI, the client MUST first select one of
+the server ESNIKeyShare values and generate an (EC)DHE share in the
+matching group. This share is then used for the client's "key_share"
+extension and will be used both to derive both the SNI encryption
+key the (EC)DHE shared secret which is used in the TLS key schedule.
+This has two important implications:
+
+- The client MUST only provide one KeyShareEntry
+
+- The server is committing to support every group in the
+  ESNIKeys list (see below for server behavior).
+
+The SNI encryption key is computed from the DH shared secret Z as
+follows:
+
+~~~~
+   Z_extracted = HKDF-Extract(EncryptedSNI.nonce, Z)
+   K_sni = HKDF-Expand(Z_extracted, ClientHello.Random, L)
+
+   Where L is the key length associated with the cipher suite.
+~~~~
+
+The EncryptedSNI.encrypted_sni value is then computed by:
+
+~~~~
+    encrypted_sni = AEAD-Encrypt(K_sni, 0, "", ServerNameList)
+~~~~
+
+[[OPEN ISSUE: This is a strawman construction. We do want a
+nonce to avoid situations where the server somehow reuses
+a key, but exactly how we mix it in is TBD. Maybe in both
+places?]]
+
+This value is placed in an "encrypted_server_name" extension.
+
+The client MAY either omit the "server_name" extension or provide
+an innocuous dummy one.
+
+## Fronting Server Behavior
+
+Upon receiving an "encrypted_server_name" extension, the server
+MUST first perform the following checks:
+
+- If it is unable to negotiate TLS 1.3 or greater, it MUST
+  abort the connection with a "handshake_failure" alert.
+
+- If the EncryptedSNI.label value does not correspond to any known
+  SNI encryption key, it MUST ignore the "encrypted_server_name"
+  extension and continue with the handshake. This may involve
+  using the "server_name" field if one is present. [[TODO: Is this right?
+  Provide the rationale]].
+
+- If more than one KeyShareEntry has been provided, or if that share's
+  group does not match that for the SNI encryption key, it MUST abort
+  the connection with an "illegal_parameter" alert.
+
+Assuming that these checks succeed, the server then computes K_sni
+and decrypts the ServerName value. If decryption fails, the server
+MUST abort the connection with a "decrypt_error" alert. If decryption
+succeeds, the server then uses the result as if it were the
+"server_name" extension. Any actual "server_name" extension is
+ignored.
+
+Upon determining the true SNI, the fronting server then either
+serves the connection directly (if in Shared Mode), in which case
+it executes the steps in the following section, or forwards
+the TLS connection to the hidden server (if in Fronting Mode).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Compatibility Issues
 
