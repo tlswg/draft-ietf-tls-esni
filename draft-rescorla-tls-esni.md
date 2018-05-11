@@ -150,10 +150,51 @@ provider's public key. The provider can then decrypt the extension
 and either terminate the connection (in Shared Mode) or forward
 it to the hidden server (in Fronting Mode).
 
+
 # Publishing the SNI Encryption Key {#publishing-key}
 
 
+SNI Encryption keys can be published in the DNS using the ESNIKeys
+structure.
+
+~~~~
+    // Copied from TLS 1.3
+    struct {
+        NamedGroup group;
+        opaque key_exchange<1..2^16-1>;
+    } KeyShareEntry;
+
+
+    struct {
+        opaque label<0..2^8-1>;
+        KeyShareEntry share;
+    } ESNIKeyShare;
+
+    struct {
+        ESNIKeyShareEntry keys<4..2^16-1>;
+        CipherSuite cipher_suites<2..2^16-2>;
+    } ESNIKeys;
+~~~~
+
+label
+: An opaque label to use for a given key.
+
+share
+: An (EC)DH key share (attached to the label)
+
+keys
+: The list of keys which can be used by the client to encrypt the SNI.
+{:br}
+
+[[OPEN ISSUE: Do we need more Expiration dates, IP address limitations, etc.]]
+
+[[TODO: How to shove this in a TXT record]]
+
+
 # The "encrypted_server_name" extension {#esni-extension}
+
+# Compatibility Issues
+
 
 # Security Considerations
 
@@ -171,4 +212,10 @@ This document has no IANA actions.
 # Acknowledgments
 {:numbered="false"}
 
-TODO acknowledge.
+This document draws extensively from ideas in {{?I-D.kazuho-protected-sni}}, but
+is a much more limited mechanism because it depends on the DNS for the
+protection of the ESNI key. Richard Barnes, Christian Huitema, Patrick McManus,
+Matthew Prince, Nick Sullivan, Martin Thomson, and Chris Wood also provided
+important ideas.
+
+
