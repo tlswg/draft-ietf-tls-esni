@@ -37,34 +37,32 @@ Server Name Indication for TLS 1.3.
 
 Although TLS 1.3 {{!I-D.ietf-tls-tls13}} encrypts most of the
 handshake, including the server certificate, there are several other
-channels that allow an on-path attacker to determine the the major
-mechanism that allows an on-path attacker to determine the domain
-name the client is trying to connect to.
+channels that allow an on-path attacker to determine domain name the 
+client is trying to connect to, including:
 
-* The client's DNS lookups.
-* The server IP address, if the server is not doing domain-based
-  virtual hosting.
-* The Server Name Indication (SNI) {{!RFC6066}} in the ClientHello.
+* Cleartext client DNS queries.
+* Visible server IP addresses, assuming the the server is not doing 
+  domain-based virtual hosting.
+* Cleartext Server Name Indication (SNI) {{!RFC6066}} in ClientHello messages.
 
 DoH {{?I-D.ietf-doh-dns-over-https}} and DPRIVE {{?RFC7858}} {{?RFC8094}}
-allow the client to conceal its DNS lookups from network inspection,
+provide mechanisms for clients to conceal DNS lookups from network inspection,
 and many TLS servers host multiple domains on the same IP address.
-In such environments, SNI is the major direct method of determining
-the server's identity (although indirect mechanisms such as traffic
-analysis also exist).
+In such environments, SNI is an explicit signal used to determine the server's 
+identity. Indirect mechanisms such as traffic analysis also exist.
 
 The TLS WG has extensively studied the problem of protecting SNI, but
 has been unable to develop a completely generic
 solution. {{?I-D.ietf-tls-sni-encryption}} provides a description
 of the problem space and some of the proposed techniques. One of the
-most difficult problems is "Do not stick out"
+more difficult problems is "Do not stick out"
 ({{?I-D.ietf-tls-sni-encryption}}; Section 2.4): if only hidden
-services use SNI encryption, then the use of SNI encryption is a
-signal that the client is going to a hidden server. For this reason,
+services use SNI encryption, then SNI encryption is a signal that 
+a client is going to a hidden server. For this reason,
 the techniques in {{?I-D.ietf-tls-sni-encryption}} largely focus on
 concealing the fact that SNI encryption is in use. Unfortunately,
 the result often has undesirable performance consequences, incomplete
-covervage or both.
+coverage, or both.
 
 The design in this document takes a different approach: it assumes
 that hidden servers will hide behind a provider (CDN, app server,
@@ -150,12 +148,10 @@ provider's public key. The provider can then decrypt the extension
 and either terminate the connection (in Shared Mode) or forward
 it to the hidden server (in Fronting Mode).
 
-
 # Publishing the SNI Encryption Key {#publishing-key}
 
-
 SNI Encryption keys can be published in the DNS using the ESNIKeys
-structure.
+structure, defined below.
 
 ~~~~
     // Copied from TLS 1.3
@@ -163,7 +159,6 @@ structure.
         NamedGroup group;
         opaque key_exchange<1..2^16-1>;
     } KeyShareEntry;
-
 
     struct {
         opaque label<0..2^8-1>;
@@ -186,15 +181,85 @@ keys
 : The list of keys which can be used by the client to encrypt the SNI.
 {:br}
 
-[[OPEN ISSUE: Do we need more Expiration dates, IP address limitations, etc.]]
-
-[[TODO: How to shove this in a TXT record]]
-
+This structure is placed in the RRData section of a TXT record as 
+encoded above. The Resource Record TTL determines the lifetime of
+the published ESNI keys. Clients MUST NOT use ESNI keys beyond 
+their recommended lifetime. 
 
 # The "encrypted_server_name" extension {#esni-extension}
 
+ESNIs are carried in an extension similar to the SNI, with the 
+following extension type:
+
+~~~
+enum {
+    ...
+    encrypted_server_name(TBD),
+    (65535)
+} ExtensionType;
+~~~
+
+The contents of this extension are as follows:
+~~~
+struct {
+        opaque label<0..2^8-1>;
+        opaque esni<1..2^16-1>;
+} ESNI-Extension;
+~~~
+
+# Client SNI Encryption
+
+Let X be the client's ephemeral key share in a group that matches one
+of the NamedGroup entries in ESNIKeys. Let Y be the corresponding key
+share (key_exchange) value in ESNIKeys. To encrypt the SNI, clients first
+compute an (EC)DH operation between X and Y, yielding a secret S.
+A shared secret esni_key is then derived from S as follows:
+
+~~~ 
+esni_key = HKDF-Extract(0, S)
+~~~
+
+This key is then used to encrypt the SNI, using all information in the
+Client Hello preceding any PSK binders that may be present as Associated Data (additional_data). 
+Thus, the ESNI extension MUST be last in the extension list before the 
+PreSharedKeyExtension, if present. Following 4.2.11.2 of {{!I-D.ietf-tls-tls13}},
+the contents of this preceding data may be computed as follows:
+
+~~~
+ TruncateToESNI(ClientHello)
+~~~
+
+Where TruncateToESNI() removes all information from ClientHello1 up to the
+ESNI extension. Encryption of plaintext value `sni`, e.g., example.com, is then 
+performed as follows:
+
+~~~
+ESNI = AEAD-Encrypt(esni_key, 0, TruncateToESNI(ClientHello), sni)
+~~~
+
+Clients MUST NOT re-use esni_key more than once, as this would lead to
+encryption with nonce re-use. Nonce re-use across clients would only occur
+if two clients happened to generate the same key share (X).
+
+# Server SNI Decryption
+
+When a server -- fronting or shared -- receives a ClientHello with an ESNI 
+extension, it does the following:
+
+1. Lookup the secret key corresponding to the key in the label.
+2. Perform the same (EC)DH operation to derive S, and from that, derive esni_key.
+3. Decrypt the `esni` value in the ESNI-Extension using esni_key.
+
+The server may then use the plaintext SNI to route the ClientHello to the correct
+service or hidden server.
+
+If Step (1) fails because (a) the server rotated its ESNI keys or (b) a matching
+label does not exist, the server SHOULD proceed with the connection as if no 
+ESNI-Extension was present. 
+
 # Compatibility Issues
 
+TODO
 
 # Security Considerations
 
@@ -204,7 +269,6 @@ TODO Security
 # IANA Considerations
 
 This document has no IANA actions.
-
 
 
 --- back
