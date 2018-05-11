@@ -75,16 +75,60 @@ going to a particular service provider, which the observer could
 already tell from the IP address.
 
 
-
-
-
-
 # Conventions and Definitions
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
 "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
 document are to be interpreted as described in BCP 14 {{RFC2119}} {{!RFC8174}}
 when, and only when, they appear in all capitals, as shown here.
+
+
+# Overview
+
+This document is designed to operate in one of two primary topologies
+shown below, which we call "Shared Mode" and "Fronting Mode"
+
+
+~~~~
+                +--------------------+
+                |                    |
+                |   2001:DB8::1111   |
+                |                    |
+Client <----->  | hidden.example.org |
+                |                    |
+                | public.example.com |
+                |                    |
+                +--------------------+
+                        Server
+~~~~
+{: #shared-mode title="Shared Mode Topology"}
+
+In Shared Mode, the provider is the origin server for all the domains
+whose DNS records point to it and clients form a TLS connection directly
+to that provider, which has access to the plaintext of the connection.
+
+~~~~
+                +--------------------+       +--------------------+
+                |                    |       |                    |
+                |   2001:DB8::1111   |       |   2001:DB8::EEEE   |
+Client <------------------------------------>|                    |
+                | public.example.com |       | hidden.example.com |
+                |                    |       |                    |
+                +--------------------+       +--------------------+
+                    Fronting Server               Hidden Server
+~~~~
+{: #fronting-mode title="Fronting Mode Topology"}
+
+In Fronting Mode, the provider is *not* the origin server for hidden
+domains. Rather the DNS records for hidden domains point to the provider,
+but the provider's server just relays the connection back to the
+hidden server, which is the true origin server. The provider does
+not have access to the plaintext of the connection. In principle,
+the provider might not be the origin for any domains, but as
+a practical matter, it is probably the origin for a large set of
+innocuous domains, but is also providing protection for some hidden
+domains.
+
 
 
 # Security Considerations
