@@ -35,6 +35,10 @@ Server Name Indication for TLS 1.3.
 
 # Introduction
 
+DISCLAIMER: This is very early a work-in-progress design and has not
+yet seen significant (or really any) security analysis. It should not
+be used as a basis for building production systems.
+
 Although TLS 1.3 {{!I-D.ietf-tls-tls13}} encrypts most of the
 handshake, including the server certificate, there are several other
 channels that allow an on-path attacker to determine domain name the
