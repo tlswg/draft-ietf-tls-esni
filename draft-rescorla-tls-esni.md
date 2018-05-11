@@ -68,7 +68,7 @@ covervage or both.
 
 The design in this document takes a different approach: it assumes
 that hidden servers will hide behind a provider (CDN, app server,
-etc.) which is able to activate encrypted SNI for all of the domains
+etc.) which is able to activate encrypted SNI (ESNI) for all of the domains
 it hosts. Thus, the use of encrypted SNI does not indicate that the
 client is attempting to reach a hidden server, but only that it is
 going to a particular service provider, which the observer could
@@ -88,6 +88,7 @@ when, and only when, they appear in all capitals, as shown here.
 This document is designed to operate in one of two primary topologies
 shown below, which we call "Shared Mode" and "Fronting Mode"
 
+## Topologies
 
 ~~~~
                 +--------------------+
@@ -130,6 +131,29 @@ innocuous domains, but is also providing protection for some hidden
 domains.
 
 
+## SNI Encryption
+
+The protocol designed in this document is quite straightforward.
+
+First, the provider publishes a public key which is used for SNI encryption
+for all the domains which it serves or fronts for. This document
+defines a publication mechanism using DNS, but other mechanisms
+are also possible. In particular, if some of the clients of
+a hidden server are applications rather than Web browsers, those
+applications might have the public key preconfigured.
+
+When a client wants to form a TLS connection to any of the domains
+served by an ESNI-supporting provider, it replaces the
+"server_name" extension in the ClientHello with an "encrypted_server_name"
+extension, which contains the true extension encrypted under the
+provider's public key. The provider can then decrypt the extension
+and either terminate the connection (in Shared Mode) or forward
+it to the hidden server (in Fronting Mode).
+
+# Publishing the SNI Encryption Key {#publishing-key}
+
+
+# The "encrypted_server_name" extension {#esni-extension}
 
 # Security Considerations
 
