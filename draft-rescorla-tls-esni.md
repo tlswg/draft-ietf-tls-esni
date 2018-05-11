@@ -365,7 +365,9 @@ has cleaned out most such proxies.
 
 # Security Considerations
 
-## Why is cleartext DNS OK?
+## Why is cleartext DNS OK? {#cleartext-dns}
+
+
 
 ## Comparison Against Criteria
 
@@ -393,23 +395,26 @@ by including multiple keys, with distinct labels, in an ESNIKeys structure.
 
 This design requires servers to decrypt ClientHello messages with EncryptedSNI
 extensions carrying valid labels. Thus, it is possible for an attacker to force
-decryption operations on the server. Servers SHOULD NOT be configured to handle
-multiple keys, as this then require servers to perform trial decryption before
-learning of the attack. This attack is bound by the number of valid TCP connections
-an attacker can open. 
+decryption operations on the server. This attack is bound by the number of 
+valid TCP connections an attacker can open. 
 
 4. Do not stick out
 
 By sending SNI and ESNI values (with illegitimate labels), or by sending 
 legitimate ESNI values for and "fake" SNI values, clients do not display
 clear signals of ESNI intent to passive eavesdroppers. As more clients 
-enable ESNI support with keys supplied by shared hosting providers, the 
-presence of ESNI extensions becomes less suspicious.
+enable ESNI support, e.g., as normal part of Web browser functionality, 
+with keys supplied by shared hosting providers, the presence of ESNI 
+extensions becomes less suspicious and part of common or predictable
+client behavior. In other words, if all Web browsers start using ESNI,
+the presence of this value does not signal suspicious behavior to passive
+eavesdroppers.
 
 5. Forward secrecy
 
-This design achieves forward secrecy by mixing the client's ephemeral key share
-into the ESNI key derivation.
+This design is not forward secret since the server's ESNI key is semi-static. 
+However, the window of exposure is bound by the key lifetime. In this case,
+the DNS RR TTL.
 
 6. Proper security context
 
@@ -420,14 +425,14 @@ directly to hidden origin servers, thereby avoiding unnecessary MiTM attacks.
 
 Assuming ESNIKeys retrieved from DNS are validated, e.g., via DNSSEC or fetched
 from a trusted Recursive Resolver, spoofing a server operating in Fronting Mode
-is not possible.
+is not possible. See {{cleartext-dns}} for more details regarding cleartext
+DNS.
 
 8. Supporting multiple protocols
 
 This design has no impact on application layer protocol negotiation. It only affects
 connection routing, server certificate selection, and client certificate verification. 
 Thus, it is compatible with multiple protocols.
-
 
 ## Obvious Attacks
 
