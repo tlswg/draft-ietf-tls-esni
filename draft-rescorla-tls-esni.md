@@ -37,18 +37,18 @@ Server Name Indication for TLS 1.3.
 
 Although TLS 1.3 {{!I-D.ietf-tls-tls13}} encrypts most of the
 handshake, including the server certificate, there are several other
-channels that allow an on-path attacker to determine domain name the 
+channels that allow an on-path attacker to determine domain name the
 client is trying to connect to, including:
 
 * Cleartext client DNS queries.
-* Visible server IP addresses, assuming the the server is not doing 
+* Visible server IP addresses, assuming the the server is not doing
   domain-based virtual hosting.
 * Cleartext Server Name Indication (SNI) {{!RFC6066}} in ClientHello messages.
 
 DoH {{?I-D.ietf-doh-dns-over-https}} and DPRIVE {{?RFC7858}} {{?RFC8094}}
 provide mechanisms for clients to conceal DNS lookups from network inspection,
 and many TLS servers host multiple domains on the same IP address.
-In such environments, SNI is an explicit signal used to determine the server's 
+In such environments, SNI is an explicit signal used to determine the server's
 identity. Indirect mechanisms such as traffic analysis also exist.
 
 The TLS WG has extensively studied the problem of protecting SNI, but
@@ -57,7 +57,7 @@ solution. {{?I-D.ietf-tls-sni-encryption}} provides a description
 of the problem space and some of the proposed techniques. One of the
 more difficult problems is "Do not stick out"
 ({{?I-D.ietf-tls-sni-encryption}}; Section 2.4): if only hidden
-services use SNI encryption, then SNI encryption is a signal that 
+services use SNI encryption, then SNI encryption is a signal that
 a client is going to a hidden server. For this reason,
 the techniques in {{?I-D.ietf-tls-sni-encryption}} largely focus on
 concealing the fact that SNI encryption is in use. Unfortunately,
@@ -186,10 +186,10 @@ be used to encrypt the SNI for the associated domain name.
 The cipher suite list is orthogonal to the
 list of keys, so each key may be used with any cipher suite.
 
-This structure is placed in the RRData section of a TXT record as 
+This structure is placed in the RRData section of a TXT record as
 encoded above. The Resource Record TTL determines the lifetime of
-the published ESNI keys. Clients MUST NOT use ESNI keys beyond 
-their recommended lifetime. 
+the published ESNI keys. Clients MUST NOT use ESNI keys beyond
+their recommended lifetime.
 
 # The "encrypted_server_name" extension {#esni-extension}
 
@@ -259,7 +259,9 @@ places?]]
 This value is placed in an "encrypted_server_name" extension.
 
 The client MAY either omit the "server_name" extension or provide
-an innocuous dummy one. Similarly, the client MAY send an innocuous
+an innocuous dummy one (this is required for technical conformance
+with {{!RFC7540}}; Section 9.2.
+Similarly, the client MAY send an innocuous
 EncryptedSNI extension if it has no ESNI to send.
 
 ## Fronting Server Behavior
@@ -330,12 +332,31 @@ from the DNS results, if one is provided.
 
 A more serious problem is MITM proxies which do not support this
 extension. {{I-D.ietf-tls-tls13}}; Section 9.3 requires that
-such proxies remove any extensions they do not understand,
-which will either
+such proxies remove any extensions they do not understand.
+This will have one of two results when connecting to the fronting
+server:
 
+1. The handshake will fail if the fronting server requires SNI.
+2. The handshake will succeed with the fronting server's default
+   certificate.
 
+A Web client client can securely detect case (2) because it will result
+in a connection which omits the "encrypted_server_name" extension
+but which is signed by a certificate which does not chain
+to a publicly known trust anchor. Implementations should then
+disable ESNI while in that network configuration.
 
+In order to enable this mechanism, fronting servers SHOULD NOT
+require SNI, but rather respond with some default certificate.
 
+A non-conformant MITM proxy will forward the ESNI extension,
+substituting its own KeyShare value, with the result that
+the fronting server will not be able to decrypt the SNI.
+This causes a hard failure. Detecting this case is difficult,
+but clients might opt to attempt captive portal detection
+to see if they are in the presence of a MITM proxy, and if
+so disable ESNI. Hopefully, the TLS 1.3 deployment experience
+has cleaned out most such proxies.
 
 
 # Security Considerations
