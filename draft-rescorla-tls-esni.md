@@ -37,34 +37,32 @@ Server Name Indication for TLS 1.3.
 
 Although TLS 1.3 {{!I-D.ietf-tls-tls13}} encrypts most of the
 handshake, including the server certificate, there are several other
-channels that allow an on-path attacker to determine the the major
-mechanism that allows an on-path attacker to determine the domain
-name the client is trying to connect to.
+channels that allow an on-path attacker to determine domain name the 
+client is trying to connect to, including:
 
-* The client's DNS lookups.
-* The server IP address, if the server is not doing domain-based
-  virtual hosting.
-* The Server Name Indication (SNI) {{!RFC6066}} in the ClientHello.
+* Cleartext client DNS queries.
+* Visible server IP addresses, assuming the the server is not doing 
+  domain-based virtual hosting.
+* Cleartext Server Name Indication (SNI) {{!RFC6066}} in ClientHello messages.
 
 DoH {{?I-D.ietf-doh-dns-over-https}} and DPRIVE {{?RFC7858}} {{?RFC8094}}
-allow the client to conceal its DNS lookups from network inspection,
+provide mechanisms for clients to conceal DNS lookups from network inspection,
 and many TLS servers host multiple domains on the same IP address.
-In such environments, SNI is the major direct method of determining
-the server's identity (although indirect mechanisms such as traffic
-analysis also exist).
+In such environments, SNI is an explicit signal used to determine the server's 
+identity. Indirect mechanisms such as traffic analysis also exist.
 
 The TLS WG has extensively studied the problem of protecting SNI, but
 has been unable to develop a completely generic
 solution. {{?I-D.ietf-tls-sni-encryption}} provides a description
 of the problem space and some of the proposed techniques. One of the
-most difficult problems is "Do not stick out"
+more difficult problems is "Do not stick out"
 ({{?I-D.ietf-tls-sni-encryption}}; Section 2.4): if only hidden
-services use SNI encryption, then the use of SNI encryption is a
-signal that the client is going to a hidden server. For this reason,
+services use SNI encryption, then SNI encryption is a signal that 
+a client is going to a hidden server. For this reason,
 the techniques in {{?I-D.ietf-tls-sni-encryption}} largely focus on
 concealing the fact that SNI encryption is in use. Unfortunately,
 the result often has undesirable performance consequences, incomplete
-covervage or both.
+coverage, or both.
 
 The design in this document takes a different approach: it assumes
 that hidden servers will hide behind a provider (CDN, app server,
@@ -150,12 +148,10 @@ provider's public key. The provider can then decrypt the extension
 and either terminate the connection (in Shared Mode) or forward
 it to the hidden server (in Fronting Mode).
 
-
 # Publishing the SNI Encryption Key {#publishing-key}
 
-
 SNI Encryption keys can be published in the DNS using the ESNIKeys
-structure.
+structure, defined below.
 
 ~~~~
     // Copied from TLS 1.3
@@ -163,7 +159,6 @@ structure.
         NamedGroup group;
         opaque key_exchange<1..2^16-1>;
     } KeyShareEntry;
-
 
     struct {
         opaque label<0..2^8-1>;
@@ -191,9 +186,10 @@ be used to encrypt the SNI for the associated domain name.
 The cipher suite list is orthogonal to the
 list of keys, so each key may be used with any cipher suite.
 
-[[OPEN ISSUE: Do we need more Expiration dates, IP address limitations, etc.]]
-
-[[TODO: How to shove this in a TXT record]]
+This structure is placed in the RRData section of a TXT record as 
+encoded above. The Resource Record TTL determines the lifetime of
+the published ESNI keys. Clients MUST NOT use ESNI keys beyond 
+their recommended lifetime. 
 
 # The "encrypted_server_name" extension {#esni-extension}
 
@@ -244,7 +240,7 @@ follows:
 
 ~~~~
    Z_extracted = HKDF-Extract(EncryptedSNI.nonce, Z)
-   K_sni = HKDF-Expand(Z_extracted, ClientHello.Random, L)
+   K_sni = HKDF-Expand-Label(Z_extracted, "encrypted-sni", ClientHello.Random, L)
 
    Where L is the key length associated with the cipher suite.
 ~~~~
@@ -263,7 +259,8 @@ places?]]
 This value is placed in an "encrypted_server_name" extension.
 
 The client MAY either omit the "server_name" extension or provide
-an innocuous dummy one.
+an innocuous dummy one. Similarly, the client MAY send an innocuous
+EncryptedSNI extension if it has no ESNI to send.
 
 ## Fronting Server Behavior
 
@@ -276,8 +273,11 @@ MUST first perform the following checks:
 - If the EncryptedSNI.label value does not correspond to any known
   SNI encryption key, it MUST ignore the "encrypted_server_name"
   extension and continue with the handshake. This may involve
-  using the "server_name" field if one is present. [[TODO: Is this right?
-  Provide the rationale]].
+  using the "server_name" field if one is present. This has
+  two benefits: (1) allowing clients to signal presence of ESNI
+  and SNI, even if only one of them is legitimate, and (2) allowing
+  servers to gracefully handle key rotation breaking clients in
+  possession of an ESNI key.
 
 - If more than one KeyShareEntry has been provided, or if that share's
   group does not match that for the SNI encryption key, it MUST abort
@@ -303,13 +303,6 @@ The Hidden Server ignores both the "encrypted_server_name" and the
 Shared Mode, the server will still know the true SNI, and can use it
 for certificate selection. In Fronting Mode, it may not know the true
 SNI and so will generally be configured to use a single certificate
-(though see XXX for methods for communicating the true SNI to the
-hidden server).
-
-If the "encrypted_server_name" extension was present, the server
-MUST insert an empty (zero-length) "encrypted_server_name" extension
-in its own EncryptedExtensions message.
-[[TODO: Do we need this?]]
 
 
 # Compatibility Issues
@@ -357,7 +350,6 @@ which will either
 # IANA Considerations
 
 This document has no IANA actions.
-
 
 
 --- back
