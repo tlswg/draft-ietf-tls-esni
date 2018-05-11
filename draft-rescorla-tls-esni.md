@@ -194,7 +194,7 @@ list of keys, so each key may be used with any cipher suite.
 
 This structure is placed in the RRData section of a TXT record as
 encoded above. The Resource Record TTL determines the lifetime of
-the published ESNI keys. Clients MUST NOT use ESNI keys beyond 
+the published ESNI keys. Clients MUST NOT use ESNI keys beyond
 their recommended lifetime. Note that the length of this structure
 MUST NOT exceed 2^16 - 1, as the RDLENGTH is only 16 bits {{RFC1035}}.
 
@@ -269,7 +269,7 @@ This value is placed in an "encrypted_server_name" extension.
 The client MAY either omit the "server_name" extension or provide
 an innocuous dummy one (this is required for technical conformance
 with {{!RFC7540}}; Section 9.2.) Similarly, the client MAY send an innocuous
-EncryptedSNI extension if it has no ESNI to send. If present, this 
+EncryptedSNI extension if it has no ESNI to send. If present, this
 extension MUST carry a random key label and encryption, as otherwise
 it may induce unnecessary work for servers.
 
@@ -381,13 +381,13 @@ has cleaned out most such proxies.
 
 ## Comparison Against Criteria
 
-{{?I-D.ietf-tls-sni-encryption}} lists several requirements for SNI encryption. In this 
+{{?I-D.ietf-tls-sni-encryption}} lists several requirements for SNI encryption. In this
 section, we re-iterate these requirements and assess the ESNI design against them.
 
 1. Mitigate against replay attacks
 
 Since K_sni is derived from a (EC)DH operation between the client's ephemeral
-and server's semi-static ESNI key. This binds the ESNI encryption to the 
+and server's semi-static ESNI key. This binds the ESNI encryption to the
 Client Hello. It is not possible for an attacker to "cut and paste" the ESNI
 value in a different Client Hello, with a different ephemeral key share, as
 the terminating server will fail to decrypt and verify the ESNI value.
@@ -396,8 +396,8 @@ the terminating server will fail to decrypt and verify the ESNI value.
 
 This design depends upon DNS as a vehicle for semi-static public key distribution.
 Server operators may partition their private keys however they see fit provided
-each server behind an IP address has the corresponding private key to decrypt 
-a key. Thus, when one ESNI key is provided, sharing is optimally bound by the number 
+each server behind an IP address has the corresponding private key to decrypt
+a key. Thus, when one ESNI key is provided, sharing is optimally bound by the number
 of hosts that share an IP address. Server operators may further limit sharing
 by including multiple keys, with distinct labels, in an ESNIKeys structure.
 
@@ -405,16 +405,16 @@ by including multiple keys, with distinct labels, in an ESNIKeys structure.
 
 This design requires servers to decrypt ClientHello messages with EncryptedSNI
 extensions carrying valid labels. Thus, it is possible for an attacker to force
-decryption operations on the server. This attack is bound by the number of 
-valid TCP connections an attacker can open. 
+decryption operations on the server. This attack is bound by the number of
+valid TCP connections an attacker can open.
 
 4. Do not stick out
 
-By sending SNI and ESNI values (with illegitimate labels), or by sending 
+By sending SNI and ESNI values (with illegitimate labels), or by sending
 legitimate ESNI values for and "fake" SNI values, clients do not display
-clear signals of ESNI intent to passive eavesdroppers. As more clients 
-enable ESNI support, e.g., as normal part of Web browser functionality, 
-with keys supplied by shared hosting providers, the presence of ESNI 
+clear signals of ESNI intent to passive eavesdroppers. As more clients
+enable ESNI support, e.g., as normal part of Web browser functionality,
+with keys supplied by shared hosting providers, the presence of ESNI
 extensions becomes less suspicious and part of common or predictable
 client behavior. In other words, if all Web browsers start using ESNI,
 the presence of this value does not signal suspicious behavior to passive
@@ -422,13 +422,13 @@ eavesdroppers.
 
 5. Forward secrecy
 
-This design is not forward secret since the server's ESNI key is semi-static. 
+This design is not forward secret since the server's ESNI key is semi-static.
 However, the window of exposure is bound by the key lifetime. In this case,
 the DNS RR TTL.
 
 6. Proper security context
 
-This design permits servers operating in Fronting Mode to forward connections 
+This design permits servers operating in Fronting Mode to forward connections
 directly to hidden origin servers, thereby avoiding unnecessary MiTM attacks.
 
 7. Fronting server spoofing
@@ -441,7 +441,7 @@ DNS.
 8. Supporting multiple protocols
 
 This design has no impact on application layer protocol negotiation. It only affects
-connection routing, server certificate selection, and client certificate verification. 
+connection routing, server certificate selection, and client certificate verification.
 Thus, it is compatible with multiple protocols.
 
 ## Obvious Attacks
@@ -476,7 +476,30 @@ a message of his choice, which should be intractable (Hand-waving alert!).
 
 # Alternate Encryption Design
 
-The design described in
+The design described here only provides encryption for the SNI, but
+not for other extensions, such as ALPN. Another potential design
+would be to encrypt all of the extensions using the same basic
+structure as we use here for ESNI. That design has the following
+advantages:
+
+- It protects all the extensions from ordinary eavesdroppers
+- If the encrypted block has its own KeyShare, it does not
+  necessarily require the client to use a single KeyShare,
+  because the client's share is bound to the SNI by the
+  AEAD (analysis needed).
+
+It also has the following disadvantages:
+
+- The fronting server can still see the other extensions. By
+  contrast we could introduce another EncryptedExtensions
+  block that was encrypted to the hidden server and not
+  the fronting server.
+- It requires a mechanism for the fronting server to provide the
+  extension-encryption key to the hidden server (as in {{communicating-sni}}
+  and thus cannot be used with an unmodified hidden server.
+- A conformant middlebox will strip every extension, which might
+  result in a ClientHello which is just unacceptable to the server
+  (more analysis needed).
 
 # Acknowledgments
 {:numbered="false"}
