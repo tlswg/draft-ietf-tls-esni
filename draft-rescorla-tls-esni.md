@@ -312,28 +312,46 @@ in its own EncryptedExtensions message.
 [[TODO: Do we need this?]]
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Compatibility Issues
+
+In general, this mechanism is designed only to be used with
+servers which have opted in, thus minimizing compatibility
+issues. However, there are two scenarios where that does not
+apply, as detailed below.
+
+## Misconfiguration
+
+If DNS is misconfigured so that a client receives ESNI keys for a
+server which is not prepared to receive ESNI, then the server will
+ignore the "encrypted_server_name" extension, as required by
+{{I-D.ietf-tls-tls13}}; Section 4.1.2.  If the servers does not
+require SNI, it will complete the handshake with its default
+certificate. Most likely, this will cause a certificate name
+mismatch and thus handshake failure. Clients SHOULD not fall
+back to cleartext SNI, because that allows a network attacker
+to disclose the SNI. They MAY attempt to use another server
+from the DNS results, if one is provided.
+
+
+## Middleboxes
+
+A more serious problem is MITM proxies which do not support this
+extension. {{I-D.ietf-tls-tls13}}; Section 9.3 requires that
+such proxies remove any extensions they do not understand,
+which will either
+
+
+
+
 
 
 # Security Considerations
 
-TODO Security
+## Why is cleartext DNS OK?
+
+## Comparison Against Criteria
+
+## Obvious Attacks
 
 
 # IANA Considerations
