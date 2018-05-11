@@ -1,12 +1,12 @@
 ---
-title: TODO - Your title
-abbrev: TODO - Abbreviation
-docname: draft-todo-your-name-here
-category: info
+title: Encrypted Server Name Indication for TLS 1.3
+abbrev: TLS 1.3 SNI Encryption
+docname: draft-rescorla-tls-esni-latest
+category: exp
 
 ipr: trust200902
 area: General
-workgroup: TODO Working Group
+workgroup: tls
 keyword: Internet-Draft
 
 stand_alone: yes
@@ -14,10 +14,10 @@ pi: [toc, sortrefs, symrefs]
 
 author:
  -
-    ins: T. Todo
-    name: Todo Fullname
-    organization: TODO Organization
-    email: todo@example.com
+       ins: E. Rescorla
+       name: Eric Rescorla
+       organization: RTFM, Inc.
+       email: ekr@rtfm.com
 
 normative:
   RFC2119:
