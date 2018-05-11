@@ -367,7 +367,13 @@ has cleaned out most such proxies.
 
 ## Why is cleartext DNS OK? {#cleartext-dns}
 
-
+In comparison to {{?I-D.kazuho-protected-sni}}, wherein DNS Resource Records
+are signed via a server private key, ESNIKeys have no authenticity or provenance
+information. This means that any attacker which can inject DNS responses or poison 
+DNS caches can supply clients with fake ESNIKeys. This is not problematic since,
+without ESNI, a DNS poisoning attacker can force clients to connect to
+IP addresses and reveal their SNI in cleartext. Thus, doing so specifically
+for ESNI yields no new attack vector. 
 
 ## Comparison Against Criteria
 
