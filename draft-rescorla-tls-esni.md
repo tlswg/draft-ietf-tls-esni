@@ -20,6 +20,7 @@ author:
        email: ekr@rtfm.com
 
 normative:
+  RFC1035:
   RFC2119:
 
 informative:
@@ -193,8 +194,9 @@ list of keys, so each key may be used with any cipher suite.
 
 This structure is placed in the RRData section of a TXT record as
 encoded above. The Resource Record TTL determines the lifetime of
-the published ESNI keys. Clients MUST NOT use ESNI keys beyond
-their recommended lifetime.
+the published ESNI keys. Clients MUST NOT use ESNI keys beyond 
+their recommended lifetime. Note that the length of this structure
+MUST NOT exceed 2^16 - 1, as the RDLENGTH is only 16 bits {{RFC1035}}.
 
 # The "encrypted_server_name" extension {#esni-extension}
 
@@ -230,7 +232,8 @@ encrypted_sni
 
 In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShare values and generate an (EC)DHE share in the
-matching group. This share is then used for the client's "key_share"
+matching group. If multiple keys (labels) for the same IP address are available,
+clients SHOULD choose one at random. This share is then used for the client's "key_share"
 extension and will be used both to derive both the SNI encryption
 key the (EC)DHE shared secret which is used in the TLS key schedule.
 This has two important implications:
@@ -265,9 +268,10 @@ This value is placed in an "encrypted_server_name" extension.
 
 The client MAY either omit the "server_name" extension or provide
 an innocuous dummy one (this is required for technical conformance
-with {{!RFC7540}}; Section 9.2.
-Similarly, the client MAY send an innocuous
-EncryptedSNI extension if it has no ESNI to send.
+with {{!RFC7540}}; Section 9.2.) Similarly, the client MAY send an innocuous
+EncryptedSNI extension if it has no ESNI to send. If present, this 
+extension MUST carry a random key label and encryption, as otherwise
+it may induce unnecessary work for servers.
 
 ## Fronting Server Behavior
 
@@ -371,9 +375,74 @@ has cleaned out most such proxies.
 
 # Security Considerations
 
-## Why is cleartext DNS OK?
+## Why is cleartext DNS OK? {#cleartext-dns}
+
+
 
 ## Comparison Against Criteria
+
+{{?I-D.ietf-tls-sni-encryption}} lists several requirements for SNI encryption. In this 
+section, we re-iterate these requirements and assess the ESNI design against them.
+
+1. Mitigate against replay attacks
+
+Since K_sni is derived from a (EC)DH operation between the client's ephemeral
+and server's semi-static ESNI key. This binds the ESNI encryption to the 
+Client Hello. It is not possible for an attacker to "cut and paste" the ESNI
+value in a different Client Hello, with a different ephemeral key share, as
+the terminating server will fail to decrypt and verify the ESNI value.
+
+2. Avoid widely-deployed shared secrets
+
+This design depends upon DNS as a vehicle for semi-static public key distribution.
+Server operators may partition their private keys however they see fit provided
+each server behind an IP address has the corresponding private key to decrypt 
+a key. Thus, when one ESNI key is provided, sharing is optimally bound by the number 
+of hosts that share an IP address. Server operators may further limit sharing
+by including multiple keys, with distinct labels, in an ESNIKeys structure.
+
+3. Prevent SNI-based DoS attacks
+
+This design requires servers to decrypt ClientHello messages with EncryptedSNI
+extensions carrying valid labels. Thus, it is possible for an attacker to force
+decryption operations on the server. This attack is bound by the number of 
+valid TCP connections an attacker can open. 
+
+4. Do not stick out
+
+By sending SNI and ESNI values (with illegitimate labels), or by sending 
+legitimate ESNI values for and "fake" SNI values, clients do not display
+clear signals of ESNI intent to passive eavesdroppers. As more clients 
+enable ESNI support, e.g., as normal part of Web browser functionality, 
+with keys supplied by shared hosting providers, the presence of ESNI 
+extensions becomes less suspicious and part of common or predictable
+client behavior. In other words, if all Web browsers start using ESNI,
+the presence of this value does not signal suspicious behavior to passive
+eavesdroppers.
+
+5. Forward secrecy
+
+This design is not forward secret since the server's ESNI key is semi-static. 
+However, the window of exposure is bound by the key lifetime. In this case,
+the DNS RR TTL.
+
+6. Proper security context
+
+This design permits servers operating in Fronting Mode to forward connections 
+directly to hidden origin servers, thereby avoiding unnecessary MiTM attacks.
+
+7. Fronting server spoofing
+
+Assuming ESNIKeys retrieved from DNS are validated, e.g., via DNSSEC or fetched
+from a trusted Recursive Resolver, spoofing a server operating in Fronting Mode
+is not possible. See {{cleartext-dns}} for more details regarding cleartext
+DNS.
+
+8. Supporting multiple protocols
+
+This design has no impact on application layer protocol negotiation. It only affects
+connection routing, server certificate selection, and client certificate verification. 
+Thus, it is compatible with multiple protocols.
 
 ## Obvious Attacks
 
