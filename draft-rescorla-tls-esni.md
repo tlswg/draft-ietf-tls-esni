@@ -126,7 +126,8 @@ not have access to the plaintext of the connection. In principle,
 the provider might not be the origin for any domains, but as
 a practical matter, it is probably the origin for a large set of
 innocuous domains, but is also providing protection for some hidden
-domains.
+domains. Note that the hidden server can be an unmodified TLS 1.3
+server.
 
 
 ## SNI Encryption
@@ -305,6 +306,11 @@ The Hidden Server ignores both the "encrypted_server_name" and the
 Shared Mode, the server will still know the true SNI, and can use it
 for certificate selection. In Fronting Mode, it may not know the true
 SNI and so will generally be configured to use a single certificate
+{{communicating-sni}} describes a mechanism for communicating the
+true SNI to the hidden server.
+[[OPEN ISSUE: Do we want "encrypted_server_name" in EE? It's
+clearer communication, but gets in the way of stock servers.]]
+
 
 
 # Compatibility Issues
@@ -341,10 +347,10 @@ server:
    certificate.
 
 A Web client client can securely detect case (2) because it will result
-in a connection which omits the "encrypted_server_name" extension
+in a connection which has an invalid identity (most likely)
 but which is signed by a certificate which does not chain
-to a publicly known trust anchor. Implementations should then
-disable ESNI while in that network configuration.
+to a publicly known trust anchor. The client can detect this
+case and disable ESNI while in that network configuration.
 
 In order to enable this mechanism, fronting servers SHOULD NOT
 require SNI, but rather respond with some default certificate.
@@ -374,6 +380,19 @@ This document has no IANA actions.
 
 
 --- back
+
+
+# Communicating SNI to Hidden Server {#communicating-sni}
+
+As noted in {{hidden-server-behavior}}, in Fronting Mode the hidden
+server will generally not know the true SNI. It is possible for
+the fronting server to communicate the true SNI to the hidden server,
+at the cost of the hidden server
+
+
+# Alternate Encryption Design
+
+The design described in
 
 # Acknowledgments
 {:numbered="false"}
