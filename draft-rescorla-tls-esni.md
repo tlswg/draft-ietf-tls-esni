@@ -64,8 +64,8 @@ more difficult problems is "Do not stick out"
 ({{?I-D.ietf-tls-sni-encryption}}; Section 2.4): if only hidden
 services use SNI encryption, then SNI encryption is a signal that
 a client is going to a hidden server. For this reason,
-the techniques in {{?I-D.ietf-tls-sni-encryption}} largely focus on
-concealing the fact that SNI encryption is in use. Unfortunately,
+much recent work has focused on
+concealing the fact that SNI is being protected. Unfortunately,
 the result often has undesirable performance consequences, incomplete
 coverage, or both.
 
@@ -195,7 +195,7 @@ list of keys, so each key may be used with any cipher suite.
 This structure is placed in the RRData section of a TXT record as
 encoded above. The Resource Record TTL determines the lifetime of
 the published ESNI keys. Clients MUST NOT use ESNI keys beyond
-their recommended lifetime. Note that the length of this structure
+their published lifetime. Note that the length of this structure
 MUST NOT exceed 2^16 - 1, as the RDLENGTH is only 16 bits {{RFC1035}}.
 
 # The "encrypted_server_name" extension {#esni-extension}
@@ -403,15 +403,16 @@ without encryption of DNS queries in transit via DoH or DPRIVE mechanisms.
 {{?I-D.ietf-tls-sni-encryption}} lists several requirements for SNI encryption. In this
 section, we re-iterate these requirements and assess the ESNI design against them.
 
-1. Mitigate against replay attacks
+### Mitigate against replay attacks
 
-Since K_sni is derived from a (EC)DH operation between the client's ephemeral
-and server's semi-static ESNI key. This binds the ESNI encryption to the
-Client Hello. It is not possible for an attacker to "cut and paste" the ESNI
-value in a different Client Hello, with a different ephemeral key share, as
-the terminating server will fail to decrypt and verify the ESNI value.
+Since the SNI encryption key is derived from a (EC)DH operation
+between the client's ephemeral and server's semi-static ESNI key. This
+binds the ESNI encryption to the Client Hello. It is not possible for
+an attacker to "cut and paste" the ESNI value in a different Client
+Hello, with a different ephemeral key share, as the terminating server
+will fail to decrypt and verify the ESNI value.
 
-2. Avoid widely-deployed shared secrets
+### Avoid widely-deployed shared secrets
 
 This design depends upon DNS as a vehicle for semi-static public key distribution.
 Server operators may partition their private keys however they see fit provided
@@ -420,14 +421,14 @@ a key. Thus, when one ESNI key is provided, sharing is optimally bound by the nu
 of hosts that share an IP address. Server operators may further limit sharing
 by including multiple keys, with distinct labels, in an ESNIKeys structure.
 
-3. Prevent SNI-based DoS attacks
+### Prevent SNI-based DoS attacks
 
 This design requires servers to decrypt ClientHello messages with EncryptedSNI
 extensions carrying valid labels. Thus, it is possible for an attacker to force
 decryption operations on the server. This attack is bound by the number of
 valid TCP connections an attacker can open.
 
-4. Do not stick out
+### Do not stick out
 
 By sending SNI and ESNI values (with illegitimate labels), or by sending
 legitimate ESNI values for and "fake" SNI values, clients do not display
@@ -439,31 +440,44 @@ client behavior. In other words, if all Web browsers start using ESNI,
 the presence of this value does not signal suspicious behavior to passive
 eavesdroppers.
 
-5. Forward secrecy
+### Forward secrecy
 
-This design is not forward secret since the server's ESNI key is semi-static.
-However, the window of exposure is bound by the key lifetime. In this case,
-the DNS RR TTL.
+This design is not forward secret since the server's ESNI key is static.
+However, the window of exposure is bound by the key lifetime. It is
+RECOMMEMDED that servers rotate keys frequently.
 
-6. Proper security context
+### Proper security context
 
 This design permits servers operating in Fronting Mode to forward connections
 directly to hidden origin servers, thereby avoiding unnecessary MiTM attacks.
 
-7. Fronting server spoofing
+### Fronting server spoofing
 
 Assuming ESNIKeys retrieved from DNS are validated, e.g., via DNSSEC or fetched
 from a trusted Recursive Resolver, spoofing a server operating in Fronting Mode
 is not possible. See {{cleartext-dns}} for more details regarding cleartext
 DNS.
 
-8. Supporting multiple protocols
+### Supporting multiple protocols
 
 This design has no impact on application layer protocol negotiation. It only affects
 connection routing, server certificate selection, and client certificate verification.
 Thus, it is compatible with multiple protocols.
 
-## Obvious Attacks
+## Misrouting
+
+Note that the hidden server has no way of knowing what the SNI was,
+but that does not lead to additional privacy exposure because the
+hidden server also only has one identity. This does, however, change
+the situation slightly in that the hidden server might previously have
+checked SNI and now cannot (and an attacker can route a connection
+with an encrypted SNI to any hidden server and the TLS connection will
+still complete).  However, the client is still responsible for
+verifying the server's identity in its certificate.
+
+[[TODO: Some more analysis needed in this case, as it is a little
+odd, and probably some precise rules about handling ESNI and no
+SNI uniformly?]]
 
 
 # IANA Considerations
