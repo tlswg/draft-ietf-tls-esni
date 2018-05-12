@@ -448,8 +448,8 @@ section, we re-iterate these requirements and assess the ESNI design against the
 ### Mitigate against replay attacks
 
 Since the SNI encryption key is derived from a (EC)DH operation
-between the client's ephemeral and server's semi-static ESNI key. This
-binds the ESNI encryption to the Client Hello. It is not possible for
+between the client's ephemeral and server's semi-static ESNI key, the ESNI
+encryption is bound to the Client Hello. It is not possible for
 an attacker to "cut and paste" the ESNI value in a different Client
 Hello, with a different ephemeral key share, as the terminating server
 will fail to decrypt and verify the ESNI value.
