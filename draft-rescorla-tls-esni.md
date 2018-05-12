@@ -223,7 +223,8 @@ returned. Alt-Svc records may be used to inform the client of the
 plaintext (fronting) SNI. If present, clients SHOULD use its value
 in the SNI extension of the subsequent ClientHello.
 
-Servers operating in Fronting Mode SHOULD have DNS configured to return 
+Clients obtain these records by querying DNS for hidden server domains.
+Thus, servers operating in Fronting Mode SHOULD have DNS configured to return 
 the same A (or AAAA) record for all hidden servers they service. This yields
 an anonymity set of cardinality equal to the number of hidden server domains
 supported by a given fronting server. Thus, even with SNI encryption,
