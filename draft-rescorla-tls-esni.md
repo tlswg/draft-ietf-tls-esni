@@ -377,21 +377,24 @@ has cleaned out most such proxies.
 
 ## Why is cleartext DNS OK? {#cleartext-dns}
 
-In comparison to {{?I-D.kazuho-protected-sni}}, wherein DNS Resource Records
-are signed via a server private key, ESNIKeys have no authenticity or provenance
-information. This means that any attacker which can inject DNS responses or poison
-DNS caches can supply clients with fake ESNIKeys or strip the ESNIKeys from
-the response. However, in the face
-of an attacker that controls DNS, no SNI encryption scheme can work because
-the attacker can replace the IP address, thus blocking client connections, or
-substituting a unique IP address which is 1:1 with the DNS name that was
-looked up (module DNS wildcards). Thus, allowing the ESNIKeys in the clear
-does not make the situation significantly worse.
+In comparison to {{?I-D.kazuho-protected-sni}}, wherein DNS Resource
+Records are signed via a server private key, ESNIKeys have no
+authenticity or provenance information. This means that any attacker
+which can inject DNS responses or poison DNS caches, which is a common
+scenario in client access netowrks, can supply clients with fake
+ESNIKeys (so that the client encrypts SNI to them) or strip the
+ESNIKeys from the response. However, in the face of an attacker that
+controls DNS, no SNI encryption scheme can work because the attacker
+can replace the IP address, thus blocking client connections, or
+substituting a unique IP address which is 1:1 with the DNS name that
+was looked up (module DNS wildcards). Thus, allowing the ESNIKeys in
+the clear does not make the situation significantly worse.
 
 Clearly, DNSSEC (if the client validates and hard fails) is a defense against
 this form of attack, but DoH/DPRIVE are also defenses against DNS attacks
-by attackers on the local network, which is a common case where SNI
-encryption is useful.
+by attackers on the local network, which is a common case where SNI.
+Moreover, as noted in the introduction, SNI encryption is less useful
+without encryption of DNS queries in transit via DoH or DPRIVE mechanisms.
 
 ## Comparison Against Criteria
 
