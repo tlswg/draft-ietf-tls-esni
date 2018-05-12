@@ -273,7 +273,9 @@ an innocuous dummy one (this is required for technical conformance
 with {{!RFC7540}}; Section 9.2.) Similarly, the client MAY send an innocuous
 EncryptedSNI extension if it has no ESNI to send. If present, this
 extension MUST carry a random key label and encryption, as otherwise
-it may induce unnecessary work for servers.
+it may induce unnecessary work for servers. This makes it somewhat
+harder to determine if ESNI is in use and "greases" {{?I-D.ietf-tls-grease}}
+the use of ESNI on the network.
 
 ## Fronting Server Behavior
 
@@ -288,9 +290,9 @@ MUST first perform the following checks:
   extension and continue with the handshake. This may involve
   using the "server_name" field if one is present. This has
   two benefits: (1) allowing clients to signal presence of ESNI
-  and SNI, even if only one of them is legitimate, and (2) allowing
-  servers to gracefully handle key rotation breaking clients in
-  possession of an ESNI key.
+  and SNI, even if only one of them is legitimate, and (2) makes
+  it somewhat harder to determine which labels are valid.
+  [[TODO: this may need a bit more thinking.]]
 
 - If more than one KeyShareEntry has been provided, or if that share's
   group does not match that for the SNI encryption key, it MUST abort
