@@ -198,13 +198,10 @@ of "_esni" and the query domain name. That is, if a client queries
 example.com, the ESNI TXT name is _esni.example.com.
 Servers SHOULD configure DNS such that, upon querying a domain name
 with ESNI support, at most one A, AAAA, TXT ESNI, and ALTSVC {{?I-D.schwartz-httpbis-dns-alt-svc}} 
-Resource Record is returned. Providing more address options and ESNI keys could lead
-a client to choose an incorrect key for an address. Alt-Svc records 
-may be used to inform the client of the plaintext (fronting) SNI 
-
-Also, servers operating
-in Fronting Mode SHOULD have DNS configured to return the same A (or AAAA) 
-record for all hidden servers they service.
+Resource Record is returned. Alt-Svc records 
+may be used to inform the client of the plaintext (fronting) SNI. 
+Also, servers operating in Fronting Mode SHOULD have DNS configured to 
+return the same A (or AAAA) record for all hidden servers they service.
 
 The Resource Record TTL determines the lifetime of the published ESNI keys. 
 Clients MUST NOT use ESNI keys beyond their recommended lifetime. Note that the 
