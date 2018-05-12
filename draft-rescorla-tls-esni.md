@@ -538,7 +538,7 @@ the fronting server to communicate the true SNI to the hidden server,
 but at the cost of having that communication not be unmodified TLS 1.3.
 The basic idea is to have a shared key between the fronting server
 and the hidden server (this can be a symmetric key) and use it to
-send Z at the beginning of the connection before
+AEAD-encrypt Z and send the encrypted blob at the beginning of the connection before
 the ClientHello. The hidden server can then decrypt ESNI to recover
 the true SNI.
 
