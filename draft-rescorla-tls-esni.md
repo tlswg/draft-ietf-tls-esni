@@ -169,7 +169,7 @@ structure, defined below.
     struct {
         opaque label<0..2^8-1>;
         KeyShareEntry share;
-    } ESNIKeyShare;
+    } ESNIKeyShareEntry;
 
     struct {
         ESNIKeyShareEntry keys<4..2^16-1>;
@@ -248,7 +248,7 @@ encrypted_sni
 ## Client Behavior
 
 In order to send an encrypted SNI, the client MUST first select one of
-the server ESNIKeyShare values and generate an (EC)DHE share in the
+the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
 matching group. If multiple keys (labels) for the same IP address are available,
 clients SHOULD choose one at random. This share is then used for the client's "key_share"
 extension and will be used to derive both the SNI encryption
@@ -294,7 +294,7 @@ TLS 1.3 AEAD:
 ~~~~
 
 
-Note: future extensions may end up reusing the server's ESNIKeyShare
+Note: future extensions may end up reusing the server's ESNIKeyShareEntry
 for other purposes within the same message (e.g., encrypting other
 values). Those usages MUST have their own HKDF labels to avoid
 reuse.
