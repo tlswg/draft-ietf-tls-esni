@@ -206,7 +206,7 @@ list of keys, so each key may be used with any cipher suite.
 This structure is placed in the RRData section of a TXT record 
 as a base64-encoded string. If this encoding exceeds the 255 octet 
 limit of TXT strings, it must be split across multiple concatenated
-strings as per Section 3.1.3. of {{RFC4408}}.
+strings as per Section 3.1.3 of {{RFC4408}}.
 
 The name of each TXT record MUST match the name composed
 of \_esni and the query domain name. That is, if a client queries
@@ -220,9 +220,17 @@ Servers SHOULD configure DNS such that, upon querying a domain name
 with ESNI support, at most one each of A, AAAA, TXT ESNI, and 
 ALTSVC {{?I-D.schwartz-httpbis-dns-alt-svc}} Resource Record is 
 returned. Alt-Svc records may be used to inform the client of the 
-plaintext (fronting) SNI. Also, servers operating in Fronting Mode SHOULD 
-have DNS configured to return the same A (or AAAA) record for all hidden 
-servers they service.
+plaintext (fronting) SNI. If present, clients SHOULD use its value
+in the SNI extension of the subsequent ClientHello.
+
+Servers operating in Fronting Mode SHOULD have DNS configured to return 
+the same A (or AAAA) record for all hidden servers they service. This yields
+an anonymity set of cardinality equal to the number of hidden server domains
+supported by a given fronting server. Thus, even with SNI encryption,
+an attacker which can enumerate the set of hidden server domains supported 
+by a fronting server can guess the correct SNI with probability at least 
+1/K, where K is the size of this hidden server anonymity set. This probability
+may be increased via traffic analysis or other mechanisms.
 
 The Resource Record TTL determines the lifetime of the published ESNI keys.
 Clients MUST NOT use ESNI keys beyond their published lifetime. Note that the
