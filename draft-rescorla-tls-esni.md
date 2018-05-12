@@ -174,6 +174,7 @@ structure, defined below.
     struct {
         ESNIKeyShareEntry keys<4..2^16-1>;
         CipherSuite cipher_suites<2..2^16-2>;
+        uint16 padded_length;
     } ESNIKeys;
 ~~~~
 
@@ -185,7 +186,17 @@ share
 
 keys
 : The list of keys which can be used by the client to encrypt the SNI.
+
+padded_length
+: The length to pad the ServerNameList value to prior to encryption.
+This value SHOULD be set to the largest ServerNameList the fronting server
+expects to support rounded up the nearest multiple of 16.
 {:br}
+
+[[OPEN ISSUE: An alternative to padding is to instead send
+a hash of the server name. This would be fixed-length, but
+have the disadvantage that the server has to retain a table
+of all the server names it supports.]]
 
 The semantics of this structure are simple: any of the listed keys may
 be used to encrypt the SNI for the associated domain name.
@@ -229,7 +240,7 @@ suite
 
 encrypted_sni
 : The original ServerNameList from the "server_name" extension,
-  AEAD-encrypted using cipher suite "suite" and with the key
+  padded and AEAD-encrypted using cipher suite "suite" and with the key
   generated as described below.
 {:br}
 
@@ -258,11 +269,28 @@ follows:
    iv = HKDF-Expand-Label(Zx, "esni iv", ClientHello.Random, iv_length)
 ~~~~
 
+The client then creates a PaddedServerNameList:
+
+~~~~
+   struct {
+       ServerNameList sni;
+       opaque zeros[padding_length - length(sni)];
+   } PaddedServerNameList;
+~~~~
+
+This value consists of the serialized ServerNameList padded with
+enough zeroes to make the total structure ESNIKeys.padded_length
+bytes long. The purpose of the padding is to prevent attackers
+from using the length of the "encrypted_server_name" extension
+to determine the true SNI. If the serialized ServerNameList is
+longer than ESNIKeys.padded_length, the client MUST NOT use
+the "encrypted_server_name" extension.
+
 The EncryptedSNI.encrypted_sni value is then computed using the usual
 TLS 1.3 AEAD:
 
 ~~~~
-    encrypted_sni = AEAD-Encrypt(key, iv, "", ServerNameList)
+    encrypted_sni = AEAD-Encrypt(key, iv, "", PaddedServerNameList)
 ~~~~
 
 
@@ -300,11 +328,21 @@ MUST first perform the following checks:
   group does not match that for the SNI encryption key, it MUST abort
   the connection with an "illegal_parameter" alert.
 
+- If the length of the "encrypted_server_name" extension is
+  inconsistent with the advertised padding length (plus AEAD
+  expansion) the server MAY abort the connection with an
+  "illegal_parameter" alert without attempting to decrypt.
+
 Assuming that these checks succeed, the server then computes K_sni
 and decrypts the ServerName value. If decryption fails, the server
-MUST abort the connection with a "decrypt_error" alert. If decryption
-succeeds, the server then uses the result as if it were the
-"server_name" extension. Any actual "server_name" extension is
+MUST abort the connection with a "decrypt_error" alert.
+
+If the decrypted value's length is different from
+the advertised padding_length or the padding consists of
+any value other than 0, then the server MUST abort the
+connection with an illegal_parameter alert. Otherwise, the
+server uses the PaddedServerNameList.sni value as if it were
+the "server_name" extension. Any actual "server_name" extension is
 ignored.
 
 Upon determining the true SNI, the fronting server then either
