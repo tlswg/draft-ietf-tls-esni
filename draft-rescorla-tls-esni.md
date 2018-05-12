@@ -42,7 +42,7 @@ be used as a basis for building production systems.
 
 Although TLS 1.3 {{!I-D.ietf-tls-tls13}} encrypts most of the
 handshake, including the server certificate, there are several other
-channels that allow an on-path attacker to determine domain name the
+channels that allow an on-path attacker to determine the domain name the
 client is trying to connect to, including:
 
 * Cleartext client DNS queries.
@@ -251,7 +251,7 @@ In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShare values and generate an (EC)DHE share in the
 matching group. If multiple keys (labels) for the same IP address are available,
 clients SHOULD choose one at random. This share is then used for the client's "key_share"
-extension and will be used both to derive both the SNI encryption
+extension and will be used to derive both the SNI encryption
 key the (EC)DHE shared secret which is used in the TLS key schedule.
 This has two important implications:
 
