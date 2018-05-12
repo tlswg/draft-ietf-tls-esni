@@ -379,13 +379,19 @@ has cleaned out most such proxies.
 
 In comparison to {{?I-D.kazuho-protected-sni}}, wherein DNS Resource Records
 are signed via a server private key, ESNIKeys have no authenticity or provenance
-information. This means that any attacker which can inject DNS responses or poison 
-DNS caches can supply clients with fake ESNIKeys. This is not problematic since,
-without ESNI, a DNS poisoning attacker can force clients to connect to
-IP addresses and reveal their SNI in cleartext. Alternatively, a DNS-controlling
-attacker can strip the ESNI data from a response, thereby causing clients to 
-connect without ESNI in the usual way. Thus, doing so specifically for ESNI yields 
-no new attack vectors.
+information. This means that any attacker which can inject DNS responses or poison
+DNS caches can supply clients with fake ESNIKeys or strip the ESNIKeys from
+the response. However, in the face
+of an attacker that controls DNS, no SNI encryption scheme can work because
+the attacker can replace the IP address, thus blocking client connections, or
+substituting a unique IP address which is 1:1 with the DNS name that was
+looked up (module DNS wildcards). Thus, allowing the ESNIKeys in the clear
+does not make the situation significantly worse.
+
+Clearly, DNSSEC (if the client validates and hard fails) is a defense against
+this form of attack, but DoH/DPRIVE are also defenses against DNS attacks
+by attackers on the local network, which is a common case where SNI
+encryption is useful.
 
 ## Comparison Against Criteria
 
