@@ -193,10 +193,20 @@ The cipher suite list is orthogonal to the
 list of keys, so each key may be used with any cipher suite.
 
 This structure is placed in the RRData section of a TXT record as
-encoded above. The Resource Record TTL determines the lifetime of
-the published ESNI keys. Clients MUST NOT use ESNI keys beyond
-their published lifetime. Note that the length of this structure
-MUST NOT exceed 2^16 - 1, as the RDLENGTH is only 16 bits {{RFC1035}}.
+encoded above. The name of each TXT record MUST match the name composed
+of "_esni" and the query domain name. That is, if a client queries 
+example.com, the ESNI TXT name is _esni.example.com.
+Servers SHOULD configure DNS such that, upon querying a domain name
+with ESNI support, at most one each of A, AAAA, TXT ESNI, and ALTSVC {{?I-D.schwartz-httpbis-dns-alt-svc}} 
+Resource Record is returned. Alt-Svc records 
+may be used to inform the client of the plaintext (fronting) SNI. 
+Also, servers operating in Fronting Mode SHOULD have DNS configured to 
+return the same A (or AAAA) record for all hidden servers they service.
+
+The Resource Record TTL determines the lifetime of the published ESNI keys. 
+Clients MUST NOT use ESNI keys beyond their published lifetime. Note that the 
+length of this structure MUST NOT exceed 2^16 - 1, as the RDLENGTH is only 16 
+bits {{RFC1035}}.
 
 # The "encrypted_server_name" extension {#esni-extension}
 
