@@ -194,18 +194,18 @@ list of keys, so each key may be used with any cipher suite.
 
 This structure is placed in the RRData section of a TXT record as
 encoded above. The name of each TXT record MUST match the name composed
-of "_esni" and the query domain name. That is, if a client queries 
+of "_esni" and the query domain name. That is, if a client queries
 example.com, the ESNI TXT name is _esni.example.com.
 Servers SHOULD configure DNS such that, upon querying a domain name
-with ESNI support, at most one each of A, AAAA, TXT ESNI, and ALTSVC {{?I-D.schwartz-httpbis-dns-alt-svc}} 
-Resource Record is returned. Alt-Svc records 
-may be used to inform the client of the plaintext (fronting) SNI. 
-Also, servers operating in Fronting Mode SHOULD have DNS configured to 
+with ESNI support, at most one each of A, AAAA, TXT ESNI, and ALTSVC {{?I-D.schwartz-httpbis-dns-alt-svc}}
+Resource Record is returned. Alt-Svc records
+may be used to inform the client of the plaintext (fronting) SNI.
+Also, servers operating in Fronting Mode SHOULD have DNS configured to
 return the same A (or AAAA) record for all hidden servers they service.
 
-The Resource Record TTL determines the lifetime of the published ESNI keys. 
-Clients MUST NOT use ESNI keys beyond their published lifetime. Note that the 
-length of this structure MUST NOT exceed 2^16 - 1, as the RDLENGTH is only 16 
+The Resource Record TTL determines the lifetime of the published ESNI keys.
+Clients MUST NOT use ESNI keys beyond their published lifetime. Note that the
+length of this structure MUST NOT exceed 2^16 - 1, as the RDLENGTH is only 16
 bits {{RFC1035}}.
 
 # The "encrypted_server_name" extension {#esni-extension}
@@ -280,12 +280,7 @@ This value is placed in an "encrypted_server_name" extension.
 
 The client MAY either omit the "server_name" extension or provide
 an innocuous dummy one (this is required for technical conformance
-with {{!RFC7540}}; Section 9.2.) Similarly, the client MAY send an innocuous
-EncryptedSNI extension if it has no ESNI to send. If present, this
-extension MUST carry a random key label and encryption, as otherwise
-it may induce unnecessary work for servers. This makes it somewhat
-harder to determine if ESNI is in use and "greases" {{?I-D.ietf-tls-grease}}
-the use of ESNI on the network.
+with {{!RFC7540}}; Section 9.2.)
 
 ## Fronting Server Behavior
 
@@ -296,13 +291,10 @@ MUST first perform the following checks:
   abort the connection with a "handshake_failure" alert.
 
 - If the EncryptedSNI.label value does not correspond to any known
-  SNI encryption key, it MUST ignore the "encrypted_server_name"
-  extension and continue with the handshake. This may involve
-  using the "server_name" field if one is present. This has
-  two benefits: (1) allowing clients to signal presence of ESNI
-  and SNI, even if only one of them is legitimate, and (2) makes
-  it somewhat harder to determine which labels are valid.
-  [[TODO: this may need a bit more thinking.]]
+  SNI encryption key, it MUST abort the connection with an
+  "illegal_parameter" alert.
+  [[OPEN ISSUE: We looked at ignoring the extension but concluded
+  this was better.]]
 
 - If more than one KeyShareEntry has been provided, or if that share's
   group does not match that for the SNI encryption key, it MUST abort
