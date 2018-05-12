@@ -206,7 +206,6 @@ extension, which contains an EncryptedSNI structure:
 ~~~~
    struct {
        opaque label<0..2^8-1>;
-       opaque nonce[16];
        CipherSuite suite;
        opaque encrypted_sni<0..2^16-1>;
    } EncryptedSNI;
@@ -214,9 +213,6 @@ extension, which contains an EncryptedSNI structure:
 
 label
 : The label associated with the SNI encryption key.
-
-nonce
-: A cryptographically random 128-bit nonce
 
 suite
 : The cipher suite used to encrypt the SNI.
@@ -247,22 +243,28 @@ The SNI encryption key is computed from the DH shared secret Z as
 follows:
 
 ~~~~
-   Z_extracted = HKDF-Extract(EncryptedSNI.nonce, Z)
-   K_sni = HKDF-Expand-Label(Z_extracted, "encrypted-sni", ClientHello.Random, L)
-
-   Where L is the key length associated with the cipher suite.
+   Z_extracted = HKDF-Extract(0, Z)
+   key = HKDF-Expand-Label(Z_extracted, "esni key", ClientHello.Random, key_length)
+   iv = HKDF-Expand-Label(Z_extracted, "esni iv", ClientHello.Random, iv_length)
 ~~~~
 
-The EncryptedSNI.encrypted_sni value is then computed by:
+The EncryptedSNI.encrypted_sni value is then computed using the usual
+TLS 1.3 AEAD:
 
 ~~~~
-    encrypted_sni = AEAD-Encrypt(K_sni, 0, "", ServerNameList)
+    encrypted_sni = AEAD-Encrypt(key, iv, "", ServerNameList)
 ~~~~
 
-[[OPEN ISSUE: This is a strawman construction. We do want a
-nonce to avoid situations where the server somehow reuses
-a key, but exactly how we mix it in is TBD. Maybe in both
-places?]]
+
+Note: future extensions may end up reusing the server's ESNIKeyShare
+for other purposes within the same message (e.g., encrypting other
+values). Those usages MUST have their own HKDF labels to avoid
+reuse.
+
+[[OPEN ISSUE: If in future you were to reuse these keys for
+0-RTT priming, then you would have to worry about potentially
+expanding twice of Z_extracted. We should think about how
+to harmonize these.]]
 
 This value is placed in an "encrypted_server_name" extension.
 
