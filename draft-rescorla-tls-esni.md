@@ -243,9 +243,9 @@ The SNI encryption key is computed from the DH shared secret Z as
 follows:
 
 ~~~~
-   Z_extracted = HKDF-Extract(0, Z)
-   key = HKDF-Expand-Label(Z_extracted, "esni key", ClientHello.Random, key_length)
-   iv = HKDF-Expand-Label(Z_extracted, "esni iv", ClientHello.Random, iv_length)
+   Zx = HKDF-Extract(0, Z)
+   key = HKDF-Expand-Label(Zx, "esni key", ClientHello.Random, key_length)
+   iv = HKDF-Expand-Label(Zx, "esni iv", ClientHello.Random, iv_length)
 ~~~~
 
 The EncryptedSNI.encrypted_sni value is then computed using the usual
@@ -264,7 +264,7 @@ reuse.
 [[OPEN ISSUE: If in future you were to reuse these keys for
 0-RTT priming, then you would have to worry about potentially
 expanding twice of Z_extracted. We should think about how
-to harmonize these.]]
+to harmonize these to make sure that we maintain key separation.]]
 
 This value is placed in an "encrypted_server_name" extension.
 
