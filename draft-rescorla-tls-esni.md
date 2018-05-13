@@ -19,6 +19,13 @@ author:
        organization: RTFM, Inc.
        email: ekr@rtfm.com
 
+ -
+       ins: K. Oku
+       name: Kazuho Oku
+       organization: Fastly
+       email: kazuhooku@gmail.com
+
+
 normative:
   RFC1035:
   RFC2119:
