@@ -186,6 +186,7 @@ structure, defined below.
         uint16 padded_length;
         uint64 not_before;
         uint64 not_after;
+        Extension extensions<0..2^16-1>;
     } ESNIKeys;
 ~~~~
 
@@ -212,7 +213,9 @@ expects to support rounded up the nearest multiple of 16.
 [[OPEN ISSUE: An alternative to padding is to instead send
 a hash of the server name. This would be fixed-length, but
 have the disadvantage that the server has to retain a table
-of all the server names it supports.]]
+of all the server names it supports, and will not work if
+the mapping between the fronting server and the hidden server
+uses wildcards.]]
 
 not_before
 : The moment when the keys become valid for use. The value is represented
@@ -221,6 +224,13 @@ as seconds from 00:00:00 UTC on Jan 1 1970, not including leap seconds.
 not_after
 : The moment when the keys become invalid. Uses the same unit as
 not_before.
+
+extensions
+: A list of extensions that the client can take into consideration when
+generating a Client Hello message. The format is defined in
+{{I-D.ietf-tls-tls13}}; Section 4.2. The purpose of the field is to
+provide room for additional features in the future; this document does
+not define any extension.
 
 The semantics of this structure are simple: any of the listed keys may
 be used to encrypt the SNI for the associated domain name.
