@@ -204,7 +204,9 @@ expects to support rounded up the nearest multiple of 16.
 [[OPEN ISSUE: An alternative to padding is to instead send
 a hash of the server name. This would be fixed-length, but
 have the disadvantage that the server has to retain a table
-of all the server names it supports.]]
+of all the server names it supports, and will not work if
+the mapping between the fronting server and the hidden server
+uses wildcards.]]
 
 extensions
 : A list of extensions that the client can take into consideration when
