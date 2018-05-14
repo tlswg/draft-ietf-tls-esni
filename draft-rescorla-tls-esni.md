@@ -245,8 +245,14 @@ The encrypted SNI is carried in an "encrypted_server_name"
 extension, which contains an EncryptedSNI structure:
 
 ~~~~
+   // Copied from TLS 1.3
+   struct {
+       NamedGroup named_group_list<2..2^16-1>;
+   } NamedGroupList;
+
    struct {
        opaque label<0..2^8-1>;
+       NamedGroupList offered_groups;
        CipherSuite suite;
        opaque encrypted_sni<0..2^16-1>;
    } EncryptedSNI;
@@ -254,6 +260,10 @@ extension, which contains an EncryptedSNI structure:
 
 label
 : The label associated with the SNI encryption key.
+
+offered_groups
+: The list of named groups offered by the SNI encryption key, in the order
+  they were offered.
 
 suite
 : The cipher suite used to encrypt the SNI.
@@ -342,6 +352,11 @@ MUST first perform the following checks:
   "illegal_parameter" alert.
   [[OPEN ISSUE: We looked at ignoring the extension but concluded
   this was better.]]
+
+- If the list of the Named Groups provided by EncryptedSNI.offered_groups
+  does not exactly match the named groups that were offered by the SNI
+  encryption key identified by the label, it MUST abort the connection
+  with an "illegal_parameter" alert.
 
 - If more than one KeyShareEntry has been provided, or if that share's
   group does not match that for the SNI encryption key, it MUST abort
