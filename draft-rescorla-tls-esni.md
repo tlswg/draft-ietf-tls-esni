@@ -175,24 +175,18 @@ structure, defined below.
 
     struct {
         opaque label<0..2^8-1>;
-        KeyShareEntry share;
-    } ESNIKeyShareEntry;
-
-    struct {
-        ESNIKeyShareEntry keys<4..2^16-1>;
+        KeyShareEntry keys<4..2^16-1>;
         CipherSuite cipher_suites<2..2^16-2>;
         uint16 padded_length;
     } ESNIKeys;
 ~~~~
 
 label
-: An opaque label to use for a given key.
-
-share
-: An (EC)DH key share (attached to the label)
+: An opaque label used to identify the list of keys.
 
 keys
 : The list of keys which can be used by the client to encrypt the SNI.
+Every key being listed MUST belong to a different group.
 
 padded_length
 : The length to pad the ServerNameList value to prior to encryption.
@@ -275,8 +269,7 @@ encrypted_sni
 
 In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
-matching group. If multiple keys (labels) for the same IP address are available,
-clients SHOULD choose one at random. This share is then used for the client's "key_share"
+matching group. This share is then used for the client's "key_share"
 extension and will be used to derive both the SNI encryption
 key the (EC)DHE shared secret which is used in the TLS key schedule.
 This has two important implications:
@@ -487,7 +480,8 @@ Server operators may partition their private keys however they see fit provided
 each server behind an IP address has the corresponding private key to decrypt
 a key. Thus, when one ESNI key is provided, sharing is optimally bound by the number
 of hosts that share an IP address. Server operators may further limit sharing
-by including multiple keys, with distinct labels, in an ESNIKeys structure.
+by sending different Resource Records containing ESNIKeys with different keys
+covered by different labels using a short TTL.
 
 ### Prevent SNI-based DoS attacks
 
