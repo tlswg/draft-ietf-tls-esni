@@ -182,6 +182,7 @@ structure, defined below.
         ESNIKeyShareEntry keys<4..2^16-1>;
         CipherSuite cipher_suites<2..2^16-2>;
         uint16 padded_length;
+        Extension extensions<0..2^16-1>;
     } ESNIKeys;
 ~~~~
 
@@ -204,6 +205,13 @@ expects to support rounded up the nearest multiple of 16.
 a hash of the server name. This would be fixed-length, but
 have the disadvantage that the server has to retain a table
 of all the server names it supports.]]
+
+extensions
+: A list of extensions that the client can take into consideration when
+generating a Client Hello message. The format is defined in
+{{I-D.ietf-tls-tls13}}; Section 4.2. The purpose of the field is to
+provide room for additional features in the future; this document does
+not define any extension.
 
 The semantics of this structure are simple: any of the listed keys may
 be used to encrypt the SNI for the associated domain name.
