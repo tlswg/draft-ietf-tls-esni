@@ -182,6 +182,8 @@ structure, defined below.
         ESNIKeyShareEntry keys<4..2^16-1>;
         CipherSuite cipher_suites<2..2^16-2>;
         uint16 padded_length;
+        uint64 not_before;
+        uint64 not_after;
     } ESNIKeys;
 ~~~~
 
@@ -204,6 +206,14 @@ expects to support rounded up the nearest multiple of 16.
 a hash of the server name. This would be fixed-length, but
 have the disadvantage that the server has to retain a table
 of all the server names it supports.]]
+
+not_before
+: The moment when the keys become valid for use. The value is represented
+as seconds from 00:00:00 UTC on Jan 1 1970, not including leap seconds.
+
+not_after
+: The moment when the keys become invalid. Uses the same unit as
+not_before.
 
 The semantics of this structure are simple: any of the listed keys may
 be used to encrypt the SNI for the associated domain name.
@@ -240,10 +250,14 @@ by a fronting server can guess the correct SNI with probability at least
 1/K, where K is the size of this hidden server anonymity set. This probability
 may be increased via traffic analysis or other mechanisms.
 
-The Resource Record TTL determines the lifetime of the published ESNI keys.
-Clients MUST NOT use ESNI keys beyond their published lifetime. Note that the
-length of this structure MUST NOT exceed 2^16 - 1, as the RDLENGTH is only 16
-bits {{RFC1035}}.
+"not_before" and "not_after" fields represent the validity period of the
+published ESNI keys. Clients MUST NOT use ESNI keys beyond the published
+period. Servers SHOULD set the Resource Record TTL small enough so that the
+record gets discarded by the cache before the ESNI keys reach the end of
+their validity period.
+
+Note that the length of this structure MUST NOT exceed 2^16 - 1, as the
+RDLENGTH is only 16 bits {{RFC1035}}.
 
 # The "encrypted_server_name" extension {#esni-extension}
 
