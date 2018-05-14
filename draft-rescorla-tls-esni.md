@@ -29,6 +29,7 @@ author:
 normative:
   RFC1035:
   RFC2119:
+  RFC6234:
 
 informative:
 
@@ -174,15 +175,24 @@ structure, defined below.
     } KeyShareEntry;
 
     struct {
+        uint8 checksum[4];
         opaque label<0..2^8-1>;
         KeyShareEntry keys<4..2^16-1>;
         CipherSuite cipher_suites<2..2^16-2>;
         uint16 padded_length;
+        uint64 not_before;
+        uint64 not_after;
+        Extension extensions<0..2^16-1>;
     } ESNIKeys;
 ~~~~
 
 label
 : An opaque label used to identify the list of keys.
+
+checksum
+: First four (4) octets of the SHA-256 message digest {{RFC6234}} of the
+ESNIKeys structure starting from the first octet of "keys" to the end of
+the stucture.
 
 keys
 : The list of keys which can be used by the client to encrypt the SNI.
@@ -197,7 +207,24 @@ expects to support rounded up the nearest multiple of 16.
 [[OPEN ISSUE: An alternative to padding is to instead send
 a hash of the server name. This would be fixed-length, but
 have the disadvantage that the server has to retain a table
-of all the server names it supports.]]
+of all the server names it supports, and will not work if
+the mapping between the fronting server and the hidden server
+uses wildcards.]]
+
+not_before
+: The moment when the keys become valid for use. The value is represented
+as seconds from 00:00:00 UTC on Jan 1 1970, not including leap seconds.
+
+not_after
+: The moment when the keys become invalid. Uses the same unit as
+not_before.
+
+extensions
+: A list of extensions that the client can take into consideration when
+generating a Client Hello message. The format is defined in
+{{I-D.ietf-tls-tls13}}; Section 4.2. The purpose of the field is to
+provide room for additional features in the future; this document does
+not define any extension.
 
 The semantics of this structure are simple: any of the listed keys may
 be used to encrypt the SNI for the associated domain name.
@@ -234,10 +261,18 @@ by a fronting server can guess the correct SNI with probability at least
 1/K, where K is the size of this hidden server anonymity set. This probability
 may be increased via traffic analysis or other mechanisms.
 
-The Resource Record TTL determines the lifetime of the published ESNI keys.
-Clients MUST NOT use ESNI keys beyond their published lifetime. Note that the
-length of this structure MUST NOT exceed 2^16 - 1, as the RDLENGTH is only 16
-bits {{RFC1035}}.
+The "checksum" field provides protection against transmission errors,
+including those caused by intermediaries such as a DNS proxy running on a
+home router.
+"not_before" and "not_after" fields represent the validity period of the
+published ESNI keys. Clients MUST NOT use ESNI keys that was covered by an
+invalid checksum or beyond the published
+period. Servers SHOULD set the Resource Record TTL small enough so that the
+record gets discarded by the cache before the ESNI keys reach the end of
+their validity period.
+
+Note that the length of this structure MUST NOT exceed 2^16 - 1, as the
+RDLENGTH is only 16 bits {{RFC1035}}.
 
 # The "encrypted_server_name" extension {#esni-extension}
 
