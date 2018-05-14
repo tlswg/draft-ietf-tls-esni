@@ -29,6 +29,7 @@ author:
 normative:
   RFC1035:
   RFC2119:
+  RFC6234:
 
 informative:
 
@@ -179,6 +180,7 @@ structure, defined below.
     } ESNIKeyShareEntry;
 
     struct {
+        uint8 checksum[4];
         ESNIKeyShareEntry keys<4..2^16-1>;
         CipherSuite cipher_suites<2..2^16-2>;
         uint16 padded_length;
@@ -192,6 +194,11 @@ label
 
 share
 : An (EC)DH key share (attached to the label)
+
+checksum
+: First four (4) octets of the SHA-256 message digest {{RFC6234}} of the
+ESNIKeys structure starting from the first octet of "keys" to the end of
+the stucture.
 
 keys
 : The list of keys which can be used by the client to encrypt the SNI.
@@ -250,8 +257,12 @@ by a fronting server can guess the correct SNI with probability at least
 1/K, where K is the size of this hidden server anonymity set. This probability
 may be increased via traffic analysis or other mechanisms.
 
+The "checksum" field provides protection against transmission errors,
+including those caused by intermediaries such as a DNS proxy running on a
+home router.
 "not_before" and "not_after" fields represent the validity period of the
-published ESNI keys. Clients MUST NOT use ESNI keys beyond the published
+published ESNI keys. Clients MUST NOT use ESNI keys that was covered by an
+invalid checksum or beyond the published
 period. Servers SHOULD set the Resource Record TTL small enough so that the
 record gets discarded by the cache before the ESNI keys reach the end of
 their validity period.
