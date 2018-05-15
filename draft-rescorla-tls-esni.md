@@ -280,11 +280,6 @@ The encrypted SNI is carried in an "encrypted_server_name"
 extension, which contains an EncryptedSNI structure:
 
 ~~~~
-   // Copied from TLS 1.3
-   struct {
-       NamedGroup named_group_list<2..2^16-1>;
-   } NamedGroupList;
-
    struct {
        opaque label<0..2^8-1>;
        CipherSuite suite;
