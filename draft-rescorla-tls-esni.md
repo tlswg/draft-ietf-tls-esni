@@ -287,8 +287,8 @@ extension, which contains an EncryptedSNI structure:
 
    struct {
        opaque label<0..2^8-1>;
-       NamedGroupList offered_groups;
        CipherSuite suite;
+       opaque record_digest<0..2^16-1>;
        opaque encrypted_sni<0..2^16-1>;
    } EncryptedSNI;
 ~~~~
@@ -296,9 +296,10 @@ extension, which contains an EncryptedSNI structure:
 label
 : The label associated with the SNI encryption key.
 
-offered_groups
-: The list of named groups offered by the SNI encryption key, in the order
-  they were offered.
+record_digest
+: A cryptographic hash of the ESNIKeys structure from which the label and ESNI 
+key was obtained, i.e., from "checksum" to the end of the structure. 
+This hash is computed using the hash function associated with `suite`. 
 
 suite
 : The cipher suite used to encrypt the SNI.
@@ -308,7 +309,6 @@ encrypted_sni
   padded and AEAD-encrypted using cipher suite "suite" and with the key
   generated as described below.
 {:br}
-
 
 ## Client Behavior
 
@@ -388,10 +388,9 @@ MUST first perform the following checks:
   [[OPEN ISSUE: We looked at ignoring the extension but concluded
   this was better.]]
 
-- If the list of the Named Groups provided by EncryptedSNI.offered_groups
-  does not exactly match the named groups that were offered by the SNI
-  encryption key identified by the label, it MUST abort the connection
-  with an "illegal_parameter" alert.
+- If the EncryptedSNI.record_digest value does not match the cryptographic
+  hash of the associated ENSIKeys structure, it MUST abort the connection with
+  an "illegal_parameter" alert. This is necessary to prevent downgrade attacks.
 
 - If more than one KeyShareEntry has been provided, or if that share's
   group does not match that for the SNI encryption key, it MUST abort
