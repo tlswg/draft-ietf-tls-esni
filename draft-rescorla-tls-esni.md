@@ -240,7 +240,7 @@ list of keys, so each key may be used with any cipher suite.
 This structure is placed in the RRData section of a TXT record 
 as a base64-encoded string. If this encoding exceeds the 255 octet 
 limit of TXT strings, it must be split across multiple concatenated
-strings as per Section 3.1.3 of {{RFC4408}}.
+strings as per Section 3.1.3 of {{!RFC4408}}.
 
 The name of each TXT record MUST match the name composed
 of \_esni and the query domain name. That is, if a client queries
