@@ -176,7 +176,6 @@ structure, defined below.
 
     struct {
         uint8 checksum[4];
-        opaque label<0..2^8-1>;
         KeyShareEntry keys<4..2^16-1>;
         CipherSuite cipher_suites<2..2^16-2>;
         uint16 padded_length;
@@ -185,9 +184,6 @@ structure, defined below.
         Extension extensions<0..2^16-1>;
     } ESNIKeys;
 ~~~~
-
-label
-: An opaque label used to identify the list of keys.
 
 checksum
 : First four (4) octets of the SHA-256 message digest {{RFC6234}} of the
@@ -281,18 +277,14 @@ extension, which contains an EncryptedSNI structure:
 
 ~~~~
    struct {
-       opaque label<0..2^8-1>;
        CipherSuite suite;
        opaque record_digest<0..2^16-1>;
        opaque encrypted_sni<0..2^16-1>;
    } EncryptedSNI;
 ~~~~
 
-label
-: The label associated with the SNI encryption key.
-
 record_digest
-: A cryptographic hash of the ESNIKeys structure from which the label and ESNI 
+: A cryptographic hash of the ESNIKeys structure from which the ESNI
 key was obtained, i.e., from "checksum" to the end of the structure. 
 This hash is computed using the hash function associated with `suite`. 
 
@@ -377,15 +369,11 @@ MUST first perform the following checks:
 - If it is unable to negotiate TLS 1.3 or greater, it MUST
   abort the connection with a "handshake_failure" alert.
 
-- If the EncryptedSNI.label value does not correspond to any known
-  SNI encryption key, it MUST abort the connection with an
-  "illegal_parameter" alert.
+- If the EncryptedSNI.record_digest value does not match the cryptographic
+  hash of any known ENSIKeys structure, it MUST abort the connection with
+  an "illegal_parameter" alert. This is necessary to prevent downgrade attacks.
   [[OPEN ISSUE: We looked at ignoring the extension but concluded
   this was better.]]
-
-- If the EncryptedSNI.record_digest value does not match the cryptographic
-  hash of the associated ENSIKeys structure, it MUST abort the connection with
-  an "illegal_parameter" alert. This is necessary to prevent downgrade attacks.
 
 - If more than one KeyShareEntry has been provided, or if that share's
   group does not match that for the SNI encryption key, it MUST abort
@@ -525,18 +513,18 @@ each server behind an IP address has the corresponding private key to decrypt
 a key. Thus, when one ESNI key is provided, sharing is optimally bound by the number
 of hosts that share an IP address. Server operators may further limit sharing
 by sending different Resource Records containing ESNIKeys with different keys
-covered by different labels using a short TTL.
+using a short TTL.
 
 ### Prevent SNI-based DoS attacks
 
 This design requires servers to decrypt ClientHello messages with EncryptedSNI
-extensions carrying valid labels. Thus, it is possible for an attacker to force
+extensions carrying valid digests. Thus, it is possible for an attacker to force
 decryption operations on the server. This attack is bound by the number of
 valid TCP connections an attacker can open.
 
 ### Do not stick out
 
-By sending SNI and ESNI values (with illegitimate labels), or by sending
+By sending SNI and ESNI values (with illegitimate digests), or by sending
 legitimate ESNI values for and "fake" SNI values, clients do not display
 clear signals of ESNI intent to passive eavesdroppers. As more clients
 enable ESNI support, e.g., as normal part of Web browser functionality,
