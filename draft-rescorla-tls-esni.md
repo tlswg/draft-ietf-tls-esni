@@ -175,13 +175,9 @@ structure, defined below.
     } KeyShareEntry;
 
     struct {
-        opaque label<0..2^8-1>;
-        KeyShareEntry share;
-    } ESNIKeyShareEntry;
-
-    struct {
         uint8 checksum[4];
-        ESNIKeyShareEntry keys<4..2^16-1>;
+        opaque label<0..2^8-1>;
+        KeyShareEntry keys<4..2^16-1>;
         CipherSuite cipher_suites<2..2^16-2>;
         uint16 padded_length;
         uint64 not_before;
@@ -191,10 +187,7 @@ structure, defined below.
 ~~~~
 
 label
-: An opaque label to use for a given key.
-
-share
-: An (EC)DH key share (attached to the label)
+: An opaque label used to identify the list of keys.
 
 checksum
 : First four (4) octets of the SHA-256 message digest {{RFC6234}} of the
@@ -203,6 +196,7 @@ the stucture.
 
 keys
 : The list of keys which can be used by the client to encrypt the SNI.
+Every key being listed MUST belong to a different group.
 
 padded_length
 : The length to pad the ServerNameList value to prior to encryption.
@@ -291,12 +285,18 @@ extension, which contains an EncryptedSNI structure:
    struct {
        opaque label<0..2^8-1>;
        CipherSuite suite;
+       opaque record_digest<0..2^16-1>;
        opaque encrypted_sni<0..2^16-1>;
    } EncryptedSNI;
 ~~~~
 
 label
 : The label associated with the SNI encryption key.
+
+record_digest
+: A cryptographic hash of the ESNIKeys structure from which the label and ESNI 
+key was obtained, i.e., from "checksum" to the end of the structure. 
+This hash is computed using the hash function associated with `suite`. 
 
 suite
 : The cipher suite used to encrypt the SNI.
@@ -307,13 +307,11 @@ encrypted_sni
   generated as described below.
 {:br}
 
-
 ## Client Behavior
 
 In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
-matching group. If multiple keys (labels) for the same IP address are available,
-clients SHOULD choose one at random. This share is then used for the client's "key_share"
+matching group. This share is then used for the client's "key_share"
 extension and will be used to derive both the SNI encryption
 key the (EC)DHE shared secret which is used in the TLS key schedule.
 This has two important implications:
@@ -386,6 +384,10 @@ MUST first perform the following checks:
   "illegal_parameter" alert.
   [[OPEN ISSUE: We looked at ignoring the extension but concluded
   this was better.]]
+
+- If the EncryptedSNI.record_digest value does not match the cryptographic
+  hash of the associated ENSIKeys structure, it MUST abort the connection with
+  an "illegal_parameter" alert. This is necessary to prevent downgrade attacks.
 
 - If more than one KeyShareEntry has been provided, or if that share's
   group does not match that for the SNI encryption key, it MUST abort
@@ -524,7 +526,8 @@ Server operators may partition their private keys however they see fit provided
 each server behind an IP address has the corresponding private key to decrypt
 a key. Thus, when one ESNI key is provided, sharing is optimally bound by the number
 of hosts that share an IP address. Server operators may further limit sharing
-by including multiple keys, with distinct labels, in an ESNIKeys structure.
+by sending different Resource Records containing ESNIKeys with different keys
+covered by different labels using a short TTL.
 
 ### Prevent SNI-based DoS attacks
 
