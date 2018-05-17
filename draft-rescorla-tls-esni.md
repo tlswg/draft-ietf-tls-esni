@@ -244,10 +244,9 @@ example.com, the ESNI TXT Resource Record might be:
 _esni.example.com. 60S IN TXT "..." "..."
 ~~~
 
-Servers MUST ensure that, if multiple A, AAAA or
-ALTSVC {{?I-D.schwartz-httpbis-dns-alt-svc}} records are returned for a domain
-with ESNI support, all the servers pointed to by those records are able to
-handle the keys returned as part of a ESNI TXT record for that domain.
+Servers MUST ensure that, if multiple A or AAAA records are returned for a
+domain with ESNI support, all the servers pointed to by those records are
+able to handle the keys returned as part of a ESNI TXT record for that domain.
 
 Alt-Svc records may be used to inform the client of the 
 plaintext (fronting) SNI. If present, clients SHOULD use its value
