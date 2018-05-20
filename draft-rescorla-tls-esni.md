@@ -234,7 +234,7 @@ list of keys, so each key may be used with any cipher suite.
 This structure is placed in the RRData section of a TXT record 
 as a base64-encoded string. If this encoding exceeds the 255 octet 
 limit of TXT strings, it must be split across multiple concatenated
-strings as per Section 3.1.3 of {{RFC4408}}.
+strings as per Section 3.1.3 of {{!RFC4408}}.
 
 The name of each TXT record MUST match the name composed
 of \_esni and the query domain name. That is, if a client queries
@@ -244,10 +244,11 @@ example.com, the ESNI TXT Resource Record might be:
 _esni.example.com. 60S IN TXT "..." "..."
 ~~~
 
-Servers SHOULD configure DNS such that, upon querying a domain name
-with ESNI support, at most one each of A, AAAA, TXT ESNI, and 
-ALTSVC {{?I-D.schwartz-httpbis-dns-alt-svc}} Resource Record is 
-returned. Alt-Svc records may be used to inform the client of the 
+Servers MUST ensure that, if multiple A or AAAA records are returned for a
+domain with ESNI support, all the servers pointed to by those records are
+able to handle the keys returned as part of a ESNI TXT record for that domain.
+
+Alt-Svc records may be used to inform the client of the 
 plaintext (client-facing) SNI. If present, clients SHOULD use its value
 in the SNI extension of the subsequent ClientHello.
 
@@ -280,11 +281,6 @@ The encrypted SNI is carried in an "encrypted_server_name"
 extension, which contains an EncryptedSNI structure:
 
 ~~~~
-   // Copied from TLS 1.3
-   struct {
-       NamedGroup named_group_list<2..2^16-1>;
-   } NamedGroupList;
-
    struct {
        opaque label<0..2^8-1>;
        CipherSuite suite;
