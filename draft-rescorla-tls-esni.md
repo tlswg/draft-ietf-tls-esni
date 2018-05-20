@@ -97,7 +97,7 @@ when, and only when, they appear in all capitals, as shown here.
 # Overview
 
 This document is designed to operate in one of two primary topologies
-shown below, which we call "Shared Mode" and "Fronting Mode"
+shown below, which we call "Shared Mode" and "Split Mode"
 
 ## Topologies
 
@@ -127,11 +127,11 @@ Client <------------------------------------>|                    |
                 | public.example.com |       | hidden.example.com |
                 |                    |       |                    |
                 +--------------------+       +--------------------+
-                    Fronting Server               Hidden Server
+                  Client-Facing Server            Hidden Server
 ~~~~
-{: #fronting-mode title="Fronting Mode Topology"}
+{: #split-mode title="Split Mode Topology"}
 
-In Fronting Mode, the provider is *not* the origin server for hidden
+In Split Mode, the provider is *not* the origin server for hidden
 domains. Rather the DNS records for hidden domains point to the provider,
 but the provider's server just relays the connection back to the
 hidden server, which is the true origin server. The provider does
@@ -148,8 +148,8 @@ server.
 The protocol designed in this document is quite straightforward.
 
 First, the provider publishes a public key which is used for SNI encryption
-for all the domains which it serves or fronts for. This document
-defines a publication mechanism using DNS, but other mechanisms
+for all the domains for which it serves directly or indirectly (via Split mode).
+This document defines a publication mechanism using DNS, but other mechanisms
 are also possible. In particular, if some of the clients of
 a hidden server are applications rather than Web browsers, those
 applications might have the public key preconfigured.
@@ -160,7 +160,7 @@ served by an ESNI-supporting provider, it replaces the
 extension, which contains the true extension encrypted under the
 provider's public key. The provider can then decrypt the extension
 and either terminate the connection (in Shared Mode) or forward
-it to the hidden server (in Fronting Mode).
+it to the hidden server (in Split Mode).
 
 # Publishing the SNI Encryption Key {#publishing-key}
 
@@ -200,7 +200,7 @@ Every key being listed MUST belong to a different group.
 
 padded_length
 : The length to pad the ServerNameList value to prior to encryption.
-This value SHOULD be set to the largest ServerNameList the fronting server
+This value SHOULD be set to the largest ServerNameList the server
 expects to support rounded up the nearest multiple of 16.
 {:br}
 
@@ -208,8 +208,8 @@ expects to support rounded up the nearest multiple of 16.
 a hash of the server name. This would be fixed-length, but
 have the disadvantage that the server has to retain a table
 of all the server names it supports, and will not work if
-the mapping between the fronting server and the hidden server
-uses wildcards.]]
+the mapping between the client-facing server and hidden 
+server uses wildcards.]]
 
 not_before
 : The moment when the keys become valid for use. The value is represented
@@ -248,16 +248,16 @@ Servers SHOULD configure DNS such that, upon querying a domain name
 with ESNI support, at most one each of A, AAAA, TXT ESNI, and 
 ALTSVC {{?I-D.schwartz-httpbis-dns-alt-svc}} Resource Record is 
 returned. Alt-Svc records may be used to inform the client of the 
-plaintext (fronting) SNI. If present, clients SHOULD use its value
+plaintext (client-facing) SNI. If present, clients SHOULD use its value
 in the SNI extension of the subsequent ClientHello.
 
 Clients obtain these records by querying DNS for hidden server domains.
-Thus, servers operating in Fronting Mode SHOULD have DNS configured to return 
+Thus, servers operating in Split Mode SHOULD have DNS configured to return 
 the same A (or AAAA) record for all hidden servers they service. This yields
 an anonymity set of cardinality equal to the number of hidden server domains
-supported by a given fronting server. Thus, even with SNI encryption,
+supported by a given client-facing server. Thus, even with SNI encryption,
 an attacker which can enumerate the set of hidden server domains supported 
-by a fronting server can guess the correct SNI with probability at least 
+by a client-facing server can guess the correct SNI with probability at least 
 1/K, where K is the size of this hidden server anonymity set. This probability
 may be increased via traffic analysis or other mechanisms.
 
@@ -374,7 +374,7 @@ The client MAY either omit the "server_name" extension or provide
 an innocuous dummy one (this is required for technical conformance
 with {{!RFC7540}}; Section 9.2.)
 
-## Fronting Server Behavior
+## Split Server Behavior
 
 Upon receiving an "encrypted_server_name" extension, the server
 MUST first perform the following checks:
@@ -413,10 +413,10 @@ server uses the PaddedServerNameList.sni value as if it were
 the "server_name" extension. Any actual "server_name" extension is
 ignored.
 
-Upon determining the true SNI, the fronting server then either
+Upon determining the true SNI, the client-facing server then either
 serves the connection directly (if in Shared Mode), in which case
 it executes the steps in the following section, or forwards
-the TLS connection to the hidden server (if in Fronting Mode).
+the TLS connection to the hidden server (if in Split Mode).
 
 
 ## Hidden Server Behavior
@@ -424,7 +424,7 @@ the TLS connection to the hidden server (if in Fronting Mode).
 The Hidden Server ignores both the "encrypted_server_name" and the
 "server_name" (if any) and completes the handshake as usual. If in
 Shared Mode, the server will still know the true SNI, and can use it
-for certificate selection. In Fronting Mode, it may not know the true
+for certificate selection. In Split Mode, it may not know the true
 SNI and so will generally be configured to use a single certificate
 {{communicating-sni}} describes a mechanism for communicating the
 true SNI to the hidden server.
@@ -459,11 +459,11 @@ from the DNS results, if one is provided.
 A more serious problem is MITM proxies which do not support this
 extension. {{I-D.ietf-tls-tls13}}; Section 9.3 requires that
 such proxies remove any extensions they do not understand.
-This will have one of two results when connecting to the fronting
+This will have one of two results when connecting to the client-facing
 server:
 
-1. The handshake will fail if the fronting server requires SNI.
-2. The handshake will succeed with the fronting server's default
+1. The handshake will fail if the client-facing server requires SNI.
+2. The handshake will succeed with the client-facing server's default
    certificate.
 
 A Web client client can securely detect case (2) because it will result
@@ -472,12 +472,12 @@ but which is signed by a certificate which does not chain
 to a publicly known trust anchor. The client can detect this
 case and disable ESNI while in that network configuration.
 
-In order to enable this mechanism, fronting servers SHOULD NOT
+In order to enable this mechanism, client-facing servers SHOULD NOT
 require SNI, but rather respond with some default certificate.
 
 A non-conformant MITM proxy will forward the ESNI extension,
 substituting its own KeyShare value, with the result that
-the fronting server will not be able to decrypt the SNI.
+the client-facing server will not be able to decrypt the SNI.
 This causes a hard failure. Detecting this case is difficult,
 but clients might opt to attempt captive portal detection
 to see if they are in the presence of a MITM proxy, and if
@@ -559,13 +559,13 @@ RECOMMEMDED that servers rotate keys frequently.
 
 ### Proper security context
 
-This design permits servers operating in Fronting Mode to forward connections
+This design permits servers operating in Split Mode to forward connections
 directly to hidden origin servers, thereby avoiding unnecessary MiTM attacks.
 
-### Fronting server spoofing
+### Split server spoofing
 
 Assuming ESNIKeys retrieved from DNS are validated, e.g., via DNSSEC or fetched
-from a trusted Recursive Resolver, spoofing a server operating in Fronting Mode
+from a trusted Recursive Resolver, spoofing a server operating in Split Mode
 is not possible. See {{cleartext-dns}} for more details regarding cleartext
 DNS.
 
@@ -601,18 +601,18 @@ This document has no IANA actions.
 
 # Communicating SNI to Hidden Server {#communicating-sni}
 
-As noted in {{hidden-server-behavior}}, in Fronting Mode the hidden
+As noted in {{hidden-server-behavior}}, in Split Mode the hidden
 server will generally not know the true SNI. It is possible for
-the fronting server to communicate the true SNI to the hidden server,
+the client-facing server to communicate the true SNI to the hidden server,
 but at the cost of having that communication not be unmodified TLS 1.3.
-The basic idea is to have a shared key between the fronting server
+The basic idea is to have a shared key between the client-facing server
 and the hidden server (this can be a symmetric key) and use it to
 AEAD-encrypt Z and send the encrypted blob at the beginning of the connection before
 the ClientHello. The hidden server can then decrypt ESNI to recover
 the true SNI.
 
-An obvious alternative here would be to have the fronting server
-forward the true SNI, but that would allow the fronting server to
+An obvious alternative here would be to have the client-facing server
+forward the true SNI, but that would allow the client-facing server to
 lie. In this design, the attacker would need to be able to find a
 Z which would expand into a key that would validly AEAD-encrypt
 a message of his choice, which should be intractable (Hand-waving alert!).
@@ -634,11 +634,11 @@ advantages:
 
 It also has the following disadvantages:
 
-- The fronting server can still see the other extensions. By
+- The client-facing server can still see the other extensions. By
   contrast we could introduce another EncryptedExtensions
   block that was encrypted to the hidden server and not
-  the fronting server.
-- It requires a mechanism for the fronting server to provide the
+  the client-facing server.
+- It requires a mechanism for the client-facing server to provide the
   extension-encryption key to the hidden server (as in {{communicating-sni}}
   and thus cannot be used with an unmodified hidden server.
 - A conformant middlebox will strip every extension, which might
