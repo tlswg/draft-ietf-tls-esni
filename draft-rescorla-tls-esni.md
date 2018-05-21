@@ -304,7 +304,7 @@ In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
 matching group. This share is then used for the client's "key_share"
 extension and will be used to derive both the SNI encryption
-key the (EC)DHE shared secret which is used in the TLS key schedule.
+key and the (EC)DHE shared secret which is used in the TLS key schedule.
 This has two important implications:
 
 - The client MUST only provide one KeyShareEntry
