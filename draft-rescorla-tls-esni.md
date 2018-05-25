@@ -195,9 +195,11 @@ keys
 Every key being listed MUST belong to a different group.
 
 padded_length
-: The length to pad the ServerNameList value to prior to encryption.
-This value SHOULD be set to the largest ServerNameList the server
-expects to support rounded up the nearest multiple of 16.
+: 
+The length to pad the ServerNameList value to prior to encryption. 
+This value SHOULD be set to the largest ServerNameList the server 
+expects to support rounded up the nearest multiple of 16. If the 
+server supports wildcard names, it SHOULD set this value to 256.
 {:br}
 
 [[OPEN ISSUE: An alternative to padding is to instead send
