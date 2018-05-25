@@ -188,7 +188,7 @@ structure, defined below.
 checksum
 : First four (4) octets of the SHA-256 message digest {{RFC6234}} of the
 ESNIKeys structure starting from the first octet of "keys" to the end of
-the stucture.
+the structure.
 
 keys
 : The list of keys which can be used by the client to encrypt the SNI.
@@ -200,14 +200,6 @@ The length to pad the ServerNameList value to prior to encryption.
 This value SHOULD be set to the largest ServerNameList the server 
 expects to support rounded up the nearest multiple of 16. If the 
 server supports wildcard names, it SHOULD set this value to 256.
-{:br}
-
-[[OPEN ISSUE: An alternative to padding is to instead send
-a hash of the server name. This would be fixed-length, but
-have the disadvantage that the server has to retain a table
-of all the server names it supports, and will not work if
-the mapping between the client-facing server and hidden 
-server uses wildcards.]]
 
 not_before
 : The moment when the keys become valid for use. The value is represented
@@ -364,10 +356,10 @@ The client MAY either omit the "server_name" extension or provide
 an innocuous dummy one (this is required for technical conformance
 with {{!RFC7540}}; Section 9.2.)
 
-## Split Server Behavior
+## Client-Facing Server Behavior
 
-Upon receiving an "encrypted_server_name" extension, the server
-MUST first perform the following checks:
+Upon receiving an "encrypted_server_name" extension, the client-facing 
+server MUST first perform the following checks:
 
 - If it is unable to negotiate TLS 1.3 or greater, it MUST
   abort the connection with a "handshake_failure" alert.
@@ -387,7 +379,7 @@ MUST first perform the following checks:
   expansion) the server MAY abort the connection with an
   "illegal_parameter" alert without attempting to decrypt.
 
-Assuming that these checks succeed, the server then computes K_sni
+Assuming these checks succeed, the server then computes K_sni
 and decrypts the ServerName value. If decryption fails, the server
 MUST abort the connection with a "decrypt_error" alert.
 
@@ -404,20 +396,29 @@ serves the connection directly (if in Shared Mode), in which case
 it executes the steps in the following section, or forwards
 the TLS connection to the hidden server (if in Split Mode).
 
+## Shared Mode Hidden Server Behavior
 
-## Hidden Server Behavior
+A server operating in Shared Mode uses PaddedServerNameList.sni as
+if it were the "server_name" extension to finish the handshake. It
+SHOULD pad the Certificate message with the padding(21) extension {{!RFC7685}}
+with at least as much padding as that which was used to pad the SNI.
+
+## Split Mode Hidden Server Behavior {#hidden-server-behavior}
 
 The Hidden Server ignores both the "encrypted_server_name" and the
 "server_name" (if any) and completes the handshake as usual. If in
 Shared Mode, the server will still know the true SNI, and can use it
 for certificate selection. In Split Mode, it may not know the true
-SNI and so will generally be configured to use a single certificate
+SNI and so will generally be configured to use a single certificate.
 {{communicating-sni}} describes a mechanism for communicating the
 true SNI to the hidden server.
+
+Similar to the Shared Mode behavior, the hidden server in Split Mode
+SHOULD pad the Certificate message with the padding(21) extension {{!RFC7685}}
+with at least as much padding as that which was used to pad the SNI.
+
 [[OPEN ISSUE: Do we want "encrypted_server_name" in EE? It's
 clearer communication, but gets in the way of stock servers.]]
-
-
 
 # Compatibility Issues
 
@@ -479,7 +480,7 @@ In comparison to {{?I-D.kazuho-protected-sni}}, wherein DNS Resource
 Records are signed via a server private key, ESNIKeys have no
 authenticity or provenance information. This means that any attacker
 which can inject DNS responses or poison DNS caches, which is a common
-scenario in client access netowrks, can supply clients with fake
+scenario in client access networks, can supply clients with fake
 ESNIKeys (so that the client encrypts SNI to them) or strip the
 ESNIKeys from the response. However, in the face of an attacker that
 controls DNS, no SNI encryption scheme can work because the attacker
@@ -587,8 +588,8 @@ This document has no IANA actions.
 
 # Communicating SNI to Hidden Server {#communicating-sni}
 
-As noted in {{hidden-server-behavior}}, in Split Mode the hidden
-server will generally not know the true SNI. It is possible for
+As noted in {{hidden-server-behavior}}, the hidden server will 
+generally not know the true SNI in Split Mode. It is possible for
 the client-facing server to communicate the true SNI to the hidden server,
 but at the cost of having that communication not be unmodified TLS 1.3.
 The basic idea is to have a shared key between the client-facing server
@@ -632,7 +633,6 @@ It also has the following disadvantages:
   (more analysis needed).
 
 # Acknowledgments
-{:numbered="false"}
 
 This document draws extensively from ideas in {{?I-D.kazuho-protected-sni}}, but
 is a much more limited mechanism because it depends on the DNS for the
