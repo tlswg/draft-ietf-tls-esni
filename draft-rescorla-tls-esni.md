@@ -199,7 +199,7 @@ padded_length
 The length to pad the ServerNameList value to prior to encryption. 
 This value SHOULD be set to the largest ServerNameList the server 
 expects to support rounded up the nearest multiple of 16. If the 
-server supports wildcard names, it SHOULD set this value to 256.
+server supports wildcard names, it SHOULD set this value to 256. 
 
 not_before
 : The moment when the keys become valid for use. The value is represented
@@ -401,7 +401,8 @@ the TLS connection to the hidden server (if in Split Mode).
 A server operating in Shared Mode uses PaddedServerNameList.sni as
 if it were the "server_name" extension to finish the handshake. It
 SHOULD pad the Certificate message with the padding(21) extension {{!RFC7685}}
-with at least as much padding as that which was used to pad the SNI.
+to the length of the largest possible Certificate covered by the same
+ESNI key.
 
 ## Split Mode Hidden Server Behavior {#hidden-server-behavior}
 
@@ -415,7 +416,8 @@ true SNI to the hidden server.
 
 Similar to the Shared Mode behavior, the hidden server in Split Mode
 SHOULD pad the Certificate message with the padding(21) extension {{!RFC7685}}
-with at least as much padding as that which was used to pad the SNI.
+to the length of the largest possible Certificate covered by the same
+ESNI key.
 
 [[OPEN ISSUE: Do we want "encrypted_server_name" in EE? It's
 clearer communication, but gets in the way of stock servers.]]
