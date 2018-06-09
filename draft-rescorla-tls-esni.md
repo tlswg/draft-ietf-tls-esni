@@ -601,8 +601,47 @@ lie. In this design, the attacker would need to be able to find a
 Z which would expand into a key that would validly AEAD-encrypt
 a message of his choice, which should be intractable (Hand-waving alert!).
 
+# Alternative SNI Protection Designs
 
-# Alternate Encryption Design
+Alternative approaches to encrypted SNI may be implemented at the TLS or 
+application layer. In this section we describe several alternatives and discuss 
+drawbacks in comparison to the design in this document.
+
+## TLS-layer
+
+### TLS Tunnels
+
+In this variant, real TLS Client Hellos are tunneled within the early data payload 
+of an outer TLS connection established with the client-facing server. This requires 
+the client to have established a previous session — and obtained a PSK — with the 
+server. Problems with this approach are: (1) servers may not always be able to 
+distinguish inner Client Hellos from legitimate application data, (2) nested 0-RTT 
+data may not work function correctly, and (3) 0-RTT data may not be supported, 
+especially under DoS, leading to availability concerns. In contrast, encrypted SNI 
+protects the SNI in a distinct Client Hello extension and does not abuse early data.
+
+### Combined Tickets
+
+In this variant, client-facing and hidden servers coordinate to produce "combined tickets" 
+that are consumable by both. Clients offer combined tickets to client-facing servers. 
+The latter parse them to determine the correct hidden server to which the Client Hello 
+should be forwarded. This approach is problematic due to non-trivial coordination between 
+client-facing and hidden servers for ticket construction and consumption. In contrast, 
+encrypted SNI requires no such coordination.
+
+## Application-layer
+
+### HTTP/2 CERTIFICATE Frames 
+
+In this variant, clients request secondary certificates with CERTIFICATE_REQUEST HTTP/2 
+frames after TLS connection completion. Servers supply certificates via TLS exported 
+authenticators {{!I-D.ietf-tls-exported-authenticator}} in CERTIFICATE frame responses. 
+Clients use a generic SNI for the client-facing server TLS connection. This approach is 
+problematic as it requires one additional round trip before peer authentication. In contrast, 
+encrypted SNI induces no additional round trip.
+
+
+# Total Client Hello Encryption
 
 The design described here only provides encryption for the SNI, but
 not for other extensions, such as ALPN. Another potential design
@@ -630,7 +669,6 @@ It also has the following disadvantages:
   (more analysis needed).
 
 # Acknowledgments
-{:numbered="false"}
 
 This document draws extensively from ideas in {{?I-D.kazuho-protected-sni}}, but
 is a much more limited mechanism because it depends on the DNS for the
