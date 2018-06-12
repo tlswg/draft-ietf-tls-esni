@@ -616,9 +616,11 @@ of an outer TLS connection established with the client-facing server. This requi
 the client to have established a previous session — and obtained a PSK — with the 
 server. Problems with this approach are: (1) servers may not always be able to 
 distinguish inner Client Hellos from legitimate application data, (2) nested 0-RTT 
-data may not work function correctly, and (3) 0-RTT data may not be supported, 
-especially under DoS, leading to availability concerns. In contrast, encrypted SNI 
-protects the SNI in a distinct Client Hello extension and does not abuse early data.
+data may not function correctly, (3) 0-RTT data may not be supported -- 
+especially under DoS -- leading to availability concerns, and (4) clients must bootstrap
+tunnels (sessions), costing an additional round trip and potentially revealing the SNI 
+during the initial connection. In contrast, encrypted SNI protects the SNI in a distinct 
+Client Hello extension and neither abuses early data nor requires a bootstrapping connection.
 
 ### Combined Tickets
 
@@ -626,7 +628,8 @@ In this variant, client-facing and hidden servers coordinate to produce "combine
 that are consumable by both. Clients offer combined tickets to client-facing servers. 
 The latter parse them to determine the correct hidden server to which the Client Hello 
 should be forwarded. This approach is problematic due to non-trivial coordination between 
-client-facing and hidden servers for ticket construction and consumption. In contrast, 
+client-facing and hidden servers for ticket construction and consumption. Moreover, 
+it requires a bootstrapping step similar to that of the previous variant. In contrast, 
 encrypted SNI requires no such coordination.
 
 ## Application-layer
@@ -634,11 +637,13 @@ encrypted SNI requires no such coordination.
 ### HTTP/2 CERTIFICATE Frames 
 
 In this variant, clients request secondary certificates with CERTIFICATE_REQUEST HTTP/2 
-frames after TLS connection completion. Servers supply certificates via TLS exported 
-authenticators {{!I-D.ietf-tls-exported-authenticator}} in CERTIFICATE frame responses. 
-Clients use a generic SNI for the client-facing server TLS connection. This approach is 
-problematic as it requires one additional round trip before peer authentication. In contrast, 
-encrypted SNI induces no additional round trip.
+frames after TLS connection completion. In response, servers supply certificates via TLS 
+exported authenticators {{!I-D.ietf-tls-exported-authenticator}} in CERTIFICATE frames. 
+Clients use a generic SNI for the underlying client-facing server TLS connection. 
+Problems with this approach include: (1) one additional round trip before peer 
+authentication, and (2) non-trivial application-layer dependencies and interaction. 
+In contrast, encrypted SNI induces no additional round trip and operates below the 
+application layer.
 
 
 # Total Client Hello Encryption
