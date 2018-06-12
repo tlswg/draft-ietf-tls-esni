@@ -400,10 +400,9 @@ the TLS connection to the hidden server (if in Split Mode).
 
 A server operating in Shared Mode uses PaddedServerNameList.sni as
 if it were the "server_name" extension to finish the handshake. It
-SHOULD pad the Certificate message, via padding at the record layer
-or with the padding(21) extension {{!RFC7685}}, such that its length 
-equals the size of the largest possible Certificate (message) covered 
-by the same ESNI key.
+SHOULD pad the Certificate message, via padding at the record layer,
+such that its length equals the size of the largest possible Certificate 
+(message) covered by the same ESNI key.
 
 ## Split Mode Hidden Server Behavior {#hidden-server-behavior}
 
@@ -417,9 +416,8 @@ true SNI to the hidden server.
 
 Similar to the Shared Mode behavior, the hidden server in Split Mode
 SHOULD pad the Certificate message, via padding at the record layer
-or with the padding(21) extension {{!RFC7685}}, such that its length 
-equals the size of the largest possible Certificate (message) covered 
-by the same ESNI key.
+such that its length equals the size of the largest possible Certificate
+(message) covered by the same ESNI key.
 
 [[OPEN ISSUE: Do we want "encrypted_server_name" in EE? It's
 clearer communication, but gets in the way of stock servers.]]
