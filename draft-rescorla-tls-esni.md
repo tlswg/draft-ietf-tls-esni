@@ -25,6 +25,12 @@ author:
        organization: Fastly
        email: kazuhooku@gmail.com
 
+ -
+       ins: N. Sullivan
+       name: Nick Sullivan
+       organization: Cloudflare
+       email: nick@cloudflare.com
+
 
 normative:
   RFC1035:
