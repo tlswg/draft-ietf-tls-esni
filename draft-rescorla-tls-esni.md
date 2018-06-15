@@ -614,7 +614,7 @@ drawbacks in comparison to the design in this document.
 
 ## TLS-layer
 
-### TLS Tunnels
+### TLS in Early Data
 
 In this variant, real TLS Client Hellos are tunneled within the early data payload 
 of an outer TLS connection established with the client-facing server. This requires 
@@ -646,9 +646,9 @@ frames after TLS connection completion. In response, servers supply certificates
 exported authenticators {{!I-D.ietf-tls-exported-authenticator}} in CERTIFICATE frames. 
 Clients use a generic SNI for the underlying client-facing server TLS connection. 
 Problems with this approach include: (1) one additional round trip before peer 
-authentication, and (2) non-trivial application-layer dependencies and interaction. 
-In contrast, encrypted SNI induces no additional round trip and operates below the 
-application layer.
+authentication, (2) non-trivial application-layer dependencies and interaction, 
+and (3) obtaining the generic SNI to bootstrap the connection. In contrast, encrypted 
+SNI induces no additional round trip and operates below the application layer.
 
 
 # Total Client Hello Encryption
