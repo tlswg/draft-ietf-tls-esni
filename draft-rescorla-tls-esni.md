@@ -616,10 +616,15 @@ drawbacks in comparison to the design in this document.
 
 ### TLS in Early Data
 
-In this variant, real TLS Client Hellos are tunneled within the early data payload 
-of an outer TLS connection established with the client-facing server. This requires 
-the client to have established a previous session — and obtained a PSK — with the 
-server. Problems with this approach are: (1) servers may not always be able to 
+In this variant, TLS Client Hellos are tunneled within early data payloads
+belonging to outer TLS connections established with the client-facing server. This 
+requires clients to have established a previous session -— and obtained PSKs —- with 
+the server. The client-facing server decrypts early data payloads to uncover Client Hellos
+destined for the hidden server, and forwards them onwards as necessary. All Server
+Hello messages generated in response by hidden servers are forwarded directly to
+client -- unmodified. This avoids double encryption of TLS handshake messages.
+
+Problems with this approach are: (1) servers may not always be able to 
 distinguish inner Client Hellos from legitimate application data, (2) nested 0-RTT 
 data may not function correctly, (3) 0-RTT data may not be supported -- 
 especially under DoS -- leading to availability concerns, and (4) clients must bootstrap
