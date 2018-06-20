@@ -621,8 +621,8 @@ belonging to outer TLS connections established with the client-facing server. Th
 requires clients to have established a previous session -— and obtained PSKs —- with 
 the server. The client-facing server decrypts early data payloads to uncover Client Hellos
 destined for the hidden server, and forwards them onwards as necessary. Afterwards, all 
-remaining handshake messages to and from hidden servers are forwarded by the client-facing 
-server -- unmodified. This avoids double encryption of TLS handshake messages.
+records to and from hidden servers are forwarded by the client-facing server -- unmodified. 
+This avoids double encryption of TLS records.
 
 Problems with this approach are: (1) servers may not always be able to 
 distinguish inner Client Hellos from legitimate application data, (2) nested 0-RTT 
