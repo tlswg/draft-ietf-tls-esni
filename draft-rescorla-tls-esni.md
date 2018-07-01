@@ -274,6 +274,12 @@ period. Servers SHOULD set the Resource Record TTL small enough so that the
 record gets discarded by the cache before the ESNI keys reach the end of
 their validity period.
 
+Client MAY cache the ESNIKeys for a particular domain based on the TTL of the
+Resource Record, but MUST NOT cache it based on the not_after value, to allow
+servers to rotate the keys often and improve forward secrecy (due to clock skew
+on the client, it may not be possible for the server to use a very short key
+lifetime).
+
 Note that the length of this structure MUST NOT exceed 2^16 - 1, as the
 RDLENGTH is only 16 bits {{RFC1035}}.
 
