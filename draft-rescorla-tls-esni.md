@@ -408,6 +408,10 @@ serves the connection directly (if in Shared Mode), in which case
 it executes the steps in the following section, or forwards
 the TLS connection to the hidden server (if in Split Mode).
 
+The server MUST include an extension of type "encrypted_server_name" in the
+EncryptedExtensions message. The "extension_data" field of this extension MUST
+be empty.
+
 ## Shared Mode Hidden Server Behavior
 
 A server operating in Shared Mode uses PaddedServerNameList.sni as
@@ -430,9 +434,6 @@ Similar to the Shared Mode behavior, the hidden server in Split Mode
 SHOULD pad the Certificate message, via padding at the record layer
 such that its length equals the size of the largest possible Certificate
 (message) covered by the same ESNI key.
-
-[[OPEN ISSUE: Do we want "encrypted_server_name" in EE? It's
-clearer communication, but gets in the way of stock servers.]]
 
 # Compatibility Issues
 
