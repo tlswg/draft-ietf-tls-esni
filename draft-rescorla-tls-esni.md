@@ -81,7 +81,7 @@ has been unable to develop a completely generic
 solution. {{?I-D.ietf-tls-sni-encryption}} provides a description
 of the problem space and some of the proposed techniques. One of the
 more difficult problems is "Do not stick out"
-({{?I-D.ietf-tls-sni-encryption}}; Section 2.4): if only sensitive/private
+({{?I-D.ietf-tls-sni-encryption}}; Section 3.4): if only sensitive/private
 services use SNI encryption, then SNI encryption is a signal that
 a client is going to such a service. For this reason,
 much recent work has focused on
@@ -249,10 +249,6 @@ _esni.example.com. 60S IN TXT "..." "..."
 Servers MUST ensure that if multiple A or AAAA records are returned for a
 domain with ESNI support, all the servers pointed to by those records are
 able to handle the keys returned as part of a ESNI TXT record for that domain.
-
-Alt-Svc records may be used to inform the client of the
-plaintext (client-facing) SNI. If present, clients SHOULD use its value
-in the SNI extension of the subsequent ClientHello.
 
 Clients obtain these records by querying DNS for ESNI-enabled server domains.
 Thus, servers operating in Split Mode SHOULD have DNS configured to return
@@ -516,7 +512,7 @@ ESNIKeys from the response. However, in the face of an attacker that
 controls DNS, no SNI encryption scheme can work because the attacker
 can replace the IP address, thus blocking client connections, or
 substituting a unique IP address which is 1:1 with the DNS name that
-was looked up (module DNS wildcards). Thus, allowing the ESNIKeys in
+was looked up (modulo DNS wildcards). Thus, allowing the ESNIKeys in
 the clear does not make the situation significantly worse.
 
 Clearly, DNSSEC (if the client validates and hard fails) is a defense against
