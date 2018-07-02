@@ -211,7 +211,7 @@ padded_length
 The length to pad the ServerNameList value to prior to encryption.
 This value SHOULD be set to the largest ServerNameList the server
 expects to support rounded up the nearest multiple of 16. If the
-server supports wildcard names, it SHOULD set this value to 256.
+server supports wildcard names, it SHOULD set this value to 260.
 
 not_before
 : The moment when the keys become valid for use. The value is represented
