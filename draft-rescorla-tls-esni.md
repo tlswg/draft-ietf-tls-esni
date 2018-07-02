@@ -594,7 +594,11 @@ SNI uniformly?]]
 
 # IANA Considerations
 
-This document has no IANA actions.
+## Update of the TLS ExtensionType Registry
+
+Create an entry, encrypted_server_name(0xffce), in the existing registry for
+ExtensionType (defined in {{!I-D.ietf-tls-tls13}}), with "TLS 1.3" column values
+being set to "CH, EE", and "Recommended" column being set to "Yes".
 
 
 --- back
