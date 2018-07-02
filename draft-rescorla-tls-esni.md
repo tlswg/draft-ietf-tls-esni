@@ -81,19 +81,19 @@ has been unable to develop a completely generic
 solution. {{?I-D.ietf-tls-sni-encryption}} provides a description
 of the problem space and some of the proposed techniques. One of the
 more difficult problems is "Do not stick out"
-({{?I-D.ietf-tls-sni-encryption}}; Section 2.4): if only hidden
+({{?I-D.ietf-tls-sni-encryption}}; Section 2.4): if only sensitive/private
 services use SNI encryption, then SNI encryption is a signal that
-a client is going to a hidden server. For this reason,
+a client is going to such a service. For this reason,
 much recent work has focused on
 concealing the fact that SNI is being protected. Unfortunately,
 the result often has undesirable performance consequences, incomplete
 coverage, or both.
 
 The design in this document takes a different approach: it assumes
-that hidden servers will hide behind a provider (CDN, app server,
+that private origins will co-locate with or hide behind a provider (CDN, app server,
 etc.) which is able to activate encrypted SNI (ESNI) for all of the domains
 it hosts. Thus, the use of encrypted SNI does not indicate that the
-client is attempting to reach a hidden server, but only that it is
+client is attempting to reach a private origin, but only that it is
 going to a particular service provider, which the observer could
 already tell from the IP address.
 
@@ -114,15 +114,15 @@ shown below, which we call "Shared Mode" and "Split Mode"
 ## Topologies
 
 ~~~~
-                +--------------------+
-                |                    |
-                |   2001:DB8::1111   |
-                |                    |
-Client <----->  | hidden.example.org |
-                |                    |
-                | public.example.com |
-                |                    |
-                +--------------------+
+                +---------------------+
+                |                     |
+                |   2001:DB8::1111    |
+                |                     |
+Client <----->  | private.example.org |
+                |                     |
+                | public.example.com  |
+                |                     |
+                +---------------------+
                         Server
 ~~~~
 {: #shared-mode title="Shared Mode Topology"}
@@ -132,26 +132,26 @@ whose DNS records point to it and clients form a TLS connection directly
 to that provider, which has access to the plaintext of the connection.
 
 ~~~~
-                +--------------------+       +--------------------+
-                |                    |       |                    |
-                |   2001:DB8::1111   |       |   2001:DB8::EEEE   |
-Client <------------------------------------>|                    |
-                | public.example.com |       | hidden.example.com |
-                |                    |       |                    |
-                +--------------------+       +--------------------+
-                  Client-Facing Server            Hidden Server
+                +--------------------+       +---------------------+
+                |                    |       |                     |
+                |   2001:DB8::1111   |       |   2001:DB8::EEEE    |
+Client <------------------------------------>|                     |
+                | public.example.com |       | private.example.com |
+                |                    |       |                     |
+                +--------------------+       +---------------------+
+                  Client-Facing Server            Backend Server
 ~~~~
 {: #split-mode title="Split Mode Topology"}
 
-In Split Mode, the provider is *not* the origin server for hidden
-domains. Rather the DNS records for hidden domains point to the provider,
+In Split Mode, the provider is *not* the origin server for private
+domains. Rather the DNS records for private domains point to the provider,
 but the provider's server just relays the connection back to the
-hidden server, which is the true origin server. The provider does
+backend server, which is the true origin server. The provider does
 not have access to the plaintext of the connection. In principle,
 the provider might not be the origin for any domains, but as
 a practical matter, it is probably the origin for a large set of
-innocuous domains, but is also providing protection for some hidden
-domains. Note that the hidden server can be an unmodified TLS 1.3
+innocuous domains, but is also providing protection for some private
+domains. Note that the backend server can be an unmodified TLS 1.3
 server.
 
 
@@ -163,7 +163,7 @@ First, the provider publishes a public key which is used for SNI encryption
 for all the domains for which it serves directly or indirectly (via Split mode).
 This document defines a publication mechanism using DNS, but other mechanisms
 are also possible. In particular, if some of the clients of
-a hidden server are applications rather than Web browsers, those
+a private server are applications rather than Web browsers, those
 applications might have the public key preconfigured.
 
 When a client wants to form a TLS connection to any of the domains
@@ -172,7 +172,7 @@ served by an ESNI-supporting provider, it replaces the
 extension, which contains the true extension encrypted under the
 provider's public key. The provider can then decrypt the extension
 and either terminate the connection (in Shared Mode) or forward
-it to the hidden server (in Split Mode).
+it to the backend server (in Split Mode).
 
 # Publishing the SNI Encryption Key {#publishing-key}
 
@@ -254,14 +254,14 @@ Alt-Svc records may be used to inform the client of the
 plaintext (client-facing) SNI. If present, clients SHOULD use its value
 in the SNI extension of the subsequent ClientHello.
 
-Clients obtain these records by querying DNS for hidden server domains.
+Clients obtain these records by querying DNS for ESNI-enabled server domains.
 Thus, servers operating in Split Mode SHOULD have DNS configured to return
-the same A (or AAAA) record for all hidden servers they service. This yields
-an anonymity set of cardinality equal to the number of hidden server domains
+the same A (or AAAA) record for all ESNI-enabled servers they service. This yields
+an anonymity set of cardinality equal to the number of ESNI-enabled server domains
 supported by a given client-facing server. Thus, even with SNI encryption,
-an attacker which can enumerate the set of hidden server domains supported
+an attacker which can enumerate the set of ESNI-enabled domains supported
 by a client-facing server can guess the correct SNI with probability at least
-1/K, where K is the size of this hidden server anonymity set. This probability
+1/K, where K is the size of this ESNI-enabled server anonymity set. This probability
 may be increased via traffic analysis or other mechanisms.
 
 The "checksum" field provides protection against transmission errors,
@@ -331,8 +331,8 @@ follows:
 
 ~~~~
    Zx = HKDF-Extract(0, Z)
-   key = HKDF-Expand-Label(Zx, "esni key", ClientHello.Random, key_length)
-   iv = HKDF-Expand-Label(Zx, "esni iv", ClientHello.Random, iv_length)
+   key = HKDF-Expand-Label(Zx, "esni key", Hash(ClientHello.Random), key_length)
+   iv = HKDF-Expand-Label(Zx, "esni iv", Hash(ClientHello.Random), iv_length)
 ~~~~
 
 
@@ -419,11 +419,11 @@ ignored.
 Upon determining the true SNI, the client-facing server then either
 serves the connection directly (if in Shared Mode), in which case
 it executes the steps in the following section, or forwards
-the TLS connection to the hidden server (if in Split Mode). In
+the TLS connection to the backend server (if in Split Mode). In
 the latter case, it does not make any changes to the TLS
 messages, but just blindly forwards them.
 
-## Shared Mode Hidden Server Behavior
+## Shared Mode Server Behavior
 
 A server operating in Shared Mode uses PaddedServerNameList.sni as
 if it were the "server_name" extension to finish the handshake. It
@@ -431,24 +431,24 @@ SHOULD pad the Certificate message, via padding at the record layer,
 such that its length equals the size of the largest possible Certificate
 (message) covered by the same ESNI key.
 
-## Split Mode Hidden Server Behavior {#hidden-server-behavior}
+## Split Mode Server Behavior {#backend-server-behavior}
 
-The Hidden Server ignores both the "encrypted_server_name" and the
+The backend Server ignores both the "encrypted_server_name" and the
 "server_name" (if any) and completes the handshake as usual. If in
 Shared Mode, the server will still know the true SNI, and can use it
 for certificate selection. In Split Mode, it may not know the true
 SNI and so will generally be configured to use a single certificate.
 {{communicating-sni}} describes a mechanism for communicating the
-true SNI to the hidden server.
+true SNI to the backend server.
 
-Similar to the Shared Mode behavior, the hidden server in Split Mode
+Similar to the Shared Mode behavior, the backend server in Split Mode
 SHOULD pad the Certificate message, via padding at the record layer
 such that its length equals the size of the largest possible Certificate
 (message) covered by the same ESNI key.
 
 [[OPEN ISSUE: Do we want "encrypted_server_name" in EE? It's
 clearer communication, but would make it so you could not
-operate a current TLS 1.3 server as a hidden server.]]
+operate a current TLS 1.3 server as a backend server.]]
 
 # Compatibility Issues
 
@@ -577,7 +577,7 @@ RECOMMEMDED that servers rotate keys frequently.
 ### Proper security context
 
 This design permits servers operating in Split Mode to forward connections
-directly to hidden origin servers, thereby avoiding unnecessary MiTM attacks.
+directly to backend origin servers, thereby avoiding unnecessary MiTM attacks.
 
 ### Split server spoofing
 
@@ -594,12 +594,12 @@ Thus, it is compatible with multiple protocols.
 
 ## Misrouting
 
-Note that the hidden server has no way of knowing what the SNI was,
+Note that the backend server has no way of knowing what the SNI was,
 but that does not lead to additional privacy exposure because the
-hidden server also only has one identity. This does, however, change
-the situation slightly in that the hidden server might previously have
+backend server also only has one identity. This does, however, change
+the situation slightly in that the backend server might previously have
 checked SNI and now cannot (and an attacker can route a connection
-with an encrypted SNI to any hidden server and the TLS connection will
+with an encrypted SNI to any backend server and the TLS connection will
 still complete).  However, the client is still responsible for
 verifying the server's identity in its certificate.
 
@@ -621,16 +621,16 @@ in the existing registry for ExtensionType (defined in
 --- back
 
 
-# Communicating SNI to Hidden Server {#communicating-sni}
+# Communicating SNI to Backend Server {#communicating-sni}
 
-As noted in {{hidden-server-behavior}}, the hidden server will
+As noted in {{backend-server-behavior}}, the backend server will
 generally not know the true SNI in Split Mode. It is possible for
-the client-facing server to communicate the true SNI to the hidden server,
+the client-facing server to communicate the true SNI to the backend server,
 but at the cost of having that communication not be unmodified TLS 1.3.
 The basic idea is to have a shared key between the client-facing server
-and the hidden server (this can be a symmetric key) and use it to
+and the backend server (this can be a symmetric key) and use it to
 AEAD-encrypt Z and send the encrypted blob at the beginning of the connection before
-the ClientHello. The hidden server can then decrypt ESNI to recover
+the ClientHello. The backend server can then decrypt ESNI to recover
 the true SNI.
 
 An obvious alternative here would be to have the client-facing server
@@ -653,8 +653,8 @@ In this variant, TLS Client Hellos are tunneled within early data payloads
 belonging to outer TLS connections established with the client-facing server. This
 requires clients to have established a previous session -— and obtained PSKs —- with
 the server. The client-facing server decrypts early data payloads to uncover Client Hellos
-destined for the hidden server, and forwards them onwards as necessary. Afterwards, all
-records to and from hidden servers are forwarded by the client-facing server -- unmodified.
+destined for the backend server, and forwards them onwards as necessary. Afterwards, all
+records to and from backend servers are forwarded by the client-facing server -- unmodified.
 This avoids double encryption of TLS records.
 
 Problems with this approach are: (1) servers may not always be able to
@@ -667,11 +667,11 @@ Client Hello extension and neither abuses early data nor requires a bootstrappin
 
 ### Combined Tickets
 
-In this variant, client-facing and hidden servers coordinate to produce "combined tickets"
+In this variant, client-facing and backend servers coordinate to produce "combined tickets"
 that are consumable by both. Clients offer combined tickets to client-facing servers.
-The latter parse them to determine the correct hidden server to which the Client Hello
+The latter parse them to determine the correct backend server to which the Client Hello
 should be forwarded. This approach is problematic due to non-trivial coordination between
-client-facing and hidden servers for ticket construction and consumption. Moreover,
+client-facing and backend servers for ticket construction and consumption. Moreover,
 it requires a bootstrapping step similar to that of the previous variant. In contrast,
 encrypted SNI requires no such coordination.
 
@@ -707,11 +707,11 @@ It also has the following disadvantages:
 
 - The client-facing server can still see the other extensions. By
   contrast we could introduce another EncryptedExtensions
-  block that was encrypted to the hidden server and not
+  block that was encrypted to the backend server and not
   the client-facing server.
 - It requires a mechanism for the client-facing server to provide the
-  extension-encryption key to the hidden server (as in {{communicating-sni}}
-  and thus cannot be used with an unmodified hidden server.
+  extension-encryption key to the backend server (as in {{communicating-sni}}
+  and thus cannot be used with an unmodified backend server.
 - A conformant middlebox will strip every extension, which might
   result in a ClientHello which is just unacceptable to the server
   (more analysis needed).
