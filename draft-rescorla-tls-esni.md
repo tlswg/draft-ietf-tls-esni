@@ -413,7 +413,9 @@ ignored.
 Upon determining the true SNI, the client-facing server then either
 serves the connection directly (if in Shared Mode), in which case
 it executes the steps in the following section, or forwards
-the TLS connection to the hidden server (if in Split Mode).
+the TLS connection to the hidden server (if in Split Mode). In
+the latter case, it does not make any changes to the TLS
+messages, but just blindly forwards them.
 
 ## Shared Mode Hidden Server Behavior
 
