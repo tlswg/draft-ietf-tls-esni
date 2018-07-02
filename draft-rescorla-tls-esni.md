@@ -207,11 +207,11 @@ keys
 Every key being listed MUST belong to a different group.
 
 padded_length
-: 
-The length to pad the ServerNameList value to prior to encryption. 
-This value SHOULD be set to the largest ServerNameList the server 
-expects to support rounded up the nearest multiple of 16. If the 
-server supports wildcard names, it SHOULD set this value to 256. 
+:
+The length to pad the ServerNameList value to prior to encryption.
+This value SHOULD be set to the largest ServerNameList the server
+expects to support rounded up the nearest multiple of 16. If the
+server supports wildcard names, it SHOULD set this value to 256.
 
 not_before
 : The moment when the keys become valid for use. The value is represented
@@ -233,8 +233,8 @@ be used to encrypt the SNI for the associated domain name.
 The cipher suite list is orthogonal to the
 list of keys, so each key may be used with any cipher suite.
 
-This structure is placed in the RRData section of a TXT record 
-as a base64-encoded string. If this encoding exceeds the 255 octet 
+This structure is placed in the RRData section of a TXT record
+as a base64-encoded string. If this encoding exceeds the 255 octet
 limit of TXT strings, it must be split across multiple concatenated
 strings as per Section 3.1.3 of {{!RFC4408}}.
 
@@ -250,17 +250,17 @@ Servers MUST ensure that, if multiple A or AAAA records are returned for a
 domain with ESNI support, all the servers pointed to by those records are
 able to handle the keys returned as part of a ESNI TXT record for that domain.
 
-Alt-Svc records may be used to inform the client of the 
+Alt-Svc records may be used to inform the client of the
 plaintext (client-facing) SNI. If present, clients SHOULD use its value
 in the SNI extension of the subsequent ClientHello.
 
 Clients obtain these records by querying DNS for hidden server domains.
-Thus, servers operating in Split Mode SHOULD have DNS configured to return 
+Thus, servers operating in Split Mode SHOULD have DNS configured to return
 the same A (or AAAA) record for all hidden servers they service. This yields
 an anonymity set of cardinality equal to the number of hidden server domains
 supported by a given client-facing server. Thus, even with SNI encryption,
-an attacker which can enumerate the set of hidden server domains supported 
-by a client-facing server can guess the correct SNI with probability at least 
+an attacker which can enumerate the set of hidden server domains supported
+by a client-facing server can guess the correct SNI with probability at least
 1/K, where K is the size of this hidden server anonymity set. This probability
 may be increased via traffic analysis or other mechanisms.
 
@@ -292,8 +292,8 @@ extension, which contains an EncryptedSNI structure:
 
 record_digest
 : A cryptographic hash of the ESNIKeys structure from which the ESNI
-key was obtained, i.e., from "checksum" to the end of the structure. 
-This hash is computed using the hash function associated with `suite`. 
+key was obtained, i.e., from "checksum" to the end of the structure.
+This hash is computed using the hash function associated with `suite`.
 
 suite
 : The cipher suite used to encrypt the SNI.
@@ -370,7 +370,7 @@ with {{!RFC7540}}; Section 9.2.)
 
 ## Client-Facing Server Behavior
 
-Upon receiving an "encrypted_server_name" extension, the client-facing 
+Upon receiving an "encrypted_server_name" extension, the client-facing
 server MUST first perform the following checks:
 
 - If it is unable to negotiate TLS 1.3 or greater, it MUST
@@ -413,7 +413,7 @@ the TLS connection to the hidden server (if in Split Mode).
 A server operating in Shared Mode uses PaddedServerNameList.sni as
 if it were the "server_name" extension to finish the handshake. It
 SHOULD pad the Certificate message, via padding at the record layer,
-such that its length equals the size of the largest possible Certificate 
+such that its length equals the size of the largest possible Certificate
 (message) covered by the same ESNI key.
 
 ## Split Mode Hidden Server Behavior {#hidden-server-behavior}
@@ -594,7 +594,12 @@ SNI uniformly?]]
 
 # IANA Considerations
 
-This document has no IANA actions.
+## Update of the TLS ExtensionType Registry
+
+IANA is requested to Create an entry, encrypted_server_name(0xffce),
+in the existing registry for ExtensionType (defined in
+{{!I-D.ietf-tls-tls13}}), with "TLS 1.3" column values being set to
+"CH", and "Recommended" column being set to "Yes".
 
 
 --- back
@@ -602,7 +607,7 @@ This document has no IANA actions.
 
 # Communicating SNI to Hidden Server {#communicating-sni}
 
-As noted in {{hidden-server-behavior}}, the hidden server will 
+As noted in {{hidden-server-behavior}}, the hidden server will
 generally not know the true SNI in Split Mode. It is possible for
 the client-facing server to communicate the true SNI to the hidden server,
 but at the cost of having that communication not be unmodified TLS 1.3.
@@ -620,8 +625,8 @@ a message of his choice, which should be intractable (Hand-waving alert!).
 
 # Alternative SNI Protection Designs
 
-Alternative approaches to encrypted SNI may be implemented at the TLS or 
-application layer. In this section we describe several alternatives and discuss 
+Alternative approaches to encrypted SNI may be implemented at the TLS or
+application layer. In this section we describe several alternatives and discuss
 drawbacks in comparison to the design in this document.
 
 ## TLS-layer
@@ -629,42 +634,42 @@ drawbacks in comparison to the design in this document.
 ### TLS in Early Data
 
 In this variant, TLS Client Hellos are tunneled within early data payloads
-belonging to outer TLS connections established with the client-facing server. This 
-requires clients to have established a previous session -— and obtained PSKs —- with 
+belonging to outer TLS connections established with the client-facing server. This
+requires clients to have established a previous session -— and obtained PSKs —- with
 the server. The client-facing server decrypts early data payloads to uncover Client Hellos
-destined for the hidden server, and forwards them onwards as necessary. Afterwards, all 
-records to and from hidden servers are forwarded by the client-facing server -- unmodified. 
+destined for the hidden server, and forwards them onwards as necessary. Afterwards, all
+records to and from hidden servers are forwarded by the client-facing server -- unmodified.
 This avoids double encryption of TLS records.
 
-Problems with this approach are: (1) servers may not always be able to 
-distinguish inner Client Hellos from legitimate application data, (2) nested 0-RTT 
-data may not function correctly, (3) 0-RTT data may not be supported -- 
+Problems with this approach are: (1) servers may not always be able to
+distinguish inner Client Hellos from legitimate application data, (2) nested 0-RTT
+data may not function correctly, (3) 0-RTT data may not be supported --
 especially under DoS -- leading to availability concerns, and (4) clients must bootstrap
-tunnels (sessions), costing an additional round trip and potentially revealing the SNI 
-during the initial connection. In contrast, encrypted SNI protects the SNI in a distinct 
+tunnels (sessions), costing an additional round trip and potentially revealing the SNI
+during the initial connection. In contrast, encrypted SNI protects the SNI in a distinct
 Client Hello extension and neither abuses early data nor requires a bootstrapping connection.
 
 ### Combined Tickets
 
-In this variant, client-facing and hidden servers coordinate to produce "combined tickets" 
-that are consumable by both. Clients offer combined tickets to client-facing servers. 
-The latter parse them to determine the correct hidden server to which the Client Hello 
-should be forwarded. This approach is problematic due to non-trivial coordination between 
-client-facing and hidden servers for ticket construction and consumption. Moreover, 
-it requires a bootstrapping step similar to that of the previous variant. In contrast, 
+In this variant, client-facing and hidden servers coordinate to produce "combined tickets"
+that are consumable by both. Clients offer combined tickets to client-facing servers.
+The latter parse them to determine the correct hidden server to which the Client Hello
+should be forwarded. This approach is problematic due to non-trivial coordination between
+client-facing and hidden servers for ticket construction and consumption. Moreover,
+it requires a bootstrapping step similar to that of the previous variant. In contrast,
 encrypted SNI requires no such coordination.
 
 ## Application-layer
 
-### HTTP/2 CERTIFICATE Frames 
+### HTTP/2 CERTIFICATE Frames
 
-In this variant, clients request secondary certificates with CERTIFICATE_REQUEST HTTP/2 
-frames after TLS connection completion. In response, servers supply certificates via TLS 
-exported authenticators {{!I-D.ietf-tls-exported-authenticator}} in CERTIFICATE frames. 
-Clients use a generic SNI for the underlying client-facing server TLS connection. 
-Problems with this approach include: (1) one additional round trip before peer 
-authentication, (2) non-trivial application-layer dependencies and interaction, 
-and (3) obtaining the generic SNI to bootstrap the connection. In contrast, encrypted 
+In this variant, clients request secondary certificates with CERTIFICATE_REQUEST HTTP/2
+frames after TLS connection completion. In response, servers supply certificates via TLS
+exported authenticators {{!I-D.ietf-tls-exported-authenticator}} in CERTIFICATE frames.
+Clients use a generic SNI for the underlying client-facing server TLS connection.
+Problems with this approach include: (1) one additional round trip before peer
+authentication, (2) non-trivial application-layer dependencies and interaction,
+and (3) obtaining the generic SNI to bootstrap the connection. In contrast, encrypted
 SNI induces no additional round trip and operates below the application layer.
 
 
