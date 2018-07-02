@@ -151,7 +151,7 @@ not have access to the plaintext of the connection. In principle,
 the provider might not be the origin for any domains, but as
 a practical matter, it is probably the origin for a large set of
 innocuous domains, but is also providing protection for some private
-private. Note that the backend server can be an unmodified TLS 1.3
+domains. Note that the backend server can be an unmodified TLS 1.3
 server.
 
 
