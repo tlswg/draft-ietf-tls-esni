@@ -198,9 +198,9 @@ structure, defined below.
 ~~~~
 
 checksum
-: First four (4) octets of the SHA-256 message digest {{RFC6234}} of the
-ESNIKeys structure starting from the first octet of "keys" to the end of
-the structure.
+: The first four (4) octets of the SHA-256 message digest {{RFC6234}}
+of the ESNIKeys structure starting from the first octet of "keys" to
+the end of the structure.
 
 keys
 : The list of keys which can be used by the client to encrypt the SNI.
@@ -246,7 +246,7 @@ example.com, the ESNI TXT Resource Record might be:
 _esni.example.com. 60S IN TXT "..." "..."
 ~~~
 
-Servers MUST ensure that, if multiple A or AAAA records are returned for a
+Servers MUST ensure that if multiple A or AAAA records are returned for a
 domain with ESNI support, all the servers pointed to by those records are
 able to handle the keys returned as part of a ESNI TXT record for that domain.
 
@@ -299,8 +299,9 @@ extension, which contains an EncryptedSNI structure:
 
 record_digest
 : A cryptographic hash of the ESNIKeys structure from which the ESNI
-key was obtained, i.e., from "checksum" to the end of the structure.
-This hash is computed using the hash function associated with `suite`.
+key was obtained, i.e., from the first byte of "checksum" to the end
+of the structure.  This hash is computed using the hash function
+associated with `suite`.
 
 suite
 : The cipher suite used to encrypt the SNI.
@@ -333,6 +334,7 @@ follows:
    key = HKDF-Expand-Label(Zx, "esni key", ClientHello.Random, key_length)
    iv = HKDF-Expand-Label(Zx, "esni iv", ClientHello.Random, iv_length)
 ~~~~
+
 
 The client then creates a PaddedServerNameList:
 
@@ -367,7 +369,11 @@ reuse.
 [[OPEN ISSUE: If in future you were to reuse these keys for
 0-RTT priming, then you would have to worry about potentially
 expanding twice of Z_extracted. We should think about how
-to harmonize these to make sure that we maintain key separation.]]
+to harmonize these to make sure that we maintain key separation.
+Similarly, if the server uses the same key for ESNI as it does
+in ServerKeyShare, this is going to involve re-use of Z in some
+hard to analyze ways. Of course, this would also involve
+abandoning PFS.]]
 
 This value is placed in an "encrypted_server_name" extension.
 
@@ -441,7 +447,8 @@ such that its length equals the size of the largest possible Certificate
 (message) covered by the same ESNI key.
 
 [[OPEN ISSUE: Do we want "encrypted_server_name" in EE? It's
-clearer communication, but gets in the way of stock servers.]]
+clearer communication, but would make it so you could not
+operate a current TLS 1.3 server as a hidden server.]]
 
 # Compatibility Issues
 
@@ -563,7 +570,7 @@ eavesdroppers.
 
 ### Forward secrecy
 
-This design is not forward secret since the server's ESNI key is static.
+This design is not forward secret because the server's ESNI key is static.
 However, the window of exposure is bound by the key lifetime. It is
 RECOMMEMDED that servers rotate keys frequently.
 
