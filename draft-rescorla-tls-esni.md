@@ -267,19 +267,19 @@ may be increased via traffic analysis or other mechanisms.
 The "checksum" field provides protection against transmission errors,
 including those caused by intermediaries such as a DNS proxy running on a
 home router.
+
 "not_before" and "not_after" fields represent the validity period of the
 published ESNI keys. Clients MUST NOT use ESNI keys that was covered by an
 invalid checksum or beyond the published
 period. Servers SHOULD set the Resource Record TTL small enough so that the
 record gets discarded by the cache before the ESNI keys reach the end of
-their validity period.
+their validity period. Note that servers will need to retain the decryption
+key for some time after "not_after" to deal with clock skew, internal caches,
+and the like.
 
 Client MAY cache the ESNIKeys for a particular domain based on the TTL of the
 Resource Record, but SHOULD NOT cache it based on the not_after value, to allow
-servers to rotate the keys often and improve forward secrecy (due to clock skew
-on the client, it may not be possible for the server to use a very short key
-lifetime). Note that servers will need to retain the decryption key for some
-time after not_after to deal with clock skew, internal caches, and the like.
+servers to rotate the keys often and improve forward secrecy.
 
 Note that the length of this structure MUST NOT exceed 2^16 - 1, as the
 RDLENGTH is only 16 bits {{RFC1035}}.
