@@ -269,9 +269,9 @@ published ESNI keys. Clients MUST NOT use ESNI keys that was covered by an
 invalid checksum or beyond the published
 period. Servers SHOULD set the Resource Record TTL small enough so that the
 record gets discarded by the cache before the ESNI keys reach the end of
-their validity period. Note that servers will need to retain the decryption
-key for some time after "not_after" to deal with clock skew, internal caches,
-and the like.
+their validity period. Note that servers MAY need to retain the decryption key
+for some time after "not_after", and will need to consider clock skew, internal
+caches and the like, when selecting the "not_before" and "not_after" values.
 
 Client MAY cache the ESNIKeys for a particular domain based on the TTL of the
 Resource Record, but SHOULD NOT cache it based on the not_after value, to allow
