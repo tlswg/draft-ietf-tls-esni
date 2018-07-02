@@ -332,7 +332,7 @@ The client then creates a PaddedServerNameList:
 ~~~~
    struct {
        ServerNameList sni;
-       opaque zeros[padding_length - length(sni)];
+       opaque zeros[ESNIKeys.padded_length - length(sni)];
    } PaddedServerNameList;
 ~~~~
 
@@ -396,7 +396,7 @@ and decrypts the ServerName value. If decryption fails, the server
 MUST abort the connection with a "decrypt_error" alert.
 
 If the decrypted value's length is different from
-the advertised padding_length or the padding consists of
+the advertised ESNIKeys.padded_length or the padding consists of
 any value other than 0, then the server MUST abort the
 connection with an illegal_parameter alert. Otherwise, the
 server uses the PaddedServerNameList.sni value as if it were
