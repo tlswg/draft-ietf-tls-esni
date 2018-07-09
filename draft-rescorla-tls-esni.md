@@ -442,10 +442,6 @@ SHOULD pad the Certificate message, via padding at the record layer
 such that its length equals the size of the largest possible Certificate
 (message) covered by the same ESNI key.
 
-[[OPEN ISSUE: Do we want "encrypted_server_name" in EE? It's
-clearer communication, but would make it so you could not
-operate a current TLS 1.3 server as a backend server.]]
-
 # Compatibility Issues
 
 In general, this mechanism is designed only to be used with
