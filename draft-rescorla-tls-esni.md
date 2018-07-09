@@ -313,14 +313,11 @@ encrypted_sni
 In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
 matching group. This share is then used for the client's "key_share"
-extension and will be used to derive both the SNI encryption
-key and the (EC)DHE shared secret which is used in the TLS key schedule.
-This has two important implications:
-
-- The client MUST only provide one KeyShareEntry
-
-- The server is committing to support every group in the
-  ESNIKeys list (see below for server behavior).
+extension and will be used to derive the SNI encryption key. The
+implication here is that the server is committing to support every group
+in the ESNIKeys list (see below for server behavior). The server can
+select the same "key_share" for the TLS key schedule, or a different
+one.
 
 The SNI encryption key is computed from the DH shared secret Z as
 follows:
@@ -391,9 +388,9 @@ server MUST first perform the following checks:
   [[OPEN ISSUE: We looked at ignoring the extension but concluded
   this was better.]]
 
-- If more than one KeyShareEntry has been provided, or if that share's
-  group does not match that for the SNI encryption key, it MUST abort
-  the connection with an "illegal_parameter" alert.
+- If none of the KeyShareEntry's group matches that for the SNI
+  encryption key, it MUST abort the connection with an
+  "illegal_parameter" alert.
 
 - If the length of the "encrypted_server_name" extension is
   inconsistent with the advertised padding length (plus AEAD
