@@ -154,6 +154,24 @@ innocuous domains, but is also providing protection for some private
 domains. Note that the backend server can be an unmodified TLS 1.3
 server.
 
+~~~~
+                +--------------------+       +---------------------+
+                |                    |       |                     |
+                |   2001:DB8::1111   |       |   2001:DB8::EEEE    |
+Client <------->|                    |<----->|                     |
+                | public.example.com |       | private.example.com |
+                |                    |       |                     |
+                +--------------------+       +---------------------+
+                  Client-Facing Server            Backend Server
+~~~~
+{: #proxy-mode title="Proxy Mode Topology"}
+
+In Proxy Mode, as in Split Mode, the provider is *not* the origin server
+for private domains. The difference from Split Mode is that the provider's
+server accepts and decrypts connections on behalf of the origin server. The
+provider's server then establishes a new connection to the origin server.
+The provider does have access to the plaintext of the connection. For most
+practical purposes, this can be treated as Split Mode.
 
 ## SNI Encryption
 
@@ -170,8 +188,8 @@ When a client wants to form a TLS connection to any of the domains
 served by an ESNI-supporting provider, it replaces the
 "server_name" extension in the ClientHello with an "encrypted_server_name"
 extension, which contains the true extension encrypted under the
-provider's public key. The provider can then decrypt the extension
-and either terminate the connection (in Shared Mode) or forward
+provider's public key. The provider then decrypts the extension
+and either terminates the connection (in Shared or Proxy Modes) or forwards
 it to the backend server (in Split Mode).
 
 # Publishing the SNI Encryption Key {#publishing-key}
@@ -251,13 +269,14 @@ domain with ESNI support, all the servers pointed to by those records are
 able to handle the keys returned as part of a ESNI TXT record for that domain.
 
 Clients obtain these records by querying DNS for ESNI-enabled server domains.
-Thus, servers operating in Split Mode SHOULD have DNS configured to return
+Thus, providers SHOULD have DNS configured to return
 the same A (or AAAA) record for all ESNI-enabled servers they service. This yields
 an anonymity set of cardinality equal to the number of ESNI-enabled server domains
 supported by a given client-facing server. Thus, even with SNI encryption,
-an attacker which can enumerate the set of ESNI-enabled domains supported
-by a client-facing server can guess the correct SNI with probability at least
-1/K, where K is the size of this ESNI-enabled server anonymity set. This probability
+an attacker can enumerate the set of ESNI-enabled domains supported
+by a client-facing server and then guess the correct SNI with probability at least
+1/K, where K is the size of this ESNI-enabled server anonymity set for the given
+client-facing server. This probability
 may be increased via traffic analysis or other mechanisms.
 
 The "checksum" field provides protection against transmission errors,
@@ -590,7 +609,7 @@ Thus, it is compatible with multiple protocols.
 
 ## Misrouting
 
-Note that the backend server has no way of knowing what the SNI was,
+Note that in Split Mode the backend server has no way of knowing what the SNI was,
 but that does not lead to additional privacy exposure because the
 backend server also only has one identity. This does, however, change
 the situation slightly in that the backend server might previously have
@@ -603,6 +622,15 @@ verifying the server's identity in its certificate.
 odd, and probably some precise rules about handling ESNI and no
 SNI uniformly?]]
 
+## Size of Anonymity Sets
+
+The domains, destinations and ESNI key of an anonymity set are publicly known.
+The strength of the anonymity provided by ESNI is directly related to the number of
+domains sharing both an ESNI key and destination A (or AAAA) records.
+
+Providers SHOULD minimize the number of anonymity sets they support. A single large set is
+better than many small sets.
+A single ESNI-protected domain served by a separate provider server does not provide anonymity.
 
 # IANA Considerations
 
