@@ -109,7 +109,15 @@ when, and only when, they appear in all capitals, as shown here.
 # Overview
 
 This document is designed to operate in one of two primary topologies
-shown below, which we call "Shared Mode" and "Split Mode"
+shown below, which we call "Shared Mode" and "Split Mode".
+
+In both cases, DNS records point to the provider's client-facing server.
+A client-facing server may operate in either mode simultaneously, depending
+on which domain is being served.
+
+In principle, the provider might not be the origin for any domains. As far as
+the client is concerned, it is the logical origin for a large set of
+innocuous domains, while also providing protection for some private domains.
 
 ## Topologies
 
@@ -123,13 +131,14 @@ Client <----->  | private.example.org |
                 | public.example.com  |
                 |                     |
                 +---------------------+
-                        Server
+                  Client-Facing Server
 ~~~~
 {: #shared-mode title="Shared Mode Topology"}
 
-In Shared Mode, the provider is the origin server for all the domains
-whose DNS records point to it and clients form a TLS connection directly
-to that provider, which has access to the plaintext of the connection.
+In Shared Mode, the provider's server terminates TLS connection from the client.
+This gives the provider access to the plaintext of the connection.
+The provider's server retrives content from the origin, which may be itself or a separate
+backend server.
 
 ~~~~
                 +--------------------+       +---------------------+
@@ -143,35 +152,10 @@ Client <------------------------------------>|                     |
 ~~~~
 {: #split-mode title="Split Mode Topology"}
 
-In Split Mode, the provider is *not* the origin server for private
-domains. Rather the DNS records for private domains point to the provider,
-but the provider's server just relays the connection back to the
-backend server, which is the true origin server. The provider does
-not have access to the plaintext of the connection. In principle,
-the provider might not be the origin for any domains, but as
-a practical matter, it is probably the origin for a large set of
-innocuous domains, but is also providing protection for some private
-domains. Note that the backend server can be an unmodified TLS 1.3
-server.
-
-~~~~
-                +--------------------+       +---------------------+
-                |                    |       |                     |
-                |   2001:DB8::1111   |       |   2001:DB8::EEEE    |
-Client <------->|                    |<----->|                     |
-                | public.example.com |       | private.example.com |
-                |                    |       |                     |
-                +--------------------+       +---------------------+
-                  Client-Facing Server            Backend Server
-~~~~
-{: #proxy-mode title="Proxy Mode Topology"}
-
-In Proxy Mode, as in Split Mode, the provider is *not* the origin server
-for private domains. The difference from Split Mode is that the provider's
-server accepts and decrypts connections on behalf of the origin server. The
-provider's server then establishes a new connection to the origin server.
-The provider does have access to the plaintext of the connection. For most
-practical purposes, this can be treated as Split Mode.
+In Split Mode, the provider's server relays the TLS connection to the Backend Server.
+The Backend Server is the true origin server.
+The provider does not have access to the plaintext of the connection.
+Note that the backend server can be an unmodified TLS 1.3 server.
 
 ## SNI Encryption
 
@@ -626,11 +610,12 @@ SNI uniformly?]]
 
 The domains, destinations and ESNI key of an anonymity set are publicly known.
 The strength of the anonymity provided by ESNI is directly related to the number of
-domains sharing both an ESNI key and destination A (or AAAA) records.
+domains sharing both an ESNI key and destination A (or AAAA) records (see {{publishing-key}}).
 
 Providers SHOULD minimize the number of anonymity sets they support. A single large set is
 better than many small sets.
-A single ESNI-protected domain served by a separate provider server does not provide anonymity.
+A single ESNI-protected domain served by a separate provider server does not provide anonymity
+from sophisticated tools.
 
 # IANA Considerations
 
