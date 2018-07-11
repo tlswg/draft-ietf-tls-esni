@@ -233,8 +233,7 @@ be used to encrypt the SNI for the associated domain name.
 The cipher suite list is orthogonal to the
 list of keys, so each key may be used with any cipher suite.
 
-This structure is placed in the RRData section of an ESNI record
-as a base64-encoded string.
+This structure is placed in the RRData section of an ESNI record as-is.
 
 The name of each ESNI record MUST match the name composed
 of the query domain name. That is, if a client queries
