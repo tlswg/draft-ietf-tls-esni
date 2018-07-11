@@ -233,22 +233,20 @@ be used to encrypt the SNI for the associated domain name.
 The cipher suite list is orthogonal to the
 list of keys, so each key may be used with any cipher suite.
 
-This structure is placed in the RRData section of a TXT record
-as a base64-encoded string. If this encoding exceeds the 255 octet
-limit of TXT strings, it must be split across multiple concatenated
-strings as per Section 3.1.3 of {{!RFC4408}}.
+This structure is placed in the RRData section of an ESNI record
+as a base64-encoded string.
 
-The name of each TXT record MUST match the name composed
-of \_esni and the query domain name. That is, if a client queries
-example.com, the ESNI TXT Resource Record might be:
+The name of each ESNI record MUST match the name composed
+of the query domain name. That is, if a client queries
+example.com, the ESNI Resource Record might be:
 
 ~~~
-_esni.example.com. 60S IN TXT "..." "..."
+example.com. 60S IN ESNI "..."
 ~~~
 
 Servers MUST ensure that if multiple A or AAAA records are returned for a
 domain with ESNI support, all the servers pointed to by those records are
-able to handle the keys returned as part of a ESNI TXT record for that domain.
+able to handle the keys returned as part of an ESNI record for that domain.
 
 Clients obtain these records by querying DNS for ESNI-enabled server domains.
 Clients may initiate these queries in parallel alongside normal A or AAAA queries,
@@ -649,7 +647,7 @@ SNI uniformly?]]
 
 ## Update of the TLS ExtensionType Registry
 
-IANA is requested to Create an entry, encrypted_server_name(0xffce),
+IANA is requested to create an entry, encrypted_server_name(0xffce),
 in the existing registry for ExtensionType (defined in
 {{!RFC8446}}), with "TLS 1.3" column values being set to
 "CH, EE", and "Recommended" column being set to "Yes".
@@ -658,9 +656,16 @@ in the existing registry for ExtensionType (defined in
 
 IANA is requested to create an entry in the DNS Underscore Global
 Scoped Entry Registry (defined in {{!I-D.ietf-dnsop-attrleaf}}) with the
-"RR Type" column value being set to "TXT", the "_NODE NAME" column
+"RR Type" column value being set to "ESNI", the "_NODE NAME" column
 value being set to "_esni", and the "Reference" column value being set
 to this document.
+
+## Update of the Resource Record (RR) TYPEs Registry
+
+IANA is requested to create an entry, ESNI(0xff9f), in the existing
+registry for Resource Record (RR) TYPEs (defined in {{!BCP42}}) with
+"Meaning" column value being set to "Encrypted SNI".
+
 
 --- back
 
