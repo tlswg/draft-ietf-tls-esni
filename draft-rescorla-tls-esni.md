@@ -233,8 +233,14 @@ be used to encrypt the SNI for the associated domain name.
 The cipher suite list is orthogonal to the
 list of keys, so each key may be used with any cipher suite.
 
-This structure is placed in the RRData section of a TXT record
-as a base64-encoded string. If this encoding exceeds the 255 octet
+This structure SHOULD be placed in the RRData section of a ESNI record as-is.
+
+~~~
+example.com. 60S IN ESNI <raw ESNIKeys structure>
+~~~
+
+In alternative the structure MAY be placed in the RRData section of a TXT
+record as a base64-encoded string. If this encoding exceeds the 255 octet
 limit of TXT strings, it must be split across multiple concatenated
 strings as per Section 3.1.3 of {{!RFC4408}}.
 
@@ -248,7 +254,8 @@ _esni.example.com. 60S IN TXT "..." "..."
 
 Servers MUST ensure that if multiple A or AAAA records are returned for a
 domain with ESNI support, all the servers pointed to by those records are
-able to handle the keys returned as part of a ESNI TXT record for that domain.
+able to handle the keys returned as part of a ESNI or ESNI TXT record for
+that domain.
 
 Clients obtain these records by querying DNS for ESNI-enabled server domains.
 Thus, servers operating in Split Mode SHOULD have DNS configured to return
@@ -259,6 +266,10 @@ an attacker which can enumerate the set of ESNI-enabled domains supported
 by a client-facing server can guess the correct SNI with probability at least
 1/K, where K is the size of this ESNI-enabled server anonymity set. This probability
 may be increased via traffic analysis or other mechanisms.
+
+Clients SHOULD support and be able to lookup both the ESNI record, and the TXT
+one. If both are returned by the server, the ESNI record MUST be used and the
+TXT one discarded.
 
 The "checksum" field provides protection against transmission errors,
 including those caused by intermediaries such as a DNS proxy running on a
@@ -604,10 +615,16 @@ SNI uniformly?]]
 
 ## Update of the TLS ExtensionType Registry
 
-IANA is requested to Create an entry, encrypted_server_name(0xffce),
+IANA is requested to create an entry, encrypted_server_name(0xffce),
 in the existing registry for ExtensionType (defined in
 {{!I-D.ietf-tls-tls13}}), with "TLS 1.3" column values being set to
 "CH", and "Recommended" column being set to "Yes".
+
+## Update of the Resource Record (RR) TYPEs Registry
+
+IANA is requested to create an entry, ESNI(0xff9f), in the existing
+registry for Resource Record (RR) TYPEs (defined in {{!BCP42}}) with
+"Meaning" column value being set to "Encrypted SNI".
 
 
 --- back
