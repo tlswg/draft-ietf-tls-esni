@@ -236,11 +236,11 @@ list of keys, so each key may be used with any cipher suite.
 This structure is placed in the RRData section of an ESNI record as-is.
 
 The name of each ESNI record MUST match the name composed
-of the query domain name. That is, if a client queries
+of \_esni and the query domain name. That is, if a client queries
 example.com, the ESNI Resource Record might be:
 
 ~~~
-example.com. 60S IN ESNI "..."
+_esni.example.com. 60S IN ESNI "..."
 ~~~
 
 Servers MUST ensure that if multiple A or AAAA records are returned for a
