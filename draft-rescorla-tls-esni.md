@@ -609,6 +609,13 @@ in the existing registry for ExtensionType (defined in
 {{!I-D.ietf-tls-tls13}}), with "TLS 1.3" column values being set to
 "CH", and "Recommended" column being set to "Yes".
 
+## Update of the DNS Underscore Global Scoped Entry Registry
+
+IANA is requested to create an entry in the DNS Underscore Global
+Scoped Entry Registry (defined in {{!I-D.ietf-dnsop-attrleaf}}) with the
+"RR Type" column value being set to "TXT", the "_NODE NAME" column
+value being set to "_esni", and the "Reference" column value being set
+to this document.
 
 --- back
 
