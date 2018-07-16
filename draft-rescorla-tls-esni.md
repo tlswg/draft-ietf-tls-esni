@@ -186,10 +186,13 @@ structure, defined below.
         opaque key_exchange<1..2^16-1>;
     } KeyShareEntry;
 
+    uint16 Version;
+
     struct {
         uint8 checksum[4];
         KeyShareEntry keys<4..2^16-1>;
         CipherSuite cipher_suites<2..2^16-2>;
+        Version versions<2..2^16-2>
         uint16 padded_length;
         uint64 not_before;
         uint64 not_after;
@@ -206,9 +209,13 @@ keys
 : The list of keys which can be used by the client to encrypt the SNI.
 Every key being listed MUST belong to a different group.
 
+versions
+: The list of supported versions of ESNI that are supported by this domain.
+The value of 0x0000 represents this RFC version. The value of 0xFFnn represents
+previous Internet Draft versions, where nn is the revision of an earlier Internet Draft.
+
 padded_length
-:
-The length to pad the ServerNameList value to prior to encryption.
+: The length to pad the ServerNameList value to prior to encryption.
 This value SHOULD be set to the largest ServerNameList the server
 expects to support rounded up the nearest multiple of 16. If the
 server supports wildcard names, it SHOULD set this value to 260.
@@ -288,6 +295,7 @@ extension, which contains an EncryptedSNI structure:
 ~~~~
    struct {
        CipherSuite suite;
+       Version version;
        opaque record_digest<0..2^16-1>;
        opaque encrypted_sni<0..2^16-1>;
    } EncryptedSNI;
@@ -301,6 +309,11 @@ associated with `suite`.
 
 suite
 : The cipher suite used to encrypt the SNI.
+
+version
+: The version of ESNI that is in use. The value of 0x0000 represents this RFC
+version. The value of 0xFFnn represents previous Internet Draft versions,
+where nn is the revision of an earlier Internet Draft.
 
 encrypted_sni
 : The original ServerNameList from the "server_name" extension,
