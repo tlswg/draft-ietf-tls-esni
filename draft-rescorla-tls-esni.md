@@ -341,8 +341,8 @@ The client then creates a PaddedServerNameList:
    } PaddedServerNameList;
 ~~~~
 
-This value consists of the serialized ServerNameList padded with
-enough zeroes to make the total structure ESNIKeys.padded_length
+This value consists of the serialized ServerNameList from the "server_name" extension,
+padded with enough zeroes to make the total structure ESNIKeys.padded_length
 bytes long. The purpose of the padding is to prevent attackers
 from using the length of the "encrypted_server_name" extension
 to determine the true SNI. If the serialized ServerNameList is
