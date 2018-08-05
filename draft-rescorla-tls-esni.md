@@ -327,10 +327,12 @@ follows:
 
 ~~~~
    Zx = HKDF-Extract(0, Z)
-   key = HKDF-Expand-Label(Zx, "esni key", Hash(ClientHello.Random), key_length)
-   iv = HKDF-Expand-Label(Zx, "esni iv", Hash(ClientHello.Random), iv_length)
+   key = HKDF-Expand-Label(Zx, "esni key", ESNIContents, key_length)
+   iv = HKDF-Expand-Label(Zx, "esni iv", ESNIContents, iv_length)
 ~~~~
 
+where ESNIContents = Hash(record_digest || ClientHello.KeyShareClientHello || ClientHello.Random),
+and Hash is the hash function associated with the HKDF instantiation.
 
 The client then creates a PaddedServerNameList:
 
@@ -457,7 +459,7 @@ ignore the "encrypted_server_name" extension, as required by
 {{I-D.ietf-tls-tls13}}; Section 4.1.2.  If the servers does not
 require SNI, it will complete the handshake with its default
 certificate. Most likely, this will cause a certificate name
-mismatch and thus handshake failure. Clients SHOULD not fall
+mismatch and thus handshake failure. Clients SHOULD NOT fall
 back to cleartext SNI, because that allows a network attacker
 to disclose the SNI. They MAY attempt to use another server
 from the DNS results, if one is provided.
@@ -580,7 +582,7 @@ DNS.
 
 ### Supporting multiple protocols
 
-This design has no impact on application layer protocol negotiation. It only affects
+This design has no impact on application layer protocol negotiation. It may affect
 connection routing, server certificate selection, and client certificate verification.
 Thus, it is compatible with multiple protocols.
 
