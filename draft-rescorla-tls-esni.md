@@ -288,19 +288,24 @@ extension, which contains an EncryptedSNI structure:
 ~~~~
    struct {
        CipherSuite suite;
+       KeyShareEntry entry;
        opaque record_digest<0..2^16-1>;
        opaque encrypted_sni<0..2^16-1>;
    } EncryptedSNI;
 ~~~~
+
+suite
+: The cipher suite used to encrypt the SNI.
+
+entry
+: The KeyShareEntry carrying the client's public ephemeral key shared
+used to derive the ESNI key. 
 
 record_digest
 : A cryptographic hash of the ESNIKeys structure from which the ESNI
 key was obtained, i.e., from the first byte of "checksum" to the end
 of the structure.  This hash is computed using the hash function
 associated with `suite`.
-
-suite
-: The cipher suite used to encrypt the SNI.
 
 encrypted_sni
 : The original ServerNameList from the "server_name" extension,
@@ -312,18 +317,18 @@ encrypted_sni
 
 In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
-matching group. This share is then used for the client's "key_share"
-extension and will be used to derive both the SNI encryption
-key and the (EC)DHE shared secret which is used in the TLS key schedule.
-This has two important implications:
+matching group. This share will then be sent to the server in the EncryptedSNI
+extension and used to derive the SNI encryption key. It does not affect the 
+(EC)DHE shared secret used in the TLS key schedule.
 
-- The client MUST only provide one KeyShareEntry
+This has one important implication: The client-facing server is committing to 
+support every group in the ESNIKeys list (see below for server behavior). 
+The (backend) server terminating the TLS connection makes no such commitment,
+as its key exchange algorithm selection is unaffected.
 
-- The server is committing to support every group in the
-  ESNIKeys list (see below for server behavior).
-
-The SNI encryption key is computed from the DH shared secret Z as
-follows:
+Let Z be the DH shared secret derived from a key share in ESNIKeys and the 
+corresponding client share in EncryptedSNI.entry. The SNI encryption key is 
+Z as follows:
 
 ~~~~
    Zx = HKDF-Extract(0, Z)
@@ -357,7 +362,6 @@ TLS 1.3 AEAD:
 ~~~~
     encrypted_sni = AEAD-Encrypt(key, iv, "", PaddedServerNameList)
 ~~~~
-
 
 Note: future extensions may end up reusing the server's ESNIKeyShareEntry
 for other purposes within the same message (e.g., encrypting other
@@ -393,9 +397,8 @@ server MUST first perform the following checks:
   [[OPEN ISSUE: We looked at ignoring the extension but concluded
   this was better.]]
 
-- If more than one KeyShareEntry has been provided, or if that share's
-  group does not match that for the SNI encryption key, it MUST abort
-  the connection with an "illegal_parameter" alert.
+- If the EncryptedSNI.entry group does not match one in the ESNIKeys.keys,
+  it MUST abort the connection with an "illegal_parameter" alert.
 
 - If the length of the "encrypted_server_name" extension is
   inconsistent with the advertised padding length (plus AEAD
