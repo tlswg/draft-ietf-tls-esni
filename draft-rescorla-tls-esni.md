@@ -332,12 +332,20 @@ Z as follows:
 
 ~~~~
    Zx = HKDF-Extract(0, Z)
-   key = HKDF-Expand-Label(Zx, "esni key", ESNIContents, key_length)
+   key = HKDF-Expand-Label(Zx, "esni key", Hash(ESNIContents), key_length)
    iv = HKDF-Expand-Label(Zx, "esni iv", ESNIContents, iv_length)
 ~~~~
 
-where ESNIContents = Hash(record_digest || EncryptedSNI.entry || ClientHello.KeyShareClientHello || ClientHello.Random), 
-and Hash is the hash function associated with the HKDF instantiation.
+where ESNIContents is as specified below and Hash is the hash function associated with 
+the HKDF instantiation.
+
+~~~
+   struct {
+       opaque record_digest<0..2^16-1>;
+       KeyShareEntry esni_key_share;
+       Random client_hello_random;
+   } ESNIContents;
+~~~
 
 The client then creates a PaddedServerNameList:
 
@@ -360,7 +368,7 @@ The EncryptedSNI.encrypted_sni value is then computed using the usual
 TLS 1.3 AEAD:
 
 ~~~~
-    encrypted_sni = AEAD-Encrypt(key, iv, "", PaddedServerNameList)
+    encrypted_sni = AEAD-Encrypt(key, iv, ClientHello.KeyShareClientHello, PaddedServerNameList)
 ~~~~
 
 Note: future extensions may end up reusing the server's ESNIKeyShareEntry
