@@ -333,7 +333,7 @@ Z as follows:
 ~~~~
    Zx = HKDF-Extract(0, Z)
    key = HKDF-Expand-Label(Zx, "esni key", Hash(ESNIContents), key_length)
-   iv = HKDF-Expand-Label(Zx, "esni iv", ESNIContents, iv_length)
+   iv = HKDF-Expand-Label(Zx, "esni iv", Hash(ESNIContents), iv_length)
 ~~~~
 
 where ESNIContents is as specified below and Hash is the hash function associated with 
