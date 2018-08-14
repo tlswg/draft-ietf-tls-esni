@@ -297,7 +297,7 @@ extension, which contains an EncryptedSNI structure:
 suite
 : The cipher suite used to encrypt the SNI.
 
-entry
+key_share
 : The KeyShareEntry carrying the client's public ephemeral key shared
 used to derive the ESNI key. 
 
