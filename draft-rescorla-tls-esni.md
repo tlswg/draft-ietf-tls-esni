@@ -288,7 +288,7 @@ extension, which contains an EncryptedSNI structure:
 ~~~~
    struct {
        CipherSuite suite;
-       KeyShareEntry entry;
+       KeyShareEntry key_share;
        opaque record_digest<0..2^16-1>;
        opaque encrypted_sni<0..2^16-1>;
    } EncryptedSNI;
