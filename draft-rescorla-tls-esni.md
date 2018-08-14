@@ -327,7 +327,7 @@ The (backend) server terminating the TLS connection makes no such commitment,
 as its key exchange algorithm selection is unaffected.
 
 Let Z be the DH shared secret derived from a key share in ESNIKeys and the 
-corresponding client share in EncryptedSNI.entry. The SNI encryption key is 
+corresponding client share in EncryptedSNI.key_share. The SNI encryption key is 
 Z as follows:
 
 ~~~~
@@ -405,7 +405,7 @@ server MUST first perform the following checks:
   [[OPEN ISSUE: We looked at ignoring the extension but concluded
   this was better.]]
 
-- If the EncryptedSNI.entry group does not match one in the ESNIKeys.keys,
+- If the EncryptedSNI.key_share group does not match one in the ESNIKeys.keys,
   it MUST abort the connection with an "illegal_parameter" alert.
 
 - If the length of the "encrypted_server_name" extension is
