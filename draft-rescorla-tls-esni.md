@@ -251,7 +251,10 @@ domain with ESNI support, all the servers pointed to by those records are
 able to handle the keys returned as part of a ESNI TXT record for that domain.
 
 Clients obtain these records by querying DNS for ESNI-enabled server domains.
-Thus, servers operating in Split Mode SHOULD have DNS configured to return
+Clients may initiate these queries in parallel alongside normal A or AAAA queries,
+and SHOULD block TLS handshakes until they complete, perhaps by timing out.
+
+Servers operating in Split Mode SHOULD have DNS configured to return
 the same A (or AAAA) record for all ESNI-enabled servers they service. This yields
 an anonymity set of cardinality equal to the number of ESNI-enabled server domains
 supported by a given client-facing server. Thus, even with SNI encryption,
