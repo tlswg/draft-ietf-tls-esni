@@ -60,7 +60,7 @@ DISCLAIMER: This is very early a work-in-progress design and has not
 yet seen significant (or really any) security analysis. It should not
 be used as a basis for building production systems.
 
-Although TLS 1.3 {{!I-D.ietf-tls-tls13}} encrypts most of the
+Although TLS 1.3 {{!RFC8446}} encrypts most of the
 handshake, including the server certificate, there are several other
 channels that allow an on-path attacker to determine the domain name the
 client is trying to connect to, including:
@@ -224,7 +224,7 @@ not_before.
 extensions
 : A list of extensions that the client can take into consideration when
 generating a Client Hello message. The format is defined in
-{{I-D.ietf-tls-tls13}}; Section 4.2. The purpose of the field is to
+{{RFC8446}}; Section 4.2. The purpose of the field is to
 provide room for additional features in the future; this document does
 not define any extension.
 
@@ -336,7 +336,7 @@ Z as follows:
    iv = HKDF-Expand-Label(Zx, "esni iv", ESNIContents, iv_length)
 ~~~~
 
-where ESNIContents = Hash(record_digest || ClientHello.KeyShareClientHello || ClientHello.Random),
+where ESNIContents = Hash(record_digest || EncryptedSNI.entry || ClientHello.KeyShareClientHello || ClientHello.Random), 
 and Hash is the hash function associated with the HKDF instantiation.
 
 The client then creates a PaddedServerNameList:
@@ -459,7 +459,7 @@ apply, as detailed below.
 If DNS is misconfigured so that a client receives ESNI keys for a
 server which is not prepared to receive ESNI, then the server will
 ignore the "encrypted_server_name" extension, as required by
-{{I-D.ietf-tls-tls13}}; Section 4.1.2.  If the servers does not
+{{RFC8446}}; Section 4.1.2.  If the servers does not
 require SNI, it will complete the handshake with its default
 certificate. Most likely, this will cause a certificate name
 mismatch and thus handshake failure. Clients SHOULD NOT fall
@@ -471,7 +471,7 @@ from the DNS results, if one is provided.
 ## Middleboxes
 
 A more serious problem is MITM proxies which do not support this
-extension. {{I-D.ietf-tls-tls13}}; Section 9.3 requires that
+extension. {{RFC8446}}; Section 9.3 requires that
 such proxies remove any extensions they do not understand.
 This will have one of two results when connecting to the client-facing
 server:
@@ -611,7 +611,7 @@ SNI uniformly?]]
 
 IANA is requested to Create an entry, encrypted_server_name(0xffce),
 in the existing registry for ExtensionType (defined in
-{{!I-D.ietf-tls-tls13}}), with "TLS 1.3" column values being set to
+{{!RFC8446}}), with "TLS 1.3" column values being set to
 "CH", and "Recommended" column being set to "Yes".
 
 ## Update of the DNS Underscore Global Scoped Entry Registry
