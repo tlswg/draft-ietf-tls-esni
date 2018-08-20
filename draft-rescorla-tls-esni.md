@@ -319,16 +319,11 @@ In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
 matching group. This share will then be sent to the server in the EncryptedSNI
 extension and used to derive the SNI encryption key. It does not affect the 
-(EC)DHE shared secret used in the TLS key schedule.
-
-This has one important implication: The client-facing server is committing to 
-support every group in the ESNIKeys list (see below for server behavior). 
-The (backend) server terminating the TLS connection makes no such commitment,
-as its key exchange algorithm selection is unaffected.
+(EC)DHE shared secret used in the TLS key schedule. 
 
 Let Z be the DH shared secret derived from a key share in ESNIKeys and the 
 corresponding client share in EncryptedSNI.key_share. The SNI encryption key is 
-Z as follows:
+computed from Z as follows:
 
 ~~~~
    Zx = HKDF-Extract(0, Z)
@@ -336,8 +331,8 @@ Z as follows:
    iv = HKDF-Expand-Label(Zx, "esni iv", Hash(ESNIContents), iv_length)
 ~~~~
 
-where ESNIContents is as specified below and Hash is the hash function associated with 
-the HKDF instantiation.
+where ESNIContents is as specified below and Hash is the hash function 
+associated with the HKDF instantiation.
 
 ~~~
    struct {
@@ -370,6 +365,10 @@ TLS 1.3 AEAD:
 ~~~~
     encrypted_sni = AEAD-Encrypt(key, iv, ClientHello.KeyShareClientHello, PaddedServerNameList)
 ~~~~
+
+Including ClientHello.KeyShareClientHello in the AAD of AEAD-Encrypt 
+binds the EncryptedSNI value to the ClientHello and prevents cut-and-paste
+attacks.
 
 Note: future extensions may end up reusing the server's ESNIKeyShareEntry
 for other purposes within the same message (e.g., encrypting other
