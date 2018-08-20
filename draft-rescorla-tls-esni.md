@@ -60,7 +60,7 @@ DISCLAIMER: This is very early a work-in-progress design and has not
 yet seen significant (or really any) security analysis. It should not
 be used as a basis for building production systems.
 
-Although TLS 1.3 {{!I-D.ietf-tls-tls13}} encrypts most of the
+Although TLS 1.3 {{!RFC8446}} encrypts most of the
 handshake, including the server certificate, there are several other
 channels that allow an on-path attacker to determine the domain name the
 client is trying to connect to, including:
@@ -224,7 +224,7 @@ not_before.
 extensions
 : A list of extensions that the client can take into consideration when
 generating a Client Hello message. The format is defined in
-{{I-D.ietf-tls-tls13}}; Section 4.2. The purpose of the field is to
+{{RFC8446}}; Section 4.2. The purpose of the field is to
 provide room for additional features in the future; this document does
 not define any extension.
 
@@ -291,19 +291,24 @@ extension, which contains an EncryptedSNI structure:
 ~~~~
    struct {
        CipherSuite suite;
+       KeyShareEntry key_share;
        opaque record_digest<0..2^16-1>;
        opaque encrypted_sni<0..2^16-1>;
    } EncryptedSNI;
 ~~~~
+
+suite
+: The cipher suite used to encrypt the SNI.
+
+key_share
+: The KeyShareEntry carrying the client's public ephemeral key shared
+used to derive the ESNI key. 
 
 record_digest
 : A cryptographic hash of the ESNIKeys structure from which the ESNI
 key was obtained, i.e., from the first byte of "checksum" to the end
 of the structure.  This hash is computed using the hash function
 associated with `suite`.
-
-suite
-: The cipher suite used to encrypt the SNI.
 
 encrypted_sni
 : The original ServerNameList from the "server_name" extension,
@@ -315,25 +320,30 @@ encrypted_sni
 
 In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
-matching group. This share is then used for the client's "key_share"
-extension and will be used to derive both the SNI encryption
-key and the (EC)DHE shared secret which is used in the TLS key schedule.
-This has two important implications:
+matching group. This share will then be sent to the server in the EncryptedSNI
+extension and used to derive the SNI encryption key. It does not affect the 
+(EC)DHE shared secret used in the TLS key schedule. 
 
-- The client MUST only provide one KeyShareEntry
-
-- The server is committing to support every group in the
-  ESNIKeys list (see below for server behavior).
-
-The SNI encryption key is computed from the DH shared secret Z as
-follows:
+Let Z be the DH shared secret derived from a key share in ESNIKeys and the 
+corresponding client share in EncryptedSNI.key_share. The SNI encryption key is 
+computed from Z as follows:
 
 ~~~~
    Zx = HKDF-Extract(0, Z)
-   key = HKDF-Expand-Label(Zx, "esni key", Hash(ClientHello.Random), key_length)
-   iv = HKDF-Expand-Label(Zx, "esni iv", Hash(ClientHello.Random), iv_length)
+   key = HKDF-Expand-Label(Zx, "esni key", Hash(ESNIContents), key_length)
+   iv = HKDF-Expand-Label(Zx, "esni iv", Hash(ESNIContents), iv_length)
 ~~~~
 
+where ESNIContents is as specified below and Hash is the hash function 
+associated with the HKDF instantiation.
+
+~~~
+   struct {
+       opaque record_digest<0..2^16-1>;
+       KeyShareEntry esni_key_share;
+       Random client_hello_random;
+   } ESNIContents;
+~~~
 
 The client then creates a PaddedServerNameList:
 
@@ -356,9 +366,12 @@ The EncryptedSNI.encrypted_sni value is then computed using the usual
 TLS 1.3 AEAD:
 
 ~~~~
-    encrypted_sni = AEAD-Encrypt(key, iv, "", PaddedServerNameList)
+    encrypted_sni = AEAD-Encrypt(key, iv, ClientHello.KeyShareClientHello, PaddedServerNameList)
 ~~~~
 
+Including ClientHello.KeyShareClientHello in the AAD of AEAD-Encrypt 
+binds the EncryptedSNI value to the ClientHello and prevents cut-and-paste
+attacks.
 
 Note: future extensions may end up reusing the server's ESNIKeyShareEntry
 for other purposes within the same message (e.g., encrypting other
@@ -394,9 +407,8 @@ server MUST first perform the following checks:
   [[OPEN ISSUE: We looked at ignoring the extension but concluded
   this was better.]]
 
-- If more than one KeyShareEntry has been provided, or if that share's
-  group does not match that for the SNI encryption key, it MUST abort
-  the connection with an "illegal_parameter" alert.
+- If the EncryptedSNI.key_share group does not match one in the ESNIKeys.keys,
+  it MUST abort the connection with an "illegal_parameter" alert.
 
 - If the length of the "encrypted_server_name" extension is
   inconsistent with the advertised padding length (plus AEAD
@@ -457,10 +469,10 @@ apply, as detailed below.
 If DNS is misconfigured so that a client receives ESNI keys for a
 server which is not prepared to receive ESNI, then the server will
 ignore the "encrypted_server_name" extension, as required by
-{{I-D.ietf-tls-tls13}}; Section 4.1.2.  If the servers does not
+{{RFC8446}}; Section 4.1.2.  If the servers does not
 require SNI, it will complete the handshake with its default
 certificate. Most likely, this will cause a certificate name
-mismatch and thus handshake failure. Clients SHOULD not fall
+mismatch and thus handshake failure. Clients SHOULD NOT fall
 back to cleartext SNI, because that allows a network attacker
 to disclose the SNI. They MAY attempt to use another server
 from the DNS results, if one is provided.
@@ -469,7 +481,7 @@ from the DNS results, if one is provided.
 ## Middleboxes
 
 A more serious problem is MITM proxies which do not support this
-extension. {{I-D.ietf-tls-tls13}}; Section 9.3 requires that
+extension. {{RFC8446}}; Section 9.3 requires that
 such proxies remove any extensions they do not understand.
 This will have one of two results when connecting to the client-facing
 server:
@@ -583,7 +595,7 @@ DNS.
 
 ### Supporting multiple protocols
 
-This design has no impact on application layer protocol negotiation. It only affects
+This design has no impact on application layer protocol negotiation. It may affect
 connection routing, server certificate selection, and client certificate verification.
 Thus, it is compatible with multiple protocols.
 
@@ -609,7 +621,7 @@ SNI uniformly?]]
 
 IANA is requested to Create an entry, encrypted_server_name(0xffce),
 in the existing registry for ExtensionType (defined in
-{{!I-D.ietf-tls-tls13}}), with "TLS 1.3" column values being set to
+{{!RFC8446}}), with "TLS 1.3" column values being set to
 "CH", and "Recommended" column being set to "Yes".
 
 ## Update of the DNS Underscore Global Scoped Entry Registry
