@@ -290,7 +290,7 @@ extension, defined as follows:
 
 ~~~
    enum {
-       encrypted_server_name(TBD), (65535)
+       encrypted_server_name(0xffce), (65535)
    } ExtensionType;
 ~~~
 
@@ -424,8 +424,8 @@ with {{!RFC7540}}; Section 9.2.)
 
 If the server does not provide an "encrypted_server_name" extension
 in EncryptedExtensions, the client MUST abort the connection with 
-an "illegal_parameter" alert. Moreover, if MUST check that 
-PaddedServerNameList.nonce matches the contents of the 
+an "illegal_parameter" alert. Moreover, it MUST check that 
+PaddedServerNameList.nonce matches the value of the 
 "encrypted_server_name" extension provided by the server. If it 
 does not, the client MUST abort the connection with an "illegal_parameter" 
 alert.
@@ -665,7 +665,7 @@ SNI uniformly?]]
 IANA is requested to Create an entry, encrypted_server_name(0xffce),
 in the existing registry for ExtensionType (defined in
 {{!RFC8446}}), with "TLS 1.3" column values being set to
-"CH", and "Recommended" column being set to "Yes".
+"CH, EE", and "Recommended" column being set to "Yes".
 
 ## Update of the DNS Underscore Global Scoped Entry Registry
 
