@@ -288,6 +288,12 @@ RDLENGTH is only 16 bits {{RFC1035}}.
 The encrypted SNI is carried in an "encrypted_server_name"
 extension, defined as follows:
 
+~~~
+   enum {
+       encrypted_server_name(TBD), (65535)
+   } ExtensionType;
+~~~
+
 For clients (in ClientHello), this extension contains the following 
 EncryptedSNI structure:
 
