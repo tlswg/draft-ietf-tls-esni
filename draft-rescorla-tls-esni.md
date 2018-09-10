@@ -372,7 +372,7 @@ The client then creates a PaddedServerNameList:
    struct {
        ServerNameList sni;
        uint8 nonce[16];
-       opaque zeros[ESNIKeys.padded_length - length(sni) - 16];
+       opaque zeros[ESNIKeys.padded_length - length(sni)];
    } PaddedServerNameList;
 ~~~~
 
@@ -426,8 +426,8 @@ If the server does not provide an "encrypted_server_name" extension
 in EncryptedExtensions, the client MUST abort the connection with 
 an "illegal_parameter" alert. Moreover, it MUST check that 
 PaddedServerNameList.nonce matches the value of the 
-"encrypted_server_name" extension provided by the server. If it 
-does not, the client MUST abort the connection with an "illegal_parameter" 
+"encrypted_server_name" extension provided by the server, 
+and otherwise abort the connection with an "illegal_parameter" 
 alert.
 
 ## Client-Facing Server Behavior
@@ -483,22 +483,12 @@ and the value of this extension MUST match PaddedServerNameList.nonce.
 
 ## Split Mode Server Behavior {#backend-server-behavior}
 
-In Split Mode, the backend server may not know the true SNI and thus will 
-generally be configured to use a single certificate. In this case, the backend 
-server ignores the "encrypted_server_name" and may ignore the "server_name" 
-(if any) and completes the handshake as usual. If the backend server
-knows the true SNI, e.g., via the mechanism described in {{communicating-sni}},
-the backend server MAY use it to complete the handshake.
-
-Similar to the Shared Mode behavior, the backend server in Split Mode
-SHOULD pad the Certificate message, via padding at the record layer
-such that its length equals the size of the largest possible Certificate
-(message) covered by the same ESNI key.
-
-Also, the server MUST include the "encrypted_server_name" extension in 
-EncryptedExtensions, and the value of this extension MUST match 
-PaddedServerNameList.nonce. See {{communicating-sni}} for a mechanism 
-to send PaddedServerNameList.nonce to the backend server.
+In Split Mode, the backend server must know PaddedServerNameList.nonce 
+to echo it back in EncryptedExtensions and complete the handshake.
+{{communicating-sni}} describes one mechanism for sending both 
+PaddedServerNameList.sni and PaddedServerNameList.nonce to the backend
+server. Thus, backend servers function the same as servers operating
+in Shared mode.
 
 # Compatibility Issues
 
@@ -680,25 +670,20 @@ to this document.
 
 # Communicating SNI and Nonce to Backend Server {#communicating-sni}
 
-As noted in {{backend-server-behavior}}, the backend server will
-generally not know the true SNI in Split Mode, nor will it know 
-PaddedServerNameList.nonce. The former is not needed for the handshake
-to complete with a default certificate, while the latter is mandatory
-for successful handshake completion. Thus, client-facing servers must
-be able to communicate at least the nonce to backend servers.
+When operating in Split mode, backend servers will not have access
+to PaddedServerNameList.sni or PaddedServerNameList.nonce without
+access to the ESNI keys or a way to decrypt EncryptedSNI.encrypted_sni.
 
-One way to do this, at the cost of having communication not be unmodified TLS 1.3,
-is as follows. Assume there is a shared (symmetric) key between the 
+One way to address this for a single connection, at the cost of having 
+communication not be unmodified TLS 1.3, is as follows. 
+Assume there is a shared (symmetric) key between the 
 client-facing server and the backend server and use it to AEAD-encrypt Z 
 and send the encrypted blob at the beginning of the connection before
 the ClientHello. The backend server can then decrypt ESNI to recover
-the true SNI and nonce.
+the true SNI and nonce. 
 
-An obvious alternative here would be to have the client-facing server
-forward the true SNI, but that would allow the client-facing server to
-lie. In this design, the attacker would need to be able to find a
-Z which would expand into a key that would validly AEAD-encrypt
-a message of his choice, which should be intractable (Hand-waving alert!).
+Another way for backend servers to access the true SNI and nonce is by the 
+client-facing server sharing the ESNI keys. 
 
 # Alternative SNI Protection Designs
 
