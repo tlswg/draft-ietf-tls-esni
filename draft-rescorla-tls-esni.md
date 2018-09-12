@@ -565,12 +565,9 @@ valid TCP connections an attacker can open.
 
 ### Do not stick out
 
-By sending SNI and ESNI values (with illegitimate digests), or by sending
-legitimate ESNI values for and "fake" SNI values, clients do not display
-clear signals of ESNI intent to passive eavesdroppers. As more clients
-enable ESNI support, e.g., as normal part of Web browser functionality,
-with keys supplied by shared hosting providers, the presence of ESNI
-extensions becomes less suspicious and part of common or predictable
+As more clients enable ESNI support, e.g., as normal part of Web browser 
+functionality, with keys supplied by shared hosting providers, the presence 
+of ESNI extensions becomes less suspicious and part of common or predictable
 client behavior. In other words, if all Web browsers start using ESNI,
 the presence of this value does not signal suspicious behavior to passive
 eavesdroppers.
