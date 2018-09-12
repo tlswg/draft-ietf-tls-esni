@@ -286,7 +286,16 @@ RDLENGTH is only 16 bits {{RFC1035}}.
 # The "encrypted_server_name" extension {#esni-extension}
 
 The encrypted SNI is carried in an "encrypted_server_name"
-extension, which contains an EncryptedSNI structure:
+extension, defined as follows:
+
+~~~
+   enum {
+       encrypted_server_name(0xffce), (65535)
+   } ExtensionType;
+~~~
+
+For clients (in ClientHello), this extension contains the following 
+EncryptedSNI structure:
 
 ~~~~
    struct {
@@ -316,7 +325,19 @@ encrypted_sni
   generated as described below.
 {:br}
 
-## Client Behavior
+For servers (in EncryptedExtensions), this extension contains the following
+structure:
+
+~~~
+   struct {
+       uint8 nonce[16];
+   } EncryptedSNI;
+~~~
+
+nonce
+: The contents of PaddedServerNameList.nonce. (See {{client-behavior}}.)
+
+## Client Behavior {#client-behavior}
 
 In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
@@ -350,9 +371,21 @@ The client then creates a PaddedServerNameList:
 ~~~~
    struct {
        ServerNameList sni;
+       uint8 nonce[16];
        opaque zeros[ESNIKeys.padded_length - length(sni)];
    } PaddedServerNameList;
 ~~~~
+
+sni
+: The true SNI.
+
+nonce
+: A random 16-octet value to be echoed by the server in the 
+"encrypted_server_name" extension.
+
+zeros
+: Zero padding whose length makes the serialized struct length 
+match ESNIKeys.padded_length.
 
 This value consists of the serialized ServerNameList from the "server_name" extension,
 padded with enough zeroes to make the total structure ESNIKeys.padded_length
@@ -378,20 +411,24 @@ for other purposes within the same message (e.g., encrypting other
 values). Those usages MUST have their own HKDF labels to avoid
 reuse.
 
-[[OPEN ISSUE: If in future you were to reuse these keys for
+[[OPEN ISSUE: If in the future you were to reuse these keys for
 0-RTT priming, then you would have to worry about potentially
 expanding twice of Z_extracted. We should think about how
-to harmonize these to make sure that we maintain key separation.
-Similarly, if the server uses the same key for ESNI as it does
-in ServerKeyShare, this is going to involve re-use of Z in some
-hard to analyze ways. Of course, this would also involve
-abandoning PFS.]]
+to harmonize these to make sure that we maintain key separation.]]
 
 This value is placed in an "encrypted_server_name" extension.
 
 The client MAY either omit the "server_name" extension or provide
 an innocuous dummy one (this is required for technical conformance
 with {{!RFC7540}}; Section 9.2.)
+
+If the server does not provide an "encrypted_server_name" extension
+in EncryptedExtensions, the client MUST abort the connection with 
+an "illegal_parameter" alert. Moreover, it MUST check that 
+PaddedServerNameList.nonce matches the value of the 
+"encrypted_server_name" extension provided by the server, 
+and otherwise abort the connection with an "illegal_parameter" 
+alert.
 
 ## Client-Facing Server Behavior
 
@@ -440,22 +477,18 @@ A server operating in Shared Mode uses PaddedServerNameList.sni as
 if it were the "server_name" extension to finish the handshake. It
 SHOULD pad the Certificate message, via padding at the record layer,
 such that its length equals the size of the largest possible Certificate
-(message) covered by the same ESNI key.
+(message) covered by the same ESNI key. Moreover, the server MUST
+include the "encrypted_server_name" extension in EncryptedExtensions,
+and the value of this extension MUST match PaddedServerNameList.nonce.
 
 ## Split Mode Server Behavior {#backend-server-behavior}
 
-The backend Server ignores both the "encrypted_server_name" and the
-"server_name" (if any) and completes the handshake as usual. If in
-Shared Mode, the server will still know the true SNI, and can use it
-for certificate selection. In Split Mode, it may not know the true
-SNI and so will generally be configured to use a single certificate.
-{{communicating-sni}} describes a mechanism for communicating the
-true SNI to the backend server.
-
-Similar to the Shared Mode behavior, the backend server in Split Mode
-SHOULD pad the Certificate message, via padding at the record layer
-such that its length equals the size of the largest possible Certificate
-(message) covered by the same ESNI key.
+In Split Mode, the backend server must know PaddedServerNameList.nonce 
+to echo it back in EncryptedExtensions and complete the handshake.
+{{communicating-sni}} describes one mechanism for sending both 
+PaddedServerNameList.sni and PaddedServerNameList.nonce to the backend
+server. Thus, backend servers function the same as servers operating
+in Shared mode.
 
 # Compatibility Issues
 
@@ -534,8 +567,9 @@ without encryption of DNS queries in transit via DoH or DPRIVE mechanisms.
 
 ## Comparison Against Criteria
 
-{{?I-D.ietf-tls-sni-encryption}} lists several requirements for SNI encryption. In this
-section, we re-iterate these requirements and assess the ESNI design against them.
+{{?I-D.ietf-tls-sni-encryption}} lists several requirements for SNI 
+encryption. In this section, we re-iterate these requirements and assess 
+the ESNI design against them.
 
 ### Mitigate against replay attacks
 
@@ -611,7 +645,6 @@ verifying the server's identity in its certificate.
 odd, and probably some precise rules about handling ESNI and no
 SNI uniformly?]]
 
-
 # IANA Considerations
 
 ## Update of the TLS ExtensionType Registry
@@ -619,7 +652,7 @@ SNI uniformly?]]
 IANA is requested to Create an entry, encrypted_server_name(0xffce),
 in the existing registry for ExtensionType (defined in
 {{!RFC8446}}), with "TLS 1.3" column values being set to
-"CH", and "Recommended" column being set to "Yes".
+"CH, EE", and "Recommended" column being set to "Yes".
 
 ## Update of the DNS Underscore Global Scoped Entry Registry
 
@@ -632,23 +665,22 @@ to this document.
 --- back
 
 
-# Communicating SNI to Backend Server {#communicating-sni}
+# Communicating SNI and Nonce to Backend Server {#communicating-sni}
 
-As noted in {{backend-server-behavior}}, the backend server will
-generally not know the true SNI in Split Mode. It is possible for
-the client-facing server to communicate the true SNI to the backend server,
-but at the cost of having that communication not be unmodified TLS 1.3.
-The basic idea is to have a shared key between the client-facing server
-and the backend server (this can be a symmetric key) and use it to
-AEAD-encrypt Z and send the encrypted blob at the beginning of the connection before
+When operating in Split mode, backend servers will not have access
+to PaddedServerNameList.sni or PaddedServerNameList.nonce without
+access to the ESNI keys or a way to decrypt EncryptedSNI.encrypted_sni.
+
+One way to address this for a single connection, at the cost of having 
+communication not be unmodified TLS 1.3, is as follows. 
+Assume there is a shared (symmetric) key between the 
+client-facing server and the backend server and use it to AEAD-encrypt Z 
+and send the encrypted blob at the beginning of the connection before
 the ClientHello. The backend server can then decrypt ESNI to recover
-the true SNI.
+the true SNI and nonce. 
 
-An obvious alternative here would be to have the client-facing server
-forward the true SNI, but that would allow the client-facing server to
-lie. In this design, the attacker would need to be able to find a
-Z which would expand into a key that would validly AEAD-encrypt
-a message of his choice, which should be intractable (Hand-waving alert!).
+Another way for backend servers to access the true SNI and nonce is by the 
+client-facing server sharing the ESNI keys. 
 
 # Alternative SNI Protection Designs
 
