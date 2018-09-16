@@ -344,7 +344,7 @@ structure:
 ~~~
 
 nonce
-: The contents of .nonce. (See {{client-behavior}}.)
+: The contents of ClientESNIInner.nonce. (See {{client-behavior}}.)
 
 ## Client Behavior {#client-behavior}
 
@@ -417,7 +417,7 @@ to determine the true SNI. If the serialized ServerNameList is
 longer than ESNIKeys.padded_length, the client MUST NOT use
 the "encrypted_server_name" extension.
 
-The clientEncryptedSNI.encrypted_sni value is then computed using the usual
+The ClientEncryptedSNI.encrypted_sni value is then computed using the usual
 TLS 1.3 AEAD:
 
 ~~~~
