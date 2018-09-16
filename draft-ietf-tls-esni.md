@@ -304,7 +304,7 @@ extension, defined as follows:
 ~~~
 
 For clients (in ClientHello), this extension contains the following
-EncryptedSNI structure:
+ClientEncryptedSNI structure:
 
 ~~~~
    struct {
@@ -312,7 +312,7 @@ EncryptedSNI structure:
        KeyShareEntry key_share;
        opaque record_digest<0..2^16-1>;
        opaque encrypted_sni<0..2^16-1>;
-   } EncryptedSNI;
+   } ClientEncryptedSNI;
 ~~~~
 
 suite
@@ -350,12 +350,12 @@ nonce
 
 In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
-matching group. This share will then be sent to the server in the EncryptedSNI
-extension and used to derive the SNI encryption key. It does not affect the
+matching group. This share will then be sent to the server in the
+"encrypted_sni" extension and used to derive the SNI encryption key. It does not affect the
 (EC)DHE shared secret used in the TLS key schedule.
 
 Let Z be the DH shared secret derived from a key share in ESNIKeys and the
-corresponding client share in EncryptedSNI.key_share. The SNI encryption key is
+corresponding client share in ClientEncryptedSNI.key_share. The SNI encryption key is
 computed from Z as follows:
 
 ~~~~
@@ -417,7 +417,7 @@ to determine the true SNI. If the serialized ServerNameList is
 longer than ESNIKeys.padded_length, the client MUST NOT use
 the "encrypted_server_name" extension.
 
-The EncryptedSNI.encrypted_sni value is then computed using the usual
+The clientEncryptedSNI.encrypted_sni value is then computed using the usual
 TLS 1.3 AEAD:
 
 ~~~~
@@ -425,7 +425,7 @@ TLS 1.3 AEAD:
 ~~~~
 
 Including ClientHello.KeyShareClientHello in the AAD of AEAD-Encrypt
-binds the EncryptedSNI value to the ClientHello and prevents cut-and-paste
+binds the ClientEncryptedSNI value to the ClientHello and prevents cut-and-paste
 attacks.
 
 Note: future extensions may end up reusing the server's ESNIKeyShareEntry
@@ -447,7 +447,7 @@ with {{!RFC7540}}; Section 9.2.)
 If the server does not provide an "encrypted_server_name" extension
 in EncryptedExtensions, the client MUST abort the connection with
 an "illegal_parameter" alert. Moreover, it MUST check that
-ESNIInner.nonce matches the value of the
+ClientESNIInner.nonce matches the value of the
 "encrypted_server_name" extension provided by the server,
 and otherwise abort the connection with an "illegal_parameter"
 alert.
@@ -460,13 +460,13 @@ server MUST first perform the following checks:
 - If it is unable to negotiate TLS 1.3 or greater, it MUST
   abort the connection with a "handshake_failure" alert.
 
-- If the EncryptedSNI.record_digest value does not match the cryptographic
+- If the ClientEncryptedSNI.record_digest value does not match the cryptographic
   hash of any known ENSIKeys structure, it MUST abort the connection with
   an "illegal_parameter" alert. This is necessary to prevent downgrade attacks.
   [[OPEN ISSUE: We looked at ignoring the extension but concluded
   this was better.]]
 
-- If the EncryptedSNI.key_share group does not match one in the ESNIKeys.keys,
+- If the ClientEncryptedSNI.key_share group does not match one in the ESNIKeys.keys,
   it MUST abort the connection with an "illegal_parameter" alert.
 
 - If the length of the "encrypted_server_name" extension is
@@ -614,7 +614,7 @@ using a short TTL.
 
 ### Prevent SNI-based DoS attacks
 
-This design requires servers to decrypt ClientHello messages with EncryptedSNI
+This design requires servers to decrypt ClientHello messages with ClientEncryptedSNI
 extensions carrying valid digests. Thus, it is possible for an attacker to force
 decryption operations on the server. This attack is bound by the number of
 valid TCP connections an attacker can open.
@@ -691,7 +691,7 @@ to this document.
 
 When operating in Split mode, backend servers will not have access
 to PaddedServerNameList.sni or ClientESNIInner.nonce without
-access to the ESNI keys or a way to decrypt EncryptedSNI.encrypted_sni.
+access to the ESNI keys or a way to decrypt ClientEncryptedSNI.encrypted_sni.
 
 One way to address this for a single connection, at the cost of having
 communication not be unmodified TLS 1.3, is as follows.
