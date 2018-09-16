@@ -244,10 +244,8 @@ This structure is placed in the RRData section of a TXT record
 as a base64-encoded string. If this encoding exceeds the 255 octet
 limit of TXT strings, it must be split across multiple concatenated
 strings as per Section 3.1.3 of {{!RFC4408}}. Servers MAY supply
-multiple TXT records, either of the same or of different versions.
+multiple ESNIKeys values, either of the same or of different versions.
 This allows a server to support multiple versions at once.
-[[OPEN ISSUE: What do you do with multiple concurrent ESNIs of the
-same version? Should that be legal?]]
 
 The name of each TXT record MUST match the name composed
 of \_esni and the query domain name. That is, if a client queries
