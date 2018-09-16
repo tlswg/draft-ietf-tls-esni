@@ -395,19 +395,9 @@ nonce
 sni
 : The true SNI.
 
-<<<<<<< HEAD
-nonce
-: A random 16-octet value to be echoed by the server in the
-"encrypted_server_name" extension.
-
-zeros
-: Zero padding whose length makes the serialized struct length
-match ESNIKeys.padded_length.
-=======
 zeros
 : Zero padding whose length makes the serialized PaddedServerNameList
 struct have a length equal to ESNIKeys.padded_length.
->>>>>>> Reorder the extension in a more logical way to make padding easier.
 
 This value consists of the serialized ServerNameList from the "server_name" extension,
 padded with enough zeroes to make the total structure ESNIKeys.padded_length
