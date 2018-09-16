@@ -187,6 +187,7 @@ structure, defined below.
     } KeyShareEntry;
 
     struct {
+        uint16 version;
         uint8 checksum[4];
         KeyShareEntry keys<4..2^16-1>;
         CipherSuite cipher_suites<2..2^16-2>;
@@ -196,6 +197,12 @@ structure, defined below.
         Extension extensions<0..2^16-1>;
     } ESNIKeys;
 ~~~~
+
+version
+: The version of the structure. For this specification, that value
+SHALL be 0x0000. Clients MUST ignore any ESNIKeys structure with a
+version they do not understand.
+[[NOTE: This means that the RFC will presumably have a nonzero value.]]
 
 checksum
 : The first four (4) octets of the SHA-256 message digest {{RFC6234}}
@@ -236,7 +243,9 @@ list of keys, so each key may be used with any cipher suite.
 This structure is placed in the RRData section of a TXT record
 as a base64-encoded string. If this encoding exceeds the 255 octet
 limit of TXT strings, it must be split across multiple concatenated
-strings as per Section 3.1.3 of {{!RFC4408}}.
+strings as per Section 3.1.3 of {{!RFC4408}}. Servers MAY supply
+multiple ESNIKeys values, either of the same or of different versions.
+This allows a server to support multiple versions at once.
 
 The name of each TXT record MUST match the name composed
 of \_esni and the query domain name. That is, if a client queries
@@ -294,7 +303,7 @@ extension, defined as follows:
    } ExtensionType;
 ~~~
 
-For clients (in ClientHello), this extension contains the following 
+For clients (in ClientHello), this extension contains the following
 EncryptedSNI structure:
 
 ~~~~
@@ -311,7 +320,7 @@ suite
 
 key_share
 : The KeyShareEntry carrying the client's public ephemeral key shared
-used to derive the ESNI key. 
+used to derive the ESNI key.
 
 record_digest
 : A cryptographic hash of the ESNIKeys structure from which the ESNI
@@ -342,11 +351,11 @@ nonce
 In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
 matching group. This share will then be sent to the server in the EncryptedSNI
-extension and used to derive the SNI encryption key. It does not affect the 
-(EC)DHE shared secret used in the TLS key schedule. 
+extension and used to derive the SNI encryption key. It does not affect the
+(EC)DHE shared secret used in the TLS key schedule.
 
-Let Z be the DH shared secret derived from a key share in ESNIKeys and the 
-corresponding client share in EncryptedSNI.key_share. The SNI encryption key is 
+Let Z be the DH shared secret derived from a key share in ESNIKeys and the
+corresponding client share in EncryptedSNI.key_share. The SNI encryption key is
 computed from Z as follows:
 
 ~~~~
@@ -355,7 +364,7 @@ computed from Z as follows:
    iv = HKDF-Expand-Label(Zx, "esni iv", Hash(ESNIContents), iv_length)
 ~~~~
 
-where ESNIContents is as specified below and Hash is the hash function 
+where ESNIContents is as specified below and Hash is the hash function
 associated with the HKDF instantiation.
 
 ~~~
@@ -380,11 +389,11 @@ sni
 : The true SNI.
 
 nonce
-: A random 16-octet value to be echoed by the server in the 
+: A random 16-octet value to be echoed by the server in the
 "encrypted_server_name" extension.
 
 zeros
-: Zero padding whose length makes the serialized struct length 
+: Zero padding whose length makes the serialized struct length
 match ESNIKeys.padded_length.
 
 This value consists of the serialized ServerNameList from the "server_name" extension,
@@ -402,7 +411,7 @@ TLS 1.3 AEAD:
     encrypted_sni = AEAD-Encrypt(key, iv, ClientHello.KeyShareClientHello, PaddedServerNameList)
 ~~~~
 
-Including ClientHello.KeyShareClientHello in the AAD of AEAD-Encrypt 
+Including ClientHello.KeyShareClientHello in the AAD of AEAD-Encrypt
 binds the EncryptedSNI value to the ClientHello and prevents cut-and-paste
 attacks.
 
@@ -423,11 +432,11 @@ an innocuous dummy one (this is required for technical conformance
 with {{!RFC7540}}; Section 9.2.)
 
 If the server does not provide an "encrypted_server_name" extension
-in EncryptedExtensions, the client MUST abort the connection with 
-an "illegal_parameter" alert. Moreover, it MUST check that 
-PaddedServerNameList.nonce matches the value of the 
-"encrypted_server_name" extension provided by the server, 
-and otherwise abort the connection with an "illegal_parameter" 
+in EncryptedExtensions, the client MUST abort the connection with
+an "illegal_parameter" alert. Moreover, it MUST check that
+PaddedServerNameList.nonce matches the value of the
+"encrypted_server_name" extension provided by the server,
+and otherwise abort the connection with an "illegal_parameter"
 alert.
 
 ## Client-Facing Server Behavior
@@ -483,9 +492,9 @@ and the value of this extension MUST match PaddedServerNameList.nonce.
 
 ## Split Mode Server Behavior {#backend-server-behavior}
 
-In Split Mode, the backend server must know PaddedServerNameList.nonce 
+In Split Mode, the backend server must know PaddedServerNameList.nonce
 to echo it back in EncryptedExtensions and complete the handshake.
-{{communicating-sni}} describes one mechanism for sending both 
+{{communicating-sni}} describes one mechanism for sending both
 PaddedServerNameList.sni and PaddedServerNameList.nonce to the backend
 server. Thus, backend servers function the same as servers operating
 in Shared mode.
@@ -567,8 +576,8 @@ without encryption of DNS queries in transit via DoH or DPRIVE mechanisms.
 
 ## Comparison Against Criteria
 
-{{?I-D.ietf-tls-sni-encryption}} lists several requirements for SNI 
-encryption. In this section, we re-iterate these requirements and assess 
+{{?I-D.ietf-tls-sni-encryption}} lists several requirements for SNI
+encryption. In this section, we re-iterate these requirements and assess
 the ESNI design against them.
 
 ### Mitigate against replay attacks
@@ -599,8 +608,8 @@ valid TCP connections an attacker can open.
 
 ### Do not stick out
 
-As more clients enable ESNI support, e.g., as normal part of Web browser 
-functionality, with keys supplied by shared hosting providers, the presence 
+As more clients enable ESNI support, e.g., as normal part of Web browser
+functionality, with keys supplied by shared hosting providers, the presence
 of ESNI extensions becomes less suspicious and part of common or predictable
 client behavior. In other words, if all Web browsers start using ESNI,
 the presence of this value does not signal suspicious behavior to passive
@@ -671,16 +680,16 @@ When operating in Split mode, backend servers will not have access
 to PaddedServerNameList.sni or PaddedServerNameList.nonce without
 access to the ESNI keys or a way to decrypt EncryptedSNI.encrypted_sni.
 
-One way to address this for a single connection, at the cost of having 
-communication not be unmodified TLS 1.3, is as follows. 
-Assume there is a shared (symmetric) key between the 
-client-facing server and the backend server and use it to AEAD-encrypt Z 
+One way to address this for a single connection, at the cost of having
+communication not be unmodified TLS 1.3, is as follows.
+Assume there is a shared (symmetric) key between the
+client-facing server and the backend server and use it to AEAD-encrypt Z
 and send the encrypted blob at the beginning of the connection before
 the ClientHello. The backend server can then decrypt ESNI to recover
-the true SNI and nonce. 
+the true SNI and nonce.
 
-Another way for backend servers to access the true SNI and nonce is by the 
-client-facing server sharing the ESNI keys. 
+Another way for backend servers to access the true SNI and nonce is by the
+client-facing server sharing the ESNI keys.
 
 # Alternative SNI Protection Designs
 
