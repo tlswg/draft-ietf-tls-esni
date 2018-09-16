@@ -340,11 +340,11 @@ structure:
 ~~~
    struct {
        uint8 nonce[16];
-   } EncryptedSNI;
+   } ServerEncryptedSNI;
 ~~~
 
 nonce
-: The contents of PaddedServerNameList.nonce. (See {{client-behavior}}.)
+: The contents of .nonce. (See {{client-behavior}}.)
 
 ## Client Behavior {#client-behavior}
 
@@ -375,19 +375,27 @@ associated with the HKDF instantiation.
    } ESNIContents;
 ~~~
 
-The client then creates a PaddedServerNameList:
+The client then creates a ClientESNIInner structure:
 
 ~~~~
    struct {
        ServerNameList sni;
-       uint8 nonce[16];
        opaque zeros[ESNIKeys.padded_length - length(sni)];
    } PaddedServerNameList;
+
+   struct {
+       uint8 nonce[16];
+       PaddedServerNameList realSNI;
+   } ClientESNIInner;
 ~~~~
+nonce
+: A random 16-octet value to be echoed by the server in the
+"encrypted_server_name" extension.
 
 sni
 : The true SNI.
 
+<<<<<<< HEAD
 nonce
 : A random 16-octet value to be echoed by the server in the
 "encrypted_server_name" extension.
@@ -395,6 +403,11 @@ nonce
 zeros
 : Zero padding whose length makes the serialized struct length
 match ESNIKeys.padded_length.
+=======
+zeros
+: Zero padding whose length makes the serialized PaddedServerNameList
+struct have a length equal to ESNIKeys.padded_length.
+>>>>>>> Reorder the extension in a more logical way to make padding easier.
 
 This value consists of the serialized ServerNameList from the "server_name" extension,
 padded with enough zeroes to make the total structure ESNIKeys.padded_length
@@ -408,7 +421,7 @@ The EncryptedSNI.encrypted_sni value is then computed using the usual
 TLS 1.3 AEAD:
 
 ~~~~
-    encrypted_sni = AEAD-Encrypt(key, iv, ClientHello.KeyShareClientHello, PaddedServerNameList)
+    encrypted_sni = AEAD-Encrypt(key, iv, ClientHello.KeyShareClientHello, ClientESNIInner)
 ~~~~
 
 Including ClientHello.KeyShareClientHello in the AAD of AEAD-Encrypt
@@ -434,7 +447,7 @@ with {{!RFC7540}}; Section 9.2.)
 If the server does not provide an "encrypted_server_name" extension
 in EncryptedExtensions, the client MUST abort the connection with
 an "illegal_parameter" alert. Moreover, it MUST check that
-PaddedServerNameList.nonce matches the value of the
+ESNIInner.nonce matches the value of the
 "encrypted_server_name" extension provided by the server,
 and otherwise abort the connection with an "illegal_parameter"
 alert.
@@ -495,7 +508,7 @@ and the value of this extension MUST match PaddedServerNameList.nonce.
 In Split Mode, the backend server must know PaddedServerNameList.nonce
 to echo it back in EncryptedExtensions and complete the handshake.
 {{communicating-sni}} describes one mechanism for sending both
-PaddedServerNameList.sni and PaddedServerNameList.nonce to the backend
+PaddedServerNameList.sni and ClientESNIInner.nonce to the backend
 server. Thus, backend servers function the same as servers operating
 in Shared mode.
 
@@ -677,7 +690,7 @@ to this document.
 # Communicating SNI and Nonce to Backend Server {#communicating-sni}
 
 When operating in Split mode, backend servers will not have access
-to PaddedServerNameList.sni or PaddedServerNameList.nonce without
+to PaddedServerNameList.sni or ClientESNIInner.nonce without
 access to the ESNI keys or a way to decrypt EncryptedSNI.encrypted_sni.
 
 One way to address this for a single connection, at the cost of having
