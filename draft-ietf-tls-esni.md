@@ -373,7 +373,7 @@ associated with the HKDF instantiation.
        KeyShareEntry esni_key_share;
        Random client_hello_random;
    } ESNIContents;
-~~
+~~~
 
 The client then creates a ClientESNIInner structure:
 
