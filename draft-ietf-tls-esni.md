@@ -373,7 +373,7 @@ associated with the HKDF instantiation.
        KeyShareEntry esni_key_share;
        Random client_hello_random;
    } ESNIContents;
-~~~
+~~
 
 The client then creates a ClientESNIInner structure:
 
@@ -414,8 +414,10 @@ TLS 1.3 AEAD:
     encrypted_sni = AEAD-Encrypt(key, iv, ClientHello.KeyShareClientHello, ClientESNIInner)
 ~~~~
 
-Including ClientHello.KeyShareClientHello in the AAD of AEAD-Encrypt
-binds the ClientEncryptedSNI value to the ClientHello and prevents cut-and-paste
+Where ClientHello.KeyShareClientHello is the body of the extension but
+not including the extension header. Including
+ClientHello.KeyShareClientHello in the AAD of AEAD-Encrypt binds the
+ClientEncryptedSNI value to the ClientHello and prevents cut-and-paste
 attacks.
 
 Note: future extensions may end up reusing the server's ESNIKeyShareEntry
