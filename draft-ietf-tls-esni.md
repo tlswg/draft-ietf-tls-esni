@@ -200,7 +200,7 @@ structure, defined below.
 
 version
 : The version of the structure. For this specification, that value
-SHALL be 0x0000. Clients MUST ignore any ESNIKeys structure with a
+SHALL be 0xff01. Clients MUST ignore any ESNIKeys structure with a
 version they do not understand.
 [[NOTE: This means that the RFC will presumably have a nonzero value.]]
 
