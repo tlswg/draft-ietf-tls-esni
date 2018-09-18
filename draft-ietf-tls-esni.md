@@ -392,7 +392,8 @@ nonce
 "encrypted_server_name" extension.
 
 sni
-: The original ServerNameList from the "server_name" extension.
+: The true SNI, that is, the ServerNameList that would have been sent in the
+plaintext "server_name" extension.
 
 zeros
 : Zero padding whose length makes the serialized PaddedServerNameList
