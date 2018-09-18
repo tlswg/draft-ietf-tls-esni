@@ -206,8 +206,8 @@ version they do not understand.
 
 checksum
 : The first four (4) octets of the SHA-256 message digest {{RFC6234}}
-of the ESNIKeys structure starting from the first octet of "keys" to
-the end of the structure.
+of the ESNIKeys structure. For the purpose of computing the checksum, the
+value of the "checksum" field MUST be set to zero.
 
 keys
 : The list of keys which can be used by the client to encrypt the SNI.
