@@ -329,9 +329,8 @@ of the structure.  This hash is computed using the hash function
 associated with `suite`.
 
 encrypted_sni
-: The original ServerNameList from the "server_name" extension,
-  padded and AEAD-encrypted using cipher suite "suite" and with the key
-  generated as described below.
+: The ClientESNIInner structure, AEAD-encrypted using cipher suite "suite" and
+the key generated as described below.
 {:br}
 
 For servers (in EncryptedExtensions), this extension contains the following
@@ -393,7 +392,7 @@ nonce
 "encrypted_server_name" extension.
 
 sni
-: The true SNI.
+: The original ServerNameList from the "server_name" extension.
 
 zeros
 : Zero padding whose length makes the serialized PaddedServerNameList
