@@ -476,7 +476,8 @@ any value other than 0, then the server MUST abort the
 connection with an illegal_parameter alert. Otherwise, the
 server uses the PaddedServerNameList.sni value as if it were
 the "server_name" extension. Any actual "server_name" extension is
-ignored.
+ignored, which also means the server MUST NOT send the "server_name"
+extension to the client.
 
 Upon determining the true SNI, the client-facing server then either
 serves the connection directly (if in Shared Mode), in which case
