@@ -263,6 +263,10 @@ Clients obtain these records by querying DNS for ESNI-enabled server domains.
 Clients may initiate these queries in parallel alongside normal A or AAAA queries,
 and SHOULD block TLS handshakes until they complete, perhaps by timing out.
 
+In cases where the domain of the A or AAAA records being resolved do
+not match the SNI Server Name, such as when {{!RFC7838}} is being used, the SNI
+domain should be used for querying the ESNI TXT record.
+
 Servers operating in Split Mode SHOULD have DNS configured to return
 the same A (or AAAA) record for all ESNI-enabled servers they service. This yields
 an anonymity set of cardinality equal to the number of ESNI-enabled server domains
