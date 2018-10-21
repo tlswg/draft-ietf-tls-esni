@@ -246,6 +246,9 @@ limit of TXT strings, it must be split across multiple concatenated
 strings as per Section 3.1.3 of {{!RFC4408}}. Servers MAY supply
 multiple ESNIKeys values, either of the same or of different versions.
 This allows a server to support multiple versions at once.
+If the server does not supply any ESNIKeys values with a version
+known to the client, then the client SHOULD behave as if no
+ESNIKeys were found.
 
 The name of each TXT record MUST match the name composed
 of \_esni and the query domain name. That is, if a client queries
@@ -278,8 +281,11 @@ home router.
 
 "not_before" and "not_after" fields represent the validity period of the
 published ESNI keys. Clients MUST NOT use ESNI keys that was covered by an
-invalid checksum or beyond the published
-period. Servers SHOULD set the Resource Record TTL small enough so that the
+invalid checksum or beyond the published period. If none of the ESNI keys
+values are acceptable, the client should behave as if non ESNIKeys
+were found.
+
+Servers SHOULD set the Resource Record TTL small enough so that the
 record gets discarded by the cache before the ESNI keys reach the end of
 their validity period. Note that servers MAY need to retain the decryption key
 for some time after "not_after", and will need to consider clock skew, internal
@@ -351,7 +357,12 @@ In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
 matching group. This share will then be sent to the server in the
 "encrypted_sni" extension and used to derive the SNI encryption key. It does not affect the
-(EC)DHE shared secret used in the TLS key schedule.
+(EC)DHE shared secret used in the TLS key schedule. It MUST also select
+an appropriate cipher suite from the list of suites offered by the
+server. If the client is unable to select an appropriate group or
+suite it SHOULD ignore that ESNIKeys value and MAY attempt to use another
+value provided by the server; it MUST NOT send
+encrypted SNI using groups or cipher suites not advertised by the server.
 
 Let Z be the DH shared secret derived from a key share in ESNIKeys and the
 corresponding client share in ClientEncryptedSNI.key_share. The SNI encryption key is
