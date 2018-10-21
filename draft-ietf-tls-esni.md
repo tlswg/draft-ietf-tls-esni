@@ -282,7 +282,7 @@ home router.
 "not_before" and "not_after" fields represent the validity period of the
 published ESNI keys. Clients MUST NOT use ESNI keys that was covered by an
 invalid checksum or beyond the published period. If none of the ESNI keys
-values are acceptable, the client should behave as if no ESNIKeys
+values are acceptable, the client SHOULD behave as if no ESNIKeys
 were found.
 
 Servers SHOULD set the Resource Record TTL small enough so that the
@@ -359,7 +359,7 @@ matching group. This share will then be sent to the server in the
 "encrypted_sni" extension and used to derive the SNI encryption key. It does not affect the
 (EC)DHE shared secret used in the TLS key schedule. It MUST also select
 an appropriate cipher suite from the list of suites offered by the
-server. If the client is unable to select an appropriate group or suite it SHOULD ignore that ESNIKeys value and MAY attempt to use another value provided by the server (recall that servers may provide multiple ESNIKeys in response to a ESNI TXT query).
+server. If the client is unable to select an appropriate group or suite it SHOULD ignore that ESNIKeys value and MAY attempt to use another value provided by the server (recall that servers might provide multiple ESNIKeys in response to a ESNI TXT query).
 The client MUST NOT send
 encrypted SNI using groups or cipher suites not advertised by the server.
 
