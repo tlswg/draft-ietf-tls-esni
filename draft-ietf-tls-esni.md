@@ -436,6 +436,8 @@ The client MAY either omit the "server_name" extension or provide
 an innocuous dummy one (this is required for technical conformance
 with {{!RFC7540}}; Section 9.2.)
 
+If the server does not negotiate TLS 1.3 or above, then the client
+MUST abort the connection with an "unsupported_version" alert.
 If the server does not provide an "encrypted_server_name" extension
 in EncryptedExtensions, the client MUST abort the connection with
 an "illegal_parameter" alert. Moreover, it MUST check that
