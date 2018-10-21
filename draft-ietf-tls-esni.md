@@ -247,7 +247,7 @@ strings as per Section 3.1.3 of {{!RFC4408}}. Servers MAY supply
 multiple ESNIKeys values, either of the same or of different versions.
 This allows a server to support multiple versions at once.
 If the server does not supply any ESNIKeys values with a version
-known to the client, then the client SHOULD behave as if no
+known to the client, then the client MUST behave as if no
 ESNIKeys were found.
 
 The name of each TXT record MUST match the name composed
@@ -282,7 +282,7 @@ home router.
 "not_before" and "not_after" fields represent the validity period of the
 published ESNI keys. Clients MUST NOT use ESNI keys that was covered by an
 invalid checksum or beyond the published period. If none of the ESNI keys
-values are acceptable, the client should behave as if non ESNIKeys
+values are acceptable, the client should behave as if no ESNIKeys
 were found.
 
 Servers SHOULD set the Resource Record TTL small enough so that the
