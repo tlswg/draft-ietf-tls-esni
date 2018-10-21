@@ -359,9 +359,8 @@ matching group. This share will then be sent to the server in the
 "encrypted_sni" extension and used to derive the SNI encryption key. It does not affect the
 (EC)DHE shared secret used in the TLS key schedule. It MUST also select
 an appropriate cipher suite from the list of suites offered by the
-server. If the client is unable to select an appropriate group or
-suite it SHOULD ignore that ESNIKeys value and MAY attempt to use another
-value provided by the server; it MUST NOT send
+server. If the client is unable to select an appropriate group or suite it SHOULD ignore that ESNIKeys value and MAY attempt to use another value provided by the server (recall that servers may provide multiple ESNIKeys in response to a ESNI TXT query).
+The client MUST NOT send
 encrypted SNI using groups or cipher suites not advertised by the server.
 
 Let Z be the DH shared secret derived from a key share in ESNIKeys and the
