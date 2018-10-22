@@ -700,6 +700,9 @@ to this document.
 > **RFC Editor's Note:** Please remove this section prior to publication of a
 > final version of this document.
 
+GitHub PRs before draft-ietf-tls-esni-02 are associated with the repository located
+at https://github.com/ekr/draft-rescorla-tls-esni.
+
 ## Since draft-ietf-tls-esni-01
 
 - Clarify TXT record query name (#61).
