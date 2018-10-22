@@ -360,7 +360,7 @@ nonce
 In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
 matching group. This share will then be sent to the server in the
-"encrypted_sni" extension and used to derive the SNI encryption key. It does not affect the
+"encrypted_server_name" extension and used to derive the SNI encryption key. It does not affect the
 (EC)DHE shared secret used in the TLS key schedule. It MUST also select
 an appropriate cipher suite from the list of suites offered by the
 server. If the client is unable to select an appropriate group or suite it SHOULD ignore that ESNIKeys value and MAY attempt to use another value provided by the server (recall that servers might provide multiple ESNIKeys in response to a ESNI TXT query).
@@ -694,6 +694,30 @@ value being set to "_esni", and the "Reference" column value being set
 to this document.
 
 --- back
+
+# Change Log
+
+> **RFC Editor's Note:** Please remove this section prior to publication of a
+> final version of this document.
+
+GitHub PRs before draft-ietf-tls-esni-02 are associated with the repository located
+at https://github.com/ekr/draft-rescorla-tls-esni.
+
+## Since draft-ietf-tls-esni-01
+
+- Clarify TXT record query name (#61).
+- Ensure clients abort if TLS 1.2 is negotiated (#101).
+- Clarify that clients should soft fail if ESNI cannot be negotiated (#102).
+
+## Since draft-ietf-tls-esni-00
+
+- Add version field to ESNIKeys structure fixed to 0xff01 for experiments, and allow servers to publish multiple ESNIKeys structures (#96, #90).
+
+## Since draft-rescorla-tls-esni-00
+
+- Use separate key share entry for ESNI, and add ClientHello.KeyShareClientHello to the ESNI key
+derivation to prevent ESNI ciphertext malleability (#87).
+- Add encrypted nonce to ESNI that is echoed by servers in "encrypted_server_name" extension (#89).
 
 
 # Communicating SNI and Nonce to Backend Server {#communicating-sni}
