@@ -570,7 +570,7 @@ SHOULD be used but is likely to lead to connection failure.
  AAAA ? www.example.com.provider-A.com
      -> AAAA 2001:DB8::AAAA
  TXT ? _esni.www.example.com.provider-B.com
-     -> ".. KEY FOR B.."
+     -> "... KEY FOR B ..."
 ~~~~
 
 The client determines the canonical names for the www.example.com TXT
