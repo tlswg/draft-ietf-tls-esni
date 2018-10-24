@@ -579,7 +579,7 @@ TXT record that matches the canonical address record it already has.
 
 ~~~~
     TXT ? _esni.www.example.com.provider-A.com
-        -> ".. KEY FOR A.."
+        -> "... KEY FOR A ..."
 ~~~~
 
 ## Misconfiguration
