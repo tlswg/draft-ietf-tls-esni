@@ -260,7 +260,9 @@ _esni.example.com. 60S IN TXT "..." "..."
 
 Servers MUST ensure that if multiple A or AAAA records are returned for a
 domain with ESNI support, all the servers pointed to by those records are
-able to handle the keys returned as part of a ESNI TXT record for that domain.
+able to handle the keys returned as part of a ESNI TXT record for that
+domain. See also {{multi-cdn}} for requirements regarding the use of
+DNS aliases with ESNI DNS records.
 
 Clients obtain these records by querying DNS for ESNI-enabled server domains.
 Clients may initiate these queries in parallel alongside normal A or AAAA queries,
@@ -527,6 +529,58 @@ In general, this mechanism is designed only to be used with
 servers which have opted in, thus minimizing compatibility
 issues. However, there are two scenarios where that does not
 apply, as detailed below.
+
+## Load Balancing Multiple Independent Providers {#multi-cdn}
+
+The DNS is used to independently transfer two linked pieces of
+informaton to implement ESNI. The server is identified through DNS
+address records and the server's ESNI configuration is specified in a TXT
+record that is transported separately. {{publishing-key}} requires
+that these records are coordinated.
+
+The practice of multi-provider load balancing creates a situation
+where it is not possible to reliably coordinate this information. In
+this configuration an alias is used as the server name. The alias is
+implemented as a DNS CNAME record. This provides a level of indirection
+between the domain owner and the hosting provider. When a domain is
+load balanced, the canonical name of the aliased domain potentially
+changes between different providers on a per-request basis. This can
+lead to the use of uncoordinated addressing and key information from
+different providers which in turn will cause connection failures.
+
+In order to prevent this failure the client confirms that the two
+records being used share the same canonical provenance. Specifically,
+the client MUST confirm that the unprefixed (i.e. lacking the
+_esni. prefix) canonical name of the TXT record matches the canonical
+name of the address record.
+
+Clients that hold mismatched records MUST resolve the conflict by
+obtaining a new TXT record (or determining its absence) for the
+prefixed canonical name of the address record. If the necessary
+canonical TXT record itself turns out to be an alias this information
+SHOULD be used but is likely to lead to connection failure.
+
+### Example
+
+~~~~
+ AAAA ? www.example.com
+     -> CNAME www.example.com.provider-A.com
+ TXT ? _esni.www.example.com
+     -> CNAME _esni.www.example.com.provider-B.com
+ AAAA ? www.example.com.provider-A.com
+     -> AAAA 2001:DB8::AAAA
+ TXT ? _esni.www.example.com.provider-B.com
+     -> ".. KEY FOR B.."
+~~~~
+
+The client determines the canonical names for the www.example.com TXT
+and AAAA records do not match. It proceeds by obtaining the canonical
+TXT record that matches the canonical address record it already has.
+
+~~~~
+    TXT ? _esni.www.example.com.provider-A.com
+        -> ".. KEY FOR A.."
+~~~~
 
 ## Misconfiguration
 
