@@ -533,7 +533,7 @@ apply, as detailed below.
 ## Load Balancing Multiple Independent Providers {#multi-cdn}
 
 The DNS is used to independently transfer two linked pieces of
-informaton to implement ESNI. The server is identified through DNS
+information to implement ESNI. The server is identified through DNS
 address records and the server's ESNI configuration is specified in a TXT
 record that is transported separately. {{publishing-key}} requires
 that these records are coordinated.
