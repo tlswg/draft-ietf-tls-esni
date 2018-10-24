@@ -550,7 +550,7 @@ different providers which in turn will cause connection failures.
 
 In order to prevent this failure the client confirms that the two
 records being used share the same canonical provenance. Specifically,
-the client MUST confirm that the unprefixed (i.e. lacking the
+the client MUST confirm that the unprefixed (i.e., lacking the
 _esni. prefix) canonical name of the TXT record matches the canonical
 name of the address record.
 
