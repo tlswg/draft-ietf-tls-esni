@@ -240,19 +240,20 @@ be used to encrypt the SNI for the associated domain name.
 The cipher suite list is orthogonal to the
 list of keys, so each key may be used with any cipher suite.
 
-This structure is placed in the RRData section of a TXT record
-as a base64-encoded string. If this encoding exceeds the 255 octet
-limit of TXT strings, it must be split across multiple concatenated
-strings as per Section 3.1.3 of {{!RFC4408}}. Servers MAY supply
-multiple ESNIKeys values, either of the same or of different versions.
-This allows a server to support multiple versions at once.
+This structure is placed in the RRData section of a TXT record as a
+base64-encoded string prefixed by the case sensitive string
+"ESNIKeys=". If this encoding exceeds the 255 octet limit of TXT
+strings, it must be split across multiple concatenated strings as per
+Section 3.1.3 of {{!RFC4408}}. Servers MAY supply multiple ESNIKeys
+values, either of the same or of different versions.  This allows a
+server to support multiple versions at once.
 
 The name of each TXT record MUST match the name composed
 of \_esni and the query domain name. That is, if a client queries
 example.com, the ESNI TXT Resource Record might be:
 
 ~~~
-_esni.example.com. 60S IN TXT "..." "..."
+_esni.example.com. 60S IN TXT "ESNIKeys=..." "..."
 ~~~
 
 Servers MUST ensure that if multiple A or AAAA records are returned for a
@@ -289,8 +290,42 @@ Client MAY cache the ESNIKeys for a particular domain based on the TTL of the
 Resource Record, but SHOULD NOT cache it based on the not_after value, to allow
 servers to rotate the keys often and improve forward secrecy.
 
-Note that the length of this structure MUST NOT exceed 2^16 - 1, as the
-RDLENGTH is only 16 bits {{RFC1035}}.
+Note that the length of this structure MUST NOT exceed 2^16 - 10, as the
+RDLENGTH is only 16 bits {{RFC1035}} and 9 octets are consumed by the
+ESNIKeys= prefix.
+
+## ESNIInclude
+
+The DNS {{RFC1035}} allows most names to act as an alias via the CNAME
+record type. However, the apex of a zone cannot be an alias. Domain
+owners who cooperate with other organizations for server operation
+sometimes directly publish the A or AAAA address information for the
+servers at the apex of their zone, while relying on the more flexible
+CNAME for other hosted names. Unfortunately, a similar approach does
+not work well for ESNIKeys because they are expected to be rotated
+frequently and thus become out of date if published directly in
+another zone.
+
+The ESNIInclude mechanism provides a way to link the ESNIKeys of one
+domain with another even at the apex.
+
+A TXT Record that begins with the case sensitive string "ESNIInclude="
+does not contain ESNIKeys itself but does indicate to the client where
+they may be obtained. The remainder of the TXT record indicates the
+next name to query for the ESNIKeys.
+
+~~~
+example.com. 60S IN TXT "ESNIInclude=hoster.example.com"
+~~~
+
+An ESNI client that obtains an ESNIInclude TXT record SHOULD replace
+that record with the one indicated by the ESNIInclude. ESNIInclude is
+not a DNS alias and therefore does not change the canonical name of
+the domain using it.
+
+For better performance the ESNIInclude referenced domain is NOT
+RECOMMENDED to be another ESNIInclude though that is allowed in order
+to minimize required coordination between domain owners.
 
 # The "encrypted_server_name" extension {#esni-extension}
 
