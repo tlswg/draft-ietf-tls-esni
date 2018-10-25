@@ -247,12 +247,13 @@ strings as per Section 3.1.3 of {{!RFC4408}}. Servers MAY supply
 multiple ESNIKeys values, either of the same or of different versions.
 This allows a server to support multiple versions at once.
 
-The name of each TXT record MUST match the name composed
-of \_esni and the query domain name. That is, if a client queries
-example.com, the ESNI TXT Resource Record might be:
+The name of each TXT record MUST match the query domain name or the
+query domain name's canonicalized form. That is,
+if a client queries example.com, the ESNI TXT Resource Record might
+be:
 
 ~~~
-_esni.example.com. 60S IN TXT "..." "..."
+example.com. 60S IN TXT "..." "..."
 ~~~
 
 Servers MUST ensure that if multiple A or AAAA records are returned for a
@@ -668,14 +669,6 @@ IANA is requested to Create an entry, encrypted_server_name(0xffce),
 in the existing registry for ExtensionType (defined in
 {{!RFC8446}}), with "TLS 1.3" column values being set to
 "CH, EE", and "Recommended" column being set to "Yes".
-
-## Update of the DNS Underscore Global Scoped Entry Registry
-
-IANA is requested to create an entry in the DNS Underscore Global
-Scoped Entry Registry (defined in {{!I-D.ietf-dnsop-attrleaf}}) with the
-"RR Type" column value being set to "TXT", the "_NODE NAME" column
-value being set to "_esni", and the "Reference" column value being set
-to this document.
 
 --- back
 
