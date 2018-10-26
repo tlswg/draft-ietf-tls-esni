@@ -247,6 +247,9 @@ strings, it must be split across multiple concatenated strings as per
 Section 3.1.3 of {{!RFC4408}}. Servers MAY supply multiple ESNIKeys
 values, either of the same or of different versions.  This allows a
 server to support multiple versions at once.
+If the server does not supply any ESNIKeys values with a version
+known to the client, then the client MUST behave as if no
+ESNIKeys were found.
 
 The name of each TXT record MUST match the name composed
 of \_esni and the query domain name. That is, if a client queries
@@ -264,6 +267,10 @@ Clients obtain these records by querying DNS for ESNI-enabled server domains.
 Clients may initiate these queries in parallel alongside normal A or AAAA queries,
 and SHOULD block TLS handshakes until they complete, perhaps by timing out.
 
+In cases where the domain of the A or AAAA records being resolved do
+not match the SNI Server Name, such as when {{!RFC7838}} is being used, the SNI
+domain should be used for querying the ESNI TXT record.
+
 Servers operating in Split Mode SHOULD have DNS configured to return
 the same A (or AAAA) record for all ESNI-enabled servers they service. This yields
 an anonymity set of cardinality equal to the number of ESNI-enabled server domains
@@ -279,8 +286,11 @@ home router.
 
 "not_before" and "not_after" fields represent the validity period of the
 published ESNI keys. Clients MUST NOT use ESNI keys that was covered by an
-invalid checksum or beyond the published
-period. Servers SHOULD set the Resource Record TTL small enough so that the
+invalid checksum or beyond the published period. If none of the ESNI keys
+values are acceptable, the client SHOULD behave as if no ESNIKeys
+were found.
+
+Servers SHOULD set the Resource Record TTL small enough so that the
 record gets discarded by the cache before the ESNI keys reach the end of
 their validity period. Note that servers MAY need to retain the decryption key
 for some time after "not_after", and will need to consider clock skew, internal
@@ -386,7 +396,11 @@ In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
 matching group. This share will then be sent to the server in the
 "encrypted_sni" extension and used to derive the SNI encryption key. It does not affect the
-(EC)DHE shared secret used in the TLS key schedule.
+(EC)DHE shared secret used in the TLS key schedule. It MUST also select
+an appropriate cipher suite from the list of suites offered by the
+server. If the client is unable to select an appropriate group or suite it SHOULD ignore that ESNIKeys value and MAY attempt to use another value provided by the server (recall that servers might provide multiple ESNIKeys in response to a ESNI TXT query).
+The client MUST NOT send
+encrypted SNI using groups or cipher suites not advertised by the server.
 
 Let Z be the DH shared secret derived from a key share in ESNIKeys and the
 corresponding client share in ClientEncryptedSNI.key_share. The SNI encryption key is
@@ -471,6 +485,8 @@ The client MAY either omit the "server_name" extension or provide
 an innocuous dummy one (this is required for technical conformance
 with {{!RFC7540}}; Section 9.2.)
 
+If the server does not negotiate TLS 1.3 or above, then the client
+MUST abort the connection with an "unsupported_version" alert.
 If the server does not provide an "encrypted_server_name" extension
 in EncryptedExtensions, the client MUST abort the connection with
 an "illegal_parameter" alert. Moreover, it MUST check that
