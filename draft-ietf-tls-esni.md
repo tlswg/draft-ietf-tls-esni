@@ -641,7 +641,7 @@ eavesdroppers.
 
 This design is not forward secret because the server's ESNI key is static.
 However, the window of exposure is bound by the key lifetime. It is
-RECOMMEMDED that servers rotate keys frequently.
+RECOMMENDED that servers rotate keys frequently.
 
 ### Proper security context
 
@@ -790,7 +790,7 @@ It also has the following disadvantages:
   result in a ClientHello which is just unacceptable to the server
   (more analysis needed).
 
-# Acknowledgments
+# Acknowledgements
 
 This document draws extensively from ideas in {{?I-D.kazuho-protected-sni}}, but
 is a much more limited mechanism because it depends on the DNS for the
