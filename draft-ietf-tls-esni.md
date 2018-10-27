@@ -548,9 +548,8 @@ different providers which in turn will cause connection failures.
 
 In order to prevent this failure the client confirms that the two
 records being used share the same canonical provenance. Specifically,
-the client MUST confirm that the unprefixed (i.e., lacking the
-_esni. prefix) canonical name of the ESNI record matches the canonical
-name of the address record.
+the client MUST confirm that the canonical name of the ESNI record
+matches the canonical name of the address record.
 
 Clients that hold mismatched records MUST resolve the conflict by
 obtaining a new ESNI record (or determining its absence) for the
@@ -563,11 +562,11 @@ SHOULD be used but is likely to lead to connection failure.
 ~~~~
  AAAA ? www.example.com
      -> CNAME www.example.com.provider-A.com
- ESNI ? _esni.www.example.com
-     -> CNAME _esni.www.example.com.provider-B.com
+ ESNI ? www.example.com
+     -> CNAME www.example.com.provider-B.com
  AAAA ? www.example.com.provider-A.com
      -> AAAA 2001:DB8::AAAA
- ESNI ? _esni.www.example.com.provider-B.com
+ ESNI ? www.example.com.provider-B.com
      -> "... KEY FOR B ..."
 ~~~~
 
@@ -576,7 +575,7 @@ and AAAA records do not match. It proceeds by obtaining the canonical
 ESNI record that matches the canonical address record it already has.
 
 ~~~~
-    ESNI ? _esni.www.example.com.provider-A.com
+    ESNI ? www.example.com.provider-A.com
         -> "... KEY FOR A ..."
 ~~~~
 
