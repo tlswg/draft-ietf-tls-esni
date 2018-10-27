@@ -241,19 +241,15 @@ The cipher suite list is orthogonal to the
 list of keys, so each key may be used with any cipher suite.
 
 This structure is placed in the RRData section of an ESNI record
-as-is.  Servers MAY supply multiple ESNIKeys values, either of the
+prefixed by the case sensitive string "ESNIKeys=".  Servers MAY supply
+multiple ESNIKeys values using just one prefix label, either of the
 same or of different versions.  This allows a server to support
 multiple versions at once.  If the server does not supply any ESNIKeys
 values with a version known to the client, then the client MUST behave
 as if no ESNIKeys were found.
 
-The name of each ESNI record MUST match the query domain name for the
-query domain name's canonicalized form. That is,
-if a client queries www.example.com, the ESNI Resource Record might
-be:
-
 ~~~
-www.example.com. 60S IN ESNI "..."
+www.example.com. 60S IN ESNI "ESNIKeys=..."
 ~~~
 
 Servers MUST ensure that if multiple A or AAAA records are returned for a
@@ -299,8 +295,42 @@ Client MAY cache the ESNIKeys for a particular domain based on the TTL of the
 Resource Record, but SHOULD NOT cache it based on the not_after value, to allow
 servers to rotate the keys often and improve forward secrecy.
 
-Note that the length of this structure MUST NOT exceed 2^16 - 1, as the
-RDLENGTH is only 16 bits {{RFC1035}}.
+Note that the length of this structure MUST NOT exceed 2^16 - 10, as the
+RDLENGTH is only 16 bits {{RFC1035}} and 9 octets are consumed by the
+ESNIKeys= prefix.
+
+## ESNIInclude
+
+The DNS {{RFC1035}} allows most names to act as an alias via the CNAME
+record type. However, the apex of a zone cannot be an alias. Domain
+owners who cooperate with other organizations for server operation
+sometimes directly publish the A or AAAA address information for the
+servers at the apex of their zone, while relying on the more flexible
+CNAME for other hosted names. Unfortunately, a similar approach does
+not work well for ESNIKeys because they are expected to be rotated
+frequently and thus become out of date if published directly in
+another zone.
+
+The ESNIInclude mechanism provides a way to link the ESNIKeys of one
+domain with another even at the apex.
+
+A ESNI Record that begins with the case sensitive string "ESNIInclude="
+does not contain ESNIKeys itself but does indicate to the client where
+they may be obtained. The remainder of the ESNI record indicates the
+next name to query for the ESNIKeys.
+
+~~~
+www.example.com. 60S IN ESNI "ESNIInclude=example.com.hoster.com"
+~~~
+
+An ESNI client that obtains an ESNIInclude record SHOULD replace
+that record with the one indicated by the ESNIInclude. ESNIInclude is
+not a DNS alias and therefore does not change the canonical name of
+the domain using it.
+
+For better performance the ESNIInclude referenced domain is NOT
+RECOMMENDED to be another ESNIInclude though that is allowed in order
+to minimize required coordination between domain owners.
 
 # The "encrypted_server_name" extension {#esni-extension}
 
@@ -553,9 +583,9 @@ matches the canonical name of the address record.
 
 Clients that hold mismatched records MUST resolve the conflict by
 obtaining a new ESNI record (or determining its absence) for the
-prefixed canonical name of the address record. If the necessary
-canonical ESNI record itself turns out to be an alias this information
-SHOULD be used but is likely to lead to connection failure.
+canonical name of the address record. If the necessary canonical ESNI
+record itself turns out to be an alias this information SHOULD be used
+but is likely to lead to connection failure.
 
 ### Example
 
