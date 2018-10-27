@@ -247,12 +247,13 @@ multiple versions at once.  If the server does not supply any ESNIKeys
 values with a version known to the client, then the client MUST behave
 as if no ESNIKeys were found.
 
-The name of each ESNI record MUST match the name composed
-of \_esni and the query domain name. That is, if a client queries
-example.com, the ESNI Resource Record might be:
+The name of each ESNI record MUST match the query domain name for the
+query domain name's canonicalized form. That is,
+if a client queries www.example.com, the ESNI TXT Resource Record might
+be:
 
 ~~~
-_esni.example.com. 60S IN ESNI "..."
+www.example.com. 60S IN ESNI "..."
 ~~~
 
 Servers MUST ensure that if multiple A or AAAA records are returned for a
@@ -736,20 +737,11 @@ in the existing registry for ExtensionType (defined in
 {{!RFC8446}}), with "TLS 1.3" column values being set to
 "CH, EE", and "Recommended" column being set to "Yes".
 
-## Update of the DNS Underscore Global Scoped Entry Registry
-
-IANA is requested to create an entry in the DNS Underscore Global
-Scoped Entry Registry (defined in {{!I-D.ietf-dnsop-attrleaf}}) with the
-"RR Type" column value being set to "ESNI", the "_NODE NAME" column
-value being set to "_esni", and the "Reference" column value being set
-to this document.
-
 ## Update of the Resource Record (RR) TYPEs Registry
 
 IANA is requested to create an entry, ESNI(0xff9f), in the existing
 registry for Resource Record (RR) TYPEs (defined in BCP 42 {{!RFC6895}}) with
 "Meaning" column value being set to "Encrypted SNI".
-
 
 --- back
 
