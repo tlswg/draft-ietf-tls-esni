@@ -249,7 +249,7 @@ as if no ESNIKeys were found.
 
 The name of each ESNI record MUST match the query domain name for the
 query domain name's canonicalized form. That is,
-if a client queries www.example.com, the ESNI TXT Resource Record might
+if a client queries www.example.com, the ESNI Resource Record might
 be:
 
 ~~~
