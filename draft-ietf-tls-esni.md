@@ -257,7 +257,9 @@ _esni.example.com. 60S IN ESNI "..."
 
 Servers MUST ensure that if multiple A or AAAA records are returned for a
 domain with ESNI support, all the servers pointed to by those records are
-able to handle the keys returned as part of a ESNI record for that domain.
+able to handle the keys returned as part of a ESNI record for that
+domain. See also {{multi-cdn}} for requirements regarding the use of
+DNS aliases with ESNI DNS records.
 
 Clients obtain these records by querying DNS for ESNI-enabled server domains.
 Clients may initiate these queries in parallel alongside normal A or AAAA queries,
@@ -357,7 +359,7 @@ nonce
 In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
 matching group. This share will then be sent to the server in the
-"encrypted_sni" extension and used to derive the SNI encryption key. It does not affect the
+"encrypted_server_name" extension and used to derive the SNI encryption key. It does not affect the
 (EC)DHE shared secret used in the TLS key schedule. It MUST also select
 an appropriate cipher suite from the list of suites offered by the
 server. If the client is unable to select an appropriate group or suite it SHOULD ignore that ESNIKeys value and MAY attempt to use another value provided by the server (recall that servers might provide multiple ESNIKeys in response to a ESNI query).
@@ -524,6 +526,58 @@ In general, this mechanism is designed only to be used with
 servers which have opted in, thus minimizing compatibility
 issues. However, there are two scenarios where that does not
 apply, as detailed below.
+
+## Load Balancing Multiple Independent Providers {#multi-cdn}
+
+The DNS is used to independently transfer two linked pieces of
+information to implement ESNI. The server is identified through DNS
+address records and the server's ESNI configuration is specified in a
+ESI typed record that is transported separately. {{publishing-key}}
+requires that these records are coordinated.
+
+The practice of multi-provider load balancing creates a situation
+where it is not possible to reliably coordinate this information. In
+this configuration an alias is used as the server name. The alias is
+implemented as a DNS CNAME record. This provides a level of indirection
+between the domain owner and the hosting provider. When a domain is
+load balanced, the canonical name of the aliased domain potentially
+changes between different providers on a per-request basis. This can
+lead to the use of uncoordinated addressing and key information from
+different providers which in turn will cause connection failures.
+
+In order to prevent this failure the client confirms that the two
+records being used share the same canonical provenance. Specifically,
+the client MUST confirm that the unprefixed (i.e., lacking the
+_esni. prefix) canonical name of the ESNI record matches the canonical
+name of the address record.
+
+Clients that hold mismatched records MUST resolve the conflict by
+obtaining a new ESNI record (or determining its absence) for the
+prefixed canonical name of the address record. If the necessary
+canonical ESNI record itself turns out to be an alias this information
+SHOULD be used but is likely to lead to connection failure.
+
+### Example
+
+~~~~
+ AAAA ? www.example.com
+     -> CNAME www.example.com.provider-A.com
+ ESNI ? _esni.www.example.com
+     -> CNAME _esni.www.example.com.provider-B.com
+ AAAA ? www.example.com.provider-A.com
+     -> AAAA 2001:DB8::AAAA
+ ESNI ? _esni.www.example.com.provider-B.com
+     -> "... KEY FOR B ..."
+~~~~
+
+The client determines the canonical names for the www.example.com ESNI
+and AAAA records do not match. It proceeds by obtaining the canonical
+ESNI record that matches the canonical address record it already has.
+
+~~~~
+    ESNI ? _esni.www.example.com.provider-A.com
+        -> "... KEY FOR A ..."
+~~~~
 
 ## Misconfiguration
 
@@ -698,6 +752,30 @@ registry for Resource Record (RR) TYPEs (defined in BCP 42 {{!RFC6895}}) with
 
 
 --- back
+
+# Change Log
+
+> **RFC Editor's Note:** Please remove this section prior to publication of a
+> final version of this document.
+
+GitHub PRs before draft-ietf-tls-esni-02 are associated with the repository located
+at https://github.com/ekr/draft-rescorla-tls-esni.
+
+## Since draft-ietf-tls-esni-01
+
+- Clarify TXT record query name (#61).
+- Ensure clients abort if TLS 1.2 is negotiated (#101).
+- Clarify that clients should soft fail if ESNI cannot be negotiated (#102).
+
+## Since draft-ietf-tls-esni-00
+
+- Add version field to ESNIKeys structure fixed to 0xff01 for experiments, and allow servers to publish multiple ESNIKeys structures (#96, #90).
+
+## Since draft-rescorla-tls-esni-00
+
+- Use separate key share entry for ESNI, and add ClientHello.KeyShareClientHello to the ESNI key
+derivation to prevent ESNI ciphertext malleability (#87).
+- Add encrypted nonce to ESNI that is echoed by servers in "encrypted_server_name" extension (#89).
 
 
 # Communicating SNI and Nonce to Backend Server {#communicating-sni}
