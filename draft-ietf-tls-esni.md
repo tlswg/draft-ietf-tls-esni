@@ -160,7 +160,7 @@ server.
 The protocol designed in this document is quite straightforward.
 
 First, the provider publishes a public key which is used for SNI encryption
-for all the domains for which it serves directly or indirectly (via Split mode).
+for all the domains for which it serves directly or indirectly (via Split Mode).
 This document defines a publication mechanism using DNS, but other mechanisms
 are also possible. In particular, if some of the clients of
 a private server are applications rather than Web browsers, those
@@ -519,7 +519,7 @@ to echo it back in EncryptedExtensions and complete the handshake.
 {{communicating-sni}} describes one mechanism for sending both
 PaddedServerNameList.sni and ClientESNIInner.nonce to the backend
 server. Thus, backend servers function the same as servers operating
-in Shared mode.
+in Shared Mode.
 
 # Compatibility Issues
 
@@ -698,7 +698,7 @@ to this document.
 
 # Communicating SNI and Nonce to Backend Server {#communicating-sni}
 
-When operating in Split mode, backend servers will not have access
+When operating in Split Mode, backend servers will not have access
 to PaddedServerNameList.sni or ClientESNIInner.nonce without
 access to the ESNI keys or a way to decrypt ClientEncryptedSNI.encrypted_sni.
 
