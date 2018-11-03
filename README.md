@@ -1,10 +1,10 @@
-# 
+# Encrypted Server Name Indication for TLS 1.3
 
-This is the working area for the individual Internet-Draft, "".
+This is the working area for the IETF [TLS Working Group](https://datatracker.ietf.org/wg/tls/documents/) Internet-Draft, "Encrypted Server Name Indication for TLS 1.3".
 
-* [Editor's Copy](https://ekr.github.io/draft-rescorla-tls-esni/#go.draft-rescorla-tls-esni.html)
-* [Individual Draft](https://tools.ietf.org/html/draft-rescorla-tls-esni)
-* [Compare Editor's Copy to Individual Draft](https://ekr.github.io/draft-rescorla-tls-esni/#go.draft-rescorla-tls-esni.diff)
+* [Editor's Copy](https://tlswg.github.io/draft-ietf-tls-esni/#go.draft-ietf-tls-esni.html)
+* [Working Group Draft](https://tools.ietf.org/html/draft-ietf-tls-esni)
+* [Compare Editor's Copy to Working Group Draft](https://tlswg.github.io/draft-ietf-tls-esni/#go.draft-ietf-tls-esni.diff)
 
 ## Building the Draft
 
@@ -21,4 +21,4 @@ This requires that you have the necessary software installed.  See
 ## Contributing
 
 See the
-[guidelines for contributions](https://github.com/ekr/draft-rescorla-tls-esni/blob/master/CONTRIBUTING.md).
+[guidelines for contributions](https://github.com/tlswg/draft-ietf-tls-esni/blob/master/CONTRIBUTING.md).
