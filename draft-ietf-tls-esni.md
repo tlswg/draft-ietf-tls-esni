@@ -592,7 +592,8 @@ the clear does not make the situation significantly worse.
 
 Clearly, DNSSEC (if the client validates and hard fails) is a defense against
 this form of attack, but DoH/DPRIVE are also defenses against DNS attacks
-by attackers on the local network, which is a common case where SNI.
+by attackers on the local network, which is a common case where SNI is
+desired.
 Moreover, as noted in the introduction, SNI encryption is less useful
 without encryption of DNS queries in transit via DoH or DPRIVE mechanisms.
 
