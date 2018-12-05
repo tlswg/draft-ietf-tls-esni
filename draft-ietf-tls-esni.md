@@ -469,7 +469,7 @@ server MUST first perform the following checks:
   abort the connection with a "handshake_failure" alert.
 
 - If the ClientEncryptedSNI.record_digest value does not match the cryptographic
-  hash of any known ENSIKeys structure, it MUST abort the connection with
+  hash of any known ESNIKeys structure, it MUST abort the connection with
   an "illegal_parameter" alert. This is necessary to prevent downgrade attacks.
   [[OPEN ISSUE: We looked at ignoring the extension but concluded
   this was better.]]
