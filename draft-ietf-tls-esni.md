@@ -506,11 +506,13 @@ messages, but just blindly forwards them.
 
 A server operating in Shared Mode uses PaddedServerNameList.sni as
 if it were the "server_name" extension to finish the handshake. It
-SHOULD pad the Certificate message, via padding at the record layer,
-such that its length equals the size of the largest possible Certificate
-(message) covered by the same ESNI key. Moreover, the server MUST
-include the "encrypted_server_name" extension in EncryptedExtensions,
-and the value of this extension MUST match PaddedServerNameList.nonce.
+SHOULD pad at least the Certificate and CertificateVerify ahnshake 
+messages, via padding at the record layer, so that differences between 
+different server_name instances (i.e. certificate or signature size) 
+covered by the same ESNI key are not apparent on the network. Moreover, 
+the server MUST include the "encrypted_server_name" extension in 
+EncryptedExtensions, and the value of this extension MUST match 
+PaddedServerNameList.nonce.
 
 ## Split Mode Server Behavior {#backend-server-behavior}
 
