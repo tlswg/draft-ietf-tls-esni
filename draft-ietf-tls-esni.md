@@ -45,7 +45,7 @@ normative:
   RFC7918:
 
 informative:
-
+  I-D.ietf-tls-grease:
 
 
 --- abstract
@@ -700,6 +700,38 @@ presented by the server. These connections are only used to trigger retries, as
 described in {{handle-server-response}}. This may be implemented, for instance, by
 reporting a failed connection with a dedicated error code.
 
+### GREASE extensions {#grease-extensions}
+
+If the client attempts to connect to a server and does not have an ESNIKeys
+structure available for the server, it SHOULD send a GREASE
+{{I-D.ietf-tls-grease}} "encrypted_server_name" extension as follows:
+
+- Select a supported cipher suite, named group, and padded_length
+  value. The padded_length value SHOULD be 260. Set the "suite" field
+  to the selected cipher suite.
+
+- Set the "key_share" field to a randomly-generated valid public key
+  for the named group.
+
+- Set the "record_digest" field to a randomly-generated string of hash_length
+  bytes, where hash_length is the length of the hash function associated with
+  the chosen cipher suite.
+
+- Set the "encrypted_sni" field to a randomly-generated string of
+  16 + padded_length + tag_length bytes, where tag_length is the tag length
+  of the chosen cipher suite's associated AEAD.
+
+If the server sends an "encrypted_server_name" extension, the client
+MUST check the extension syntactically and abort the connection with a
+"decode_error" alert if it is invalid. If the "response_type" field
+contains "esni_retry_requested", the client MUST ignore the extension
+and proceed with the handshake. If it contains "esni_accept" or any other
+value, the client MUST abort the connection with an "illegal_parameter" alert.
+
+Offering a GREASE extension is not considered offering an encrypted SNI for
+purposes of requirements in {{client-behavior}}. In particular, the client MAY
+offer sessions established without ESNI.
+
 ## Client-Facing Server Behavior {#server-behavior}
 
 Upon receiving an "encrypted_server_name" extension, the client-facing
@@ -723,6 +755,11 @@ behavior:
   name. The server was unable to decrypt then ESNI name, so it should not resume
   them when using the cleartext SNI name. This restriction allows a client to
   reject resumptions in {{verify-public-name}}.
+
+Note that an unrecognized ClientEncryptedSNI.record_digest value may be
+a GREASE ESNI extension (see {{grease-extensions}}), so it is necessary
+for servers to proceed with the connection and rely on the client to
+abort if ESNI was required.
 
 If the ClientEncryptedSNI.record_digest value does match the cryptographic
 hash of a known ESNIKeys, the server performs the following checks:
@@ -906,6 +943,10 @@ of ESNI extensions becomes less suspicious and part of common or predictable
 client behavior. In other words, if all Web browsers start using ESNI,
 the presence of this value does not signal suspicious behavior to passive
 eavesdroppers.
+
+Additionally, this specification allows for clients to send GREASE ESNI
+extensions (see {{grease-extensions}}), which helps ensure the ecosystem
+handles the values correctly.
 
 ### Forward secrecy
 
