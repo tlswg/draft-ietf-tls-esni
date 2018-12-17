@@ -42,6 +42,7 @@ normative:
   RFC1035:
   RFC2119:
   RFC6234:
+  RFC7918:
 
 informative:
 
@@ -157,18 +158,17 @@ server.
 
 ## SNI Encryption
 
-The protocol designed in this document is quite straightforward.
+The protocol designed in this document is straightforward.
 
-First, the provider publishes a public key which is used for SNI encryption
-for all the domains for which it serves directly or indirectly (via Split Mode).
-This document defines a publication mechanism using DNS, but other mechanisms
-are also possible. In particular, if some of the clients of
-a private server are applications rather than Web browsers, those
-applications might have the public key preconfigured.
+First, the provider publishes a public key and metadata which is used for SNI
+encryption for all the domains for which it serves directly or indirectly (via
+Split Mode). This document defines a publication mechanism using DNS, but other
+mechanisms are also possible. In particular, if some of the clients of a private
+server are applications rather than Web browsers, those applications might have
+the public key preconfigured.
 
 When a client wants to form a TLS connection to any of the domains
-served by an ESNI-supporting provider, it replaces the
-"server_name" extension in the ClientHello with an "encrypted_server_name"
+served by an ESNI-supporting provider, it sends an "encrypted_server_name"
 extension, which contains the true extension encrypted under the
 provider's public key. The provider can then decrypt the extension
 and either terminate the connection (in Shared Mode) or forward
@@ -189,6 +189,7 @@ structure, defined below.
     struct {
         uint16 version;
         uint8 checksum[4];
+        opaque public_name<1..2^16-1>;
         KeyShareEntry keys<4..2^16-1>;
         CipherSuite cipher_suites<2..2^16-2>;
         uint16 padded_length;
@@ -200,7 +201,7 @@ structure, defined below.
 
 version
 : The version of the structure. For this specification, that value
-SHALL be 0xff01. Clients MUST ignore any ESNIKeys structure with a
+SHALL be 0xff02. Clients MUST ignore any ESNIKeys structure with a
 version they do not understand.
 [[NOTE: This means that the RFC will presumably have a nonzero value.]]
 
@@ -208,6 +209,11 @@ checksum
 : The first four (4) octets of the SHA-256 message digest {{RFC6234}}
 of the ESNIKeys structure. For the purpose of computing the checksum, the
 value of the "checksum" field MUST be set to zero.
+
+public_name
+: The name of the entity trusted to update these encryption keys.
+This is used by the server in case there is a key mismatch or the
+server has disabled ESNI.
 
 keys
 : The list of keys which can be used by the client to encrypt the SNI.
@@ -347,13 +353,40 @@ For servers (in EncryptedExtensions), this extension contains the following
 structure:
 
 ~~~
+   enum {
+       esni_accept(0),
+       esni_retry_request(1),
+   } ServerESNIResponseType;
+
    struct {
-       uint8 nonce[16];
+       ServerESNIResponseType response_type;
+       select (response_type) {
+           case esni_accept:        uint8 nonce[16];
+           case esni_retry_request: ESNIKeys retry_keys<1..2^16-1>;
+       }
    } ServerEncryptedSNI;
 ~~~
 
+response_type
+: Indicates whether the server processed the client ESNI extension. (See
+{{client-behavior}} and {{server-behavior}}.}
+
 nonce
 : The contents of ClientESNIInner.nonce. (See {{client-behavior}}.)
+
+retry_keys
+: ESNIKeys structures containing the keys that the client should use on
+subsequent connections to encrypt the ClientESNIInner structure.
+
+Finally, this protocol defines the "esni_required" alert, which is sent by
+the client when it offered an "encrypted_server_name" extension which was not
+accepted by the server.
+
+~~~~
+   enum {
+       esni_required(121),
+   } AlertDescription;
+~~~~
 
 ## Client Behavior {#client-behavior}
 
@@ -366,6 +399,9 @@ an appropriate cipher suite from the list of suites offered by the
 server. If the client is unable to select an appropriate group or suite it SHOULD ignore that ESNIKeys value and MAY attempt to use another value provided by the server (recall that servers might provide multiple ESNIKeys in response to a ESNI TXT query).
 The client MUST NOT send
 encrypted SNI using groups or cipher suites not advertised by the server.
+
+When offering an encrypted SNI, the client MUST NOT offer to resume any previous
+sessions that were established without an encrypted SNI.
 
 Let Z be the DH shared secret derived from a key share in ESNIKeys and the
 corresponding client share in ClientEncryptedSNI.key_share. The SNI encryption key is
@@ -446,33 +482,111 @@ to harmonize these to make sure that we maintain key separation.]]
 
 This value is placed in an "encrypted_server_name" extension.
 
-The client MAY either omit the "server_name" extension or provide
-an innocuous dummy one (this is required for technical conformance
-with {{!RFC7540}}; Section 9.2.)
+The client MUST place the value of ESNIKeys.public_name in the "server_name"
+extension. (This is required for technical conformance with {{!RFC7540}};
+Section 9.2.)
 
-If the server does not negotiate TLS 1.3 or above, then the client
-MUST abort the connection with an "unsupported_version" alert.
-If the server does not provide an "encrypted_server_name" extension
-in EncryptedExtensions, the client MUST abort the connection with
-an "illegal_parameter" alert. Moreover, it MUST check that
-ClientESNIInner.nonce matches the value of the
-"encrypted_server_name" extension provided by the server,
-and otherwise abort the connection with an "illegal_parameter"
-alert.
+If the server negotiates TLS 1.3 or above and provides an
+"encrypted_server_name" extension in EncryptedExtensions, the client
+then processes the extension's "response_type" field:
 
-## Client-Facing Server Behavior
+- If the value is "esni_accept", the client MUST check that the extension's
+  "nonce" field matches ClientESNIInner.nonce and otherwise abort the
+  connection with an "illegal_parameter" alert. The client then proceeds
+  with the connection as usual, verifying the certificate against the desired
+  name.
+
+- If the value is "esni_retry_request", the client proceeds with the handshake,
+  verifying the certificate against ESNIKeys.public_name as described in
+  {{verify-public-name}}. If the handshake completes successfully, the client
+  MUST abort the connection with an "esni_required" alert.
+
+  The client then processes the "retry_keys" field from the server's
+  "encrypted_server_name" extension. If one of the values used a version known
+  to the client, the client SHOULD retry the handshake with a new transport
+  connection, using that value to encrypt the SNI. If no value is applicable,
+  the client SHOULD retry with ESNI disabled.
+
+  The client MUST NOT use the server-provided retry keys until the handshake
+  completes successfully. On success, it MUST NOT overwrite the DNS-provided
+  keys with the retry keys. It MUST use the retry keys at most once and
+  continue offering DNS-provided keys for subsequent connections. This avoids
+  introducing a tracking vector, should a malicious server present
+  client-specific retry keys.
+
+- If the field contains any other value, the client MUST abort the connection
+  with an "illegal_parameter" alert.
+
+If the server negotiates an earlier version of TLS, or if it does not
+provide an "encrypted_server_name" extension in EncryptedExtensions, the
+client proceeds with the handshake, verifying the certificate against
+ESNIKeys.public_name as described in {{verify-public-name}}. The client MUST
+NOT enable the False Start optimization {{RFC7918}}. If the handshake completes
+successfully, the client MUST abort the connection with an "esni_required" alert.
+It then SHOULD retry the handshake with a new transport connection and encrypted
+SNI disabled.
+
+[[TODO: Key replacement is significantly less scary than saying that ESNI-naive
+  servers bounce ESNI off. Is it worth defining a strict mode toggle in the ESNI
+  keys, for a deployment to indicate it is ready for that? ]]
+
+The client MUST NOT treat this as a signal to disable encrypted SNI until the
+handshake completes successfully.
+
+Clients SHOULD implement a limit on retries caused by "esni_retry_request" or
+servers which do not acknowledge the "encrypted_server_name" extension. If the
+client does not retry in either scenario, it MUST report an error to the
+calling application.
+
+### Verifying against the public name {#verify-public-name}
+
+When the server cannot decrypt or does not process the "encrypted_server_name"
+extension, it continues with the handshake using the cleartext "server_name"
+extension instead (see {{server-behavior}}). Clients that offer ESNI then
+verify the certificate with the public name, as follows:
+
+- If the server resumed a session or negotiated parameters not based on
+  certificates, the client MUST abort the connection with an illegal_parameter
+  alert. This case is invalid because {{client-behavior}} requires the client
+  to only offer ESNI-established sessions, and {{server-behavior}} requires
+  the server to decline ESNI-established sessions if it did not accept ESNI.
+
+- The client MUST verify that the certificate is valid for ESNIKeys.public_name.
+  If invalid, it MUST abort the connection with the appropriate alert.
+
+- If the server requests a client certificate, the client MUST respond with an
+  empty Certificate message, denoting no client certificate.
+
+Note that verifying a connection for the public name does not verify it for the
+origin. The TLS implementation MUST NOT surface such connections as successful to
+the application. It additionally MUST ignore all session tickets and session IDs
+presented by the server. These connections are only used to trigger retries, as
+described in {{client-behavior}}. This may be implemented, for instance, by
+reporting a failed connection with a dedicated error code.
+
+## Client-Facing Server Behavior {#server-behavior}
 
 Upon receiving an "encrypted_server_name" extension, the client-facing
-server MUST first perform the following checks:
+server MUST check that it is able to negotiate TLS 1.3 or greater. If not,
+it MUST abort the connection with a "handshake_failure" alert.
 
-- If it is unable to negotiate TLS 1.3 or greater, it MUST
-  abort the connection with a "handshake_failure" alert.
+If the ClientEncryptedSNI.record_digest value does not match the
+cryptographic hash of any known ESNIKeys structure, it MUST ignore the
+extension and proceed with the connection, with the following
+behavior:
 
-- If the ClientEncryptedSNI.record_digest value does not match the cryptographic
-  hash of any known ESNIKeys structure, it MUST abort the connection with
-  an "illegal_parameter" alert. This is necessary to prevent downgrade attacks.
-  [[OPEN ISSUE: We looked at ignoring the extension but concluded
-  this was better.]]
+- It MUST include the "encrypted_server_name" extension in
+  EncryptedExtensions message with the "response_type" field set to
+  "esni_retry_requested" and the "retry_keys" field set to one or more
+  ESNIKeys structures with up-to-date keys. Servers MAY supply multiple
+  ESNIKeys values of different versions. This allows a server to support
+  multiple versions at once.
+
+- The server MUST NOT resume any sessions offered by the client that
+  were established without ESNI.
+
+If the ClientEncryptedSNI.record_digest value does match the cryptographic
+hash of a known ESNIKeys, the server performs the following checks:
 
 - If the ClientEncryptedSNI.key_share group does not match one in the ESNIKeys.keys,
   it MUST abort the connection with an "illegal_parameter" alert.
@@ -509,8 +623,15 @@ if it were the "server_name" extension to finish the handshake. It
 SHOULD pad the Certificate message, via padding at the record layer,
 such that its length equals the size of the largest possible Certificate
 (message) covered by the same ESNI key. Moreover, the server MUST
-include the "encrypted_server_name" extension in EncryptedExtensions,
-and the value of this extension MUST match PaddedServerNameList.nonce.
+include the "encrypted_server_name" extension in EncryptedExtensions
+with the "response_type" field set to "esni_accept" and the "nonce"
+field set to PaddedServerNameList.nonce.
+
+If the server sends a NewSessionTicket message, the ticket MUST be
+ignored by servers not negotiating ESNI, including servers which do
+not implement this specification. This may be implemented by adding
+a new field to the server session state which earlier implementations
+cannot parse.
 
 ## Split Mode Server Behavior {#backend-server-behavior}
 
@@ -521,57 +642,61 @@ PaddedServerNameList.sni and ClientESNIInner.nonce to the backend
 server. Thus, backend servers function the same as servers operating
 in Shared Mode.
 
+As in Shared Mode, if the backend server sends a NewSessionTicket
+message, the ticket MUST be ignored by servers not negotiating ESNI,
+including servers which do not implement this specification.
+
 # Compatibility Issues
 
-In general, this mechanism is designed only to be used with
-servers which have opted in, thus minimizing compatibility
-issues. However, there are two scenarios where that does not
-apply, as detailed below.
+Unlike most TLS extensions, placing the SNI value in an ESNI extension
+is not interoperable with existing servers, which expect the value in
+the existing cleartext extension. Thus server operators SHOULD ensure
+servers understand a given set of ESNI keys before advertising them in
+DNS. Additionally, servers SHOULD retain support for any
+previously-advertised keys for the duration of their validity.
 
-## Misconfiguration
+However, in more complex deployment scenarios, this may be difficult
+to fully guarantee. Thus this protocol was designed to be robust in case
+of inconsistencies between DNS and servers, at the cost of extra
+round-trips due to a retry. Two specific scenarios are detailed below.
 
-If DNS is misconfigured so that a client receives ESNI keys for a
-server which is not prepared to receive ESNI, then the server will
-ignore the "encrypted_server_name" extension, as required by
-{{RFC8446}}; Section 4.1.2.  If the servers does not
-require SNI, it will complete the handshake with its default
-certificate. Most likely, this will cause a certificate name
-mismatch and thus handshake failure. Clients SHOULD NOT fall
-back to cleartext SNI, because that allows a network attacker
-to disclose the SNI. They MAY attempt to use another server
-from the DNS results, if one is provided.
+## Misconfiguration and Deployment Concerns
 
+It is possible for DNS and servers to become inconsistent. This may occur, for instance,
+from DNS misconfiguration, caching issues, or an incomplete rollout in a multi-server
+deployment. This may also occur if a server loses its ESNI keys, or an initial deployment
+of ESNI must be rolled back on the server.
+
+The retry mechanism repairs most such inconsistencies. If server and DNS keys mismatch,
+the server will respond with esni_retry_requested. If the server does not understand the
+"encrypted_server_name" extension at all, it will ignore it as required by {{RFC8446}};
+Section 4.1.2. Provided the server can present a certificate valid for the public name,
+the client can safely retry with updated settings, as described in {{client-behavior}}.
+
+If the public name does not verify or the retry fails, the client SHOULD NOT
+fall back to cleartext SNI, as this allows a network attacker to disclose the SNI.
+They MAY attempt to use another server from the DNS results, if one is provided.
 
 ## Middleboxes
 
 A more serious problem is MITM proxies which do not support this
 extension. {{RFC8446}}; Section 9.3 requires that
 such proxies remove any extensions they do not understand.
-This will have one of two results when connecting to the client-facing
-server:
 
-1. The handshake will fail if the client-facing server requires SNI.
-2. The handshake will succeed with the client-facing server's default
-   certificate.
+A non-conformant MITM proxy which forwards the ESNI extension,
+substituting its own KeyShare value, will result in
+the client-facing server recognizing the key, but failing to decrypt
+the SNI. This causes a hard failure. Hopefully, the TLS 1.3 deployment
+experience has cleaned out most such proxies.
 
-A Web client client can securely detect case (2) because it will result
-in a connection which has an invalid identity (most likely)
-but which is signed by a certificate which does not chain
-to a publicly known trust anchor. The client can detect this
-case and disable ESNI while in that network configuration.
-
-In order to enable this mechanism, client-facing servers SHOULD NOT
-require SNI, but rather respond with some default certificate.
-
-A non-conformant MITM proxy will forward the ESNI extension,
-substituting its own KeyShare value, with the result that
-the client-facing server will not be able to decrypt the SNI.
-This causes a hard failure. Detecting this case is difficult,
-but clients might opt to attempt captive portal detection
-to see if they are in the presence of a MITM proxy, and if
-so disable ESNI. Hopefully, the TLS 1.3 deployment experience
-has cleaned out most such proxies.
-
+The public name, however, makes this protocol compatible with deployments that
+use correctly-implemented MITM proxies. If the client has cached an ESNIKey for
+the origin server, the MITM proxy will process the cleartext SNI field and
+terminate a connection to the public name instead. If the client is configured
+to trust the proxy's certificate, it will accept the connection as valid for the
+public name and retry with ESNI disabled. If the client is not configured to
+trust the proxy, it will reject this and not retry, meeting this protocol's and
+TLS's security requirements.
 
 # Security Considerations
 
@@ -656,6 +781,10 @@ from a trusted Recursive Resolver, spoofing a server operating in Split Mode
 is not possible. See {{cleartext-dns}} for more details regarding cleartext
 DNS.
 
+Validating the ESNIKeys structure additionally validates the public name. This
+validates any retry signals from the server because the client validates the server
+certificate against the public name before retrying.
+
 ### Supporting multiple protocols
 
 This design has no impact on application layer protocol negotiation. It may affect
@@ -681,10 +810,16 @@ SNI uniformly?]]
 
 ## Update of the TLS ExtensionType Registry
 
-IANA is requested to Create an entry, encrypted_server_name(0xffce),
+IANA is requested to create an entry, encrypted_server_name(0xffce),
 in the existing registry for ExtensionType (defined in
 {{!RFC8446}}), with "TLS 1.3" column values being set to
 "CH, EE", and "Recommended" column being set to "Yes".
+
+## Update of the TLS Alert Registry
+
+IANA is requested to create an entry, esni_required(121) in the
+existing registry for Alerts (defined in {{!RFC8446}}), with the
+"DTLS-OK" column being set to "Y".
 
 ## Update of the DNS Underscore Global Scoped Entry Registry
 
