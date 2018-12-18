@@ -583,7 +583,8 @@ behavior:
   multiple versions at once.
 
 - The server MUST NOT resume any sessions offered by the client that
-  were established without ESNI.
+  were established with ESNI. Such sessions are associated with the ESNI name,
+  which the server was unable to decrypt.
 
 If the ClientEncryptedSNI.record_digest value does match the cryptographic
 hash of a known ESNIKeys, the server performs the following checks:
