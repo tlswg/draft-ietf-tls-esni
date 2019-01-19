@@ -187,8 +187,8 @@ structure, defined below.
     } KeyShareEntry;
 
     struct {
-        uint16 version;
         uint8 checksum[4];
+        uint16 version;
         KeyShareEntry keys<4..2^16-1>;
         CipherSuite cipher_suites<2..2^16-2>;
         uint16 padded_length;
