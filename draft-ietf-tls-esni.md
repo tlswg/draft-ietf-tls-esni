@@ -460,6 +460,17 @@ ClientESNIInner.nonce matches the value of the
 and otherwise abort the connection with an "illegal_parameter"
 alert.
 
+If the server sends a HelloRetryRequest in response to the ClientHello
+and the client can send a second updated ClientHello per the rules in
+{{RFC8446}}, the "encrypted_server_name" extension values which do not depend
+on the (possibly updated) ClientHello.KeyShareClientHello, i.e,,
+ClientEncryptedSNI.suite, ClientEncryptedSNI.key_share, and
+ClientEncryptedSNI.record_digest, MUST NOT change across ClientHello messages.
+Moreover, ClientESNIInner.nonce and ClientESNIInner.realSNI MUST not change
+across ClientHello messages. Informally, the values of all unencrypted extension
+information, as well as the inner extension plaintext, must be consistent between
+the first and second ClientHello messages.
+
 ## Client-Facing Server Behavior
 
 Upon receiving an "encrypted_server_name" extension, the client-facing
