@@ -165,7 +165,7 @@ encryption for all the domains for which it serves directly or indirectly (via
 Split Mode). This document defines a publication mechanism using DNS, but other
 mechanisms are also possible. In particular, if some of the clients of a private
 server are applications rather than Web browsers, those applications might have
-the public key preconfigured.
+the public key and metadata preconfigured.
 
 When a client wants to form a TLS connection to any of the domains
 served by an ESNI-supporting provider, it sends an "encrypted_server_name"
@@ -378,8 +378,8 @@ retry_keys
 : ESNIKeys structures containing the keys that the client should use on
 subsequent connections to encrypt the ClientESNIInner structure.
 
-Finally, this protocol defines the "esni_required" alert, which is sent by
-the client when it offered an "encrypted_server_name" extension which was not
+This protocol also defines the "esni_required" alert, which is sent by the
+client when it offered an "encrypted_server_name" extension which was not
 accepted by the server.
 
 ~~~~
@@ -387,6 +387,13 @@ accepted by the server.
        esni_required(121),
    } AlertDescription;
 ~~~~
+
+Finally, implementations MUST track whether each PSK was established by a
+connection which negotiated this extension with the "esni_accept" response type.
+If so, this is referred to as an "ESNI PSK". Otherwise, it is a "non-ESNI PSK".
+This may be implemented by adding a new field to client and server session
+states.
+
 
 ## Client Behavior {#client-behavior}
 
@@ -400,8 +407,9 @@ server. If the client is unable to select an appropriate group or suite it SHOUL
 The client MUST NOT send
 encrypted SNI using groups or cipher suites not advertised by the server.
 
-When offering an encrypted SNI, the client MUST NOT offer to resume any previous
-sessions that were established without an encrypted SNI.
+When offering an encrypted SNI, the client MUST NOT offer to resume any non-ESNI
+PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2 or
+below.
 
 Let Z be the DH shared secret derived from a key share in ESNIKeys and the
 corresponding client share in ClientEncryptedSNI.key_share. The SNI encryption key is
@@ -523,8 +531,8 @@ client proceeds with the handshake, verifying the certificate against
 ESNIKeys.public_name as described in {{verify-public-name}}. The client MUST
 NOT enable the False Start optimization {{RFC7918}}. If the handshake completes
 successfully, the client MUST abort the connection with an "esni_required" alert.
-It then SHOULD retry the handshake with a new transport connection and encrypted
-SNI disabled.
+It then SHOULD retry the handshake with a new transport connection and ESNI
+disabled.
 
 [[TODO: Key replacement is significantly less scary than saying that ESNI-naive
   servers bounce ESNI off. Is it worth defining a strict mode toggle in the ESNI
@@ -572,7 +580,7 @@ it MUST abort the connection with a "handshake_failure" alert.
 
 If the ClientEncryptedSNI.record_digest value does not match the
 cryptographic hash of any known ESNIKeys structure, it MUST ignore the
-extension and proceed with the connection, with the following
+extension and proceed with the connection, with the following added
 behavior:
 
 - It MUST include the "encrypted_server_name" extension in
@@ -582,9 +590,11 @@ behavior:
   ESNIKeys values of different versions. This allows a server to support
   multiple versions at once.
 
-- The server MUST NOT resume any sessions offered by the client that
-  were established with ESNI. Such sessions are associated with the ESNI name,
-  which the server was unable to decrypt.
+- The server MUST ignore all PSK identities in the ClientHello which correspond
+  to ESNI PSKs. ESNI PSKs offered by the client are associated with the ESNI
+  name. The server was unable to decrypt then ESNI name, so it should not resume
+  them when using the cleartext SNI name. This restriction allows a client to
+  reject resumptions in {{verify-public-name}}.
 
 If the ClientEncryptedSNI.record_digest value does match the cryptographic
 hash of a known ESNIKeys, the server performs the following checks:
@@ -628,11 +638,13 @@ include the "encrypted_server_name" extension in EncryptedExtensions
 with the "response_type" field set to "esni_accept" and the "nonce"
 field set to PaddedServerNameList.nonce.
 
-If the server sends a NewSessionTicket message, the ticket MUST be
-ignored by servers not negotiating ESNI, including servers which do
-not implement this specification. This may be implemented by adding
-a new field to the server session state which earlier implementations
-cannot parse.
+If the server sends a NewSessionTicket message, the corresponding ESNI PSK MUST
+be ignored by all other servers in the deployment when not negotiating ESNI,
+including servers which do not implement this specification. This may be
+implemented by adding a new field to the server session state which earlier
+implementations cannot parse.
+
+This restriction provides robustness for rollbacks (see {{misconfiguration}}).
 
 ## Split Mode Server Behavior {#backend-server-behavior}
 
@@ -643,9 +655,10 @@ PaddedServerNameList.sni and ClientESNIInner.nonce to the backend
 server. Thus, backend servers function the same as servers operating
 in Shared Mode.
 
-As in Shared Mode, if the backend server sends a NewSessionTicket
-message, the ticket MUST be ignored by servers not negotiating ESNI,
-including servers which do not implement this specification.
+As in Shared Mode, if the backend server sends a NewSessionTicket message, the
+corresponding ESNI PSK MUST be ignored by other servers in the deployment when
+not negotiating ESNI, including servers which do not implement this
+specification.
 
 # Compatibility Issues
 
@@ -661,7 +674,7 @@ to fully guarantee. Thus this protocol was designed to be robust in case
 of inconsistencies between DNS and servers, at the cost of extra
 round-trips due to a retry. Two specific scenarios are detailed below.
 
-## Misconfiguration and Deployment Concerns
+## Misconfiguration and Deployment Concerns {#misconfiguration}
 
 It is possible for DNS and servers to become inconsistent. This may occur, for instance,
 from DNS misconfiguration, caching issues, or an incomplete rollout in a multi-server
