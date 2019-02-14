@@ -158,7 +158,6 @@ server.
 
 ## SNI Encryption
 
-The protocol designed in this document is straightforward.
 
 First, the provider publishes a public key and metadata which is used for SNI
 encryption for all the domains for which it serves directly or indirectly (via
@@ -636,7 +635,8 @@ such that its length equals the size of the largest possible Certificate
 (message) covered by the same ESNI key. Moreover, the server MUST
 include the "encrypted_server_name" extension in EncryptedExtensions
 with the "response_type" field set to "esni_accept" and the "nonce"
-field set to PaddedServerNameList.nonce.
+field set to the decrypted PaddedServerNameList.nonce value from the client
+"encrypted_server_name" extension.
 
 If the server sends a NewSessionTicket message, the corresponding ESNI PSK MUST
 be ignored by all other servers in the deployment when not negotiating ESNI,
@@ -678,7 +678,7 @@ round-trips due to a retry. Two specific scenarios are detailed below.
 
 It is possible for DNS and servers to become inconsistent. This may occur, for instance,
 from DNS misconfiguration, caching issues, or an incomplete rollout in a multi-server
-deployment. This may also occur if a server loses its ESNI keys, or an initial deployment
+deployment. This may also occur if a server loses its ESNI keys, or if a deployment
 of ESNI must be rolled back on the server.
 
 The retry mechanism repairs most such inconsistencies. If server and DNS keys mismatch,
