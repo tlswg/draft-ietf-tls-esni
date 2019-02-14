@@ -174,10 +174,59 @@ provider's public key. The provider can then decrypt the extension
 and either terminate the connection (in Shared Mode) or forward
 it to the backend server (in Split Mode).
 
-# Publishing the SNI Encryption Key {#publishing-key}
+# Publishing the SNI Encryption Key in the DNS {#publishing-key}
 
-SNI Encryption keys can be published in the DNS using the ESNIKeys
-structure, defined below.
+Publishing ESNI keys in the DNS requires care to ensure correct behavior.
+There are deployment environments in which a domain is served by multiple server
+operators who do not manage the ESNI Keys. Because ESNIKeys and A/AAAA lookup
+are independent, it is therefore possible to obtain an ESNIKeys record which does
+not match the A/AAAA records. (That is, the host to which an A or AAAA record
+refers is not in possession of the ESNI keys.) Naively using this record would
+result in handshake failure, and possibly require fallback to plaintext SNI.
+The design of the system must therefore allow clients to detect and recover
+from this situation.
+
+Servers operating in Split Mode SHOULD have DNS configured to return
+the same A (or AAAA) record for all ESNI-enabled servers they service. This yields
+an anonymity set of cardinality equal to the number of ESNI-enabled server domains
+supported by a given client-facing server. Thus, even with SNI encryption,
+an attacker which can enumerate the set of ESNI-enabled domains supported
+by a client-facing server can guess the correct SNI with probability at least
+1/K, where K is the size of this ESNI-enabled server anonymity set. This probability
+may be increased via traffic analysis or other mechanisms.
+
+The following sections describe a DNS record format that achieve these goals.
+
+## Host Addresses
+
+Encrypted SNI records, described in {{esni-record}}, point to the (set of) hosts which possess
+the private ESNI key. These pointers include a set of IPv4 and IPv6 addresses to hosts with
+the private key. These addresses are encoded using the following structure.
+
+~~~~
+    enum {
+        address_v4(4),
+        address_v6(6),
+    } AddressType;
+
+    struct {
+        AddressType address_type;
+        select (address_type) {
+            case address_v4: {
+                opaque ipv4Address[4];
+            }
+            case address_v6: {
+                opaque ipv6Address[16];
+            }
+        }
+    } Address;
+~~~~
+
+Use of this structure during the ESNI resolution algorithm is described in {{esni-resolution}}.
+
+## Encrypted SNI Record {#esni-record}
+
+SNI Encryption keys can be published using the following ESNIKeys structure.
 
 ~~~~
     // Copied from TLS 1.3
@@ -194,6 +243,7 @@ structure, defined below.
         uint16 padded_length;
         uint64 not_before;
         uint64 not_after;
+        Address address_set<1..2^16-1>;
         Extension extensions<0..2^16-1>;
     } ESNIKeys;
 ~~~~
@@ -228,6 +278,10 @@ not_after
 : The moment when the keys become invalid. Uses the same unit as
 not_before.
 
+address_set
+: A set of Address structures containing IPv4 or IPv6 addresses
+to hosts which have the corresponding private ESNI key.
+
 extensions
 : A list of extensions that the client can take into consideration when
 generating a Client Hello message. The format is defined in
@@ -258,27 +312,6 @@ example.com, the ESNI TXT Resource Record might be:
 _esni.example.com. 60S IN TXT "..." "..."
 ~~~
 
-Servers MUST ensure that if multiple A or AAAA records are returned for a
-domain with ESNI support, all the servers pointed to by those records are
-able to handle the keys returned as part of a ESNI TXT record for that domain.
-
-Clients obtain these records by querying DNS for ESNI-enabled server domains.
-Clients may initiate these queries in parallel alongside normal A or AAAA queries,
-and SHOULD block TLS handshakes until they complete, perhaps by timing out.
-
-In cases where the domain of the A or AAAA records being resolved do
-not match the SNI Server Name, such as when {{!RFC7838}} is being used, the SNI
-domain should be used for querying the ESNI TXT record.
-
-Servers operating in Split Mode SHOULD have DNS configured to return
-the same A (or AAAA) record for all ESNI-enabled servers they service. This yields
-an anonymity set of cardinality equal to the number of ESNI-enabled server domains
-supported by a given client-facing server. Thus, even with SNI encryption,
-an attacker which can enumerate the set of ESNI-enabled domains supported
-by a client-facing server can guess the correct SNI with probability at least
-1/K, where K is the size of this ESNI-enabled server anonymity set. This probability
-may be increased via traffic analysis or other mechanisms.
-
 The "checksum" field provides protection against transmission errors,
 including those caused by intermediaries such as a DNS proxy running on a
 home router.
@@ -301,6 +334,31 @@ servers to rotate the keys often and improve forward secrecy.
 
 Note that the length of this structure MUST NOT exceed 2^16 - 1, as the
 RDLENGTH is only 16 bits {{RFC1035}}.
+
+## Encrypted SNI DNS Resolution {#esni-resolution}
+
+Clients obtain ESNI records by querying the DNS for ESNI-enabled server domains.
+In cases where the domain of the A or AAAA records being resolved do not match the
+SNI Server Name, such as when {{!RFC7838}} is being used, the alternate domain should
+be used for querying the ESNI TXT record.
+
+Clients SHOULD initiate ESNI queries in parallel alongside normal A or AAAA queries.
+The following algorithm describes a procedure by which clients can process ESNIKeys
+responses as they arrive to produce addresses for ESNI-capable hosts.
+
+~~~
+1. If an ESNIKeys response arrives before an A or AAAA response, initiate TLS with
+ESNI to the provided address(es).
+
+2. If an A or AAAA response arrives before the ESNIKeys response, wait up
+to CD milliseconds before initiating TLS to either address. (Clients may begin
+TCP connections in this time. QUIC connections should wait.) If an ESNIKeys
+response does not arrive in this time, initiate TLS without ESNI to the
+provided address(es).
+~~~
+
+CD (Connection Delay) is a configurable parameter. The recommended value is 50 milliseconds,
+as per the guidance in {{!RFC8305}}.
 
 # The "encrypted_server_name" extension {#esni-extension}
 
