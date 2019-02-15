@@ -158,7 +158,6 @@ server.
 
 ## SNI Encryption
 
-
 First, the provider publishes a public key and metadata which is used for SNI
 encryption for all the domains for which it serves directly or indirectly (via
 Split Mode). This document defines a publication mechanism using DNS, but other
@@ -387,11 +386,12 @@ accepted by the server.
    } AlertDescription;
 ~~~~
 
-Finally, implementations MUST track whether each PSK was established by a
-connection which negotiated this extension with the "esni_accept" response type.
-If so, this is referred to as an "ESNI PSK". Otherwise, it is a "non-ESNI PSK".
-This may be implemented by adding a new field to client and server session
-states.
+Finally, requirements in {{client-behavior}} and {{server-behavior}} require
+implementations to track, alongside each PSK established by a previous
+connection, whether the connection which this extension with the "esni_accept"
+response type. If so, this is referred to as an "ESNI PSK".  Otherwise, it is a
+"non-ESNI PSK". This may be implemented by adding a new field to client and
+server session states.
 
 
 ## Client Behavior {#client-behavior}
@@ -505,21 +505,23 @@ then processes the extension's "response_type" field:
 
 - If the value is "esni_retry_request", the client proceeds with the handshake,
   verifying the certificate against ESNIKeys.public_name as described in
-  {{verify-public-name}}. If the handshake completes successfully, the client
-  MUST abort the connection with an "esni_required" alert.
+  {{verify-public-name}}. If verification or the handshake fails, the client
+  MUST return a failure to calling application. It MUST NOT use the retry keys
+  as described below.
 
-  The client then processes the "retry_keys" field from the server's
-  "encrypted_server_name" extension. If one of the values used a version known
-  to the client, the client SHOULD retry the handshake with a new transport
-  connection, using that value to encrypt the SNI. If no value is applicable,
-  the client SHOULD retry with ESNI disabled.
+  Otherwise, when the handshake completes successfully with the public name
+  verified, the client MUST abort the connection with an "esni_required" alert.
+  The client can then regard the ESNI keys as securely replaced by the server.
+  It processes the "retry_keys" field from the server's "encrypted_server_name"
+  extension. If one of the values used a version known to the client, the client
+  SHOULD retry the handshake with a new transport connection, using that value
+  to encrypt the SNI. If no value is applicable, the client SHOULD retry with
+  ESNI disabled.
 
-  The client MUST NOT use the server-provided retry keys until the handshake
-  completes successfully. On success, it MUST NOT overwrite the DNS-provided
-  keys with the retry keys. It MUST use the retry keys at most once and
-  continue offering DNS-provided keys for subsequent connections. This avoids
-  introducing a tracking vector, should a malicious server present
-  client-specific retry keys.
+  These retry keys may only be applied to the retry connection. The client MUST
+  continue to use the previously cached keys for subsequent connections. This
+  avoids introducing pinning concerns or a tracking vector, should a malicious
+  server present client-specific retry keys to identify clients.
 
 - If the field contains any other value, the client MUST abort the connection
   with an "illegal_parameter" alert.
@@ -528,17 +530,19 @@ If the server negotiates an earlier version of TLS, or if it does not
 provide an "encrypted_server_name" extension in EncryptedExtensions, the
 client proceeds with the handshake, verifying the certificate against
 ESNIKeys.public_name as described in {{verify-public-name}}. The client MUST
-NOT enable the False Start optimization {{RFC7918}}. If the handshake completes
-successfully, the client MUST abort the connection with an "esni_required" alert.
-It then SHOULD retry the handshake with a new transport connection and ESNI
-disabled.
+NOT enable the False Start optimization {{RFC7918}} for this handshake. If
+verification or the handshake fails, the client MUST return a failure to the
+calling application. It MUST NOT treat this as a signal to disable ESNI as
+described below.
+
+Otherwise, when the handshake completes successfully with the public name
+verified, the client MUST abort the connection with an "esni_required" alert.
+The client can then regard ESNI as securely disabled by the server. It SHOULD
+retry the handshake with a new transport connection and ESNI disabled.
 
 [[TODO: Key replacement is significantly less scary than saying that ESNI-naive
   servers bounce ESNI off. Is it worth defining a strict mode toggle in the ESNI
   keys, for a deployment to indicate it is ready for that? ]]
-
-The client MUST NOT treat this as a signal to disable encrypted SNI until the
-handshake completes successfully.
 
 Clients SHOULD implement a limit on retries caused by "esni_retry_request" or
 servers which do not acknowledge the "encrypted_server_name" extension. If the
@@ -552,8 +556,8 @@ extension, it continues with the handshake using the cleartext "server_name"
 extension instead (see {{server-behavior}}). Clients that offer ESNI then
 verify the certificate with the public name, as follows:
 
-- If the server resumed a session or negotiated parameters not based on
-  certificates, the client MUST abort the connection with an illegal_parameter
+- If the server resumed a session or did not negotiate certificate-based
+  authentication, the client MUST abort the connection with an illegal_parameter
   alert. This case is invalid because {{client-behavior}} requires the client
   to only offer ESNI-established sessions, and {{server-behavior}} requires
   the server to decline ESNI-established sessions if it did not accept ESNI.
@@ -565,7 +569,7 @@ verify the certificate with the public name, as follows:
   empty Certificate message, denoting no client certificate.
 
 Note that verifying a connection for the public name does not verify it for the
-origin. The TLS implementation MUST NOT surface such connections as successful to
+origin. The TLS implementation MUST NOT report such connections as successful to
 the application. It additionally MUST ignore all session tickets and session IDs
 presented by the server. These connections are only used to trigger retries, as
 described in {{client-behavior}}. This may be implemented, for instance, by
@@ -665,23 +669,25 @@ specification.
 Unlike most TLS extensions, placing the SNI value in an ESNI extension
 is not interoperable with existing servers, which expect the value in
 the existing cleartext extension. Thus server operators SHOULD ensure
-servers understand a given set of ESNI keys before advertising them in
-DNS. Additionally, servers SHOULD retain support for any
+servers understand a given set of ESNI keys before advertising them.
+Additionally, servers SHOULD retain support for any
 previously-advertised keys for the duration of their validity.
 
 However, in more complex deployment scenarios, this may be difficult
 to fully guarantee. Thus this protocol was designed to be robust in case
-of inconsistencies between DNS and servers, at the cost of extra
-round-trips due to a retry. Two specific scenarios are detailed below.
+of inconsistencies between systems that advertise ESNI keys and servers, at the
+cost of extra round-trips due to a retry. Two specific scenarios are detailed
+below.
 
 ## Misconfiguration and Deployment Concerns {#misconfiguration}
 
-It is possible for DNS and servers to become inconsistent. This may occur, for instance,
-from DNS misconfiguration, caching issues, or an incomplete rollout in a multi-server
-deployment. This may also occur if a server loses its ESNI keys, or if a deployment
-of ESNI must be rolled back on the server.
+It is possible for ESNI advertisements and servers to become inconsistent. This
+may occur, for instance, from DNS misconfiguration, caching issues, or an
+incomplete rollout in a multi-server deployment. This may also occur if a server
+loses its ESNI keys, or if a deployment of ESNI must be rolled back on the
+server.
 
-The retry mechanism repairs most such inconsistencies. If server and DNS keys mismatch,
+The retry mechanism repairs most such inconsistencies. If server and advertised keys mismatch,
 the server will respond with esni_retry_requested. If the server does not understand the
 "encrypted_server_name" extension at all, it will ignore it as required by {{RFC8446}};
 Section 4.1.2. Provided the server can present a certificate valid for the public name,
@@ -700,8 +706,7 @@ such proxies remove any extensions they do not understand.
 A non-conformant MITM proxy which forwards the ESNI extension,
 substituting its own KeyShare value, will result in
 the client-facing server recognizing the key, but failing to decrypt
-the SNI. This causes a hard failure. Hopefully, the TLS 1.3 deployment
-experience has cleaned out most such proxies.
+the SNI. This causes a hard failure.
 
 The public name, however, makes this protocol compatible with deployments that
 use correctly-implemented MITM proxies. If the client has cached an ESNIKey for
@@ -709,8 +714,8 @@ the origin server, the MITM proxy will process the cleartext SNI field and
 terminate a connection to the public name instead. If the client is configured
 to trust the proxy's certificate, it will accept the connection as valid for the
 public name and retry with ESNI disabled. If the client is not configured to
-trust the proxy, it will reject this and not retry, meeting this protocol's and
-TLS's security requirements.
+trust the proxy, it will reject this and not retry, meeting the security
+requirements of this protocol and TLS.
 
 # Security Considerations
 
