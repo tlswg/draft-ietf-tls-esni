@@ -209,9 +209,9 @@ of the ESNIKeys structure. For the purpose of computing the checksum, the
 value of the "checksum" field MUST be set to zero.
 
 public_name
-: The name of the entity trusted to update these encryption keys.
-This is used by the server in case there is a key mismatch or the
-server has disabled ESNI.
+: The non-empty name of the entity trusted to update these encryption keys.
+This is used to repair misconfigurations, as described in
+{{handle-server-response}}.
 
 keys
 : The list of keys which can be used by the client to encrypt the SNI.
@@ -388,10 +388,10 @@ accepted by the server.
 
 Finally, requirements in {{client-behavior}} and {{server-behavior}} require
 implementations to track, alongside each PSK established by a previous
-connection, whether the connection which this extension with the "esni_accept"
-response type. If so, this is referred to as an "ESNI PSK".  Otherwise, it is a
-"non-ESNI PSK". This may be implemented by adding a new field to client and
-server session states.
+connection, whether the connection negotiated this extension with the
+"esni_accept" response type. If so, this is referred to as an "ESNI PSK".
+Otherwise, it is a "non-ESNI PSK". This may be implemented by adding a new field
+to client and server session states.
 
 
 ## Client Behavior {#client-behavior}
@@ -510,8 +510,8 @@ then processes the extension's "response_type" field:
 - If the value is "esni_retry_request", the client proceeds with the handshake,
   verifying the certificate against ESNIKeys.public_name as described in
   {{verify-public-name}}. If verification or the handshake fails, the client
-  MUST return a failure to calling application. It MUST NOT use the retry keys
-  as described below.
+  MUST return a failure to the calling application. It MUST NOT use the retry
+  keys.
 
   Otherwise, when the handshake completes successfully with the public name
   verified, the client MUST abort the connection with an "esni_required" alert.
@@ -523,7 +523,7 @@ then processes the extension's "response_type" field:
   ESNI disabled.
 
   These retry keys may only be applied to the retry connection. The client MUST
-  continue to use the previously cached keys for subsequent connections. This
+  continue to use the previously-advertised keys for subsequent connections. This
   avoids introducing pinning concerns or a tracking vector, should a malicious
   server present client-specific retry keys to identify clients.
 
@@ -536,8 +536,7 @@ client proceeds with the handshake, verifying the certificate against
 ESNIKeys.public_name as described in {{verify-public-name}}. The client MUST
 NOT enable the False Start optimization {{RFC7918}} for this handshake. If
 verification or the handshake fails, the client MUST return a failure to the
-calling application. It MUST NOT treat this as a signal to disable ESNI as
-described below.
+calling application. It MUST NOT treat this as a secure signal to disable ESNI.
 
 Otherwise, when the handshake completes successfully with the public name
 verified, the client MUST abort the connection with an "esni_required" alert.
@@ -697,9 +696,10 @@ the server will respond with esni_retry_requested. If the server does not unders
 Section 4.1.2. Provided the server can present a certificate valid for the public name,
 the client can safely retry with updated settings, as described in {{handle-server-response}}.
 
-If the public name does not verify or the retry fails, the client SHOULD NOT
-fall back to cleartext SNI, as this allows a network attacker to disclose the SNI.
-They MAY attempt to use another server from the DNS results, if one is provided.
+Unless ESNI is disabled as a result of successfully establishing a connection to
+the public name, the client MUST NOT fall back to cleartext SNI, as this allows
+a network attacker to disclose the SNI.  It MAY attempt to use another server
+from the DNS results, if one is provided.
 
 ## Middleboxes
 
