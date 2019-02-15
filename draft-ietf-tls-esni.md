@@ -176,7 +176,7 @@ it to the backend server (in Split Mode).
 
 # Publishing the SNI Encryption Key in the DNS {#publishing-key}
 
-Publishing ESNI keys in DNS requires care to ensure correct behavior.
+Publishing ESNI keys in the DNS requires care to ensure correct behavior.
 There are deployment environments in which a domain is served by multiple server
 operators who do not manage the ESNI Keys. Because ESNIKeys and A/AAAA lookup
 are independent, it is therefore possible to obtain an ESNIKeys record which does
@@ -208,8 +208,8 @@ These "host pointers" are encoded using the following structure.
 
 ~~~~
     enum {
-        address_v4,
-        address_v6,
+        address_v4(4),
+        address_v6(6),
     } AddressType;
 
     struct {
@@ -355,7 +355,7 @@ RDLENGTH is only 16 bits {{RFC1035}}.
 
 ## Encrypted SNI DNS Resolution {#esni-resolution}
 
-Clients obtain ESNI records by querying DNS for ESNI-enabled server domains.
+Clients obtain ESNI records by querying the DNS for ESNI-enabled server domains.
 In cases where the domain of the A or AAAA records being resolved do not match the
 SNI Server Name, such as when {{!RFC7838}} is being used, the alternate domain should
 be used for querying the ESNI TXT record.
