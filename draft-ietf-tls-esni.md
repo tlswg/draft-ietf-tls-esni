@@ -373,7 +373,7 @@ nonce
 : The contents of ClientESNIInner.nonce. (See {{client-behavior}}.)
 
 retry_keys
-: ESNIKeys structures containing the keys that the client should use on
+: One or more ESNIKeys structures containing the keys that the client should use on
 subsequent connections to encrypt the ClientESNIInner structure.
 
 This protocol also defines the "esni_required" alert, which is sent by the
