@@ -705,21 +705,20 @@ They MAY attempt to use another server from the DNS results, if one is provided.
 
 A more serious problem is MITM proxies which do not support this
 extension. {{RFC8446}}; Section 9.3 requires that
-such proxies remove any extensions they do not understand.
+such proxies remove any extensions they do not understand. The handshake will
+then present a certificate based on the public name, without echoing the
+"encrypted_server_name" extension to the client.
 
-A non-conformant MITM proxy which forwards the ESNI extension,
+Depending on whether the client is configured to accept the proxy's certificate
+as authoritative for the public name, this may trigger the retry logic described
+in {{handle-server-response}} or result in a connection failure. A proxy which
+is not authoritative for the public name cannot forge a signal to disable ESNI.
+
+A non-conformant MITM proxy which instead forwards the ESNI extension,
 substituting its own KeyShare value, will result in
 the client-facing server recognizing the key, but failing to decrypt
-the SNI. This causes a hard failure.
-
-The public name, however, makes this protocol compatible with deployments that
-use correctly-implemented MITM proxies. If the client has cached an ESNIKey for
-the origin server, the MITM proxy will process the cleartext SNI field and
-terminate a connection to the public name instead. If the client is configured
-to trust the proxy's certificate, it will accept the connection as valid for the
-public name and retry with ESNI disabled. If the client is not configured to
-trust the proxy, it will reject this and not retry, meeting the security
-requirements of this protocol and TLS.
+the SNI. This causes a hard failure. Clients SHOULD NOT attempt to repair the
+connection in this case.
 
 # Security Considerations
 
