@@ -367,7 +367,7 @@ structure:
 
 response_type
 : Indicates whether the server processed the client ESNI extension. (See
-{{client-behavior}} and {{server-behavior}}.}
+{{handle-server-response}} and {{server-behavior}}.}
 
 nonce
 : The contents of ClientESNIInner.nonce. (See {{client-behavior}}.)
@@ -395,6 +395,8 @@ server session states.
 
 
 ## Client Behavior {#client-behavior}
+
+### Sending an encrypted SNI {#send-esni}
 
 In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
@@ -493,6 +495,8 @@ The client MUST place the value of ESNIKeys.public_name in the "server_name"
 extension. (This is required for technical conformance with {{!RFC7540}};
 Section 9.2.)
 
+### Handling the server response {#handle-server-response}
+
 If the server negotiates TLS 1.3 or above and provides an
 "encrypted_server_name" extension in EncryptedExtensions, the client
 then processes the extension's "response_type" field:
@@ -558,7 +562,7 @@ verify the certificate with the public name, as follows:
 
 - If the server resumed a session or did not negotiate certificate-based
   authentication, the client MUST abort the connection with an illegal_parameter
-  alert. This case is invalid because {{client-behavior}} requires the client
+  alert. This case is invalid because {{send-esni}} requires the client
   to only offer ESNI-established sessions, and {{server-behavior}} requires
   the server to decline ESNI-established sessions if it did not accept ESNI.
 
@@ -572,7 +576,7 @@ Note that verifying a connection for the public name does not verify it for the
 origin. The TLS implementation MUST NOT report such connections as successful to
 the application. It additionally MUST ignore all session tickets and session IDs
 presented by the server. These connections are only used to trigger retries, as
-described in {{client-behavior}}. This may be implemented, for instance, by
+described in {{handle-server-response}}. This may be implemented, for instance, by
 reporting a failed connection with a dedicated error code.
 
 ## Client-Facing Server Behavior {#server-behavior}
@@ -691,7 +695,7 @@ The retry mechanism repairs most such inconsistencies. If server and advertised 
 the server will respond with esni_retry_requested. If the server does not understand the
 "encrypted_server_name" extension at all, it will ignore it as required by {{RFC8446}};
 Section 4.1.2. Provided the server can present a certificate valid for the public name,
-the client can safely retry with updated settings, as described in {{client-behavior}}.
+the client can safely retry with updated settings, as described in {{handle-server-response}}.
 
 If the public name does not verify or the retry fails, the client SHOULD NOT
 fall back to cleartext SNI, as this allows a network attacker to disclose the SNI.
