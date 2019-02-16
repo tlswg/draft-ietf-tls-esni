@@ -515,17 +515,22 @@ then processes the extension's "response_type" field:
 
   Otherwise, when the handshake completes successfully with the public name
   verified, the client MUST abort the connection with an "esni_required" alert.
-  The client can then regard the ESNI keys as securely replaced by the server.
-  It processes the "retry_keys" field from the server's "encrypted_server_name"
-  extension. If one of the values used a version known to the client, the client
-  SHOULD retry the handshake with a new transport connection, using that value
-  to encrypt the SNI. If no value is applicable, the client SHOULD retry with
-  ESNI disabled.
+  It then processes the "retry_keys" field from the server's
+  "encrypted_server_name" extension.
 
-  These retry keys may only be applied to the retry connection. The client MUST
-  continue to use the previously-advertised keys for subsequent connections. This
-  avoids introducing pinning concerns or a tracking vector, should a malicious
-  server present client-specific retry keys to identify clients.
+  If one of the values contains a version supported by the client, it can regard
+  the ESNI keys as securely replaced by the server. It SHOULD retry the
+  handshake with a new transport connection, using that value to encrypt the
+  SNI. The value may only be applied to the retry connection. The client
+  MUST continue to use the previously-advertised keys for subsequent
+  connections. This avoids introducing pinning concerns or a tracking vector,
+  should a malicious server present client-specific retry keys to identify
+  clients.
+
+  If none of the values provided in "retry_keys" contains a supported version,
+  the client can regard ESNI as securely disabled by the server. As below, it
+  SHOULD then retry the handshake with a new transport connection and ESNI
+  disabled.
 
 - If the field contains any other value, the client MUST abort the connection
   with an "illegal_parameter" alert.
