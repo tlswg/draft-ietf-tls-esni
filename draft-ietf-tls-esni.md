@@ -564,11 +564,12 @@ extension, it continues with the handshake using the cleartext "server_name"
 extension instead (see {{server-behavior}}). Clients that offer ESNI then
 verify the certificate with the public name, as follows:
 
-- If the server resumed a session or did not negotiate certificate-based
-  authentication, the client MUST abort the connection with an illegal_parameter
-  alert. This case is invalid because {{send-esni}} requires the client
-  to only offer ESNI-established sessions, and {{server-behavior}} requires
-  the server to decline ESNI-established sessions if it did not accept ESNI.
+- If the server resumed a session or negotiated a session that did not use a
+  certificate for authentication, the client MUST abort the connection with an
+  "illegal_parameter" alert. This case is invalid because {{send-esni}} requires
+  the client to only offer ESNI-established sessions, and {{server-behavior}}
+  requires the server to decline ESNI-established sessions if it did not accept
+  ESNI.
 
 - The client MUST verify that the certificate is valid for ESNIKeys.public_name.
   If invalid, it MUST abort the connection with the appropriate alert.
