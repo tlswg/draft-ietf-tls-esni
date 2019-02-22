@@ -243,7 +243,7 @@ SNI Encryption keys can be published using the following ESNIKeys structure.
         uint16 padded_length;
         uint64 not_before;
         uint64 not_after;
-        Address address_set<1..2^16-1>;
+        Address address_set<0..2^16-1>;
         Extension extensions<0..2^16-1>;
     } ESNIKeys;
 ~~~~
@@ -287,12 +287,18 @@ extensions
 generating a Client Hello message. The format is defined in
 {{RFC8446}}; Section 4.2. The purpose of the field is to
 provide room for additional features in the future; this document does
-not define any extension.
+not define any extension. An extension may be tagged as mandatory
+by using an extension type codepoint with the high order bit
+set to 1. A client which receives a mandatory extension they do not
+understand must reject the record.
 
 The semantics of this structure are simple: any of the listed keys may
 be used to encrypt the SNI for the associated domain name.
 The cipher suite list is orthogonal to the
 list of keys, so each key may be used with any cipher suite.
+Clients MUST parse the extension list and check for unsupported
+mandatory extensions. If an unsupported mandatory extension is
+present, clients MUST reject the ESNIKeys record.
 
 This structure is placed in the RRData section of a TXT record
 as a base64-encoded string. If this encoding exceeds the 255 octet
@@ -347,14 +353,14 @@ The following algorithm describes a procedure by which clients can process ESNIK
 responses as they arrive to produce addresses for ESNI-capable hosts.
 
 ~~~
-1. If an ESNIKeys response arrives before an A or AAAA response, initiate TLS with
-ESNI to the provided address(es).
+1. If an ESNIKeys response with an address set arrives before an A or AAAA response, 
+initiate TLS with ESNI to the provided address(es).
 
 2. If an A or AAAA response arrives before the ESNIKeys response, wait up
 to CD milliseconds before initiating TLS to either address. (Clients may begin
 TCP connections in this time. QUIC connections should wait.) If an ESNIKeys
-response does not arrive in this time, initiate TLS without ESNI to the
-provided address(es).
+response with an address set does not arrive in this time, initiate TLS 
+without ESNI to the provided address(es).
 ~~~
 
 CD (Connection Delay) is a configurable parameter. The recommended value is 50 milliseconds,
