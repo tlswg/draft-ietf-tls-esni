@@ -197,33 +197,6 @@ may be increased via traffic analysis or other mechanisms.
 
 The following sections describe a DNS record format that achieve these goals.
 
-## Host Addresses
-
-Encrypted SNI records, described in {{esni-record}}, point to the (set of) hosts which possess
-the private ESNI key. These pointers include a set of IPv4 and IPv6 addresses to hosts with
-the private key. These addresses are encoded using the following structure.
-
-~~~~
-    enum {
-        address_v4(4),
-        address_v6(6),
-    } AddressType;
-
-    struct {
-        AddressType address_type;
-        select (address_type) {
-            case address_v4: {
-                opaque ipv4Address[4];
-            }
-            case address_v6: {
-                opaque ipv6Address[16];
-            }
-        }
-    } Address;
-~~~~
-
-Use of this structure during the ESNI resolution algorithm is described in {{esni-resolution}}.
-
 ## Encrypted SNI Record {#esni-record}
 
 SNI Encryption keys can be published using the following ESNIKeys structure.
@@ -243,7 +216,6 @@ SNI Encryption keys can be published using the following ESNIKeys structure.
         uint16 padded_length;
         uint64 not_before;
         uint64 not_after;
-        Address address_set<0..2^16-1>;
         Extension extensions<0..2^16-1>;
     } ESNIKeys;
 ~~~~
@@ -277,10 +249,6 @@ as seconds from 00:00:00 UTC on Jan 1 1970, not including leap seconds.
 not_after
 : The moment when the keys become invalid. Uses the same unit as
 not_before.
-
-address_set
-: A set of Address structures containing IPv4 or IPv6 addresses
-to hosts which have the corresponding private ESNI key.
 
 extensions
 : A list of extensions that the client can take into consideration when
@@ -343,24 +311,70 @@ RDLENGTH is only 16 bits {{RFC1035}}.
 
 ## Encrypted SNI DNS Resolution {#esni-resolution}
 
+This section describes a client ESNI resolution algorithm using a new "address_set"
+extension described below. Future specifications may introduce new extensions
+and corresponding resolution algorithms.
+
+### Address Set Extension
+
+ESNIKeys records may indicate a specific IP address(es) for the host(s) in possession
+of the ESNI private key via the following mandatory "address_set" ESNIKeys extension:
+
+~~~
+    enum {
+        address_set(0x1001), (65535)
+    } ExtensionType;
+~~~
+
+The body of this extension is encoded using the following structure.
+
+~~~~
+    enum {
+        address_v4(4),
+        address_v6(6),
+    } AddressType;
+
+    struct {
+        AddressType address_type;
+        select (address_type) {
+            case address_v4: {
+                opaque ipv4Address[4];
+            }
+            case address_v6: {
+                opaque ipv6Address[16];
+            }
+        }
+    } Address;
+
+    struct {
+        Address address_set<1..2^16-1>;
+    } AddressSet;
+~~~~
+
+address_set
+: A set of Address structures containing IPv4 or IPv6 addresses
+to hosts which have the corresponding private ESNI key.
+
+### Resolution Algorithm
+
 Clients obtain ESNI records by querying the DNS for ESNI-enabled server domains.
 In cases where the domain of the A or AAAA records being resolved do not match the
 SNI Server Name, such as when {{!RFC7838}} is being used, the alternate domain should
-be used for querying the ESNI TXT record.
+be used for querying the ESNI TXT record. (See Section 2.3 of {{!RFC7838}} for more details.)
 
 Clients SHOULD initiate ESNI queries in parallel alongside normal A or AAAA queries.
 The following algorithm describes a procedure by which clients can process ESNIKeys
 responses as they arrive to produce addresses for ESNI-capable hosts.
 
 ~~~
-1. If an ESNIKeys response with an address set arrives before an A or AAAA response, 
-initiate TLS with ESNI to the provided address(es).
+1. If an ESNIKeys response with an "address_set" extension arrives before an A or 
+AAAA response, initiate TLS with ESNI to the provided address(es).
 
 2. If an A or AAAA response arrives before the ESNIKeys response, wait up
 to CD milliseconds before initiating TLS to either address. (Clients may begin
 TCP connections in this time. QUIC connections should wait.) If an ESNIKeys
-response with an address set does not arrive in this time, initiate TLS 
-without ESNI to the provided address(es).
+response with an "address_set" extension does not arrive in this time, initiate 
+TLS without ESNI to the provided address(es).
 ~~~
 
 CD (Connection Delay) is a configurable parameter. The recommended value is 50 milliseconds,
