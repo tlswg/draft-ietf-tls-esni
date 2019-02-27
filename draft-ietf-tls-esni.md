@@ -179,10 +179,8 @@ There are deployment environments in which a domain is served by multiple server
 operators who do not manage the ESNI Keys. Because ESNIKeys and A/AAAA lookup
 are independent, it is therefore possible to obtain an ESNIKeys record which does
 not match the A/AAAA records. (That is, the host to which an A or AAAA record
-refers is not in possession of the ESNI keys.) Naively using this record would
-result in handshake failure, and possibly require fallback to plaintext SNI.
-The design of the system must therefore allow clients to detect and recover
-from this situation.
+refers is not in possession of the ESNI keys.) The design of the system must 
+therefore allow clients to detect and recover from this situation.
 
 Servers operating in Split Mode SHOULD have DNS configured to return
 the same A (or AAAA) record for all ESNI-enabled servers they service. This yields
@@ -194,51 +192,6 @@ by a client-facing server can guess the correct SNI with probability at least
 may be increased via traffic analysis or other mechanisms.
 
 The following sections describe a DNS record format that achieve these goals.
-
-## Host Pointers
-
-Encrypted SNI records, described in {{esni-record}}, point to the (set of) hosts which possess
-the private ESNI key. These pointers include (1) a canonical name which, if resolved, MUST yield A
-or AAAA records that possess the corresponding private key, and (2) a set of CIDR blocks,
-each possibly of size 1, that match the IPv4 or IPv6 address of a host with the private key.
-
-These "host pointers" are encoded using the following structure.
-
-~~~~
-    enum {
-        address_v4(4),
-        address_v6(6),
-    } AddressType;
-
-    struct {
-        AddressType address_type;
-        select (address_type) {
-            case address_v4: {
-                uint8 ipv4Length;
-                opaque ipv4Address[4];
-            }
-            case address_v6: {
-                uint8 ipv6Length;
-                opaque ipv6Address[16];
-            }
-        }
-    } Address;
-
-    struct {
-        HostName name;
-        Address address_set<0..2^16-1>;
-    } HostPointer;
-~~~~
-
-name
-: The terminal name for which resolution must yield valid A or
-AAAA records pointing to a host which holds the private ESNI key.
-
-address_set
-: An optional list of Address entries, each containing a single IPv4 or IPv6
-CIDR block, possibly of length 1.
-
-Use of this structure during the ESNI resolution algorithm is described in {{esni-resolution}}.
 
 ## Encrypted SNI Record {#esni-record}
 
@@ -260,7 +213,6 @@ SNI Encryption keys can be published using the following ESNIKeys structure.
         uint16 padded_length;
         uint64 not_before;
         uint64 not_after;
-        HostPointer host_pointer;
         Extension extensions<0..2^16-1>;
     } ESNIKeys;
 ~~~~
@@ -300,21 +252,22 @@ not_after
 : The moment when the keys become invalid. Uses the same unit as
 not_before.
 
-host_pointer
-: A HostPointer structure containing address information for the hosts
-carrying the corresponding private ESNI key.
-
 extensions
 : A list of extensions that the client can take into consideration when
 generating a Client Hello message. The format is defined in
 {{RFC8446}}; Section 4.2. The purpose of the field is to
-provide room for additional features in the future; this document does
-not define any extension.
+provide room for additional features in the future. An extension may 
+be tagged as mandatory by using an extension type codepoint with the 
+high order bit set to 1. A client which receives a mandatory extension 
+they do not understand must reject the record.
 
 The semantics of this structure are simple: any of the listed keys may
 be used to encrypt the SNI for the associated domain name.
 The cipher suite list is orthogonal to the
 list of keys, so each key may be used with any cipher suite.
+Clients MUST parse the extension list and check for unsupported
+mandatory extensions. If an unsupported mandatory extension is
+present, clients MUST reject the ESNIKeys record.
 
 This structure is placed in the RRData section of a TXT record
 as a base64-encoded string. If this encoding exceeds the 255 octet
@@ -358,6 +311,64 @@ Note that the length of this structure MUST NOT exceed 2^16 - 1, as the
 RDLENGTH is only 16 bits {{RFC1035}}.
 
 ## Encrypted SNI DNS Resolution {#esni-resolution}
+  
+This section describes a client ESNI resolution algorithm using a new "address_set"
+extension described below. Future specifications may introduce new extensions
+and corresponding resolution algorithms.
+
+### Address Set Extension
+
+ESNIKeys records MAY point to the (set of) hosts which possess the private ESNI key
+via the following mandatory "host_pointer" ESNIKeys extension:
+  
+~~~
+    enum {
+        host_pointer(0x1002), (65535)
+    } ExtensionType;
+~~~
+
+These pointers include (1) a canonical name which, if resolved, MUST yield A
+or AAAA records that possess the corresponding private key, and (2) a set of CIDR blocks,
+each possibly of size 1, that match the IPv4 or IPv6 address of a host with the private key.
+They are encoded using the following structure.
+
+~~~~
+    enum {
+        address_v4(4),
+        address_v6(6),
+    } AddressType;
+
+    struct {
+        AddressType address_type;
+        select (address_type) {
+            case address_v4: {
+                uint8 ipv4Length;
+                opaque ipv4Address[4];
+            }
+            case address_v6: {
+                uint8 ipv6Length;
+                opaque ipv6Address[16];
+            }
+        }
+    } Address;
+
+    struct {
+        HostName name;
+        Address address_set<0..2^16-1>;
+    } HostPointer;
+~~~~
+
+name
+: The terminal name for which resolution must yield valid A or
+AAAA records pointing to a host which holds the private ESNI key.
+
+address_set
+: An optional list of Address entries, each containing a single IPv4 or IPv6
+CIDR block, possibly of length 1.
+
+Use of this structure during the ESNI resolution algorithm is described in {{esni-resolution}}.
+
+### Resolution Algorithm
 
 Clients obtain ESNI records by querying the DNS for ESNI-enabled server domains.
 In cases where the domain of the A or AAAA records being resolved do not match the
@@ -370,34 +381,35 @@ responses as they arrive to produce addresses for ESNI-capable hosts.
 
 ~~~
 1. If an ESNIKeys response arrives before an A or AAAA response, and the ESNIKeys
-response contains a full address, clients should initiate TLS with ESNI to the
-provided address(es).
+response contains a "host_pointer" extension with a full address, clients SHOULD 
+initiate TLS with ESNI to the provided address(es).
 
-2. If an A or AAAA response arrives before the ESNIKeys response, clients should
+2. If an A or AAAA response arrives before the ESNIKeys response, clients SHOULD
 wait up to CD seconds before initiating TLS to either address. (Clients may begin
-  TCP connections in this time. QUIC connections should wait.) If an ESNIKeys
-  response does not arrive in this time, clients should initiate TLS without ESNI
-  to the provided address(es).
+TCP connections in this time. QUIC connections should wait.) If an ESNIKeys
+response does not arrive in this time, clients SHOULD initiate TLS without ESNI
+to the provided address(es).
 
-3. If an ESNIKeys response arrives before this time, and if the address netmask
-matches that in the corresponding A or AAAA response, then clients should initiate
-TLS with ESNI to said address(es). (An ESNIKeys record with a full address has a
-  full netmask, and therefore the match must be exact.) Clients may delay this
-  check until both A and AAAA responses arrive, or if a Resolution Delay timeout
-  occurs, according to {{RFC8305}}.
+3. If an ESNIKeys response with a "host_pointer" extension arrives before this time, 
+and if the address netmask matches that in the corresponding A or AAAA response, 
+then clients SHOULD initiate TLS with ESNI to said address(es). (An ESNIKeys record 
+with a full address has a full netmask, and therefore the match must be exact.) 
+Clients MAY delay this check until both A and AAAA responses arrive, or if a 
+Resolution Delay timeout occurs, according to {{RFC8305}}.
 
 4. If the address netmask does not match the corresponding A or AAAA response,
-and the A or AAAA response yielded a terminal CNAME that matches ESNIKeys.host_pointer.name,
-then clients should initiate TLS using ESNI to the address(es) in the A or AAAA records.
+and the A or AAAA response yielded a terminal CNAME that matches host_pointer.name,
+then clients SHOULD initiate TLS using ESNI to the address(es) in the A or AAAA records.
 
 5. If the address netmask does not match the corresponding A or AAAA response,
-and neither the A or AAAA queries yielded a CNAME that matches ESNIKeys.host_pointer.name,
-clients should resolve the address of ESNIKeys.host_pointer.name using an
-address type that matches the A or AAAA response. Clients should initiate TLS
+and neither the A or AAAA queries yielded a CNAME that matches host_pointer.name,
+clients SHOULD resolve the address of host_pointer.name using an
+address type that matches the A or AAAA response. Clients SHOULD initiate TLS
 using ENSI to the resulting address(es) when A or AAAA resolution completes.
 
-6. If the ESNIKeys.host_pointer address set is empty, clients should resolve the
-address(es) of ESNIKeys.host_pointer.name and initiate TLS to the resulting address(es).
+6. If the "host_pointer" address set is empty, clients SHOULD resolve the
+address(es) of host_pointer.name and initiate TLS with ESNI to the resulting 
+address(es).
 
 7. In all other cases, raise an error.
 ~~~
