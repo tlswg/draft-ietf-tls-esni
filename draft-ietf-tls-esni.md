@@ -181,10 +181,8 @@ There are deployment environments in which a domain is served by multiple server
 operators who do not manage the ESNI Keys. Because ESNIKeys and A/AAAA lookup
 are independent, it is therefore possible to obtain an ESNIKeys record which does
 not match the A/AAAA records. (That is, the host to which an A or AAAA record
-refers is not in possession of the ESNI keys.) Naively using this record would
-result in handshake failure, and possibly require fallback to plaintext SNI.
-The design of the system must therefore allow clients to detect and recover
-from this situation.
+refers is not in possession of the ESNI keys.) The design of the system must 
+therefore allow clients to detect and recover from this situation.
 
 Servers operating in Split Mode SHOULD have DNS configured to return
 the same A (or AAAA) record for all ESNI-enabled servers they service. This yields
@@ -317,7 +315,7 @@ and corresponding resolution algorithms.
 
 ### Address Set Extension
 
-ESNIKeys records may indicate a specific IP address(es) for the host(s) in possession
+ESNIKeys records MAY indicate a specific IP address(es) for the host(s) in possession
 of the ESNI private key via the following mandatory "address_set" ESNIKeys extension:
 
 ~~~
@@ -362,7 +360,8 @@ In cases where the domain of the A or AAAA records being resolved do not match t
 SNI Server Name, such as when {{!RFC7838}} is being used, the alternate domain should
 be used for querying the ESNI TXT record. (See Section 2.3 of {{!RFC7838}} for more details.)
 
-Clients SHOULD initiate ESNI queries in parallel alongside normal A or AAAA queries.
+Clients SHOULD initiate ESNI queries in parallel alongside normal A or AAAA queries to 
+obtain address information in a timely manner in the event that ESNI is available.
 The following algorithm describes a procedure by which clients can process ESNIKeys
 responses as they arrive to produce addresses for ESNI-capable hosts.
 
