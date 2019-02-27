@@ -367,13 +367,16 @@ responses as they arrive to produce addresses for ESNI-capable hosts.
 
 ~~~
 1. If an ESNIKeys response with an "address_set" extension arrives before an A or 
-AAAA response, initiate TLS with ESNI to the provided address(es).
+AAAA response, clients SHOULD initiate TLS with ESNI to the provided address(es).
 
-2. If an A or AAAA response arrives before the ESNIKeys response, wait up
+2. If an A or AAAA response arrives before the ESNIKeys response, clients SHOULD wait up
 to CD milliseconds before initiating TLS to either address. (Clients may begin
 TCP connections in this time. QUIC connections should wait.) If an ESNIKeys
-response with an "address_set" extension does not arrive in this time, initiate 
-TLS without ESNI to the provided address(es).
+response with an "address_set" extension arrives in this time, clients SHOULD 
+initiate TLS with ESNI to the provided address(es). If an ESNIKeys response 
+without an "address_set" extension arrives in this time, clients MAY initiate 
+TLS with ESNI to the address(es) in the A or AAAA response. If no ESNIKeys response
+arrives in this time, clients SHOULD initiate TLS without ESNI to the available address(es).
 ~~~
 
 CD (Connection Delay) is a configurable parameter. The recommended value is 50 milliseconds,
@@ -440,7 +443,9 @@ matching group. This share will then be sent to the server in the
 "encrypted_sni" extension and used to derive the SNI encryption key. It does not affect the
 (EC)DHE shared secret used in the TLS key schedule. It MUST also select
 an appropriate cipher suite from the list of suites offered by the
-server. If the client is unable to select an appropriate group or suite it SHOULD ignore that ESNIKeys value and MAY attempt to use another value provided by the server (recall that servers might provide multiple ESNIKeys in response to a ESNI TXT query).
+server. If the client is unable to select an appropriate group or suite it SHOULD 
+ignore that ESNIKeys value and MAY attempt to use another value provided by the 
+server (recall that servers might provide multiple ESNIKeys in response to a ESNI TXT query).
 The client MUST NOT send
 encrypted SNI using groups or cipher suites not advertised by the server.
 
