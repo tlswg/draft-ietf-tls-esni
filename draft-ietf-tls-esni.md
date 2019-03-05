@@ -244,27 +244,24 @@ be used to encrypt the SNI for the associated domain name.
 The cipher suite list is orthogonal to the
 list of keys, so each key may be used with any cipher suite.
 
-This structure is placed in the RRData section of a TXT record
-as a base64-encoded string. If this encoding exceeds the 255 octet
-limit of TXT strings, it must be split across multiple concatenated
-strings as per Section 3.1.3 of {{!RFC4408}}. Servers MAY supply
-multiple ESNIKeys values, either of the same or of different versions.
-This allows a server to support multiple versions at once.
+This structure is placed in the RRData section of an ESNI record as-is.
+Servers MAY supply multiple ESNIKeys values, either of the same or of different 
+versions. This allows a server to support multiple versions at once.
 If the server does not supply any ESNIKeys values with a version
 known to the client, then the client MUST behave as if no
 ESNIKeys were found.
 
-The name of each TXT record MUST match the name composed
-of \_esni and the query domain name. That is, if a client queries
-example.com, the ESNI TXT Resource Record might be:
+The name of each ESNI record MUST match the query domain name or the
+query domain name's canonicalized form. That is, if a client queries 
+example.com, the ESNI Resource Record might be:
 
 ~~~
-_esni.example.com. 60S IN TXT "..." "..."
+example.com. 60S IN ESNI "..." "..."
 ~~~
 
 Servers MUST ensure that if multiple A or AAAA records are returned for a
 domain with ESNI support, all the servers pointed to by those records are
-able to handle the keys returned as part of a ESNI TXT record for that domain.
+able to handle the keys returned as part of an ESNI record for that domain.
 
 Clients obtain these records by querying DNS for ESNI-enabled server domains.
 Clients may initiate these queries in parallel alongside normal A or AAAA queries,
@@ -272,7 +269,7 @@ and SHOULD block TLS handshakes until they complete, perhaps by timing out.
 
 In cases where the domain of the A or AAAA records being resolved do
 not match the SNI Server Name, such as when {{!RFC7838}} is being used, the SNI
-domain should be used for querying the ESNI TXT record.
+domain should be used for querying the ESNI record.
 
 Servers operating in Split Mode SHOULD have DNS configured to return
 the same A (or AAAA) record for all ESNI-enabled servers they service. This yields
@@ -406,8 +403,8 @@ matching group. This share will then be sent to the server in the
 an appropriate cipher suite from the list of suites offered by the
 server. If the client is unable to select an appropriate group or suite it
 SHOULD ignore that ESNIKeys value and MAY attempt to use another value provided
-by the server (recall that servers might provide multiple ESNIKeys in response
-to a ESNI TXT query). The client MUST NOT send encrypted SNI using groups or
+by the server. (Recall that servers might provide multiple ESNIKeys in response
+to a ESNI record query.) The client MUST NOT send encrypted SNI using groups or
 cipher suites not advertised by the server.
 
 When offering an encrypted SNI, the client MUST NOT offer to resume any non-ESNI
@@ -852,13 +849,11 @@ IANA is requested to create an entry, esni_required(121) in the
 existing registry for Alerts (defined in {{!RFC8446}}), with the
 "DTLS-OK" column being set to "Y".
 
-## Update of the DNS Underscore Global Scoped Entry Registry
-
-IANA is requested to create an entry in the DNS Underscore Global
-Scoped Entry Registry (defined in {{!I-D.ietf-dnsop-attrleaf}}) with the
-"RR Type" column value being set to "TXT", the "_NODE NAME" column
-value being set to "_esni", and the "Reference" column value being set
-to this document.
+## Update of the Resource Record (RR) TYPEs Registry
+  
+IANA is requested to create an entry, ESNI(0xff9f), in the existing
+registry for Resource Record (RR) TYPEs (defined in {{!BCP42}}) with
+"Meaning" column value being set to "Encrypted SNI".
 
 --- back
 
