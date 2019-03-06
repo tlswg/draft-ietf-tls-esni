@@ -957,7 +957,6 @@ It also has the following disadvantages:
 This document draws extensively from ideas in {{?I-D.kazuho-protected-sni}}, but
 is a much more limited mechanism because it depends on the DNS for the
 protection of the ESNI key. Richard Barnes, Christian Huitema, Patrick McManus,
-Matthew Prince, Nick Sullivan, Martin Thomson, and Chris Wood also provided
-important ideas.
+Matthew Prince, Nick Sullivan, and Martin Thomson also provided important ideas.
 
 
