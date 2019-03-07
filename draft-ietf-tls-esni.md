@@ -367,7 +367,7 @@ response_type
 {{handle-server-response}} and {{server-behavior}}.}
 
 nonce
-: The contents of ClientESNIInner.nonce. (See {{client-behavior}}.)
+: The decrypted contents of ClientESNIInner.encrypted_nonce. (See {{client-behavior}}.)
 
 retry_keys
 : One or more ESNIKeys structures containing the keys that the client should use on
@@ -412,13 +412,15 @@ PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2 or
 below.
 
 Let Z be the DH shared secret derived from a key share in ESNIKeys and the
-corresponding client share in ClientEncryptedSNI.key_share. The SNI encryption key is
-computed from Z as follows:
+corresponding client share in ClientEncryptedSNI.key_share. The SNI encryption key
+and nonce key is computed from Z as follows:
 
 ~~~~
    Zx = HKDF-Extract(0, Z)
-   key = HKDF-Expand-Label(Zx, "esni key", Hash(ESNIContents), key_length)
-   iv = HKDF-Expand-Label(Zx, "esni iv", Hash(ESNIContents), iv_length)
+   esni_key = HKDF-Expand-Label(Zx, "esni key", Hash(ESNIContents), key_length)
+   esni_iv = HKDF-Expand-Label(Zx, "esni iv", Hash(ESNIContents), iv_length)
+   nonce_key = HKDF-Expand-Label(Zx, "nonce key", Hash(ESNIContents), key_length)
+   nonce_iv = HKDF-Expand-Label(Zx, "nonce iv", Hash(ESNIContents), iv_length)
 ~~~~
 
 where ESNIContents is as specified below and Hash is the hash function
@@ -435,19 +437,37 @@ associated with the HKDF instantiation.
 The client then creates a ClientESNIInner structure:
 
 ~~~~
+   uint8 nonce[16];
+   
    struct {
        ServerNameList sni;
        opaque zeros[ESNIKeys.padded_length - length(sni)];
    } PaddedServerNameList;
 
    struct {
-       uint8 nonce[16];
+       uint8 encrypted_nonce<32..2^8-1>;
        PaddedServerNameList realSNI;
    } ClientESNIInner;
 ~~~~
 nonce
 : A random 16-octet value to be echoed by the server in the
 "encrypted_server_name" extension.
+
+encrypted_nonce
+: Output of an AEAD-Encrypt of nonce, symbolically:
+
+```
+nonce_AAD = ClientHello.KeyShareClientHello || sni
+encrypted_nonce = AEAD-Encrypt(nonce_key, nonce_iv, nonce_AAD, nonce)
+```
+
+The nonce is encrypted to enable solutions where esni_key and esni_iv are shared
+with a third party without also sharing Z or nonce_key.  The actual sharing mechanism
+is outside the scope of this document but it would make the true SNI visible to the
+third party, while also preventing the ability to acknowledge the nonce.  Only a server
+with access to Z would be able to set a ServerESNIResponseType of esni_accept. 
+At most the third party would  be able to trigger the retry logic in {{handle-server-response}}
+by returning a ServerESNIResponseType of esni_retry_request.
 
 sni
 : The true SNI, that is, the ServerNameList that would have been sent in the
@@ -469,7 +489,7 @@ The ClientEncryptedSNI.encrypted_sni value is then computed using the usual
 TLS 1.3 AEAD:
 
 ~~~~
-    encrypted_sni = AEAD-Encrypt(key, iv, ClientHello.KeyShareClientHello, ClientESNIInner)
+    encrypted_sni = AEAD-Encrypt(esni_key, esni_iv, ClientHello.KeyShareClientHello, ClientESNIInner)
 ~~~~
 
 Where ClientHello.KeyShareClientHello is the body of the extension but
@@ -502,10 +522,10 @@ If the server negotiates TLS 1.3 or above and provides an
 then processes the extension's "response_type" field:
 
 - If the value is "esni_accept", the client MUST check that the extension's
-  "nonce" field matches ClientESNIInner.nonce and otherwise abort the
-  connection with an "illegal_parameter" alert. The client then proceeds
-  with the connection as usual, verifying the certificate against the desired
-  name.
+  "nonce" field matches the nonce that was used to calculate
+  ClientESNIInner.encrypted_nonce and otherwise abort the connection
+  with an "illegal_parameter" alert. The client then proceeds with the
+  connection as usual, verifying the certificate against the desired name.
 
 - If the value is "esni_retry_request", the client proceeds with the handshake,
   verifying the certificate against ESNIKeys.public_name as described in
@@ -648,7 +668,7 @@ such that its length equals the size of the largest possible Certificate
 (message) covered by the same ESNI key. Moreover, the server MUST
 include the "encrypted_server_name" extension in EncryptedExtensions
 with the "response_type" field set to "esni_accept" and the "nonce"
-field set to the decrypted PaddedServerNameList.nonce value from the client
+field set to the decrypted ClientESNIInner.encrypted_nonce value from the client
 "encrypted_server_name" extension.
 
 If the server sends a NewSessionTicket message, the corresponding ESNI PSK MUST
@@ -850,7 +870,7 @@ existing registry for Alerts (defined in {{!RFC8446}}), with the
 "DTLS-OK" column being set to "Y".
 
 ## Update of the Resource Record (RR) TYPEs Registry
-  
+
 IANA is requested to create an entry, ESNI(0xff9f), in the existing
 registry for Resource Record (RR) TYPEs (defined in {{!RFC6895}}) with
 "Meaning" column value being set to "Encrypted SNI".
