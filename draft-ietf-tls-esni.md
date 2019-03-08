@@ -268,7 +268,7 @@ Clients may initiate these queries in parallel alongside normal A or AAAA querie
 and SHOULD block TLS handshakes until they complete, perhaps by timing out.
 
 In cases where the domain of the A or AAAA records being resolved do
-not match the SNI Server Name, such as when {{!RFC7838}} is being used, the SNI
+not match the SNI Server Name, such as when {{!RFC7838}} Section 2.3 is being used, the SNI
 domain should be used for querying the ESNI record.
 
 Servers operating in Split Mode SHOULD have DNS configured to return
