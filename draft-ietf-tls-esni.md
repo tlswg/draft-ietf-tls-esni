@@ -269,22 +269,19 @@ Clients MUST parse the extension list and check for unsupported
 mandatory extensions. If an unsupported mandatory extension is
 present, clients MUST reject the ESNIKeys record.
 
-This structure is placed in the RRData section of a TXT record
-as a base64-encoded string. If this encoding exceeds the 255 octet
-limit of TXT strings, it must be split across multiple concatenated
-strings as per Section 3.1.3 of {{!RFC4408}}. Servers MAY supply
-multiple ESNIKeys values, either of the same or of different versions.
-This allows a server to support multiple versions at once.
+This structure is placed in the RRData section of an ESNI record as-is.
+Servers MAY supply multiple ESNIKeys values, either of the same or of different 
+versions. This allows a server to support multiple versions at once.
 If the server does not supply any ESNIKeys values with a version
 known to the client, then the client MUST behave as if no
 ESNIKeys were found.
 
-The name of each TXT record MUST match the name composed
-of \_esni and the query domain name. That is, if a client queries
-example.com, the ESNI TXT Resource Record might be:
+The name of each ESNI record MUST match the query domain name or the
+query domain name's canonicalized form. That is, if a client queries 
+example.com, the ESNI Resource Record might be:
 
 ~~~
-_esni.example.com. 60S IN TXT "..." "..."
+example.com. 60S IN ESNI "..." "..."
 ~~~
 
 The "checksum" field provides protection against transmission errors,
@@ -485,8 +482,8 @@ matching group. This share will then be sent to the server in the
 an appropriate cipher suite from the list of suites offered by the
 server. If the client is unable to select an appropriate group or suite it
 SHOULD ignore that ESNIKeys value and MAY attempt to use another value provided
-by the server (recall that servers might provide multiple ESNIKeys in response
-to a ESNI TXT query). The client MUST NOT send encrypted SNI using groups or
+by the server. (Recall that servers might provide multiple ESNIKeys in response
+to a ESNI record query.) The client MUST NOT send encrypted SNI using groups or
 cipher suites not advertised by the server.
 
 When offering an encrypted SNI, the client MUST NOT offer to resume any non-ESNI
@@ -638,6 +635,17 @@ Clients SHOULD implement a limit on retries caused by "esni_retry_request" or
 servers which do not acknowledge the "encrypted_server_name" extension. If the
 client does not retry in either scenario, it MUST report an error to the
 calling application.
+
+If the server sends a HelloRetryRequest in response to the ClientHello
+and the client can send a second updated ClientHello per the rules in
+{{RFC8446}}, the "encrypted_server_name" extension values which do not depend
+on the (possibly updated) ClientHello.KeyShareClientHello, i.e,,
+ClientEncryptedSNI.suite, ClientEncryptedSNI.key_share, and
+ClientEncryptedSNI.record_digest, MUST NOT change across ClientHello messages.
+Moreover, ClientESNIInner.nonce and ClientESNIInner.realSNI MUST not change
+across ClientHello messages. Informally, the values of all unencrypted extension
+information, as well as the inner extension plaintext, must be consistent between
+the first and second ClientHello messages.
 
 ### Verifying against the public name {#verify-public-name}
 
@@ -931,13 +939,11 @@ IANA is requested to create an entry, esni_required(121) in the
 existing registry for Alerts (defined in {{!RFC8446}}), with the
 "DTLS-OK" column being set to "Y".
 
-## Update of the DNS Underscore Global Scoped Entry Registry
-
-IANA is requested to create an entry in the DNS Underscore Global
-Scoped Entry Registry (defined in {{!I-D.ietf-dnsop-attrleaf}}) with the
-"RR Type" column value being set to "TXT", the "_NODE NAME" column
-value being set to "_esni", and the "Reference" column value being set
-to this document.
+## Update of the Resource Record (RR) TYPEs Registry
+  
+IANA is requested to create an entry, ESNI(0xff9f), in the existing
+registry for Resource Record (RR) TYPEs (defined in {{!RFC6895}}) with
+"Meaning" column value being set to "Encrypted SNI".
 
 --- back
 
@@ -1043,4 +1049,3 @@ is a much more limited mechanism because it depends on the DNS for the
 protection of the ESNI key. Richard Barnes, Christian Huitema, Patrick McManus,
 Matthew Prince, Nick Sullivan, Martin Thomson, and David Benjamin also provided
 important ideas and contributions.
-
