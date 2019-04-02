@@ -426,7 +426,7 @@ ClientEncryptedSNI structure:
    struct {
        CipherSuite suite;
        KeyShareEntry key_share;
-       opaque record_digest<0..2^16-1>;
+       opaque record_digest_mac<0..2^16-1>;
        opaque encrypted_sni<0..2^16-1>;
    } ClientEncryptedSNI;
 ~~~~
@@ -438,11 +438,9 @@ key_share
 : The KeyShareEntry carrying the client's public ephemeral key shared
 used to derive the ESNI key.
 
-record_digest
-: A cryptographic hash of the ESNIKeys structure from which the ESNI
-key was obtained, i.e., from the first byte of "checksum" to the end
-of the structure.  This hash is computed using the hash function
-associated with `suite`.
+record_digest_mac
+: A HMAC value based on the cryptographic hash of the ESNIKeys and the client
+key shares, computed as described below.
 
 encrypted_sni
 : The ClientESNIInner structure, AEAD-encrypted using cipher suite "suite" and
@@ -495,6 +493,32 @@ connection, whether the connection negotiated this extension with the
 Otherwise, it is a "non-ESNI PSK". This may be implemented by adding a new field
 to client and server session states.
 
+## Record Digest MAC {#record-digest-mac}
+
+The record digest MAC identifies the ESNIKeys structure used to encrypt the
+SNI. It is computed in two parts:
+
+First, compute the record digest by with a cryptographic hash of the ESNIKeys
+structure, from the first byte of the "checksum" through to the end of the
+structure. This hash is computed using the hash function associated with
+`suite`. This value may be precomputed when the keys are provisioned.
+
+Next, the record digest MAC is computed from the record digest and
+ClientHello as follows:
+
+~~~~
+   record_digest_mac = HMAC(record_digest, ClientHello.KeyShareClientHello)
+~~~~
+
+The HMAC uses the hash function associated with `suite`, and
+ClientHello.KeyShareClientHello is the body of the ClientHello "key_shares"
+extension, not including the extension header.
+
+The additional HMAC in this construction prevents an attacker from echoing a
+ClientEncryptedSNI and checking whether the response indicates that this is a
+GREASE ESNI extension or a real ESNI extension. The attacker can only compare
+ESNI extensions against known ESNIKeys value.
+
 
 ## Client Behavior {#client-behavior}
 
@@ -531,7 +555,7 @@ associated with the HKDF instantiation.
 
 ~~~
    struct {
-       opaque record_digest<0..2^16-1>;
+       opaque record_digest_mac<0..2^16-1>;
        KeyShareEntry esni_key_share;
        Random client_hello_random;
    } ESNIContents;
@@ -715,9 +739,9 @@ structure available for the server, it SHOULD send a GREASE
 - Set the "key_share" field to a randomly-generated valid public key
   for the named group.
 
-- Set the "record_digest" field to a randomly-generated string of hash_length
-  bytes, where hash_length is the length of the hash function associated with
-  the chosen cipher suite.
+- Set the "record_digest_mac" field to a randomly-generated string of
+  hash_length bytes, where hash_length is the length of the hash function
+  associated with the chosen cipher suite.
 
 - Set the "encrypted_sni" field to a randomly-generated string of
   16 + padded_length + tag_length bytes, where tag_length is the tag length
@@ -740,10 +764,11 @@ Upon receiving an "encrypted_server_name" extension, the client-facing
 server MUST check that it is able to negotiate TLS 1.3 or greater. If not,
 it MUST abort the connection with a "handshake_failure" alert.
 
-If the ClientEncryptedSNI.record_digest value does not match the
-cryptographic hash of any known ESNIKeys structure, it MUST ignore the
-extension and proceed with the connection, with the following added
-behavior:
+For each of the ESNIKeys structures the server can respond for, it should
+compute the expected record_digest_mac value for the ClientHello (see
+{{record-digest-mac}}). If the ClientEncryptedESNI.record_digest_mac does not
+match any of these, it MUST ignore the extension and proceed with the
+connection, with the following added behavior:
 
 - It MUST include the "encrypted_server_name" extension in
   EncryptedExtensions message with the "response_type" field set to
@@ -758,7 +783,7 @@ behavior:
   them when using the cleartext SNI name. This restriction allows a client to
   reject resumptions in {{auth-public-name}}.
 
-Note that an unrecognized ClientEncryptedSNI.record_digest value may be
+Note that an unrecognized ClientEncryptedSNI.record_digest_mac value may be
 a GREASE ESNI extension (see {{grease-extensions}}), so it is necessary
 for servers to proceed with the connection and rely on the client to abort if
 ESNI was required. In particular, the unrecognized value alone does not
@@ -766,8 +791,8 @@ indicate a misconfigured ESNI advertisement ({{misconfiguration}}). Instead,
 servers can measure occurrences of the "esni_required" alert to detect this
 case.
 
-If the ClientEncryptedSNI.record_digest value does match the cryptographic
-hash of a known ESNIKeys, the server performs the following checks:
+If the ClientEncryptedSNI.record_digest_mac value does match the computed value
+for a known ESNIKeys, the server performs the following checks:
 
 - If the ClientEncryptedSNI.key_share group does not match one in the ESNIKeys.keys,
   it MUST abort the connection with an "illegal_parameter" alert.
