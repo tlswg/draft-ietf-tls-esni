@@ -413,10 +413,10 @@ key_share
 used to derive the ESNI key.
 
 record_digest
-: A cryptographic hash of the ESNIKeys structure from which the ESNI
-key was obtained, i.e., from the first byte of "checksum" to the end
-of the structure.  This hash is computed using the hash function
-associated with `suite`.
+: A cryptographic hash of the ESNIKeys structure, excluding the "extensions"
+field, from which the ESNI key was obtained, i.e., from the first byte of
+"checksum" to the last byte of "not_after". This hash is computed using the
+hash function associated with `suite`.
 
 encrypted_sni
 : The ClientESNIInner structure, AEAD-encrypted using cipher suite "suite" and
