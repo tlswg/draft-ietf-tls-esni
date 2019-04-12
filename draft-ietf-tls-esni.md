@@ -176,11 +176,12 @@ it to the backend server (in Split Mode).
 
 Publishing ESNI keys in the DNS requires care to ensure correct behavior.
 There are deployment environments in which a domain is served by multiple server
-operators who do not manage the ESNI Keys. Because ESNIKeys and A/AAAA lookup
-are independent, it is therefore possible to obtain an ESNIKeys record which does
+operators who do not manage the ESNI keys. Because ESNI and A/AAAA lookups
+are independent, it is therefore possible to obtain an ESNI record which does
 not match the A/AAAA records. (That is, the host to which an A or AAAA record
 refers is not in possession of the ESNI keys.) The design of the system must 
-therefore allow clients to detect and recover from this situation.
+therefore allow clients to detect and recover from this situation (see
+{{esni-resolution}} for more details).
 
 Servers operating in Split Mode SHOULD have DNS configured to return
 the same A (or AAAA) record for all ESNI-enabled servers they service. This yields
@@ -195,7 +196,7 @@ The following sections describe a DNS record format that achieve these goals.
 
 ## Encrypted SNI Record {#esni-record}
 
-SNI Encryption keys can be published using the following ESNIKeys structure.
+SNI Encryption keys can be published using the following ESNIRecord structure.
 
 ~~~~
     // Copied from TLS 1.3
@@ -215,7 +216,29 @@ SNI Encryption keys can be published using the following ESNIKeys structure.
         uint64 not_after;
         Extension extensions<0..2^16-1>;
     } ESNIKeys;
+
+    struct {
+        ESNIKeys esni_keys;
+        Extension dns_extensions<0..2^16-1>;
+    } ESNIRecord;
 ~~~~
+
+The outermost ESNIRecord structure contains the following fields:
+
+esni_keys
+: An ESNIKeys structure that contains the actual keys used to encrypt the SNI
+as well as some metadata related to those keys.
+
+dns_extensions
+: A list of extensions that the client can take into consideration when
+resolving the target DNS name. The format is defined in
+{{RFC8446}}; Section 4.2. The purpose of the field is to
+provide room for additional features in the future. An extension
+may be tagged as mandatory by using an extension type codepoint with
+the high order bit set to 1. A client which receives a mandatory extension
+they do not understand must reject the ESNIRecord values.
+
+The ESNIKeys structure contains the following fields:
 
 version
 : The version of the structure. For this specification, that value
@@ -238,7 +261,6 @@ keys
 Every key being listed MUST belong to a different group.
 
 padded_length
-:
 The length to pad the ServerNameList value to prior to encryption.
 This value SHOULD be set to the largest ServerNameList the server
 expects to support rounded up the nearest multiple of 16. If the
@@ -259,22 +281,22 @@ generating a Client Hello message. The format is defined in
 provide room for additional features in the future. An extension 
 may be tagged as mandatory by using an extension type codepoint with 
 the high order bit set to 1. A client which receives a mandatory extension 
-they do not understand must reject the record.
+they do not understand must reject the ESNIRecord value.
 
-The semantics of this structure are simple: any of the listed keys may
+Any of the listed keys in the ESNIKeys value may
 be used to encrypt the SNI for the associated domain name.
 The cipher suite list is orthogonal to the
 list of keys, so each key may be used with any cipher suite.
 Clients MUST parse the extension list and check for unsupported
 mandatory extensions. If an unsupported mandatory extension is
-present, clients MUST reject the ESNIKeys record.
+present, clients MUST reject the ESNIRecord value.
 
-This structure is placed in the RRData section of an ESNI record as-is.
-Servers MAY supply multiple ESNIKeys values, either of the same or of different 
+The ESNIRecord structure is placed in the RRData section of an ESNI record as-is.
+Servers MAY supply multiple ESNIRecord values, with ESNIKeys either of the same or of different
 versions. This allows a server to support multiple versions at once.
-If the server does not supply any ESNIKeys values with a version
+If the server does not supply any ESNIRecord values with an ESNIKeys version
 known to the client, then the client MUST behave as if no
-ESNIKeys were found.
+ESNI records were found.
 
 The name of each ESNI record MUST match the query domain name or the
 query domain name's canonicalized form. That is, if a client queries 
@@ -291,7 +313,7 @@ home router.
 "not_before" and "not_after" fields represent the validity period of the
 published ESNI keys. Clients MUST NOT use ESNI keys that was covered by an
 invalid checksum or beyond the published period. If none of the ESNI keys
-values are acceptable, the client SHOULD behave as if no ESNIKeys
+values are acceptable, the client SHOULD behave as if no ESNI records
 were found.
 
 Servers SHOULD set the Resource Record TTL small enough so that the
@@ -300,23 +322,24 @@ their validity period. Note that servers MAY need to retain the decryption key
 for some time after "not_after", and will need to consider clock skew, internal
 caches and the like, when selecting the "not_before" and "not_after" values.
 
-Client MAY cache the ESNIKeys for a particular domain based on the TTL of the
-Resource Record, but SHOULD NOT cache it based on the not_after value, to allow
+Client MAY cache the ESNIRecord values for a particular domain based on the TTL of the
+Resource Record, but SHOULD NOT cache them based on the not_after value of the ESNIKeys structure, to allow
 servers to rotate the keys often and improve forward secrecy.
 
-Note that the length of this structure MUST NOT exceed 2^16 - 1, as the
+Note that the length of the ESNIRecord structure MUST NOT exceed 2^16 - 1, as the
 RDLENGTH is only 16 bits {{RFC1035}}.
 
 ## Encrypted SNI DNS Resolution {#esni-resolution}
 
-This section describes a client ESNI resolution algorithm using a new "address_set"
-extension described below. Future specifications may introduce new extensions
-and corresponding resolution algorithms.
+This section describes a client ESNI resolution algorithm using an "address_set"
+extension for the ESNIRecord structure. Future specifications may introduce new
+ESNIRecord extensions and corresponding resolution algorithms.
 
 ### Address Set Extension
 
-ESNIKeys records MAY indicate a specific IP address(es) for the host(s) in possession
-of the ESNI private key via the following mandatory "address_set" ESNIKeys extension:
+ESNIRecord values MAY indicate one or more IP addresses for the host(s) in possession
+of the private key corresponding to one of the keys provided in the ESNIKeys
+structure, via the following mandatory "address_set" extension:
 
 ~~~
     enum {
@@ -353,6 +376,9 @@ address_set
 : A set of Address structures containing IPv4 or IPv6 addresses
 to hosts which have the corresponding private ESNI key.
 
+This extension MUST NOT be placed in the ESNIKeys extensions field, but only
+in the ESNIRecord dns_extensions field.
+
 ### Resolution Algorithm
 
 Clients obtain ESNI records by querying the DNS for ESNI-enabled server domains.
@@ -362,20 +388,20 @@ be used for querying the ESNI record. (See Section 2.3 of {{!RFC7838}} for more 
 
 Clients SHOULD initiate ESNI queries in parallel alongside normal A or AAAA queries to 
 obtain address information in a timely manner in the event that ESNI is available.
-The following algorithm describes a procedure by which clients can process ESNIKeys
-responses as they arrive to produce addresses for ESNI-capable hosts.
+The following algorithm describes a procedure by which clients can process
+ESNI responses as they arrive to produce addresses for ESNI-capable hosts.
 
 ~~~
-1. If an ESNIKeys response with an "address_set" extension arrives before an A or 
+1. If an ESNI response containing an ESNIRecord value with an "address_set" extension arrives before an A or 
 AAAA response, clients SHOULD initiate TLS with ESNI to the provided address(es).
 
-2. If an A or AAAA response arrives before the ESNIKeys response, clients SHOULD wait up
+2. If an A or AAAA response arrives before the ESNI response, clients SHOULD wait up
 to CD milliseconds before initiating TLS to either address. (Clients may begin
-TCP connections in this time. QUIC connections should wait.) If an ESNIKeys
+TCP connections in this time. QUIC connections should wait.) If an ESNI
 response with an "address_set" extension arrives in this time, clients SHOULD 
-initiate TLS with ESNI to the provided address(es). If an ESNIKeys response 
+initiate TLS with ESNI to the provided address(es). If an ESNI response 
 without an "address_set" extension arrives in this time, clients MAY initiate 
-TLS with ESNI to the address(es) in the A or AAAA response. If no ESNIKeys response
+TLS with ESNI to the address(es) in the A or AAAA response. If no ESNI response
 arrives in this time, clients SHOULD initiate TLS without ESNI to the available address(es).
 ~~~
 
@@ -482,8 +508,8 @@ matching group. This share will then be sent to the server in the
 an appropriate cipher suite from the list of suites offered by the
 server. If the client is unable to select an appropriate group or suite it
 SHOULD ignore that ESNIKeys value and MAY attempt to use another value provided
-by the server. (Recall that servers might provide multiple ESNIKeys in response
-to a ESNI record query.) The client MUST NOT send encrypted SNI using groups or
+by the server. (Recall that servers might provide multiple ESNIRecord values in response
+to a ESNI record query, each containing an ESNIKeys value.) The client MUST NOT send encrypted SNI using groups or
 cipher suites not advertised by the server.
 
 When offering an encrypted SNI, the client MUST NOT offer to resume any non-ESNI
@@ -821,16 +847,16 @@ connection in this case.
 ## Why is cleartext DNS OK? {#cleartext-dns}
 
 In comparison to {{?I-D.kazuho-protected-sni}}, wherein DNS Resource
-Records are signed via a server private key, ESNIKeys have no
+Records are signed via a server private key, ESNI records have no
 authenticity or provenance information. This means that any attacker
 which can inject DNS responses or poison DNS caches, which is a common
 scenario in client access networks, can supply clients with fake
-ESNIKeys (so that the client encrypts SNI to them) or strip the
-ESNIKeys from the response. However, in the face of an attacker that
+ESNI records (so that the client encrypts SNI to them) or strip the
+ESNI record from the response. However, in the face of an attacker that
 controls DNS, no SNI encryption scheme can work because the attacker
 can replace the IP address, thus blocking client connections, or
 substituting a unique IP address which is 1:1 with the DNS name that
-was looked up (modulo DNS wildcards). Thus, allowing the ESNIKeys in
+was looked up (modulo DNS wildcards). Thus, allowing the ESNI records in
 the clear does not make the situation significantly worse.
 
 Clearly, DNSSEC (if the client validates and hard fails) is a defense against
@@ -862,7 +888,7 @@ Server operators may partition their private keys however they see fit provided
 each server behind an IP address has the corresponding private key to decrypt
 a key. Thus, when one ESNI key is provided, sharing is optimally bound by the number
 of hosts that share an IP address. Server operators may further limit sharing
-by sending different Resource Records containing ESNIKeys with different keys
+by sending different Resource Records containing ESNIRecord and ESNIKeys values with different keys
 using a short TTL.
 
 ### Prevent SNI-based DoS attacks
@@ -894,7 +920,7 @@ directly to backend origin servers, thereby avoiding unnecessary MiTM attacks.
 
 ### Split server spoofing
 
-Assuming ESNIKeys retrieved from DNS are validated, e.g., via DNSSEC or fetched
+Assuming ESNI records retrieved from DNS are validated, e.g., via DNSSEC or fetched
 from a trusted Recursive Resolver, spoofing a server operating in Split Mode
 is not possible. See {{cleartext-dns}} for more details regarding cleartext
 DNS.
