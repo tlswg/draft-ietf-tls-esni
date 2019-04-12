@@ -358,7 +358,7 @@ to hosts which have the corresponding private ESNI key.
 Clients obtain ESNI records by querying the DNS for ESNI-enabled server domains.
 In cases where the domain of the A or AAAA records being resolved do not match the
 SNI Server Name, such as when {{!RFC7838}} is being used, the alternate domain should
-be used for querying the ESNI TXT record. (See Section 2.3 of {{!RFC7838}} for more details.)
+be used for querying the ESNI record. (See Section 2.3 of {{!RFC7838}} for more details.)
 
 Clients SHOULD initiate ESNI queries in parallel alongside normal A or AAAA queries to 
 obtain address information in a timely manner in the event that ESNI is available.
