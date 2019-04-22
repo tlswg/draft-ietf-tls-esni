@@ -45,7 +45,7 @@ normative:
   RFC7918:
 
 informative:
-
+  I-D.ietf-tls-grease:
 
 
 --- abstract
@@ -609,18 +609,18 @@ then processes the extension's "response_type" field:
 - If the value is "esni_accept", the client MUST check that the extension's
   "nonce" field matches ClientESNIInner.nonce and otherwise abort the
   connection with an "illegal_parameter" alert. The client then proceeds
-  with the connection as usual, verifying the certificate against the desired
-  name.
+  with the connection as usual, authenticating the connection for the origin
+  server.
 
 - If the value is "esni_retry_request", the client proceeds with the handshake,
-  verifying the certificate against ESNIKeys.public_name as described in
-  {{verify-public-name}}. If verification or the handshake fails, the client
+  authenticating for ESNIKeys.public_name as described in
+  {{auth-public-name}}. If authentication or the handshake fails, the client
   MUST return a failure to the calling application. It MUST NOT use the retry
   keys.
 
   Otherwise, when the handshake completes successfully with the public name
-  verified, the client MUST abort the connection with an "esni_required" alert.
-  It then processes the "retry_keys" field from the server's
+  authenticated, the client MUST abort the connection with an "esni_required"
+  alert. It then processes the "retry_keys" field from the server's
   "encrypted_server_name" extension.
 
   If one of the values contains a version supported by the client, it can regard
@@ -642,16 +642,17 @@ then processes the extension's "response_type" field:
 
 If the server negotiates an earlier version of TLS, or if it does not
 provide an "encrypted_server_name" extension in EncryptedExtensions, the
-client proceeds with the handshake, verifying the certificate against
-ESNIKeys.public_name as described in {{verify-public-name}}. The client MUST
-NOT enable the False Start optimization {{RFC7918}} for this handshake. If
-verification or the handshake fails, the client MUST return a failure to the
-calling application. It MUST NOT treat this as a secure signal to disable ESNI.
+client proceeds with the handshake, authenticating for
+ESNIKeys.public_name as described in {{auth-public-name}}. If an earlier
+version was negotiated, the client MUST NOT enable the False Start optimization
+{{RFC7918}} for this handshake. If authentication or the handshake fails, the
+client MUST return a failure to the calling application. It MUST NOT treat this
+as a secure signal to disable ESNI.
 
 Otherwise, when the handshake completes successfully with the public name
-verified, the client MUST abort the connection with an "esni_required" alert.
-The client can then regard ESNI as securely disabled by the server. It SHOULD
-retry the handshake with a new transport connection and ESNI disabled.
+authenticated, the client MUST abort the connection with an "esni_required"
+alert. The client can then regard ESNI as securely disabled by the server. It
+SHOULD retry the handshake with a new transport connection and ESNI disabled.
 
 [[TODO: Key replacement is significantly less scary than saying that ESNI-naive
   servers bounce ESNI off. Is it worth defining a strict mode toggle in the ESNI
@@ -673,12 +674,12 @@ across ClientHello messages. Informally, the values of all unencrypted extension
 information, as well as the inner extension plaintext, must be consistent between
 the first and second ClientHello messages.
 
-### Verifying against the public name {#verify-public-name}
+### Authenticating for the public name {#auth-public-name}
 
 When the server cannot decrypt or does not process the "encrypted_server_name"
 extension, it continues with the handshake using the cleartext "server_name"
 extension instead (see {{server-behavior}}). Clients that offer ESNI then
-verify the certificate with the public name, as follows:
+authenticate the connection with the public name, as follows:
 
 - If the server resumed a session or negotiated a session that did not use a
   certificate for authentication, the client MUST abort the connection with an
@@ -693,12 +694,45 @@ verify the certificate with the public name, as follows:
 - If the server requests a client certificate, the client MUST respond with an
   empty Certificate message, denoting no client certificate.
 
-Note that verifying a connection for the public name does not verify it for the
-origin. The TLS implementation MUST NOT report such connections as successful to
-the application. It additionally MUST ignore all session tickets and session IDs
-presented by the server. These connections are only used to trigger retries, as
-described in {{handle-server-response}}. This may be implemented, for instance, by
-reporting a failed connection with a dedicated error code.
+Note that authenticating a connection for the public name does not authenticate
+it for the origin. The TLS implementation MUST NOT report such connections as
+successful to the application. It additionally MUST ignore all session tickets
+and session IDs presented by the server. These connections are only used to
+trigger retries, as described in {{handle-server-response}}. This may be
+implemented, for instance, by reporting a failed connection with a dedicated
+error code.
+
+### GREASE extensions {#grease-extensions}
+
+If the client attempts to connect to a server and does not have an ESNIKeys
+structure available for the server, it SHOULD send a GREASE
+{{I-D.ietf-tls-grease}} "encrypted_server_name" extension as follows:
+
+- Select a supported cipher suite, named group, and padded_length
+  value. The padded_length value SHOULD be 260. Set the "suite" field
+  to the selected cipher suite.
+
+- Set the "key_share" field to a randomly-generated valid public key
+  for the named group.
+
+- Set the "record_digest" field to a randomly-generated string of hash_length
+  bytes, where hash_length is the length of the hash function associated with
+  the chosen cipher suite.
+
+- Set the "encrypted_sni" field to a randomly-generated string of
+  16 + padded_length + tag_length bytes, where tag_length is the tag length
+  of the chosen cipher suite's associated AEAD.
+
+If the server sends an "encrypted_server_name" extension, the client
+MUST check the extension syntactically and abort the connection with a
+"decode_error" alert if it is invalid. If the "response_type" field
+contains "esni_retry_requested", the client MUST ignore the extension
+and proceed with the handshake. If it contains "esni_accept" or any other
+value, the client MUST abort the connection with an "illegal_parameter" alert.
+
+Offering a GREASE extension is not considered offering an encrypted SNI for
+purposes of requirements in {{client-behavior}}. In particular, the client MAY
+offer to resume sessions established without ESNI.
 
 ## Client-Facing Server Behavior {#server-behavior}
 
@@ -722,7 +756,15 @@ behavior:
   to ESNI PSKs. ESNI PSKs offered by the client are associated with the ESNI
   name. The server was unable to decrypt then ESNI name, so it should not resume
   them when using the cleartext SNI name. This restriction allows a client to
-  reject resumptions in {{verify-public-name}}.
+  reject resumptions in {{auth-public-name}}.
+
+Note that an unrecognized ClientEncryptedSNI.record_digest value may be
+a GREASE ESNI extension (see {{grease-extensions}}), so it is necessary
+for servers to proceed with the connection and rely on the client to abort if
+ESNI was required. In particular, the unrecognized value alone does not
+indicate a misconfigured ESNI advertisement ({{misconfiguration}}). Instead,
+servers can measure occurrences of the "esni_required" alert to detect this
+case.
 
 If the ClientEncryptedSNI.record_digest value does match the cryptographic
 hash of a known ESNIKeys, the server performs the following checks:
@@ -769,9 +811,7 @@ field set to the decrypted PaddedServerNameList.nonce value from the client
 
 If the server sends a NewSessionTicket message, the corresponding ESNI PSK MUST
 be ignored by all other servers in the deployment when not negotiating ESNI,
-including servers which do not implement this specification. This may be
-implemented by adding a new field to the server session state which earlier
-implementations cannot parse.
+including servers which do not implement this specification.
 
 This restriction provides robustness for rollbacks (see {{misconfiguration}}).
 
@@ -812,7 +852,8 @@ incomplete rollout in a multi-server deployment. This may also occur if a server
 loses its ESNI keys, or if a deployment of ESNI must be rolled back on the
 server.
 
-The retry mechanism repairs most such inconsistencies. If server and advertised keys mismatch,
+The retry mechanism repairs inconsistencies, provided the server is
+authoritative for the public name. If server and advertised keys mismatch,
 the server will respond with esni_retry_requested. If the server does not understand the
 "encrypted_server_name" extension at all, it will ignore it as required by {{RFC8446}};
 Section 4.1.2. Provided the server can present a certificate valid for the public name,
@@ -906,6 +947,10 @@ of ESNI extensions becomes less suspicious and part of common or predictable
 client behavior. In other words, if all Web browsers start using ESNI,
 the presence of this value does not signal suspicious behavior to passive
 eavesdroppers.
+
+Additionally, this specification allows for clients to send GREASE ESNI
+extensions (see {{grease-extensions}}), which helps ensure the ecosystem
+handles the values correctly.
 
 ### Forward secrecy
 
