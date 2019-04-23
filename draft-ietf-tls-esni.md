@@ -977,6 +977,20 @@ Additionally, this specification allows for clients to send GREASE ESNI
 extensions (see {{grease-extensions}}), which helps ensure the ecosystem
 handles the values correctly.
 
+The additional construction in {{record-digest-mac}} is intended to prevent an
+attacker from being able to distinguish between a real and GREASE ESNI
+extension. If the attacker is able to distinguish the two cases, they'd be able
+to prevent ESNI from being deployed by blocking real ESNI connections,
+disincentivizing server deployment as they would suffer additional breakage.
+When real and GREASE ESNI extensions are indistinguishable, an attacker wouldn't
+be able to block connections based on whether the server supports ESNI.
+
+This construction could be defeated by an attacker which has a list of ESNIKeys
+structures it wishes to block, as the attacker could just MAC each possibility
+and compare against what the client sent, however this is roughly equivalent to
+the attacker blocking the connection based on the IP it is connecting to.
+
+
 ### Forward secrecy
 
 This design is not forward secret because the server's ESNI key is static.
