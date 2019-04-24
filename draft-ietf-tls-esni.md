@@ -440,7 +440,7 @@ used to derive the ESNI key.
 
 record_digest_mac
 : A HMAC value based on the cryptographic hash of the ESNIKeys and the client
-key shares, computed as described below.
+key shares, computed as described in {{record-digest-mac}}.
 
 encrypted_sni
 : The ClientESNIInner structure, AEAD-encrypted using cipher suite "suite" and
@@ -517,7 +517,8 @@ extension, not including the extension header.
 The additional HMAC in this construction prevents an attacker from echoing a
 ClientEncryptedSNI and checking whether the response indicates that this is a
 GREASE ESNI extension or a real ESNI extension. The attacker can only compare
-ESNI extensions against known ESNIKeys value.
+ESNI extensions against known ESNIKeys value. This is further discussed in
+{{do-not-stick-out}}.
 
 
 ## Client Behavior {#client-behavior}
@@ -964,7 +965,7 @@ extensions carrying valid digests. Thus, it is possible for an attacker to force
 decryption operations on the server. This attack is bound by the number of
 valid TCP connections an attacker can open.
 
-### Do not stick out
+### Do not stick out {#do-not-stick-out}
 
 As more clients enable ESNI support, e.g., as normal part of Web browser
 functionality, with keys supplied by shared hosting providers, the presence
@@ -979,16 +980,16 @@ handles the values correctly.
 
 The additional construction in {{record-digest-mac}} is intended to prevent an
 attacker from being able to distinguish between a real and GREASE ESNI
-extension. If the attacker is able to distinguish the two cases, they'd be able
-to prevent ESNI from being deployed by blocking real ESNI connections,
-disincentivizing server deployment as they would suffer additional breakage.
-When real and GREASE ESNI extensions are indistinguishable, an attacker wouldn't
-be able to block connections based on whether the server supports ESNI.
+extension. An attacker that is able to distinguish the two cases could block
+only real ESNI connections. This may disincentivize servers from deploying ESNI
+as they'd suffer additional breakage when they enable ESNI. When real and GREASE
+ESNI extensions are indistinguishable, an attacker wouldn't be able to block
+connections based on whether the server supports ESNI.
 
 This construction could be defeated by an attacker which has a list of ESNIKeys
 structures it wishes to block, as the attacker could just MAC each possibility
-and compare against what the client sent, however this is roughly equivalent to
-the attacker blocking the connection based on the IP it is connecting to.
+and compare against what the client sent. However, this is roughly equivalent to
+the attacker blocking the connection based on the destination IP address.
 
 
 ### Forward secrecy
