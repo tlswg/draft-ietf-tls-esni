@@ -530,7 +530,8 @@ computed from Z as follows:
 ~~~~
 
 where ESNIContents is as specified below and Hash is the hash function
-associated with the HKDF instantiation.
+associated with the HKDF instantiation. The salt argument for HKDF-Extract is a
+string consisting of Hash.length bytes set to zeros.
 
 ~~~
    struct {
@@ -577,14 +578,13 @@ The ClientEncryptedSNI.encrypted_sni value is then computed using the usual
 TLS 1.3 AEAD:
 
 ~~~~
-    encrypted_sni = AEAD-Encrypt(key, iv, ClientHello.KeyShareClientHello, ClientESNIInner)
+    encrypted_sni = AEAD-Encrypt(key, iv, KeyShareClientHello, ClientESNIInner)
 ~~~~
 
-Where ClientHello.KeyShareClientHello is the body of the extension but
-not including the extension header. Including
-ClientHello.KeyShareClientHello in the AAD of AEAD-Encrypt binds the
-ClientEncryptedSNI value to the ClientHello and prevents cut-and-paste
-attacks.
+Where KeyShareClientHello is the "extension_data" field of the "key_share"
+extension in a Client Hello (Section 4.2.8 of {{!RFC8446}})). Including
+KeyShareClientHello in the AAD of AEAD-Encrypt binds the ClientEncryptedSNI
+value to the ClientHello and prevents cut-and-paste attacks.
 
 Note: future extensions may end up reusing the server's ESNIKeyShareEntry
 for other purposes within the same message (e.g., encrypting other
@@ -669,7 +669,7 @@ calling application.
 If the server sends a HelloRetryRequest in response to the ClientHello
 and the client can send a second updated ClientHello per the rules in
 {{RFC8446}}, the "encrypted_server_name" extension values which do not depend
-on the (possibly updated) ClientHello.KeyShareClientHello, i.e,,
+on the (possibly updated) KeyShareClientHello, i.e,,
 ClientEncryptedSNI.suite, ClientEncryptedSNI.key_share, and
 ClientEncryptedSNI.record_digest, MUST NOT change across ClientHello messages.
 Moreover, ClientESNIInner.nonce and ClientESNIInner.realSNI MUST not change
