@@ -183,8 +183,11 @@ refers is not in possession of the ESNI keys.) The design of the system must
 therefore allow clients to detect and recover from this situation (see
 {{esni-resolution}} for more details).
 
-Servers operating in Split Mode SHOULD have DNS configured to return
-the same A (or AAAA) record for all ESNI-enabled servers they service. This yields
+Content providers operating in Split Mode SHOULD ensure that the A and AAAA
+records for ESNI-enabled server names do not allow identifying the server name
+from the IP address. This can for example be achieved by always returning the
+same records for all ESNI-enabled names, or by having the function that picks
+addresses from a pool not depend on the server name. This yields
 an anonymity set of cardinality equal to the number of ESNI-enabled server domains
 supported by a given client-facing server. Thus, even with SNI encryption,
 an attacker which can enumerate the set of ESNI-enabled domains supported
