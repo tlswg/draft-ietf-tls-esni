@@ -584,7 +584,8 @@ TLS 1.3 AEAD:
 Where KeyShareClientHello is the "extension_data" field of the "key_share"
 extension in a Client Hello (Section 4.2.8 of {{!RFC8446}})). Including
 KeyShareClientHello in the AAD of AEAD-Encrypt binds the ClientEncryptedSNI
-value to the ClientHello and prevents cut-and-paste attacks.
+value to the ClientHello and prevents cut-and-paste attacks
+({{replay-attacks}}).
 
 Note: future extensions may end up reusing the server's ESNIKeyShareEntry
 for other purposes within the same message (e.g., encrypting other
@@ -916,14 +917,23 @@ without encryption of DNS queries in transit via DoH or DPRIVE mechanisms.
 encryption. In this section, we re-iterate these requirements and assess
 the ESNI design against them.
 
-### Mitigate against replay attacks
+### Mitigate against replay attacks {#replay-attacks}
 
-Since the SNI encryption key is derived from a (EC)DH operation
-between the client's ephemeral and server's semi-static ESNI key, the ESNI
-encryption is bound to the Client Hello. It is not possible for
-an attacker to "cut and paste" the ESNI value in a different Client
-Hello, with a different ephemeral key share, as the terminating server
-will fail to decrypt and verify the ESNI value.
+The encrypted SNI value is bound to the "key_share" extension in the original
+Client Hello. While an attacker could "cut and paste" the ESNI value and
+"key_share" extension into a different Client Hello, they would not be able to
+decrypt subsequent handshake messages since the handshake secrets are based on
+the original "key_share" extension. If they do supply a different "key_share"
+extension with new ephemeral key shares in the updated Client Hello, then the
+terminating server will fail to decrypt and verify the ESNI value.
+
+In case the "key_share" extension contains an empty list of key shares, it could
+be replayed by an attacker, but since the server response does not reveal the
+identity in the Hello Retry Request, it is not considered problematic.
+
+[[OPEN ISSUE: if the server uses PSK-only key establishment, an attacker could
+still replay the ESNI value since the key shares list is empty and the handshake
+secret only depends on the attacker-controlled PSK.]]
 
 ### Avoid widely-deployed shared secrets
 
