@@ -215,8 +215,6 @@ SNI Encryption keys can be published using the following ESNIRecord structure.
         KeyShareEntry keys<4..2^16-1>;
         CipherSuite cipher_suites<2..2^16-2>;
         uint16 padded_length;
-        uint64 not_before;
-        uint64 not_after;
         Extension extensions<0..2^16-1>;
     } ESNIKeys;
 
@@ -269,14 +267,6 @@ This value SHOULD be set to the largest ServerNameList the server
 expects to support rounded up the nearest multiple of 16. If the
 server supports wildcard names, it SHOULD set this value to 260.
 
-not_before
-: The moment when the keys become valid for use. The value is represented
-as seconds from 00:00:00 UTC on Jan 1 1970, not including leap seconds.
-
-not_after
-: The moment when the keys become invalid. Uses the same unit as
-not_before.
-
 extensions
 : A list of extensions that the client can take into consideration when
 generating a Client Hello message. The format is defined in
@@ -312,22 +302,6 @@ example.com. 60S IN ESNI "..." "..."
 The "checksum" field provides protection against transmission errors,
 including those caused by intermediaries such as a DNS proxy running on a
 home router.
-
-"not_before" and "not_after" fields represent the validity period of the
-published ESNI keys. Clients MUST NOT use ESNI keys that was covered by an
-invalid checksum or beyond the published period. If none of the ESNI keys
-values are acceptable, the client SHOULD behave as if no ESNI records
-were found.
-
-Servers SHOULD set the Resource Record TTL small enough so that the
-record gets discarded by the cache before the ESNI keys reach the end of
-their validity period. Note that servers MAY need to retain the decryption key
-for some time after "not_after", and will need to consider clock skew, internal
-caches and the like, when selecting the "not_before" and "not_after" values.
-
-Client MAY cache the ESNIRecord values for a particular domain based on the TTL of the
-Resource Record, but SHOULD NOT cache them based on the not_after value of the ESNIKeys structure, to allow
-servers to rotate the keys often and improve forward secrecy.
 
 Note that the length of the ESNIRecord structure MUST NOT exceed 2^16 - 1, as the
 RDLENGTH is only 16 bits {{RFC1035}}.
