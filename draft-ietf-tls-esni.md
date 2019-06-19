@@ -214,7 +214,7 @@ SNI Encryption keys can be published using the following ESNIRecord structure.
         opaque public_name<1..2^16-1>;
         KeyShareEntry keys<4..2^16-1>;
         CipherSuite cipher_suites<2..2^16-2>;
-        uint8 length_index;
+        uint16 padded_length;
         Extension extensions<0..2^16-1>;
     } ESNIKeys;
 
@@ -261,14 +261,13 @@ keys
 : The list of keys which can be used by the client to encrypt the SNI.
 Every key being listed MUST belong to a different group.
 
-length_index
-The length to pad the ServerNameList value to prior to encryption, encoded as
-a number from 0 to 16. The length decoded from this value is called
-padded_length. A length_index of 0 indicates a padded_length of 260; otherwise,
-padded_length is length_index multiplied by 16.  length_index SHOULD be set to
-encode the smallest padded_length sufficient to hold the largest
-ServerNameList the server expects to support. If the server supports arbitrary
-wildcard names, it SHOULD set this value to 0 (maximum padded_length).
+padded_length
+The length to pad the ServerNameList value to prior to encryption.
+This value SHOULD be set to the largest ServerNameList the server
+expects to support rounded up the nearest multiple of 16. If the
+server supports arbitrary wildcard names, it SHOULD set this value to
+260. Clients SHOULD reject ESNIKeys as invalid if padded_length is
+greater than 260.
 
 extensions
 : A list of extensions that the client can take into consideration when
@@ -523,7 +522,7 @@ The client then creates a ClientESNIInner structure:
 ~~~~
    struct {
        ServerNameList sni;
-       opaque zeros[padded_length - length(sni)];
+       opaque zeros[ESNIKeys.padded_length - length(sni)];
    } PaddedServerNameList;
 
    struct {
@@ -541,15 +540,15 @@ plaintext "server_name" extension.
 
 zeros
 : Zero padding whose length makes the serialized PaddedServerNameList
-struct have a length equal to padded_length.
+struct have a length equal to ESNIKeys.padded_length.
 
 This value consists of the serialized ServerNameList from the "server_name" extension,
-padded with enough zeroes to make the total structure padded_length
+padded with enough zeroes to make the total structure ESNIKeys.padded_length
 bytes long. The purpose of the padding is to prevent attackers
 from using the length of the "encrypted_server_name" extension
 to determine the true SNI. If the serialized ServerNameList is
-longer than padded_length, the client MUST NOT use the "encrypted_server_name"
-extension.
+longer than ESNIKeys.padded_length, the client MUST NOT use
+the "encrypted_server_name" extension.
 
 The ClientEncryptedSNI.encrypted_sni value is then computed using the usual
 TLS 1.3 AEAD:
@@ -688,8 +687,9 @@ If the client attempts to connect to a server and does not have an ESNIKeys
 structure available for the server, it SHOULD send a GREASE
 {{I-D.ietf-tls-grease}} "encrypted_server_name" extension as follows:
 
-- Select a supported cipher suite and named group, and a valid length_index.
-  Set the "suite" field to the selected cipher suite. These selections
+- Select a supported cipher suite, named group, and padded_length
+  value. The padded_length value SHOULD be 260 or a multiple of 16 less than
+  260. Set the "suite" field  to the selected cipher suite. These selections
   SHOULD vary to exercise all supported configurations, but MAY be held constant
   for successive connections to the same server in the same session.
 
@@ -763,7 +763,7 @@ and decrypts the ServerName value. If decryption fails, the server
 MUST abort the connection with a "decrypt_error" alert.
 
 If the decrypted value's length is different from
-the padded_length indicated by ESNIKeys.length_index or the padding consists of
+the advertised ESNIKeys.padded_length or the padding consists of
 any value other than 0, then the server MUST abort the
 connection with an illegal_parameter alert. Otherwise, the
 server uses the PaddedServerNameList.sni value as if it were
