@@ -265,7 +265,9 @@ padded_length
 The length to pad the ServerNameList value to prior to encryption.
 This value SHOULD be set to the largest ServerNameList the server
 expects to support rounded up the nearest multiple of 16. If the
-server supports wildcard names, it SHOULD set this value to 260.
+server supports arbitrary wildcard names, it SHOULD set this value to
+260. Clients SHOULD reject ESNIKeys as invalid if padded_length is
+greater than 260.
 
 extensions
 : A list of extensions that the client can take into consideration when
@@ -686,8 +688,10 @@ structure available for the server, it SHOULD send a GREASE
 {{I-D.ietf-tls-grease}} "encrypted_server_name" extension as follows:
 
 - Select a supported cipher suite, named group, and padded_length
-  value. The padded_length value SHOULD be 260. Set the "suite" field
-  to the selected cipher suite.
+  value. The padded_length value SHOULD be 260 or a multiple of 16 less than
+  260. Set the "suite" field  to the selected cipher suite. These selections
+  SHOULD vary to exercise all supported configurations, but MAY be held constant
+  for successive connections to the same server in the same session.
 
 - Set the "key_share" field to a randomly-generated valid public key
   for the named group.
