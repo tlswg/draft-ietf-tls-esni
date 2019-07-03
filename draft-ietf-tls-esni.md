@@ -887,6 +887,14 @@ desired.
 Moreover, as noted in the introduction, SNI encryption is less useful
 without encryption of DNS queries in transit via DoH or DPRIVE mechanisms.
 
+## Optional Record Digests and Trial Decryption
+
+Supporting optional record digests and trial decryption opens oneself up to
+DoS attacks. Specifically, an adversary may send malicious ClientHello messages, i.e.,
+those which will not decrypt with any known ESNI key, in order to force
+decryption. Servers that support this feature should, for example, implement
+some form of rate limiting mechanism to limit the damage caused by such attacks.
+
 ## Comparison Against Criteria
 
 {{?I-D.ietf-tls-sni-encryption}} lists several requirements for SNI
