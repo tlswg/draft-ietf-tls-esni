@@ -715,10 +715,17 @@ Upon receiving an "encrypted_server_name" extension, the client-facing
 server MUST check that it is able to negotiate TLS 1.3 or greater. If not,
 it MUST abort the connection with a "handshake_failure" alert.
 
-If the ClientEncryptedSNI.record_digest value does not match the
-cryptographic hash of any known ESNIKeys structure, it MUST ignore the
-extension and proceed with the connection, with the following added
-behavior:
+The ClientEncryptedSNI value is said to match a known ESNIKeys if there exists
+an ESNIKeys that can be used to successfully decrypt ClientEncryptedSNI.encrypted_sni.
+This matching procedure should be performed as follows. If ClientEncryptedSNI.record_digest
+is non-empty, servers SHOULD compare it against cryptographic hashes of known ESNIKeys and
+choose the one that matches. Otherwise, if ClientEncryptedSNI.record_digest is empty,
+servers MAY use trial decryption to match to a known ESNIKeys. If both checks fail,
+there is no matching ESNIKeys.
+
+If the ClientEncryptedSNI value does not match any known ESNIKeys
+structure, it MUST ignore the extension and proceed with the connection,
+with the following added behavior:
 
 - It MUST include the "encrypted_server_name" extension in
   EncryptedExtensions message with the "response_type" field set to
@@ -745,8 +752,7 @@ contents to a known ESNIKeys. (Some uses of ESNI, such as local discovery mode,
 may opt to omit the ClientEncryptedSNI.record_digest since it can be used as a
 tracking vector.)
 
-If the ClientEncryptedSNI.record_digest value does match a known ESNIKeys, either by
-comparing against a known cryptographic hash or by trial decryption, the server
+If the ClientEncryptedSNI value does match a known ESNIKeys, the server
 performs the following checks:
 
 - If the ClientEncryptedSNI.key_share group does not match one in the ESNIKeys.keys,
