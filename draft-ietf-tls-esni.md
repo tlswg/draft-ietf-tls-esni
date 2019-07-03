@@ -104,8 +104,8 @@ already tell from the IP address.
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
 "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
 document are to be interpreted as described in BCP 14 {{RFC2119}} {{!RFC8174}}
-when, and only when, they appear in all capitals, as shown here. All TLS notation 
-comes from {{RFC8446}}; Section 3. 
+when, and only when, they appear in all capitals, as shown here. All TLS notation
+comes from {{RFC8446}}; Section 3.
 
 # Overview
 
@@ -179,7 +179,7 @@ There are deployment environments in which a domain is served by multiple server
 operators who do not manage the ESNI keys. Because ESNI and A/AAAA lookups
 are independent, it is therefore possible to obtain an ESNI record which does
 not match the A/AAAA records. (That is, the host to which an A or AAAA record
-refers is not in possession of the ESNI keys.) The design of the system must 
+refers is not in possession of the ESNI keys.) The design of the system must
 therefore allow clients to detect and recover from this situation (see
 {{esni-resolution}} for more details).
 
@@ -267,9 +267,9 @@ extensions
 : A list of extensions that the client can take into consideration when
 generating a Client Hello message. The format is defined in
 {{RFC8446}}; Section 4.2. The purpose of the field is to
-provide room for additional features in the future. An extension 
-may be tagged as mandatory by using an extension type codepoint with 
-the high order bit set to 1. A client which receives a mandatory extension 
+provide room for additional features in the future. An extension
+may be tagged as mandatory by using an extension type codepoint with
+the high order bit set to 1. A client which receives a mandatory extension
 they do not understand must reject the ESNIRecord value.
 
 Any of the listed keys in the ESNIKeys value may
@@ -288,7 +288,7 @@ known to the client, then the client MUST behave as if no
 ESNI records were found.
 
 The name of each ESNI record MUST match the query domain name or the
-query domain name's canonicalized form. That is, if a client queries 
+query domain name's canonicalized form. That is, if a client queries
 example.com, the ESNI Resource Record might be:
 
 ~~~
@@ -359,21 +359,21 @@ In cases where the domain of the A or AAAA records being resolved do not match t
 SNI Server Name, such as when {{!RFC7838}} is being used, the alternate domain should
 be used for querying the ESNI record. (See Section 2.3 of {{!RFC7838}} for more details.)
 
-Clients SHOULD initiate ESNI queries in parallel alongside normal A or AAAA queries to 
+Clients SHOULD initiate ESNI queries in parallel alongside normal A or AAAA queries to
 obtain address information in a timely manner in the event that ESNI is available.
 The following algorithm describes a procedure by which clients can process
 ESNI responses as they arrive to produce addresses for ESNI-capable hosts.
 
 ~~~
-1. If an ESNI response containing an ESNIRecord value with an "address_set" extension arrives before an A or 
+1. If an ESNI response containing an ESNIRecord value with an "address_set" extension arrives before an A or
 AAAA response, clients SHOULD initiate TLS with ESNI to the provided address(es).
 
 2. If an A or AAAA response arrives before the ESNI response, clients SHOULD wait up
 to CD milliseconds before initiating TLS to either address. (Clients may begin
 TCP connections in this time. QUIC connections should wait.) If an ESNI
-response with an "address_set" extension arrives in this time, clients SHOULD 
-initiate TLS with ESNI to the provided address(es). If an ESNI response 
-without an "address_set" extension arrives in this time, clients MAY initiate 
+response with an "address_set" extension arrives in this time, clients SHOULD
+initiate TLS with ESNI to the provided address(es). If an ESNI response
+without an "address_set" extension arrives in this time, clients MAY initiate
 TLS with ESNI to the address(es) in the A or AAAA response. If no ESNI response
 arrives in this time, clients SHOULD initiate TLS without ESNI to the available address(es).
 ~~~
@@ -570,7 +570,7 @@ This value is placed in an "encrypted_server_name" extension.
 
 The client MUST place the value of ESNIKeys.public_name in the "server_name"
 extension. (This is required for technical conformance with {{!RFC7540}};
-Section 9.2.) The client MUST NOT send a "cached_info" extension {{!RFC7924}} 
+Section 9.2.) The client MUST NOT send a "cached_info" extension {{!RFC7924}}
 with a CachedObject entry whose CachedInformationType is "cert".
 
 ### Handling the server response {#handle-server-response}
@@ -882,6 +882,18 @@ desired.
 Moreover, as noted in the introduction, SNI encryption is less useful
 without encryption of DNS queries in transit via DoH or DPRIVE mechanisms.
 
+## Encrypting other Extensions
+
+ESNI protects only the SNI in transit. Other ClientHello extensions,
+such as ALPN, might also reveal privacy-sensitive information to the
+network. As such, it might be desirable to encrypt other extensions
+alongside the SNI. However, the SNI extension is unique in that
+non-TLS-terminating servers or load balancers may act on its contents.
+Thus, using keys specifically for SNI encryption promotes key separation
+between client-facing servers and endpoints party to TLS connections.
+Moreover, the ESNI design described herein does not preclude a mechanism
+for generic ClientHello extension encryption.
+
 ## Comparison Against Criteria
 
 {{?I-D.ietf-tls-sni-encryption}} lists several requirements for SNI
@@ -986,7 +998,7 @@ existing registry for Alerts (defined in {{!RFC8446}}), with the
 "DTLS-OK" column being set to "Y".
 
 ## Update of the Resource Record (RR) TYPEs Registry
-  
+
 IANA is requested to create an entry, ESNI(0xff9f), in the existing
 registry for Resource Record (RR) TYPEs (defined in {{!RFC6895}}) with
 "Meaning" column value being set to "Encrypted SNI".
