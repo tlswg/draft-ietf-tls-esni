@@ -885,9 +885,9 @@ without encryption of DNS queries in transit via DoH or DPRIVE mechanisms.
 ## Related Privacy Leaks
 
 ESNI requires encrypted DNS to be an effective privacy protection mechanism.
-Similarly, implementations may wish to prohibit cleartext OCSP traffic in the
-absence of stapled OCSP responses. Failure to do so may lead to inadvertent
-leakage of otherwise encrypted domain names.
+Similarly, implementations SHOULD require OCSP stapling or prohibit
+generating OCSP or CRL traffic, especially in cleartext. Cleartext OCSP queries
+and CRL checks may leak otherwise encrypted domain names to the network.
 
 ## Comparison Against Criteria
 
