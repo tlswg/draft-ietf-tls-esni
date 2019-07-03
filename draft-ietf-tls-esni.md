@@ -104,8 +104,8 @@ already tell from the IP address.
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
 "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
 document are to be interpreted as described in BCP 14 {{RFC2119}} {{!RFC8174}}
-when, and only when, they appear in all capitals, as shown here. All TLS notation 
-comes from {{RFC8446}}; Section 3. 
+when, and only when, they appear in all capitals, as shown here. All TLS notation
+comes from {{RFC8446}}; Section 3.
 
 # Overview
 
@@ -179,7 +179,7 @@ There are deployment environments in which a domain is served by multiple server
 operators who do not manage the ESNI keys. Because ESNI and A/AAAA lookups
 are independent, it is therefore possible to obtain an ESNI record which does
 not match the A/AAAA records. (That is, the host to which an A or AAAA record
-refers is not in possession of the ESNI keys.) The design of the system must 
+refers is not in possession of the ESNI keys.) The design of the system must
 therefore allow clients to detect and recover from this situation (see
 {{esni-resolution}} for more details).
 
@@ -267,9 +267,9 @@ extensions
 : A list of extensions that the client can take into consideration when
 generating a Client Hello message. The format is defined in
 {{RFC8446}}; Section 4.2. The purpose of the field is to
-provide room for additional features in the future. An extension 
-may be tagged as mandatory by using an extension type codepoint with 
-the high order bit set to 1. A client which receives a mandatory extension 
+provide room for additional features in the future. An extension
+may be tagged as mandatory by using an extension type codepoint with
+the high order bit set to 1. A client which receives a mandatory extension
 they do not understand must reject the ESNIRecord value.
 
 Any of the listed keys in the ESNIKeys value may
@@ -288,7 +288,7 @@ known to the client, then the client MUST behave as if no
 ESNI records were found.
 
 The name of each ESNI record MUST match the query domain name or the
-query domain name's canonicalized form. That is, if a client queries 
+query domain name's canonicalized form. That is, if a client queries
 example.com, the ESNI Resource Record might be:
 
 ~~~
@@ -359,21 +359,21 @@ In cases where the domain of the A or AAAA records being resolved do not match t
 SNI Server Name, such as when {{!RFC7838}} is being used, the alternate domain should
 be used for querying the ESNI record. (See Section 2.3 of {{!RFC7838}} for more details.)
 
-Clients SHOULD initiate ESNI queries in parallel alongside normal A or AAAA queries to 
+Clients SHOULD initiate ESNI queries in parallel alongside normal A or AAAA queries to
 obtain address information in a timely manner in the event that ESNI is available.
 The following algorithm describes a procedure by which clients can process
 ESNI responses as they arrive to produce addresses for ESNI-capable hosts.
 
 ~~~
-1. If an ESNI response containing an ESNIRecord value with an "address_set" extension arrives before an A or 
+1. If an ESNI response containing an ESNIRecord value with an "address_set" extension arrives before an A or
 AAAA response, clients SHOULD initiate TLS with ESNI to the provided address(es).
 
 2. If an A or AAAA response arrives before the ESNI response, clients SHOULD wait up
 to CD milliseconds before initiating TLS to either address. (Clients may begin
 TCP connections in this time. QUIC connections should wait.) If an ESNI
-response with an "address_set" extension arrives in this time, clients SHOULD 
-initiate TLS with ESNI to the provided address(es). If an ESNI response 
-without an "address_set" extension arrives in this time, clients MAY initiate 
+response with an "address_set" extension arrives in this time, clients SHOULD
+initiate TLS with ESNI to the provided address(es). If an ESNI response
+without an "address_set" extension arrives in this time, clients MAY initiate
 TLS with ESNI to the address(es) in the A or AAAA response. If no ESNI response
 arrives in this time, clients SHOULD initiate TLS without ESNI to the available address(es).
 ~~~
@@ -524,6 +524,7 @@ The client then creates a ClientESNIInner structure:
        PaddedServerNameList realSNI;
    } ClientESNIInner;
 ~~~~
+
 nonce
 : A random 16-octet value to be echoed by the server in the
 "encrypted_server_name" extension.
@@ -570,7 +571,7 @@ This value is placed in an "encrypted_server_name" extension.
 
 The client MUST place the value of ESNIKeys.public_name in the "server_name"
 extension. (This is required for technical conformance with {{!RFC7540}};
-Section 9.2.) The client MUST NOT send a "cached_info" extension {{!RFC7924}} 
+Section 9.2.) The client MUST NOT send a "cached_info" extension {{!RFC7924}}
 with a CachedObject entry whose CachedInformationType is "cert".
 
 ### Handling the server response {#handle-server-response}
@@ -638,14 +639,14 @@ calling application.
 
 If the server sends a HelloRetryRequest in response to the ClientHello
 and the client can send a second updated ClientHello per the rules in
-{{RFC8446}}, the "encrypted_server_name" extension values which do not depend
-on the (possibly updated) KeyShareClientHello, i.e,,
-ClientEncryptedSNI.suite, ClientEncryptedSNI.key_share, and
-ClientEncryptedSNI.record_digest, MUST NOT change across ClientHello messages.
-Moreover, ClientESNIInner.nonce and ClientESNIInner.realSNI MUST not change
-across ClientHello messages. Informally, the values of all unencrypted extension
-information, as well as the inner extension plaintext, must be consistent between
-the first and second ClientHello messages.
+{{RFC8446}}, the client MUST NOT change ClientEncryptedSNI.suite,
+ClientEncryptedSNI.record_digest, or ClientESNIInner across ClientHello
+messages. Clients MUST choose fresh values for ClientEncryptedSNI.key_share
+in the second ClientHello message. This is needed to ensure key material
+is not re-used for encrypting the SNI in the second ClientHello message.
+
+[[NOTE: this fits better with HPKE adoption since that abstraction always
+generates a fresh key for each encryption operation]]
 
 ### Authenticating for the public name {#auth-public-name}
 
@@ -759,7 +760,7 @@ MUST abort the connection with a "decrypt_error" alert.
 If the decrypted value's length is different from
 the advertised ESNIKeys.padded_length or the padding consists of
 any value other than 0, then the server MUST abort the
-connection with an illegal_parameter alert. Otherwise, the
+connection with an "illegal_parameter" alert. Otherwise, the
 server uses the PaddedServerNameList.sni value as if it were
 the "server_name" extension. Any actual "server_name" extension is
 ignored, which also means the server MUST NOT send the "server_name"
@@ -771,6 +772,12 @@ it executes the steps in the following section, or forwards
 the TLS connection to the backend server (if in Split Mode). In
 the latter case, it does not make any changes to the TLS
 messages, but just blindly forwards them.
+
+If the ClientHello is the result of a HelloRetryRequest, servers MUST
+abort the connection with an "illegal_parameter" alert if any of the
+ClientEncryptedSNI.suite, ClientEncryptedSNI.record_digest, or decrypted
+ClientESNIInner values from the second ClientHello do not match that
+of the first ClientHello.
 
 ## Shared Mode Server Behavior
 
@@ -986,7 +993,7 @@ existing registry for Alerts (defined in {{!RFC8446}}), with the
 "DTLS-OK" column being set to "Y".
 
 ## Update of the Resource Record (RR) TYPEs Registry
-  
+
 IANA is requested to create an entry, ESNI(0xff9f), in the existing
 registry for Resource Record (RR) TYPEs (defined in {{!RFC6895}}) with
 "Meaning" column value being set to "Encrypted SNI".
