@@ -765,7 +765,7 @@ MUST abort the connection with a "decrypt_error" alert.
 If the decrypted value's length is different from
 the advertised ESNIKeys.padded_length or the padding consists of
 any value other than 0, then the server MUST abort the
-connection with an illegal_parameter alert. Otherwise, the
+connection with an "illegal_parameter" alert. Otherwise, the
 server uses the PaddedServerNameList.sni value as if it were
 the "server_name" extension. Any actual "server_name" extension is
 ignored, which also means the server MUST NOT send the "server_name"
@@ -779,7 +779,7 @@ the latter case, it does not make any changes to the TLS
 messages, but just blindly forwards them.
 
 If the ClientHello is the result of a HelloRetryRequest, servers MUST
-abort the connection with an illegal_parameter alert if the decrypted
+abort the connection with an "illegal_parameter" alert if the decrypted
 ClientESNIInner from the second ClientHello does not match that
 of the first ClientHello.
 
