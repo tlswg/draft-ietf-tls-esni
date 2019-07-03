@@ -46,6 +46,9 @@ normative:
 
 informative:
   I-D.ietf-tls-grease:
+  SNIExtensibilityFailed:
+    title: Accepting that other SNI name types will never work
+    target: https://mailarchive.ietf.org/arch/msg/tls/1t79gzNItZd71DwwoaqcQQ_4Yxc
 
 
 --- abstract
@@ -515,7 +518,7 @@ The client then creates a ClientESNIInner structure:
 
 ~~~~
    struct {
-       ServerNameList sni;
+       opaque dns_name<1..2^16-1>;
        opaque zeros[ESNIKeys.padded_length - length(sni)];
    } PaddedServerNameList;
 
@@ -528,9 +531,10 @@ nonce
 : A random 16-octet value to be echoed by the server in the
 "encrypted_server_name" extension.
 
-sni
-: The true SNI, that is, the ServerNameList that would have been sent in the
-plaintext "server_name" extension.
+dns_name
+: The true SNI DNS name, that is, the HostName value that would have been sent in the
+plaintext "server_name" extension. (NameType values other than "host_name" are 
+unsupported since SNI extensibility failed {{SNIExtensibilityFailed}}).
 
 zeros
 : Zero padding whose length makes the serialized PaddedServerNameList
