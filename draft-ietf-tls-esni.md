@@ -648,10 +648,10 @@ and the client can send a second updated ClientHello per the rules in
 on the (possibly updated) KeyShareClientHello, i.e,,
 ClientEncryptedSNI.suite, ClientEncryptedSNI.key_share, and
 ClientEncryptedSNI.record_digest, MUST NOT change across ClientHello messages.
-Moreover, ClientESNIInner.nonce and ClientESNIInner.realSNI MUST not change
-across ClientHello messages. Informally, the values of all unencrypted extension
-information, as well as the inner extension plaintext, must be consistent between
-the first and second ClientHello messages.
+Moreover, ClientESNIInner MUST not change across ClientHello messages.
+Informally, the values of all unencrypted extension information, as well as
+the inner extension plaintext, must be consistent between the first and
+second ClientHello messages.
 
 ### Authenticating for the public name {#auth-public-name}
 
@@ -779,9 +779,10 @@ the latter case, it does not make any changes to the TLS
 messages, but just blindly forwards them.
 
 If the ClientHello is the result of a HelloRetryRequest, servers MUST
-abort the connection with an "illegal_parameter" alert if the decrypted
-ClientESNIInner from the second ClientHello does not match that
-of the first ClientHello.
+abort the connection with an "illegal_parameter" alert if any of the
+ClientEncryptedSNI.suite, ClientEncryptedSNI.key_share, ClientEncryptedSNI.record_digest,
+or decrypted ClientESNIInner values from the second ClientHello do not
+match that of the first ClientHello.
 
 ## Shared Mode Server Behavior
 
