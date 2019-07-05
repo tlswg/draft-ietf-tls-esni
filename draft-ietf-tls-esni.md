@@ -46,6 +46,9 @@ normative:
 
 informative:
   I-D.ietf-tls-grease:
+  SNIExtensibilityFailed:
+    title: Accepting that other SNI name types will never work
+    target: https://mailarchive.ietf.org/arch/msg/tls/1t79gzNItZd71DwwoaqcQQ_4Yxc
 
 
 --- abstract
@@ -515,7 +518,7 @@ The client then creates a ClientESNIInner structure:
 
 ~~~~
    struct {
-       ServerNameList sni;
+       opaque dns_name<1..2^16-1>;
        opaque zeros[ESNIKeys.padded_length - length(sni)];
    } PaddedServerNameList;
 
@@ -528,9 +531,10 @@ nonce
 : A random 16-octet value to be echoed by the server in the
 "encrypted_server_name" extension.
 
-sni
-: The true SNI, that is, the ServerNameList that would have been sent in the
-plaintext "server_name" extension.
+dns_name
+: The true SNI DNS name, that is, the HostName value that would have been sent in the
+plaintext "server_name" extension. (NameType values other than "host_name" are 
+unsupported since SNI extensibility failed {{SNIExtensibilityFailed}}).
 
 zeros
 : Zero padding whose length makes the serialized PaddedServerNameList
@@ -893,6 +897,25 @@ Thus, using keys specifically for SNI encryption promotes key separation
 between client-facing servers and endpoints party to TLS connections.
 Moreover, the ESNI design described herein does not preclude a mechanism
 for generic ClientHello extension encryption.
+
+## Related Privacy Leaks
+
+ESNI requires encrypted DNS to be an effective privacy protection mechanism.
+However, verifying the server's identity from the Certificate message, particularly
+when using the X509 CertificateType, may result in additional network traffic
+that may reveal the server identity. Examples of this traffic may include requests
+for revocation information, such as OCSP or CRL traffic, or requests for repository
+information, such as authorityInformationAccess. It may also include
+implementation-specific traffic for additional information sources as part of
+verification.
+
+Implementations SHOULD avoid leaking information that may identify the
+server. Even when sent over an encrypted transport, such requests may result
+in indirect exposure of the server's identity, such as indicating a specific CA
+or service being used. To mitigate this risk, servers SHOULD deliver such
+information in-band when possible, such as through the use of OCSP stapling,
+and clients SHOULD take steps to minimize or protect such requests during
+certificate validation.
 
 ## Comparison Against Criteria
 
