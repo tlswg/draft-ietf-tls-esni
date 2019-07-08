@@ -533,7 +533,7 @@ nonce
 
 dns_name
 : The true SNI DNS name, that is, the HostName value that would have been sent in the
-plaintext "server_name" extension. (NameType values other than "host_name" are 
+plaintext "server_name" extension. (NameType values other than "host_name" are
 unsupported since SNI extensibility failed {{SNIExtensibilityFailed}}).
 
 zeros
@@ -719,10 +719,23 @@ Upon receiving an "encrypted_server_name" extension, the client-facing
 server MUST check that it is able to negotiate TLS 1.3 or greater. If not,
 it MUST abort the connection with a "handshake_failure" alert.
 
-If the ClientEncryptedSNI.record_digest value does not match the
-cryptographic hash of any known ESNIKeys structure, it MUST ignore the
-extension and proceed with the connection, with the following added
-behavior:
+The ClientEncryptedSNI value is said to match a known ESNIKeys if there exists
+an ESNIKeys that can be used to successfully decrypt ClientEncryptedSNI.encrypted_sni.
+This matching procedure should be done using one of the following two checks:
+
+1. Compare ClientEncryptedSNI.record_digest against cryptographic hashes of known ESNIKeys
+and choose the one that matches.
+2. Use trial decryption of ClientEncryptedSNI.encrypted_sni with known ESNIKeys and choose
+the one that succeeds.
+
+Some uses of ESNI, such as local discovery mode, may omit the ClientEncryptedSNI.record_digest
+since it can be used as a tracking vector. In such cases, trial decryption should be
+used for matching ClientEncryptedSNI to known ESNIKeys. Unless specified by the application
+using (D)TLS or externally configured on both sides, implementations MUST use the first method.
+
+If the ClientEncryptedSNI value does not match any known ESNIKeys
+structure, it MUST ignore the extension and proceed with the connection,
+with the following added behavior:
 
 - It MUST include the "encrypted_server_name" extension in
   EncryptedExtensions message with the "response_type" field set to
@@ -745,8 +758,8 @@ indicate a misconfigured ESNI advertisement ({{misconfiguration}}). Instead,
 servers can measure occurrences of the "esni_required" alert to detect this
 case.
 
-If the ClientEncryptedSNI.record_digest value does match the cryptographic
-hash of a known ESNIKeys, the server performs the following checks:
+If the ClientEncryptedSNI value does match a known ESNIKeys, the server
+performs the following checks:
 
 - If the ClientEncryptedSNI.key_share group does not match one in the ESNIKeys.keys,
   it MUST abort the connection with an "illegal_parameter" alert.
@@ -885,6 +898,14 @@ by attackers on the local network, which is a common case where SNI is
 desired.
 Moreover, as noted in the introduction, SNI encryption is less useful
 without encryption of DNS queries in transit via DoH or DPRIVE mechanisms.
+
+## Optional Record Digests and Trial Decryption
+
+Supporting optional record digests and trial decryption opens oneself up to
+DoS attacks. Specifically, an adversary may send malicious ClientHello messages, i.e.,
+those which will not decrypt with any known ESNI key, in order to force
+decryption. Servers that support this feature should, for example, implement
+some form of rate limiting mechanism to limit the damage caused by such attacks.
 
 ## Encrypting other Extensions
 
