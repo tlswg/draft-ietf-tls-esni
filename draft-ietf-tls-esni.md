@@ -533,7 +533,7 @@ nonce
 
 dns_name
 : The true SNI DNS name, that is, the HostName value that would have been sent in the
-plaintext "server_name" extension. (NameType values other than "host_name" are 
+plaintext "server_name" extension. (NameType values other than "host_name" are
 unsupported since SNI extensibility failed {{SNIExtensibilityFailed}}).
 
 zeros
@@ -723,15 +723,15 @@ The ClientEncryptedSNI value is said to match a known ESNIKeys if there exists
 an ESNIKeys that can be used to successfully decrypt ClientEncryptedSNI.encrypted_sni.
 This matching procedure should be done using one of the following two checks:
 
-1. Compare ClientEncryptedSNI.record_digest against cryptographic hashes of known ESNIKeys 
-and choose the one that matches. 
-2. Use trial decryption of ClientEncryptedSNI.encrypted_sni with known ESNIKeys and choose 
+1. Compare ClientEncryptedSNI.record_digest against cryptographic hashes of known ESNIKeys
+and choose the one that matches.
+2. Use trial decryption of ClientEncryptedSNI.encrypted_sni with known ESNIKeys and choose
 the one that succeeds.
 
-Which check to use must be configured externally. Some uses of ESNI, such as local 
-discovery mode, may omit the ClientEncryptedSNI.record_digest since it can be used 
-as a tracking vector. In such cases, trial decryption should be used for matching
-ClientEncryptedSNI to known ESNIKeys.
+Some uses of ESNI, such as local discovery mode, may omit the ClientEncryptedSNI.record_digest
+since it can be used as a tracking vector. In such cases, trial decryption should be
+used for matching ClientEncryptedSNI to known ESNIKeys. Unless specified by the application
+using (D)TLS or externally configured on both sides, implementations MUST use the first method.
 
 If the ClientEncryptedSNI value does not match any known ESNIKeys
 structure, it MUST ignore the extension and proceed with the connection,
