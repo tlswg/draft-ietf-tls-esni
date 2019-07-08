@@ -46,6 +46,9 @@ normative:
 
 informative:
   I-D.ietf-tls-grease:
+  SNIExtensibilityFailed:
+    title: Accepting that other SNI name types will never work
+    target: https://mailarchive.ietf.org/arch/msg/tls/1t79gzNItZd71DwwoaqcQQ_4Yxc
 
 
 --- abstract
@@ -515,7 +518,7 @@ The client then creates a ClientESNIInner structure:
 
 ~~~~
    struct {
-       ServerNameList sni;
+       opaque dns_name<1..2^16-1>;
        opaque zeros[ESNIKeys.padded_length - length(sni)];
    } PaddedServerNameList;
 
@@ -528,9 +531,10 @@ nonce
 : A random 16-octet value to be echoed by the server in the
 "encrypted_server_name" extension.
 
-sni
-: The true SNI, that is, the ServerNameList that would have been sent in the
-plaintext "server_name" extension.
+dns_name
+: The true SNI DNS name, that is, the HostName value that would have been sent in the
+plaintext "server_name" extension. (NameType values other than "host_name" are 
+unsupported since SNI extensibility failed {{SNIExtensibilityFailed}}).
 
 zeros
 : Zero padding whose length makes the serialized PaddedServerNameList
@@ -717,11 +721,17 @@ it MUST abort the connection with a "handshake_failure" alert.
 
 The ClientEncryptedSNI value is said to match a known ESNIKeys if there exists
 an ESNIKeys that can be used to successfully decrypt ClientEncryptedSNI.encrypted_sni.
-This matching procedure should be performed as follows. If ClientEncryptedSNI.record_digest
-is non-empty, servers SHOULD compare it against cryptographic hashes of known ESNIKeys and
-choose the one that matches. Otherwise, if ClientEncryptedSNI.record_digest is empty,
-servers MAY use trial decryption to match to a known ESNIKeys. If both checks fail,
-there is no matching ESNIKeys.
+This matching procedure should be done using one of the following two checks:
+
+1. Compare ClientEncryptedSNI.record_digest against cryptographic hashes of known ESNIKeys 
+and choose the one that matches. 
+2. Use trial decryption of ClientEncryptedSNI.encrypted_sni with known ESNIKeys and choose 
+the one that succeeds.
+
+Which check to use must be configured externally. Some uses of ESNI, such as local 
+discovery mode, may omit the ClientEncryptedSNI.record_digest since it can be used 
+as a tracking vector. In such cases, trial decryption should be used for matching
+ClientEncryptedSNI to known ESNIKeys.
 
 If the ClientEncryptedSNI value does not match any known ESNIKeys
 structure, it MUST ignore the extension and proceed with the connection,
@@ -746,11 +756,7 @@ for servers to proceed with the connection and rely on the client to abort if
 ESNI was required. In particular, the unrecognized value alone does not
 indicate a misconfigured ESNI advertisement ({{misconfiguration}}). Instead,
 servers can measure occurrences of the "esni_required" alert to detect this
-case. An empty ClientEncryptedSNI.record_digest value MAY be used in environments
-wherein trial decryption is a viable approach for matching ClientEncryptedSNI
-contents to a known ESNIKeys. (Some uses of ESNI, such as local discovery mode,
-may opt to omit the ClientEncryptedSNI.record_digest since it can be used as a
-tracking vector.)
+case.
 
 If the ClientEncryptedSNI value does match a known ESNIKeys, the server
 performs the following checks:
@@ -900,6 +906,37 @@ DoS attacks. Specifically, an adversary may send malicious ClientHello messages,
 those which will not decrypt with any known ESNI key, in order to force
 decryption. Servers that support this feature should, for example, implement
 some form of rate limiting mechanism to limit the damage caused by such attacks.
+
+## Encrypting other Extensions
+
+ESNI protects only the SNI in transit. Other ClientHello extensions,
+such as ALPN, might also reveal privacy-sensitive information to the
+network. As such, it might be desirable to encrypt other extensions
+alongside the SNI. However, the SNI extension is unique in that
+non-TLS-terminating servers or load balancers may act on its contents.
+Thus, using keys specifically for SNI encryption promotes key separation
+between client-facing servers and endpoints party to TLS connections.
+Moreover, the ESNI design described herein does not preclude a mechanism
+for generic ClientHello extension encryption.
+
+## Related Privacy Leaks
+
+ESNI requires encrypted DNS to be an effective privacy protection mechanism.
+However, verifying the server's identity from the Certificate message, particularly
+when using the X509 CertificateType, may result in additional network traffic
+that may reveal the server identity. Examples of this traffic may include requests
+for revocation information, such as OCSP or CRL traffic, or requests for repository
+information, such as authorityInformationAccess. It may also include
+implementation-specific traffic for additional information sources as part of
+verification.
+
+Implementations SHOULD avoid leaking information that may identify the
+server. Even when sent over an encrypted transport, such requests may result
+in indirect exposure of the server's identity, such as indicating a specific CA
+or service being used. To mitigate this risk, servers SHOULD deliver such
+information in-band when possible, such as through the use of OCSP stapling,
+and clients SHOULD take steps to minimize or protect such requests during
+certificate validation.
 
 ## Comparison Against Criteria
 
