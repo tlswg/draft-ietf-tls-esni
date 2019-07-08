@@ -723,7 +723,7 @@ The ClientEncryptedSNI value is said to match a known ESNIKeys if there exists
 an ESNIKeys that can be used to successfully decrypt ClientEncryptedSNI.encrypted_sni.
 This matching procedure should be performed as follows. If ClientEncryptedSNI.record_digest
 is non-empty, servers SHOULD compare it against cryptographic hashes of known ESNIKeys and
-choose the one that matches. Otherwise, if ClientEncryptedSNI.record_digest is empty,
+choose the one that matches. If ClientEncryptedSNI.record_digest is empty,
 servers MAY use trial decryption to match to a known ESNIKeys. If both checks fail,
 there is no matching ESNIKeys.
 
@@ -904,6 +904,18 @@ DoS attacks. Specifically, an adversary may send malicious ClientHello messages,
 those which will not decrypt with any known ESNI key, in order to force
 decryption. Servers that support this feature should, for example, implement
 some form of rate limiting mechanism to limit the damage caused by such attacks.
+
+## Encrypting other Extensions
+
+ESNI protects only the SNI in transit. Other ClientHello extensions,
+such as ALPN, might also reveal privacy-sensitive information to the
+network. As such, it might be desirable to encrypt other extensions
+alongside the SNI. However, the SNI extension is unique in that
+non-TLS-terminating servers or load balancers may act on its contents.
+Thus, using keys specifically for SNI encryption promotes key separation
+between client-facing servers and endpoints party to TLS connections.
+Moreover, the ESNI design described herein does not preclude a mechanism
+for generic ClientHello extension encryption.
 
 ## Related Privacy Leaks
 
