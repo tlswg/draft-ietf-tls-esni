@@ -245,7 +245,7 @@ The ESNIKeys structure contains the following fields:
 
 version
 : The version of the structure. For this specification, that value
-SHALL be 0xff02. Clients MUST ignore any ESNIKeys structure with a
+SHALL be 0xff03. Clients MUST ignore any ESNIKeys structure with a
 version they do not understand.
 [[NOTE: This means that the RFC will presumably have a nonzero value.]]
 
@@ -498,13 +498,22 @@ computed from Z as follows:
 
 ~~~~
    Zx = HKDF-Extract(0, Z)
-   key = HKDF-Expand-Label(Zx, "esni key", Hash(ESNIContents), key_length)
-   iv = HKDF-Expand-Label(Zx, "esni iv", Hash(ESNIContents), iv_length)
+   key = HKDF-Expand-Label(Zx, KeyLabel, Hash(ESNIContents), key_length)
+   iv = HKDF-Expand-Label(Zx, IVLabel, Hash(ESNIContents), iv_length)
 ~~~~
 
 where ESNIContents is as specified below and Hash is the hash function
 associated with the HKDF instantiation. The salt argument for HKDF-Extract is a
-string consisting of Hash.length bytes set to zeros.
+string consisting of Hash.length bytes set to zeros. For a client's first
+ClientHello, KeyLabel = "esni key" and IVLabel = "esni iv", whereas for a
+client's second ClientHello, sent in response to a HelloRetryRequest,
+KeyLabel = "hrr esni key" and IVLabel = "hrr esni iv". (This label variance
+is done to prevent nonce re-use since the client's ESNI key share, and
+thus the value of Zx, does not change across ClientHello retries.)
+
+[[TODO: label swapping fixes a bug in the spec, though this may not be
+the best way to deal with HRR. See https://github.com/tlswg/draft-ietf-tls-esni/issues/121
+and https://github.com/tlswg/draft-ietf-tls-esni/pull/170 for more details.]]
 
 ~~~
    struct {
@@ -527,6 +536,7 @@ The client then creates a ClientESNIInner structure:
        PaddedServerNameList realSNI;
    } ClientESNIInner;
 ~~~~
+
 nonce
 : A random 16-octet value to be echoed by the server in the
 "encrypted_server_name" extension.
@@ -646,10 +656,10 @@ and the client can send a second updated ClientHello per the rules in
 on the (possibly updated) KeyShareClientHello, i.e,,
 ClientEncryptedSNI.suite, ClientEncryptedSNI.key_share, and
 ClientEncryptedSNI.record_digest, MUST NOT change across ClientHello messages.
-Moreover, ClientESNIInner.nonce and ClientESNIInner.realSNI MUST not change
-across ClientHello messages. Informally, the values of all unencrypted extension
-information, as well as the inner extension plaintext, must be consistent between
-the first and second ClientHello messages.
+Moreover, ClientESNIInner MUST not change across ClientHello messages.
+Informally, the values of all unencrypted extension information, as well as
+the inner extension plaintext, must be consistent between the first and
+second ClientHello messages.
 
 ### Authenticating for the public name {#auth-public-name}
 
@@ -776,7 +786,7 @@ MUST abort the connection with a "decrypt_error" alert.
 If the decrypted value's length is different from
 the advertised ESNIKeys.padded_length or the padding consists of
 any value other than 0, then the server MUST abort the
-connection with an illegal_parameter alert. Otherwise, the
+connection with an "illegal_parameter" alert. Otherwise, the
 server uses the PaddedServerNameList.sni value as if it were
 the "server_name" extension. Any actual "server_name" extension is
 ignored, which also means the server MUST NOT send the "server_name"
@@ -788,6 +798,12 @@ it executes the steps in the following section, or forwards
 the TLS connection to the backend server (if in Split Mode). In
 the latter case, it does not make any changes to the TLS
 messages, but just blindly forwards them.
+
+If the ClientHello is the result of a HelloRetryRequest, servers MUST
+abort the connection with an "illegal_parameter" alert if any of the
+ClientEncryptedSNI.suite, ClientEncryptedSNI.key_share, ClientEncryptedSNI.record_digest,
+or decrypted ClientESNIInner values from the second ClientHello do not
+match that of the first ClientHello.
 
 ## Shared Mode Server Behavior
 
