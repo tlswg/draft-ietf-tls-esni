@@ -886,6 +886,18 @@ desired.
 Moreover, as noted in the introduction, SNI encryption is less useful
 without encryption of DNS queries in transit via DoH or DPRIVE mechanisms.
 
+## Encrypting other Extensions
+
+ESNI protects only the SNI in transit. Other ClientHello extensions,
+such as ALPN, might also reveal privacy-sensitive information to the
+network. As such, it might be desirable to encrypt other extensions
+alongside the SNI. However, the SNI extension is unique in that
+non-TLS-terminating servers or load balancers may act on its contents.
+Thus, using keys specifically for SNI encryption promotes key separation
+between client-facing servers and endpoints party to TLS connections.
+Moreover, the ESNI design described herein does not preclude a mechanism
+for generic ClientHello extension encryption.
+
 ## Related Privacy Leaks
 
 ESNI requires encrypted DNS to be an effective privacy protection mechanism.
