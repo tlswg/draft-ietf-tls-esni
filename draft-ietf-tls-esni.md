@@ -508,6 +508,10 @@ KeyLabel = "hrr esni key" and IVLabel = "hrr esni iv". (This label variance
 is done to prevent nonce re-use since the client's ESNI key share, and
 thus the value of Zx, does not change across ClientHello retries.)
 
+[[TODO: label swapping fixes a bug in the spec, though this may not be
+the best way to deal with HRR. See https://github.com/tlswg/draft-ietf-tls-esni/issues/121
+and https://github.com/tlswg/draft-ietf-tls-esni/pull/170 for more details.]]
+
 ~~~
    struct {
        opaque record_digest<0..2^16-1>;
