@@ -242,7 +242,7 @@ The ESNIKeys structure contains the following fields:
 
 version
 : The version of the structure. For this specification, that value
-SHALL be 0xff02. Clients MUST ignore any ESNIKeys structure with a
+SHALL be 0xff03. Clients MUST ignore any ESNIKeys structure with a
 version they do not understand.
 [[NOTE: This means that the RFC will presumably have a nonzero value.]]
 
