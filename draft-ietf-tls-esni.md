@@ -411,7 +411,7 @@ suite
 : The cipher suite used to encrypt the SNI.
 
 key_share
-: The KeyShareEntry carrying the client's public ephemeral key shared
+: The KeyShareEntry carrying the client's public ephemeral key share
 used to derive the ESNI key.
 
 record_digest
