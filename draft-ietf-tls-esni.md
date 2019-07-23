@@ -528,7 +528,7 @@ The client then creates a ClientESNIInner structure:
 ~~~~
    struct {
        opaque dns_name<1..2^16-1>;
-       opaque zeros[ESNIKeys.padded_length - length(sni)];
+       opaque zeros[ESNIKeys.padded_length - length(dns_name)];
    } PaddedServerNameList;
 
    struct {
