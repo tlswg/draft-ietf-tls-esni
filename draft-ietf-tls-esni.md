@@ -368,17 +368,21 @@ The following algorithm describes a procedure by which clients can process
 ESNI responses as they arrive to produce addresses for ESNI-capable hosts.
 
 ~~~
-1. If an ESNI response containing an ESNIRecord value with an "address_set" extension arrives before an A or
-AAAA response, clients SHOULD initiate TLS with ESNI to the provided address(es).
+1. If an ESNI response containing an ESNIRecord value with an 
+"address_set" extension arrives before an A or AAAA response, clients 
+SHOULD initiate TLS with ESNI to the provided address(es).
 
-2. If an A or AAAA response arrives before the ESNI response, clients SHOULD wait up
-to CD milliseconds before initiating TLS to either address. (Clients may begin
-TCP connections in this time. QUIC connections should wait.) If an ESNI
-response with an "address_set" extension arrives in this time, clients SHOULD
-initiate TLS with ESNI to the provided address(es). If an ESNI response
-without an "address_set" extension arrives in this time, clients MAY initiate
-TLS with ESNI to the address(es) in the A or AAAA response. If no ESNI response
-arrives in this time, clients SHOULD initiate TLS without ESNI to the available address(es).
+2. If an A or AAAA response arrives before the ESNI response, clients 
+SHOULD wait up to CD milliseconds before initiating TLS to either 
+address. (Clients may begin TCP connections in this time. QUIC 
+connections should wait.) If an ESNI response with an "address_set" 
+extension arrives in this time, clients SHOULD initiate TLS with ESNI 
+to the provided address(es). If an ESNI response without an 
+"address_set" extension arrives in this time, clients MAY initiate TLS
+with ESNI to the address(es) in the A or AAAA response. If no ESNI 
+response arrives in this time, clients SHOULD initiate TLS connection 
+with a GREASE extension (see {{grease-extensions}}) to the available 
+address(es).
 ~~~
 
 CD (Connection Delay) is a configurable parameter. The recommended value is 50 milliseconds,
