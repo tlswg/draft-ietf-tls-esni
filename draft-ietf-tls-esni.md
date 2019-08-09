@@ -586,7 +586,7 @@ The client MUST place the value of ESNIKeys.public_name in the "server_name"
 extension. (This is required for technical conformance with {{!RFC7540}};
 Section 9.2.) The client MUST NOT send a "cached_info" extension {{!RFC7924}}
 with a CachedObject entry whose CachedInformationType is "cert", since this
-indication would divulge the true value of the SNI.
+indication would divulge the true server name.
 
 ### Handling the server response {#handle-server-response}
 
