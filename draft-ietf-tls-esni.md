@@ -411,7 +411,7 @@ suite
 : The cipher suite used to encrypt the SNI.
 
 key_share
-: The KeyShareEntry carrying the client's public ephemeral key shared
+: The KeyShareEntry carrying the client's public ephemeral key share
 used to derive the ESNI key.
 
 record_digest
@@ -479,8 +479,8 @@ to client and server session states.
 In order to send an encrypted SNI, the client MUST first select one of
 the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
 matching group. This share will then be sent to the server in the
-"encrypted_sni" extension and used to derive the SNI encryption key. It does not affect the
-(EC)DHE shared secret used in the TLS key schedule. It MUST also select
+"encrypted_server_name" extension and used to derive the SNI encryption key. It does not affect the
+(EC)DHE shared secret used in the TLS key schedule. The client MUST also select
 an appropriate cipher suite from the list of suites offered by the
 server. If the client is unable to select an appropriate group or suite it
 SHOULD ignore that ESNIKeys value and MAY attempt to use another value provided
@@ -528,7 +528,7 @@ The client then creates a ClientESNIInner structure:
 ~~~~
    struct {
        opaque dns_name<1..2^16-1>;
-       opaque zeros[ESNIKeys.padded_length - length(sni)];
+       opaque zeros[ESNIKeys.padded_length - length(dns_name)];
    } PaddedServerNameList;
 
    struct {
@@ -585,7 +585,8 @@ This value is placed in an "encrypted_server_name" extension.
 The client MUST place the value of ESNIKeys.public_name in the "server_name"
 extension. (This is required for technical conformance with {{!RFC7540}};
 Section 9.2.) The client MUST NOT send a "cached_info" extension {{!RFC7924}}
-with a CachedObject entry whose CachedInformationType is "cert".
+with a CachedObject entry whose CachedInformationType is "cert", since this
+indication would divulge the true server name.
 
 ### Handling the server response {#handle-server-response}
 
