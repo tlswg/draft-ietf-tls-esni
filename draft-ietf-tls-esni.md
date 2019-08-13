@@ -498,22 +498,13 @@ computed from Z as follows:
 
 ~~~~
    Zx = HKDF-Extract(0, Z)
-   key = HKDF-Expand-Label(Zx, KeyLabel, Hash(ESNIContents), key_length)
-   iv = HKDF-Expand-Label(Zx, IVLabel, Hash(ESNIContents), iv_length)
+   key = HKDF-Expand-Label(Zx, "esni key", Hash(ESNIContents), key_length)
+   iv = HKDF-Expand-Label(Zx, "esni iv", Hash(ESNIContents), iv_length)
 ~~~~
 
 where ESNIContents is as specified below and Hash is the hash function
 associated with the HKDF instantiation. The salt argument for HKDF-Extract is a
-string consisting of Hash.length bytes set to zeros. For a client's first
-ClientHello, KeyLabel = "esni key" and IVLabel = "esni iv", whereas for a
-client's second ClientHello, sent in response to a HelloRetryRequest,
-KeyLabel = "hrr esni key" and IVLabel = "hrr esni iv". (This label variance
-is done to prevent nonce re-use since the client's ESNI key share, and
-thus the value of Zx, does not change across ClientHello retries.)
-
-[[TODO: label swapping fixes a bug in the spec, though this may not be
-the best way to deal with HRR. See https://github.com/tlswg/draft-ietf-tls-esni/issues/121
-and https://github.com/tlswg/draft-ietf-tls-esni/pull/170 for more details.]]
+string consisting of Hash.length bytes set to zeros.
 
 ~~~
    struct {
@@ -532,7 +523,7 @@ The client then creates a ClientESNIInner structure:
    } PaddedServerNameList;
 
    struct {
-       uint8 nonce[16];
+       uint8 nonce[32];
        PaddedServerNameList realSNI;
    } ClientESNIInner;
 ~~~~
@@ -588,10 +579,87 @@ Section 9.2.) The client MUST NOT send a "cached_info" extension {{!RFC7924}}
 with a CachedObject entry whose CachedInformationType is "cert", since this
 indication would divulge the true server name.
 
+### Key Schedule Modification {#key-schedule-injection}
+
+To fully bind the ESNI extension contents to the handshake such that only the client
+who sent the ESNI extension can complete the handshake, the key schedule is also
+modified by injecting ClientESNIInner.nonce before the Handshake Secret is derived.
+This restricts Handshake Secret to those in possession of the private component of
+one Key Share and the ClientESNIInner.nonce. Clients generate ClientESNIInner.nonce
+and only Client Facing servers can decrypt it.
+
+[[NOTE: this modificaftion has not yet seen significant security analysis ]]
+
+The key schedule modifications are shown below.
+
+~~~
+             0
+             |
+             v
+   PSK ->  HKDF-Extract = Early Secret
+             |
+             +-----> Derive-Secret(., "ext binder" | "res binder", "")
+             |                     = binder_key
+             |
+             +-----> Derive-Secret(., "c e traffic", ClientHello)
+             |                     = client_early_traffic_secret
+             |
+             +-----> Derive-Secret(., "e exp master", ClientHello)
+             |                     = early_exporter_master_secret
+             |
+             +-----> Derive-Secret(., "bound master", ClientHello)
+             |                     = bound_master_secret
+             |
+             V
+       Derive-Secret(., "derived early", "")
+             |
+             V
+ Nonce ->  HKDF-Extract
+             |
+             V
+       Derive-Secret(., "derived", "")
+             |
+             v
+   (EC)DHE -> HKDF-Extract = Handshake Secret
+~~~
+
+### Key Schedule Switch Signal {#esni-signal}
+
+Clients which receive a ServerHello and subsequent EncryptedExtensions handshake message
+must determine whether or not the key schedule was modified by nonce injection. (Servers
+which do not support ESNI will not modify the key schedule.) Moreover, to prevent trial
+decryption of the EncryptedExtensions message, servers need to send clients an explicit
+signal that the injection occurred. Thus, servers which accept the ClientHello and negotiate
+ESNI make use of the first 16 octets in the ServerHello.random to securely "signal" that ESNI
+was negotiated. This signal is computed as follows. First, servers compute the following
+keying material using "bound_master_secret" {{key-schedule-injection}}.
+
+~~~~
+   signal_key = HKDF-Expand-Label(bound_master_secret, "bound signal key", "", key_length)
+   signal_iv = HKDF-Expand-Label(bound_master_secret, "bound signal iv", "", iv_length)
+~~~~
+
+Then, servers construct ServerHello.random using the following algorithm:
+
+1. Generate 16 octets of random data, called r1.
+2. Compute r = AEAD-Encrypt(signal_key, signal_iv, "", r1), and let r2 = the first 16 octets of r.
+3. Output r1 \|\| r2 as 32 octets for ServerHello.random.
+
 ### Handling the server response {#handle-server-response}
 
-If the server negotiates TLS 1.3 or above and provides an
-"encrypted_server_name" extension in EncryptedExtensions, the client
+First, clients must check for the presence of the secure signal specified in {{esni-signal}}.
+To do so, clients perform the key derivation outlined in {{esni-signal}}, and then check for
+the presence of the signal as follows:
+
+1. Let r1 be the first 16 octets of ServerHello.random.
+2. Compute r = AEAD-Decrypt(signal_key, signal_iv, "", r1), and let r2 = the first 16 octets of r.
+3. If r1 equals r2, then use the modified key schedule for the duration of the handshake. Otherwise,
+use the standard key schedule (as per the rules of {{RFC8446}}) for the duration of the handshake.
+
+If the server negotiates TLS 1.3 or above, provides an "encrypted_server_name" extension in
+EncryptedExtensions, yet did not provide a secure signal in ServerHello.random, clients MUST
+abort the connection with an "illegal_parameter" alert. Otherwise, if the server negotiates TLS 1.3
+or above and provides an "encrypted_server_name" extension in EncryptedExtensions, the client
 then processes the extension's "response_type" field:
 
 - If the value is "esni_accept", the client MUST check that the extension's
