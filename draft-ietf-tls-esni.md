@@ -651,8 +651,8 @@ the presence of the signal as follows:
 
 1. Let r1 be the first 16 octets of ServerHello.random.
 2. Compute r = AEAD-Decrypt(signal_key, signal_iv, "", r1), and let r2 = the first 16 octets of r.
-3. If r1 equals r2, then use the modified key schedule for the duration of the handshake. Otherwise,
-use the standard key schedule (as per the rules of {{RFC8446}}) for the duration of the handshake.
+3. If r1 equals r2, then use the modified key schedule for the remainder of the handshake. Otherwise,
+use the standard key schedule (as per the rules of {{RFC8446}}) for the remainder of the handshake.
 
 If the server negotiates TLS 1.3 or above, provides an "encrypted_server_name" extension in
 EncryptedExtensions, yet did not provide a secure signal in ServerHello.random, clients MUST
