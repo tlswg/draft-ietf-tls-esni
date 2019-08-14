@@ -437,7 +437,7 @@ structure:
    struct {
        ServerESNIResponseType response_type;
        select (response_type) {
-           case esni_accept:        uint8 nonce[16];
+           case esni_accept:        uint8 nonce[32];
            case esni_retry_request: ESNIKeys retry_keys<1..2^16-1>;
        }
    } ServerEncryptedSNI;
@@ -606,16 +606,14 @@ The key schedule modifications are shown below.
              |
              +-----> Derive-Secret(., "e exp master", ClientHello)
              |                     = early_exporter_master_secret
-             |
-             +-----> Derive-Secret(., "bound master", ClientHello)
-             |                     = bound_master_secret
-             |
              V
        Derive-Secret(., "derived early", "")
              |
              V
  Nonce ->  HKDF-Extract
              |
+             +-----> Derive-Secret(., "bound master", ClientHello)
+             |                     = bound_master_secret
              V
        Derive-Secret(., "derived", "")
              |
@@ -630,7 +628,7 @@ must determine whether or not the key schedule was modified by nonce injection. 
 which do not support ESNI will not modify the key schedule.) Moreover, to prevent trial
 decryption of the EncryptedExtensions message, servers need to send clients an explicit
 signal that the injection occurred. Thus, servers which accept the ClientHello and negotiate
-ESNI make use of the first 16 octets in the ServerHello.random to securely "signal" that ESNI
+ESNI make use of the last 16 octets in the ServerHello.random to securely "signal" that ESNI
 was negotiated. This signal is computed as follows. First, servers compute the following
 keying material using "bound_master_secret" {{key-schedule-injection}}.
 
