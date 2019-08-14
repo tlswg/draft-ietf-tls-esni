@@ -588,7 +588,7 @@ This restricts Handshake Secret to those in possession of the private component 
 one Key Share and the ClientESNIInner.nonce. Clients generate ClientESNIInner.nonce
 and only Client Facing servers can decrypt it.
 
-[[NOTE: this modificaftion has not yet seen significant security analysis ]]
+[[NOTE: this modification has not yet seen significant security analysis ]]
 
 The key schedule modifications are shown below.
 
