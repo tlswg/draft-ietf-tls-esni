@@ -437,7 +437,7 @@ structure:
    struct {
        ServerESNIResponseType response_type;
        select (response_type) {
-           case esni_accept:        uint8 nonce[32];
+           case esni_accept:
            case esni_retry_request: ESNIKeys retry_keys<1..2^16-1>;
        }
    } ServerEncryptedSNI;
@@ -498,13 +498,19 @@ computed from Z as follows:
 
 ~~~~
    Zx = HKDF-Extract(0, Z)
-   key = HKDF-Expand-Label(Zx, "esni key", Hash(ESNIContents), key_length)
-   iv = HKDF-Expand-Label(Zx, "esni iv", Hash(ESNIContents), iv_length)
+   nonce = HKDF-Expand-Label(Zx, "esni nonce", Hash(ESNIContents), 32)
+   key = HKDF-Expand-Label(Zx, KeyLabel, Hash(ESNIContents), key_length)
+   iv = HKDF-Expand-Label(Zx, IVLabel, Hash(ESNIContents), iv_length)
 ~~~~
 
 where ESNIContents is as specified below and Hash is the hash function
 associated with the HKDF instantiation. The salt argument for HKDF-Extract is a
-string consisting of Hash.length bytes set to zeros.
+string consisting of Hash.length bytes set to zeros. For a client's first
+ClientHello, KeyLabel = "esni key" and IVLabel = "esni iv", whereas for a
+client's second ClientHello, sent in response to a HelloRetryRequest,
+KeyLabel = "hrr esni key" and IVLabel = "hrr esni iv". (This label swap
+is done to prevent nonce re-use since the client's ESNI key share, and
+thus the value of Zx, does not change across ClientHello retries.)
 
 ~~~
    struct {
@@ -523,14 +529,9 @@ The client then creates a ClientESNIInner structure:
    } PaddedServerNameList;
 
    struct {
-       uint8 nonce[32];
        PaddedServerNameList realSNI;
    } ClientESNIInner;
 ~~~~
-
-nonce
-: A random 16-octet value to be echoed by the server in the
-"encrypted_server_name" extension.
 
 dns_name
 : The true SNI DNS name, that is, the HostName value that would have been sent in the
@@ -583,12 +584,11 @@ indication would divulge the true server name.
 
 To fully bind the ESNI extension contents to the handshake such that only the client
 who sent the ESNI extension can complete the handshake, the key schedule is also
-modified by injecting ClientESNIInner.nonce before the Handshake Secret is derived.
-This restricts Handshake Secret to those in possession of the private component of
-one Key Share and the ClientESNIInner.nonce. Clients generate ClientESNIInner.nonce
-and only Client Facing servers can decrypt it.
+modified by injecting nonce (derived from Zx) before the Handshake Secret is derived.
+This restricts Handshake Secret to those in possession of the private components of
+the handshake and ENSI key shares.
 
-[[NOTE: this modification has not yet seen significant security analysis ]]
+[[NOTE: this modification has not yet seen significant security analysis]]
 
 The key schedule modifications are shown below.
 
@@ -607,13 +607,11 @@ The key schedule modifications are shown below.
              +-----> Derive-Secret(., "e exp master", ClientHello)
              |                     = early_exporter_master_secret
              V
-       Derive-Secret(., "derived early", "")
+       Derive-Secret(., "derived esni", "")
              |
              V
- Nonce ->  HKDF-Extract
+ nonce ->  HKDF-Extract
              |
-             +-----> Derive-Secret(., "bound master", ClientHello)
-             |                     = bound_master_secret
              V
        Derive-Secret(., "derived", "")
              |
@@ -633,44 +631,37 @@ was negotiated. This signal is computed as follows. First, servers compute the f
 keying material using "bound_master_secret" {{key-schedule-injection}}.
 
 ~~~~
-   signal_key = HKDF-Expand-Label(bound_master_secret, "bound signal key", "", key_length)
-   signal_iv = HKDF-Expand-Label(bound_master_secret, "bound signal iv", "", iv_length)
+   signal_key = HKDF-Expand-Label(Zx, "esni signal", Hash(ESNIContents), Hash.length)
 ~~~~
 
 Then, servers construct ServerHello.random using the following algorithm:
 
 1. Generate 16 octets of random data, called r1.
-2. Compute r = AEAD-Encrypt(signal_key, signal_iv, "", r1), and let r2 = the first 16 octets of r.
+2. Compute r2 = HKDF-Expand-Label(signal_key, "esni signal", r1, 16)
 3. Output r1 \|\| r2 as 32 octets for ServerHello.random.
+
+Clients check for the presence of this signal in ServerHello.random, comproised of r1 \|\| r2,
+by deriving signal_key and sigal_iv as above and then performing the following:
+
+1. Let r1 be the first 16 octets of ServerHello.random.
+2. Compute r2' = HKDF-Expand-Label(signal_key, "esni signal", r1, 16)
+3. If r2' equals r2, the signal is present. Otherwise, it is absent.
 
 ### Handling the server response {#handle-server-response}
 
-First, clients must check for the presence of the secure signal specified in {{esni-signal}}.
-To do so, clients perform the key derivation outlined in {{esni-signal}}, and then check for
-the presence of the signal as follows:
+If the server negotiates TLS 1.3 or above and provides an "encrypted_server_name" extension
+in EncryptedExtensions, the client then processes the extension's "response_type" field:
 
-1. Let r1 be the first 16 octets of ServerHello.random.
-2. Compute r = AEAD-Decrypt(signal_key, signal_iv, "", r1), and let r2 = the first 16 octets of r.
-3. If r1 equals r2, then use the modified key schedule for the remainder of the handshake. Otherwise,
-use the standard key schedule (as per the rules of {{RFC8446}}) for the remainder of the handshake.
+- If the value is "esni_accept", the client MUST check that ServerHello.random contains
+  a key schedule switch signal as per {{esni-signal}}, and otherwise MUST abort the
+  connection with an "illegal_parameter" alert. The client then proceeds with the
+  connection using the modified key schedule, authenticating the connection for the origin server.
 
-If the server negotiates TLS 1.3 or above, provides an "encrypted_server_name" extension in
-EncryptedExtensions, yet did not provide a secure signal in ServerHello.random, clients MUST
-abort the connection with an "illegal_parameter" alert. Otherwise, if the server negotiates TLS 1.3
-or above and provides an "encrypted_server_name" extension in EncryptedExtensions, the client
-then processes the extension's "response_type" field:
-
-- If the value is "esni_accept", the client MUST check that the extension's
-  "nonce" field matches ClientESNIInner.nonce and otherwise abort the
-  connection with an "illegal_parameter" alert. The client then proceeds
-  with the connection as usual, authenticating the connection for the origin
-  server.
-
-- If the value is "esni_retry_request", the client proceeds with the handshake,
-  authenticating for ESNIKeys.public_name as described in
-  {{auth-public-name}}. If authentication or the handshake fails, the client
-  MUST return a failure to the calling application. It MUST NOT use the retry
-  keys.
+- If the value is "esni_retry_request", the client proceeds with the handshake using
+  the standard key schedule (as per the rules of {{RFC8446}}), authenticating for
+  ESNIKeys.public_name as described in {{auth-public-name}}. If authentication or the
+  handshake fails, the client MUST return a failure to the calling application. It MUST
+  NOT use the retry keys.
 
   Otherwise, when the handshake completes successfully with the public name
   authenticated, the client MUST abort the connection with an "esni_required"
