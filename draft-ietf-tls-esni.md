@@ -853,6 +853,11 @@ case.
 If the ClientEncryptedSNI value does match a known ESNIKeys, the server
 performs the following checks:
 
+- The server MUST validate the corresponding binder value (see {{client-hello-binding}}).
+  If this value is not present or does not validate, the server MUST ignore the extension
+  and proceed with the connection, as if the ClientEncryptedSNI did not match any known
+  ESNIKeys structures.
+
 - If the ClientEncryptedSNI.key_share group does not match one in the ESNIKeys.keys,
   it MUST abort the connection with an "illegal_parameter" alert.
 
@@ -873,11 +878,6 @@ server uses the PaddedServerNameList.sni value as if it were
 the "server_name" extension. Any actual "server_name" extension is
 ignored, which also means the server MUST NOT send the "server_name"
 extension to the client.
-
-The server MUST then validate the corresponding binder value (see 
-{{client-hello-binding}}). If this value is not present or does not validate, the
-server MUST ignore the extension and proceed with the connection, as if the
-ClientEncryptedSNI did not match any known ESNIKeys structures.
 
 Upon determining the true SNI, the client-facing server then either
 serves the connection directly (if in Shared Mode), in which case
