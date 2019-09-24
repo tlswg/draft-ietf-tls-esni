@@ -499,18 +499,13 @@ computed from Z as follows:
 ~~~~
    Zx = HKDF-Extract(0, Z)
    nonce = HKDF-Expand-Label(Zx, "esni nonce", Hash(ESNIContents), 32)
-   key = HKDF-Expand-Label(Zx, KeyLabel, Hash(ESNIContents), key_length)
-   iv = HKDF-Expand-Label(Zx, IVLabel, Hash(ESNIContents), iv_length)
+   key = HKDF-Expand-Label(Zx, "esni key", Hash(ESNIContents), key_length)
+   iv = HKDF-Expand-Label(Zx, "esni iv", Hash(ESNIContents), iv_length)
 ~~~~
 
 where ESNIContents is as specified below and Hash is the hash function
 associated with the HKDF instantiation. The salt argument for HKDF-Extract is a
-string consisting of Hash.length bytes set to zeros. For a client's first
-ClientHello, KeyLabel = "esni key" and IVLabel = "esni iv", whereas for a
-client's second ClientHello, sent in response to a HelloRetryRequest,
-KeyLabel = "hrr esni key" and IVLabel = "hrr esni iv". (This label swap
-is done to prevent nonce re-use since the client's ESNI key share, and
-thus the value of Zx, does not change across ClientHello retries.)
+string consisting of Hash.length bytes set to zeros.
 
 ~~~
    struct {
@@ -734,14 +729,8 @@ calling application.
 
 If the server sends a HelloRetryRequest in response to the ClientHello
 and the client can send a second updated ClientHello per the rules in
-{{RFC8446}}, the "encrypted_server_name" extension values which do not depend
-on the (possibly updated) KeyShareClientHello, i.e,,
-ClientEncryptedSNI.suite, ClientEncryptedSNI.key_share, and
-ClientEncryptedSNI.record_digest, MUST NOT change across ClientHello messages.
-Moreover, ClientESNIInner MUST not change across ClientHello messages.
-Informally, the values of all unencrypted extension information, as well as
-the inner extension plaintext, must be consistent between the first and
-second ClientHello messages.
+{{RFC8446}}, the "encrypted_server_name" extension MUST NOT change across
+ClientHello messages.
 
 ### Authenticating for the public name {#auth-public-name}
 
@@ -887,10 +876,9 @@ the latter case, it does not make any changes to the TLS
 messages, but just blindly forwards them.
 
 If the ClientHello is the result of a HelloRetryRequest, servers MUST
-abort the connection with an "illegal_parameter" alert if any of the
-ClientEncryptedSNI.suite, ClientEncryptedSNI.key_share, ClientEncryptedSNI.record_digest,
-or decrypted ClientESNIInner values from the second ClientHello do not
-match that of the first ClientHello.
+abort the connection with an "illegal_parameter" alert if any part of the
+"encrypted_server_name" extension does not match that of the first ClientHello.
+The servers MUST check the corresponding binder value of the second ClientHello.
 
 ## Shared Mode Server Behavior
 
