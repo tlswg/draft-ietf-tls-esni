@@ -554,13 +554,8 @@ The ClientEncryptedSNI.encrypted_sni value is then computed using the usual
 TLS 1.3 AEAD:
 
 ~~~~
-    encrypted_sni = AEAD-Encrypt(key, iv, KeyShareClientHello, ClientESNIInner)
+    encrypted_sni = AEAD-Encrypt(key, iv, "", ClientESNIInner)
 ~~~~
-
-Where KeyShareClientHello is the "extension_data" field of the "key_share"
-extension in a Client Hello (Section 4.2.8 of {{!RFC8446}})). Including
-KeyShareClientHello in the AAD of AEAD-Encrypt binds the ClientEncryptedSNI
-value to the ClientHello and prevents cut-and-paste attacks.
 
 Note: future extensions may end up reusing the server's ESNIKeyShareEntry
 for other purposes within the same message (e.g., encrypting other
@@ -879,8 +874,10 @@ the "server_name" extension. Any actual "server_name" extension is
 ignored, which also means the server MUST NOT send the "server_name"
 extension to the client.
 
-The server MUST then validate the corresponding binder value (see {{client-hello-binding}}).
-If this value is not present or does not validate, the server MUST abort the handshake.
+The server MUST then validate the corresponding binder value (see 
+{{client-hello-binding}}). If this value is not present or does not validate, the
+server MUST ignore the extension and proceed with the connection, as if the
+ClientEncryptedSNI did not match any known ESNIKeys structures.
 
 Upon determining the true SNI, the client-facing server then either
 serves the connection directly (if in Shared Mode), in which case
