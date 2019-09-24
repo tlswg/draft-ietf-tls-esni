@@ -580,6 +580,35 @@ Section 9.2.) The client MUST NOT send a "cached_info" extension {{!RFC7924}}
 with a CachedObject entry whose CachedInformationType is "cert", since this
 indication would divulge the true server name.
 
+### Client Hello Binding {#client-hello-binding}
+
+To fully bind the ESNI extension contents to the rest of the ClientHello, an additional
+binding is inserted into the "pre_shared_key" extension. This is inserted as a special
+"ExtensionsPskIdentity" identity and "extensionsBinder" PskBinderEntry.
+
+       struct {
+           opaque identity<7..2^16-1> = "CHExt" || extension_type;
+           uint32 obfuscated_ticket_age = 0;
+       } ExtensionsPskIdentity;
+
+       PskBinderEntry extensionsBinder;
+
+identity
+: A label indicating that this a is a special PSK and binder for extensions, followed by the
+  extension_type of the corresponding extension.
+
+extensionsBinder
+: A HMAC value computed in the same way as the Finished message but with the BaseKey being
+  the extension_binder_key derived from the particular corresponding extension.
+{: br}
+
+For "encrypted_server_name", the extension_type matches that of the "encrypted_server_name"
+extension and the extension_binder_key is derived as follows:
+
+~~~~
+    encrypted_sni_binder_key = HKDF-Expand-Label(Zx, "esni psk binder", Hash(ESNIContents), Hash.length)
+~~~~
+
 ### Key Schedule Modification {#key-schedule-injection}
 
 To fully bind the ESNI extension contents to the handshake such that only the client
@@ -849,6 +878,9 @@ server uses the PaddedServerNameList.sni value as if it were
 the "server_name" extension. Any actual "server_name" extension is
 ignored, which also means the server MUST NOT send the "server_name"
 extension to the client.
+
+The server MUST then validate the corresponding binder value (see {{client-hello-binding}}).
+If this value is not present or does not validate, the server MUST abort the handshake.
 
 Upon determining the true SNI, the client-facing server then either
 serves the connection directly (if in Shared Mode), in which case
