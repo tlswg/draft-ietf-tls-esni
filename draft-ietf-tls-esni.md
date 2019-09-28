@@ -499,18 +499,13 @@ computed from Z as follows:
 ~~~~
    Zx = HKDF-Extract(0, Z)
    nonce = HKDF-Expand-Label(Zx, "esni nonce", Hash(ESNIContents), 32)
-   key = HKDF-Expand-Label(Zx, KeyLabel, Hash(ESNIContents), key_length)
-   iv = HKDF-Expand-Label(Zx, IVLabel, Hash(ESNIContents), iv_length)
+   key = HKDF-Expand-Label(Zx, "esni key", Hash(ESNIContents), key_length)
+   iv = HKDF-Expand-Label(Zx, "esni iv", Hash(ESNIContents), iv_length)
 ~~~~
 
 where ESNIContents is as specified below and Hash is the hash function
 associated with the HKDF instantiation. The salt argument for HKDF-Extract is a
-string consisting of Hash.length bytes set to zeros. For a client's first
-ClientHello, KeyLabel = "esni key" and IVLabel = "esni iv", whereas for a
-client's second ClientHello, sent in response to a HelloRetryRequest,
-KeyLabel = "hrr esni key" and IVLabel = "hrr esni iv". (This label swap
-is done to prevent nonce re-use since the client's ESNI key share, and
-thus the value of Zx, does not change across ClientHello retries.)
+string consisting of Hash.length bytes set to zeros.
 
 ~~~
    struct {
@@ -554,13 +549,8 @@ The ClientEncryptedSNI.encrypted_sni value is then computed using the usual
 TLS 1.3 AEAD:
 
 ~~~~
-    encrypted_sni = AEAD-Encrypt(key, iv, KeyShareClientHello, ClientESNIInner)
+    encrypted_sni = AEAD-Encrypt(key, iv, "", ClientESNIInner)
 ~~~~
-
-Where KeyShareClientHello is the "extension_data" field of the "key_share"
-extension in a Client Hello (Section 4.2.8 of {{!RFC8446}})). Including
-KeyShareClientHello in the AAD of AEAD-Encrypt binds the ClientEncryptedSNI
-value to the ClientHello and prevents cut-and-paste attacks.
 
 Note: future extensions may end up reusing the server's ESNIKeyShareEntry
 for other purposes within the same message (e.g., encrypting other
@@ -579,6 +569,35 @@ extension. (This is required for technical conformance with {{!RFC7540}};
 Section 9.2.) The client MUST NOT send a "cached_info" extension {{!RFC7924}}
 with a CachedObject entry whose CachedInformationType is "cert", since this
 indication would divulge the true server name.
+
+### Client Hello Binding {#client-hello-binding}
+
+To fully bind the ESNI extension contents to the rest of the ClientHello, an additional
+binding is inserted into the "pre_shared_key" extension. This is inserted as a special
+"ExtensionsPskIdentity" identity and "extensionsBinder" PskBinderEntry.
+
+       struct {
+           opaque identity<7..2^16-1> = "CHExt" || extension_type;
+           uint32 obfuscated_ticket_age = 0;
+       } ExtensionsPskIdentity;
+
+       PskBinderEntry extensionsBinder;
+
+identity
+: A label indicating that this a is a special PSK and binder for extensions, followed by the
+  extension_type of the corresponding extension.
+
+extensionsBinder
+: A HMAC value computed in the same way as the Finished message but with the BaseKey being
+  the extension_binder_key derived from the particular corresponding extension.
+{: br}
+
+For "encrypted_server_name", the extension_type matches that of the "encrypted_server_name"
+extension and the extension_binder_key is derived as follows:
+
+~~~~
+    encrypted_sni_binder_key = HKDF-Expand-Label(Zx, "esni psk binder", Hash(ESNIContents), Hash.length)
+~~~~
 
 ### Key Schedule Modification {#key-schedule-injection}
 
@@ -710,14 +729,8 @@ calling application.
 
 If the server sends a HelloRetryRequest in response to the ClientHello
 and the client can send a second updated ClientHello per the rules in
-{{RFC8446}}, the "encrypted_server_name" extension values which do not depend
-on the (possibly updated) KeyShareClientHello, i.e,,
-ClientEncryptedSNI.suite, ClientEncryptedSNI.key_share, and
-ClientEncryptedSNI.record_digest, MUST NOT change across ClientHello messages.
-Moreover, ClientESNIInner MUST not change across ClientHello messages.
-Informally, the values of all unencrypted extension information, as well as
-the inner extension plaintext, must be consistent between the first and
-second ClientHello messages.
+{{RFC8446}}, the "encrypted_server_name" extension MUST NOT change across
+ClientHello messages.
 
 ### Authenticating for the public name {#auth-public-name}
 
@@ -829,6 +842,11 @@ case.
 If the ClientEncryptedSNI value does match a known ESNIKeys, the server
 performs the following checks:
 
+- The server MUST validate the corresponding binder value (see {{client-hello-binding}}).
+  If this value is not present or does not validate, the server MUST ignore the extension
+  and proceed with the connection, as if the ClientEncryptedSNI did not match any known
+  ESNIKeys structures.
+
 - If the ClientEncryptedSNI.key_share group does not match one in the ESNIKeys.keys,
   it MUST abort the connection with an "illegal_parameter" alert.
 
@@ -858,10 +876,9 @@ the latter case, it does not make any changes to the TLS
 messages, but just blindly forwards them.
 
 If the ClientHello is the result of a HelloRetryRequest, servers MUST
-abort the connection with an "illegal_parameter" alert if any of the
-ClientEncryptedSNI.suite, ClientEncryptedSNI.key_share, ClientEncryptedSNI.record_digest,
-or decrypted ClientESNIInner values from the second ClientHello do not
-match that of the first ClientHello.
+abort the connection with an "illegal_parameter" alert if any part of the
+"encrypted_server_name" extension does not match that of the first ClientHello.
+The servers MUST check the corresponding binder value of the second ClientHello.
 
 ## Shared Mode Server Behavior
 
