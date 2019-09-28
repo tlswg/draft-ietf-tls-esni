@@ -576,12 +576,14 @@ To fully bind the ESNI extension contents to the rest of the ClientHello, an add
 binding is inserted into the "pre_shared_key" extension. This is inserted as a special
 "ExtensionsPskIdentity" identity and "extensionsBinder" PskBinderEntry.
 
+~~~
        struct {
            opaque identity<7..2^16-1> = "CHExt" || extension_type;
            uint32 obfuscated_ticket_age = 0;
        } ExtensionsPskIdentity;
 
        PskBinderEntry extensionsBinder;
+~~~
 
 identity
 : A label indicating that this a is a special PSK and binder for extensions, followed by the
