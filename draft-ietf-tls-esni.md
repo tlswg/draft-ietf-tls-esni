@@ -258,6 +258,9 @@ keys
 : The list of keys which can be used by the client to encrypt the SNI.
 Every key being listed MUST belong to a different group.
 
+cipher_suites
+: The list of cipher suites which can be used by the client to encrypt the SNI.
+
 padded_length
 The length to pad the ServerNameList value to prior to encryption.
 This value SHOULD be set to the largest ServerNameList the server
