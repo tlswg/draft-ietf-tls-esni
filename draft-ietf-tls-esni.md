@@ -216,8 +216,8 @@ SNI Encryption keys can be published using the following ESNIRecord structure.
         opaque public_name<1..2^16-1>;
         KeyShareEntry keys<4..2^16-1>;
         CipherSuite cipher_suites<2..2^16-2>;
-        uint16 padded_length;
         Extension extensions<0..2^16-1>;
+        uint8 label_limit;
     } ESNIKeys;
 
     struct {
@@ -258,13 +258,10 @@ keys
 : The list of keys which can be used by the client to encrypt the SNI.
 Every key being listed MUST belong to a different group.
 
-padded_length
-The length to pad the ServerNameList value to prior to encryption.
-This value SHOULD be set to the largest ServerNameList the server
-expects to support rounded up the nearest multiple of 16. If the
-server supports arbitrary wildcard names, it SHOULD set this value to
-260. Clients SHOULD reject ESNIKeys as invalid if padded_length is
-greater than 260.
+label_limit
+The maximum number of labels from the SNI to include, starting with the
+top-level domain.  For example, if `label_limit` is 2, an SNI of
+"www.example.com" would be truncated to "example.com" before encryption.
 
 extensions
 : A list of extensions that the client can take into consideration when
@@ -416,8 +413,8 @@ used to derive the ESNI key.
 
 record_digest
 : A cryptographic hash of the ESNIKeys structure from which the ESNI
-key was obtained, i.e., from the first byte of "version" to the end
-of the structure.  This hash is computed using the hash function
+key was obtained, excluding `label_limit`, i.e., from the first byte of "version"
+to the end of "extensions".  This hash is computed using the hash function
 associated with `suite`.
 
 encrypted_sni
@@ -527,13 +524,10 @@ The client then creates a ClientESNIInner structure:
 
 ~~~~
    struct {
-       opaque dns_name<1..2^16-1>;
-       opaque zeros[ESNIKeys.padded_length - length(dns_name)];
-   } PaddedServerNameList;
-
-   struct {
        uint8 nonce[16];
-       PaddedServerNameList realSNI;
+       uint8 label_limit;
+       uint8 num_labels
+       opaque name_digest<0..2^16-1>;
    } ClientESNIInner;
 ~~~~
 
@@ -541,22 +535,26 @@ nonce
 : A random 16-octet value to be echoed by the server in the
 "encrypted_server_name" extension.
 
-dns_name
-: The true SNI DNS name, that is, the HostName value that would have been sent in the
-plaintext "server_name" extension. (NameType values other than "host_name" are
-unsupported since SNI extensibility failed {{SNIExtensibilityFailed}}).
+label_limit
+: The label_limit value, copied from ESNIKeys.
 
-zeros
-: Zero padding whose length makes the serialized PaddedServerNameList
-struct have a length equal to ESNIKeys.padded_length.
+num_labels
+: The number of labels in the true SNI DNS name, that is, the HostName value
+that would have been sent in the plaintext "server_name" extension.
+(NameType values other than "host_name" are unsupported since SNI
+extensibility failed {{SNIExtensibilityFailed}}).
 
-This value consists of the serialized ServerNameList from the "server_name" extension,
-padded with enough zeroes to make the total structure ESNIKeys.padded_length
-bytes long. The purpose of the padding is to prevent attackers
-from using the length of the "encrypted_server_name" extension
-to determine the true SNI. If the serialized ServerNameList is
-longer than ESNIKeys.padded_length, the client MUST NOT use
-the "encrypted_server_name" extension.
+name_digest
+: The true SNI DNS name, truncated to the last `label_limit` labels and hashed by
+`cipher_suite`'s hash.
+
+This value consists of the hash of the truncated server name, along with an
+indication of how many labels were lost in truncation. This construction
+ensures that the length of ClientESNIInner is independent of the server name,
+so that an attacker cannot use the length of the "encrypted_server_name"
+extension to determine the true SNI. It also allows hosts to strip wildcard
+subdomains for the purpose of certificate lookup, while still indicating how
+many subdomains were present.
 
 The ClientEncryptedSNI.encrypted_sni value is then computed using the usual
 TLS 1.3 AEAD:
@@ -696,9 +694,8 @@ If the client attempts to connect to a server and does not have an ESNIKeys
 structure available for the server, it SHOULD send a GREASE
 {{I-D.ietf-tls-grease}} "encrypted_server_name" extension as follows:
 
-- Select a supported cipher suite, named group, and padded_length
-  value. The padded_length value SHOULD be 260 or a multiple of 16 less than
-  260. Set the "suite" field  to the selected cipher suite. These selections
+- Select a supported cipher suite and named group. Set the "suite" field to
+  the selected cipher suite. These selections
   SHOULD vary to exercise all supported configurations, but MAY be held constant
   for successive connections to the same server in the same session.
 
@@ -710,7 +707,7 @@ structure available for the server, it SHOULD send a GREASE
   the chosen cipher suite.
 
 - Set the "encrypted_sni" field to a randomly-generated string of
-  16 + padded_length + tag_length bytes, where tag_length is the tag length
+  18 + hash_length + tag_length bytes, where tag_length is the tag length
   of the chosen cipher suite's associated AEAD.
 
 If the server sends an "encrypted_server_name" extension, the client
@@ -776,8 +773,8 @@ performs the following checks:
   it MUST abort the connection with an "illegal_parameter" alert.
 
 - If the length of the "encrypted_server_name" extension is
-  inconsistent with the advertised padding length (plus AEAD
-  expansion) the server MAY abort the connection with an
+  inconsistent with the advertised cipher_suite,
+  the server MAY abort the connection with an
   "illegal_parameter" alert without attempting to decrypt.
 
 Assuming these checks succeed, the server then computes K_sni
@@ -785,15 +782,34 @@ and decrypts the ServerName value. If decryption fails, the server
 MUST abort the connection with a "decrypt_error" alert.
 
 If the decrypted value's length is different from
-the advertised ESNIKeys.padded_length or the padding consists of
-any value other than 0, then the server MUST abort the
+the cipher suite's hash_length, then the server MUST abort the
 connection with an "illegal_parameter" alert. Otherwise, the
-server uses the PaddedServerNameList.sni value as if it were
-the "server_name" extension. Any actual "server_name" extension is
+server searches its set of supported names for a name with a
+matching hash. If `num_labels` is less than or equal to `label_limit`,
+the server looks for a name whose hash is equal to `name_digest`.
+
+If `num_labels` is greater than `label_limit`, the server looks for a
+name consisting of `num_labels - label_limit` wildcard labels, followed by
+`label_limit` non-wildcard labels whose hash matches name_digest. Names
+containing wildcards between non-wildcard labels (e.g. a.*.b.example) are
+not supported, and partial-wildcard names at the same label
+(e.g. f*.example.com and g*.example.com) are not supported if they are in
+different certificates. To support names with different wildcard
+configurations on the same server, server operators MAY distribute
+multiple ESNIKeys that are identical except for `label_limit`.
+
+If no matching name is found, the server SHOULD select the default
+certificate.
+
+All the required hashes of supported names can be computed when those
+names are configured, so the name lookup process does not require
+performing any hash operations.
+
+Any actual "server_name" extension is
 ignored, which also means the server MUST NOT send the "server_name"
 extension to the client.
 
-Upon determining the true SNI, the client-facing server then either
+Upon determining the server name, the client-facing server then either
 serves the connection directly (if in Shared Mode), in which case
 it executes the steps in the following section, or forwards
 the TLS connection to the backend server (if in Split Mode). In
@@ -808,14 +824,14 @@ match that of the first ClientHello.
 
 ## Shared Mode Server Behavior
 
-A server operating in Shared Mode uses PaddedServerNameList.sni as
-if it were the "server_name" extension to finish the handshake. It
+A server operating in Shared Mode uses the selected certificate to
+finish the handshake. It
 SHOULD pad the Certificate message, via padding at the record layer,
 such that its length equals the size of the largest possible Certificate
 (message) covered by the same ESNI key. Moreover, the server MUST
 include the "encrypted_server_name" extension in EncryptedExtensions
 with the "response_type" field set to "esni_accept" and the "nonce"
-field set to the decrypted PaddedServerNameList.nonce value from the client
+field set to the decrypted ClientESNIInner.nonce value from the client
 "encrypted_server_name" extension.
 
 If the server sends a NewSessionTicket message, the corresponding ESNI PSK MUST
@@ -826,10 +842,10 @@ This restriction provides robustness for rollbacks (see {{misconfiguration}}).
 
 ## Split Mode Server Behavior {#backend-server-behavior}
 
-In Split Mode, the backend server must know PaddedServerNameList.nonce
+In Split Mode, the backend server must know ClientESNIInner.nonce
 to echo it back in EncryptedExtensions and complete the handshake.
-{{communicating-sni}} describes one mechanism for sending both
-PaddedServerNameList.sni and ClientESNIInner.nonce to the backend
+{{communicating-sni}} describes one mechanism for sending
+ClientESNIInner to the backend
 server. Thus, backend servers function the same as servers operating
 in Shared Mode.
 
@@ -1070,7 +1086,7 @@ registry for Resource Record (RR) TYPEs (defined in {{!RFC6895}}) with
 # Communicating SNI and Nonce to Backend Server {#communicating-sni}
 
 When operating in Split Mode, backend servers will not have access
-to PaddedServerNameList.sni or ClientESNIInner.nonce without
+to ClientESNIInner without
 access to the ESNI keys or a way to decrypt ClientEncryptedSNI.encrypted_sni.
 
 One way to address this for a single connection, at the cost of having
