@@ -149,14 +149,9 @@ Client <------------------------------------>|                     |
 
 In Split Mode, the provider is *not* the origin server for private
 domains. Rather the DNS records for private domains point to the provider,
-but the provider's server just relays the connection back to the
+and the provider's server relays the connection back to the
 backend server, which is the true origin server. The provider does
-not have access to the plaintext of the connection. In principle,
-the provider might not be the origin for any domains, but as
-a practical matter, it is probably the origin for a large set of
-innocuous domains, but is also providing protection for some private
-domains. Note that the backend server can be an unmodified TLS 1.3
-server.
+not have access to the plaintext of the connection.
 
 
 ## SNI Encryption
@@ -186,7 +181,7 @@ refers is not in possession of the ESNI keys.) The design of the system must
 therefore allow clients to detect and recover from this situation (see
 {{esni-resolution}} for more details).
 
-Content providers operating in Split Mode SHOULD ensure that the A and AAAA
+Content providers SHOULD ensure that the A and AAAA
 records for ESNI-enabled server names do not allow identifying the server name
 from the IP address. This can for example be achieved by always returning the
 same records for all ESNI-enabled names, or by having the function that picks
@@ -1026,13 +1021,14 @@ directly to backend origin servers, thereby avoiding unnecessary MiTM attacks.
 
 ### Split server spoofing
 
-Assuming ESNI records retrieved from DNS are validated, e.g., via DNSSEC or fetched
+Assuming ESNI records retrieved from DNS are authenticated, e.g., via DNSSEC or fetched
 from a trusted Recursive Resolver, spoofing a server operating in Split Mode
 is not possible. See {{cleartext-dns}} for more details regarding cleartext
 DNS.
 
-Validating the ESNIKeys structure additionally validates the public name. This
-validates any retry signals from the server because the client validates the server
+Authenticating the ESNIKeys structure naturally authenticates the
+included public name. This also authenticates any retry signals
+from the server because the client validates the server
 certificate against the public name before retrying.
 
 ### Supporting multiple protocols
@@ -1093,9 +1089,6 @@ client-facing server and the backend server and use it to AEAD-encrypt Z
 and send the encrypted blob at the beginning of the connection before
 the ClientHello. The backend server can then decrypt ESNI to recover
 the true SNI and nonce.
-
-Another way for backend servers to access the true SNI and nonce is by the
-client-facing server sharing the ESNI keys.
 
 # Alternative SNI Protection Designs
 
