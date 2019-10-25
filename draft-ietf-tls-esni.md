@@ -511,6 +511,10 @@ KeyLabel = "hrr esni key" and IVLabel = "hrr esni iv". (This label variance
 is done to prevent nonce re-use since the client's ESNI key share, and
 thus the value of Zx, does not change across ClientHello retries.)
 
+Note that ESNIContents will not be directly transmitted to the server in the
+ClientHello. The server will instead reconstruct the same object by obtaining
+its values from ClientEncryptedSNI and ClientHello.
+
 [[TODO: label swapping fixes a bug in the spec, though this may not be
 the best way to deal with HRR. See https://github.com/tlswg/draft-ietf-tls-esni/issues/121
 and https://github.com/tlswg/draft-ietf-tls-esni/pull/170 for more details.]]
@@ -522,6 +526,15 @@ and https://github.com/tlswg/draft-ietf-tls-esni/pull/170 for more details.]]
        Random client_hello_random;
    } ESNIContents;
 ~~~
+
+record_digest
+: Same value as ClientEncryptedSNI.record_digest.
+
+esni_key_share
+: Same value as ClientEncryptedSNI.key_share.
+
+client_hello_random
+: Same nonce as ClientHello.random.
 
 The client then creates a ClientESNIInner structure:
 
