@@ -149,14 +149,9 @@ Client <------------------------------------>|                     |
 
 In Split Mode, the provider is *not* the origin server for private
 domains. Rather the DNS records for private domains point to the provider,
-but the provider's server just relays the connection back to the
+and the provider's server relays the connection back to the
 backend server, which is the true origin server. The provider does
-not have access to the plaintext of the connection. In principle,
-the provider might not be the origin for any domains, but as
-a practical matter, it is probably the origin for a large set of
-innocuous domains, but is also providing protection for some private
-domains. Note that the backend server can be an unmodified TLS 1.3
-server.
+not have access to the plaintext of the connection.
 
 ## SNI Encryption
 
@@ -365,6 +360,10 @@ KeyLabel = "hrr esni key" and IVLabel = "hrr esni iv". (This label variance
 is done to prevent nonce re-use since the client's ESNI key share, and
 thus the value of Zx, does not change across ClientHello retries.)
 
+Note that ESNIContents will not be directly transmitted to the server in the
+ClientHello. The server will instead reconstruct the same object by obtaining
+its values from ClientEncryptedSNI and ClientHello.
+
 [[TODO: label swapping fixes a bug in the spec, though this may not be
 the best way to deal with HRR. See https://github.com/tlswg/draft-ietf-tls-esni/issues/121
 and https://github.com/tlswg/draft-ietf-tls-esni/pull/170 for more details.]]
@@ -376,6 +375,15 @@ and https://github.com/tlswg/draft-ietf-tls-esni/pull/170 for more details.]]
        Random client_hello_random;
    } ESNIContents;
 ~~~
+
+record_digest
+: Same value as ClientEncryptedSNI.record_digest.
+
+esni_key_share
+: Same value as ClientEncryptedSNI.key_share.
+
+client_hello_random
+: Same nonce as ClientHello.random.
 
 The client then creates a ClientESNIInner structure:
 
@@ -867,13 +875,14 @@ directly to backend origin servers, thereby avoiding unnecessary MiTM attacks.
 
 ### Split server spoofing
 
-Assuming ESNI records retrieved from DNS are validated, e.g., via DNSSEC or fetched
+Assuming ESNI records retrieved from DNS are authenticated, e.g., via DNSSEC or fetched
 from a trusted Recursive Resolver, spoofing a server operating in Split Mode
 is not possible. See {{cleartext-dns}} for more details regarding cleartext
 DNS.
 
-Validating the ESNIConfig structure additionally validates the public name. This
-validates any retry signals from the server because the client validates the server
+Authenticating the ESNIConfig structure naturally authenticates the
+included public name. This also authenticates any retry signals
+from the server because the client validates the server
 certificate against the public name before retrying.
 
 ### Supporting multiple protocols
@@ -934,9 +943,6 @@ client-facing server and the backend server and use it to AEAD-encrypt Z
 and send the encrypted blob at the beginning of the connection before
 the ClientHello. The backend server can then decrypt ESNI to recover
 the true SNI and nonce.
-
-Another way for backend servers to access the true SNI and nonce is by the
-client-facing server sharing the ESNI keys.
 
 # Alternative SNI Protection Designs
 
