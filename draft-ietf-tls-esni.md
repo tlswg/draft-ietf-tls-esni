@@ -164,7 +164,7 @@ SNI encryption requires that each provider publish a public key and metadata whi
 is used for SNI encryption for all the domains for which it serves directly or
 indirectly (via Split Mode). This document defines the format of the SNI encryption
 public key and metadata, referred to as an ESNI configuration, and delegates DNS
-publication details to {{!I-D.nygren-dnsop-svcb-httpssvc}}, though other delivery
+publication details to {{!HTTPSSVC=I-D.nygren-dnsop-svcb-httpssvc}}, though other delivery
 mechanisms are possible. In particular, if some of the clients of a private
 server are applications rather than Web browsers, those applications might have
 the public key and metadata preconfigured.
