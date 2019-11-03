@@ -155,21 +155,30 @@ not have access to the plaintext of the connection.
 
 ## SNI Encryption
 
-SNI encryption requires that each provider publish a public key and metadata which
-is used for SNI encryption for all the domains for which it serves directly or
-indirectly (via Split Mode). This document defines the format of the SNI encryption
-public key and metadata, referred to as an ESNI configuration, and delegates DNS
-publication details to {{!HTTPSSVC=I-D.nygren-dnsop-svcb-httpssvc}}, though other delivery
-mechanisms are possible. In particular, if some of the clients of a private
-server are applications rather than Web browsers, those applications might have
-the public key and metadata preconfigured.
+SNI encryption requires that each provider publish a public key and
+metadata which is used for SNI encryption for all the domains for
+which it serves directly or indirectly (via Split Mode). This document
+defines the format of the SNI encryption public key and metadata,
+referred to as an ESNI configuration, and delegates DNS publication
+details to {{!HTTPSSVC=I-D.nygren-dnsop-svcb-httpssvc}}, though other
+delivery mechanisms are possible. In particular, if some of the
+clients of a private server are applications rather than Web browsers,
+those applications might have the public key and metadata
+preconfigured.
 
 When a client wants to form a TLS connection to any of the domains
-served by an ESNI-supporting provider, it sends an "encrypted_server_name"
-extension, which contains the true extension encrypted under the
-provider's public key. The provider can then decrypt the extension
-and either terminate the connection (in Shared Mode) or forward
-it to the backend server (in Split Mode).
+served by an ESNI-supporting provider, it constructs a ClientHello in
+the regular fashion containing the true SNI value (ClientHelloInner)
+and then encrypts it using the public key for the provider.  It then
+constructs a new ClientHello (ClientHelloOuter) with an innocuous SNI
+(and potentially innocuous versions of other extensions such as ALPN
+{{?RFC7301}}) and containing the encrypted ClientHelloInner as an
+extension. It sends ClientHelloOuter to the server.
+
+Upon receiving ClientHelloOuter, the server can then decrypt
+ClientHelloInner and either terminate the connection (in Shared Mode)
+or forward it to the backend server (in Split Mode).
+
 
 # Encrypted SNI Configuration {#esni-configuration}
 
@@ -216,7 +225,7 @@ This value SHOULD be set to the largest ServerNameList the server
 expects to support rounded up the nearest multiple of 16. If the
 server supports arbitrary wildcard names, it SHOULD set this value to
 260. Clients SHOULD reject ESNIConfig as invalid if padded_length is
-greater than 260.
+greater than 260. [[TODO: ekr]]
 
 extensions
 : A list of extensions that the client can take into consideration when
