@@ -197,7 +197,7 @@ ESNIConfig structure.
         opaque public_name<1..2^16-1>;
         KeyShareEntry keys<4..2^16-1>;
         CipherSuite cipher_suites<2..2^16-2>;
-        uint16 padded_length;
+        uint16 maximum_name_length;
         Extension extensions<0..2^16-1>;
     } ESNIConfig;
 ~~~~
@@ -219,14 +219,12 @@ keys
 : The list of keys which can be used by the client to encrypt the SNI.
 Every key being listed MUST belong to a different group.
 
-padded_length
-The length to pad the ServerNameList value to prior to encryption.
-This value SHOULD be set to the largest ServerNameList the server
-expects to support rounded up the nearest multiple of 16. If the
-server supports arbitrary wildcard names, it SHOULD set this value to
-260. Clients SHOULD reject ESNIConfig as invalid if padded_length is
-greater than 260. [[OPEN ISSUE: How do we implement padding, presumably
-with the padding extension.]]
+maximum_name_length
+: the largest name the server expects to support
+rounded up the nearest multiple of 16. If the server supports
+arbitrary wildcard names, it SHOULD set this value to
+256. Clients SHOULD reject ESNIConfig as invalid if maximum_name_length is
+greater than 256.
 
 extensions
 : A list of extensions that the client can take into consideration when
@@ -341,18 +339,27 @@ to client and server session states.
 
 ## Client Behavior {#client-behavior}
 
-### Sending an encrypted SNI {#send-esni}
+### Sending an encrypted ClientHello {#send-esni}
 
-In order to send an encrypted SNI, the client MUST first select one of
-the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
-matching group. This share will then be sent to the server in the
-"encrypted_client_hello" extension and used to derive the SNI encryption key. It does not affect the
-(EC)DHE shared secret used in the TLS key schedule. The client MUST also select
-an appropriate cipher suite from the list of suites offered by the
-server. If the client is unable to select an appropriate group or suite it
-SHOULD ignore that ESNIConfig value and MAY attempt to use another value provided
-by the server. The client MUST NOT send encrypted SNI using groups or cipher suites
-not advertised by the server.
+In order to send an encrypted SNI, the client MUST first generate its
+ClientHelloInner value. In addition to the normal values, ClientHelloInner
+MUST also contain:
+
+ - an "esni_nonce" extension
+ - a TLS padding {{!RFC7685}}. This SHOULD contain X bytes of padding
+   where X + the actual server name is equal to ESNIConfig.maximum_name_length
+
+Then, the client MUST select one of the server ESNIKeyShareEntry
+values and generate an (EC)DHE share in the matching group. This share
+will then be sent to the server in the "encrypted_client_hello"
+extension and used to derive the SNI encryption key. It does not
+affect the (EC)DHE shared secret used in the TLS key schedule. The
+client MUST also select an appropriate cipher suite from the list of
+suites offered by the server. If the client is unable to select an
+appropriate group or suite it SHOULD ignore that ESNIConfig value and
+MAY attempt to use another value provided by the server. The client
+MUST NOT send encrypted SNI using groups or cipher suites not
+advertised by the server.
 
 When offering an encrypted SNI, the client MUST NOT offer to resume any non-ESNI
 PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2 or
@@ -382,7 +389,7 @@ across ClientHello retries.)
 the best way to deal with HRR. See https://github.com/tlswg/draft-ietf-tls-esni/issues/121
 and https://github.com/tlswg/draft-ietf-tls-esni/pull/170 for more details.]]
 
-The encrypted clientHello value is then computed as:
+The encrypted ClientHello value is then computed as:
 ~~~~
     encrypted_sni = AEAD-Encrypt(key, iv, "", ClientHelloIInner)
 ~~~~
@@ -392,11 +399,15 @@ The encrypted clientHello value is then computed as:
 expanding twice of Zx We should think about how
 to harmonize these to make sure that we maintain key separation.]]
 
-The client MUST place the value of ESNIConfig.public_name in the "server_name"
-extension. (This is required for technical conformance with {{!RFC7540}};
-Section 9.2.) The client MUST NOT send a "cached_info" extension {{!RFC7924}}
-with a CachedObject entry whose CachedInformationType is "cert", since this
-indication would divulge the true server name.
+Finally, the client MUST generate a ClientHelloOuter message
+containing the "encrypted_client_hello" extension with the values as
+indicated above. The cient MUST place the value of
+ESNIConfig.public_name in the "server_name" extension. The remaining
+contents of the ClientHelloOuter MAY be identical to those in
+ClientHelloInner but MAY also differ.  The ClientHelloOuter MUST NOT
+contain a "cached_info" extension {{!RFC7924}} with a CachedObject
+entry whose CachedInformationType is "cert", since this indication
+would divulge the true server name.
 
 ### Handling the server response {#handle-server-response}
 
