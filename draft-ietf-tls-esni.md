@@ -337,9 +337,9 @@ connection, whether the connection negotiated this extension with the
 Otherwise, it is a "non-ESNI PSK". This may be implemented by adding a new field
 to client and server session states.
 
-## Client Behavior {#client-behavior}
+# Client Behavior {#client-behavior}
 
-### Sending an encrypted ClientHello {#send-esni}
+## Sending an encrypted ClientHello {#send-esni}
 
 In order to send an encrypted SNI, the client MUST first generate its
 ClientHelloInner value. In addition to the normal values, ClientHelloInner
@@ -375,7 +375,7 @@ computed from Z as follows:
    iv = HKDF-Expand-Label(Zx, IVLabel, ClientHelloOuter.Random, iv_length)
 ~~~~
 
-Where the Hash for HKDFis the hash function associated with the HKDF
+Where the Hash for HKDF is the hash function associated with the HKDF
 instantiation. The salt argument for HKDF-Extract is a string
 consisting of Hash.length bytes set to zeros. For a client's first
 ClientHello, KeyLabel = "esni key" and IVLabel = "esni iv", whereas
@@ -390,6 +390,7 @@ the best way to deal with HRR. See https://github.com/tlswg/draft-ietf-tls-esni/
 and https://github.com/tlswg/draft-ietf-tls-esni/pull/170 for more details.]]
 
 The encrypted ClientHello value is then computed as:
+
 ~~~~
     encrypted_sni = AEAD-Encrypt(key, iv, "", ClientHelloIInner)
 ~~~~
@@ -401,7 +402,7 @@ to harmonize these to make sure that we maintain key separation.]]
 
 Finally, the client MUST generate a ClientHelloOuter message
 containing the "encrypted_client_hello" extension with the values as
-indicated above. The cient MUST place the value of
+indicated above. The client MUST place the value of
 ESNIConfig.public_name in the "server_name" extension. The remaining
 contents of the ClientHelloOuter MAY be identical to those in
 ClientHelloInner but MAY also differ.  The ClientHelloOuter MUST NOT
@@ -409,7 +410,7 @@ contain a "cached_info" extension {{!RFC7924}} with a CachedObject
 entry whose CachedInformationType is "cert", since this indication
 would divulge the true server name.
 
-### Handling the server response {#handle-server-response}
+## Handling the server response {#handle-server-response}
 
 As described in {{server-behavior}}, the server MAY either accept ESNI
 and use ClientHelloInner or reject it and use ClientHelloOuter. However,
@@ -417,7 +418,7 @@ there is no indication in ServerHello of which one the server has done
 and the client must therefore use trial decryption in order to determine
 this. 
 
-#### Accepted ESNI
+### Accepted ESNI
 
 If the server used ClientHelloInner, the client MUST check that the
 "esni_nonce" extension matches the nonce it used in ClientHelloInner.
@@ -425,7 +426,7 @@ otherwise abort the connection with an "illegal_parameter" alert. The client the
 with the connection as usual, authenticating the connection for the origin
 server.
 
-#### Rejected ESNI
+### Rejected ESNI
 
 If the server used ClientHelloOuter, the client proceeds with the handshake,
 authenticating for ESNIConfig.public_name as described in
@@ -478,7 +479,7 @@ servers which do not acknowledge the "encrypted_server_name" extension. If the
 client does not retry in either scenario, it MUST report an error to the
 calling application.
 
-##### Authenticating for the public name {#auth-public-name}
+#### Authenticating for the public name {#auth-public-name}
 
 When the server cannot decrypt or does not process the "encrypted_server_name"
 extension, it continues with the handshake using the cleartext "server_name"
@@ -506,7 +507,7 @@ trigger retries, as described in {{handle-server-response}}. This may be
 implemented, for instance, by reporting a failed connection with a dedicated
 error code.
 
-#### HelloRetryRequest
+### HelloRetryRequest
 
 If the server sends a HelloRetryRequest in response to the ClientHello
 and the client can send a second updated ClientHello per the rules in
@@ -527,11 +528,11 @@ know the key, and this is easy to probe for, can we just instead
 have an extension to indicate what has happened.]]
 
 
-### GREASE extensions {#grease-extensions}
+## GREASE extensions {#grease-extensions}
 
 If the client attempts to connect to a server and does not have an ESNIConfig
 structure available for the server, it SHOULD send a GREASE
-{{I-D.ietf-tls-grease}} "encrypted_server_name" extension as follows:
+{{I-D.ietf-tls-grease}} "encrypted_client_hello" extension as follows:
 
 - Select a supported cipher suite, named group, and padded_length
   value. The padded_length value SHOULD be 260 or a multiple of 16 less than
@@ -546,22 +547,18 @@ structure available for the server, it SHOULD send a GREASE
   bytes, where hash_length is the length of the hash function associated with
   the chosen cipher suite.
 
-- Set the "encrypted_sni" field to a randomly-generated string of
-  16 + padded_length + tag_length bytes, where tag_length is the tag length
-  of the chosen cipher suite's associated AEAD.
+- Set the "encrypted_client_hello" field to a randomly-generated string of
+  [TODO] bytes.
 
-If the server sends an "encrypted_server_name" extension, the client
+If the server sends an "encrypted_client_hello" extension, the client
 MUST check the extension syntactically and abort the connection with a
-"decode_error" alert if it is invalid. If the "response_type" field
-contains "esni_retry_requested", the client MUST ignore the extension
-and proceed with the handshake. If it contains "esni_accept" or any other
-value, the client MUST abort the connection with an "illegal_parameter" alert.
+"decode_error" alert if it is invalid.
 
 Offering a GREASE extension is not considered offering an encrypted SNI for
 purposes of requirements in {{client-behavior}}. In particular, the client MAY
 offer to resume sessions established without ESNI.
 
-## Client-Facing Server Behavior {#server-behavior}
+# Client-Facing Server Behavior {#server-behavior}
 
 Upon receiving an "encrypted_client_hello" extension, the client-facing
 server MUST check that it is able to negotiate TLS 1.3 or greater. If not,
@@ -585,7 +582,7 @@ If the ClientEncryptedSNI value does not match any known ESNIConfig
 structure, it MUST ignore the extension and proceed with the connection,
 with the following added behavior:
 
-- It MUST include the "encrypted_client_hello" extension in with the
+- It MUST include the "encrypted_client_hello" extension with the
   "retry_keys" field set to one or more ESNIConfig structures with
   up-to-date keys. Servers MAY supply multiple ESNIConfig values of
   different versions. This allows a server to support multiple
@@ -635,7 +632,7 @@ is not interoperable with existing servers, which expect the value in
 the existing cleartext extension. Thus server operators SHOULD ensure
 servers understand a given set of ESNI keys before advertising them.
 Additionally, servers SHOULD retain support for any
-previously-advertised keys for the duration of their validity.
+previously-advertised keys for the duration of their validity
 
 However, in more complex deployment scenarios, this may be difficult
 to fully guarantee. Thus this protocol was designed to be robust in case
