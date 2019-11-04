@@ -420,8 +420,9 @@ to determine the true SNI. If the serialized ServerNameList is
 longer than ESNIConfig.padded_length, the client MUST NOT use
 the "encrypted_server_name" extension.
 
-The ClientEncryptedSNI.encrypted_sni value is then computed using the usual
-TLS 1.3 AEAD:
+The ClientEncryptedSNI.encrypted_sni value is then computed using
+AEAD-Encrypt ({{!RFC5116}}; Section 2.1) with the AEAD corresponding to
+ClientEncryptedSNI.suite as follows:
 
 ~~~~
     encrypted_sni = AEAD-Encrypt(key, iv, KeyShareClientHello, ClientESNIInner)
@@ -559,8 +560,9 @@ structure available for the server, it SHOULD send a GREASE
 {{I-D.ietf-tls-grease}} "encrypted_server_name" extension as follows:
 
 - Select a supported cipher suite, named group, and padded_length
-  value. The padded_length value SHOULD be 260 or a multiple of 16 less than
-  260. Set the "suite" field  to the selected cipher suite. These selections
+  value. The padded_length value SHOULD be 260 (sum of the maximum DNS name
+  length and TLS encoding overhead) or a multiple of 16 less than 260.
+  Set the "suite" field  to the selected cipher suite. These selections
   SHOULD vary to exercise all supported configurations, but MAY be held constant
   for successive connections to the same server in the same session.
 
@@ -734,6 +736,13 @@ Unless ESNI is disabled as a result of successfully establishing a connection to
 the public name, the client MUST NOT fall back to cleartext SNI, as this allows
 a network attacker to disclose the SNI.  It MAY attempt to use another server
 from the DNS results, if one is provided.
+
+Client-facing servers with non-uniform cryptographic configurations across backend
+origin servers segment the ESNI anonymity set based on these configurations. For example,
+if a client-facing server hosts k backend origin servers, and exactly one of those
+backend origin servers supports a different set of cryptographic algorithms than the
+other (k - 1) servers, it may be possible to identify this single server based on
+the contents of the ServerHello as this message is not encrypted.
 
 ## Middleboxes
 
