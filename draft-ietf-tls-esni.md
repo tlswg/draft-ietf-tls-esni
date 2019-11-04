@@ -560,8 +560,9 @@ structure available for the server, it SHOULD send a GREASE
 {{I-D.ietf-tls-grease}} "encrypted_server_name" extension as follows:
 
 - Select a supported cipher suite, named group, and padded_length
-  value. The padded_length value SHOULD be 260 or a multiple of 16 less than
-  260. Set the "suite" field  to the selected cipher suite. These selections
+  value. The padded_length value SHOULD be 260 (sum of the maximum DNS name
+  length and TLS encoding overhead) or a multiple of 16 less than 260.
+  Set the "suite" field  to the selected cipher suite. These selections
   SHOULD vary to exercise all supported configurations, but MAY be held constant
   for successive connections to the same server in the same session.
 
