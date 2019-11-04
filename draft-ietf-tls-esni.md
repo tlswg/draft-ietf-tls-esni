@@ -420,8 +420,9 @@ to determine the true SNI. If the serialized ServerNameList is
 longer than ESNIConfig.padded_length, the client MUST NOT use
 the "encrypted_server_name" extension.
 
-The ClientEncryptedSNI.encrypted_sni value is then computed using the usual
-TLS 1.3 AEAD:
+The ClientEncryptedSNI.encrypted_sni value is then computed using
+AEAD-Encrypt ({{!RFC5116}}; Section 2.1) with the AEAD corresponding to
+ClientEncryptedSNI.suite as follows:
 
 ~~~~
     encrypted_sni = AEAD-Encrypt(key, iv, KeyShareClientHello, ClientESNIInner)
