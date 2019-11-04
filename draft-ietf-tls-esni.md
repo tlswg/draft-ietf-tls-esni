@@ -742,7 +742,7 @@ origin servers segment the ESNI anonymity set based on these configurations. For
 if a client-facing server hosts k backend origin servers, and exactly one of those
 backend origin servers supports a different set of cryptographic algorithms than the
 other (k - 1) servers, it may be possible to identify this single server based on
-what negotiated (cleartext) algorithms.
+the contents of the ServerHello as this message is not encrypted.
 
 ## Middleboxes
 
