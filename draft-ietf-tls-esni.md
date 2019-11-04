@@ -174,7 +174,7 @@ it to the backend server (in Split Mode).
 # Encrypted SNI Configuration {#esni-configuration}
 
 SNI Encryption configuration information is conveyed with the following
-ESNIConfig structure.
+ESNIConfigs structure.
 
 ~~~~
     // Copied from TLS 1.3
@@ -190,12 +190,18 @@ ESNIConfig structure.
 
     struct {
         opaque public_name<1..2^16-1>;
-        KeyShareEntry keys<4..2^16-1>;
+        KeyShareEntry key;
         CipherSuite cipher_suites<2..2^16-2>;
         uint16 padded_length;
         Extension extensions<0..2^16-1>;
     } ESNIConfigContents;
+
+    ESNIConfig ESNIConfigs<1..2^16-1>;
 ~~~~
+
+The ESNIConfigs structure contains one or more ESNIConfig structures in
+decreasing order of preference. This allows a server to support multiple
+versions of ESNI and multiple sets of ESNI parameters.
 
 The ESNIConfig structure contains the following fields:
 
@@ -216,12 +222,13 @@ public_name
 This is used to repair misconfigurations, as described in
 {{handle-server-response}}.
 
-keys
-: The list of keys which can be used by the client to encrypt the SNI.
-Every key being listed MUST belong to a different group.
+key
+: The key which can be used by the client to encrypt the SNI. Clients MUST
+ignore any ESNIConfig structure with a key using a NamedGroup they do not
+support or are unwilling to use.
 
 padded_length
-The length to pad the ServerNameList value to prior to encryption.
+: The length to pad the ServerNameList value to prior to encryption.
 This value SHOULD be set to the largest ServerNameList the server
 expects to support rounded up the nearest multiple of 16. If the
 server supports arbitrary wildcard names, it SHOULD set this value to
@@ -237,10 +244,6 @@ may be tagged as mandatory by using an extension type codepoint with
 the high order bit set to 1. A client which receives a mandatory extension
 they do not understand must reject the ESNIConfig content.
 
-Any of the listed keys in the ESNIConfig value may
-be used to encrypt the SNI for the associated domain name.
-The cipher suite list is orthogonal to the
-list of keys, so each key may be used with any cipher suite.
 Clients MUST parse the extension list and check for unsupported
 mandatory extensions. If an unsupported mandatory extension is
 present, clients MUST reject the ESNIConfig value.
@@ -299,7 +302,7 @@ structure:
        ServerESNIResponseType response_type;
        select (response_type) {
            case esni_accept:        uint8 nonce[16];
-           case esni_retry_request: ESNIConfig retry_keys<1..2^16-1>;
+           case esni_retry_request: ESNIConfigs retry_configs;
        }
    } ServerEncryptedSNI;
 ~~~
@@ -311,7 +314,7 @@ response_type
 nonce
 : The contents of ClientESNIInner.nonce. (See {{client-behavior}}.)
 
-retry_keys
+retry_configs
 : One or more ESNIConfig structures containing the keys that the client should use on
 subsequent connections to encrypt the ClientESNIInner structure.
 
@@ -336,8 +339,9 @@ to client and server session states.
 
 ### Sending an encrypted SNI {#send-esni}
 
-In order to send an encrypted SNI, the client MUST first select one of
-the server ESNIKeyShareEntry values and generate an (EC)DHE share in the
+In order to send an encrypted SNI, the client MUST first select one of the
+ESNIConfig values in the ESNIConfigs structure which it is able to process (see
+{{esni-configuration}}). It then generates an (EC)DHE share in the
 matching group. This share will then be sent to the server in the
 "encrypted_server_name" extension and used to derive the SNI encryption key. It does not affect the
 (EC)DHE shared secret used in the TLS key schedule. The client MUST also select
@@ -565,9 +569,10 @@ error code.
 
 ### GREASE extensions {#grease-extensions}
 
-If the client attempts to connect to a server and does not have an ESNIConfig
-structure available for the server, it SHOULD send a GREASE
-{{I-D.ietf-tls-grease}} "encrypted_server_name" extension as follows:
+If the client attempts to connect to a server and does not have an ESNIConfigs
+structure available for the server or was unable to select an appropriate
+ESNIConfig value, it SHOULD send a GREASE {{I-D.ietf-tls-grease}}
+"encrypted_server_name" extension as follows:
 
 - Select a supported cipher suite, named group, and padded_length
   value. The padded_length value SHOULD be 260 (sum of the maximum DNS name
@@ -624,10 +629,8 @@ with the following added behavior:
 
 - It MUST include the "encrypted_server_name" extension in
   EncryptedExtensions message with the "response_type" field set to
-  "esni_retry_requested" and the "retry_keys" field set to one or more
-  ESNIConfig structures with up-to-date keys. Servers MAY supply multiple
-  ESNIConfig values of different versions. This allows a server to support
-  multiple versions at once.
+  "esni_retry_requested" and the "retry_configs" field set to an up-to-date
+  ESNIConfigs structure.
 
 - The server MUST ignore all PSK identities in the ClientHello which correspond
   to ESNI PSKs. ESNI PSKs offered by the client are associated with the ESNI
@@ -646,7 +649,7 @@ case.
 If the ClientEncryptedSNI value does match a known ESNIConfig, the server
 performs the following checks:
 
-- If the ClientEncryptedSNI.key_share group does not match one in the ESNIConfigContents.keys,
+- If the ClientEncryptedSNI.key_share group does not match ESNIConfigContents.key,
   it MUST abort the connection with an "illegal_parameter" alert.
 
 - If the length of the "encrypted_server_name" extension is
@@ -899,7 +902,7 @@ from a trusted Recursive Resolver, spoofing a server operating in Split Mode
 is not possible. See {{cleartext-dns}} for more details regarding cleartext
 DNS.
 
-Authenticating the ESNIConfig structure naturally authenticates the
+Authenticating the ESNIConfigs structure naturally authenticates the
 included public name. This also authenticates any retry signals
 from the server because the client validates the server
 certificate against the public name before retrying.
