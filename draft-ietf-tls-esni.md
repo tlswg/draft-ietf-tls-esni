@@ -220,12 +220,13 @@ greater than 260.
 
 extensions
 : A list of extensions that the client can take into consideration when
-generating a Client Hello message. The format is defined in
-{{RFC8446}}; Section 4.2. The purpose of the field is to
-provide room for additional features in the future. An extension
-may be tagged as mandatory by using an extension type codepoint with
-the high order bit set to 1. A client which receives a mandatory extension
-they do not understand must reject the ESNIConfig content.
+generating a Client Hello message. The purpose of the field is to provide room
+for additional features in the future. The format is defined in {{RFC8446}};
+Section 4.2. The same interpretation rules apply: extensions MAY appear in any
+order, but there MUST NOT be more than one extension of the same type in the
+extensions block. An extension may be tagged as mandatory by using an extension
+type codepoint with the high order bit set to 1. A client which receives a
+mandatory extension they do not understand must reject the ESNIConfig content.
 
 Any of the listed keys in the ESNIConfig value may
 be used to encrypt the SNI for the associated domain name.
