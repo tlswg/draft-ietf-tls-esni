@@ -735,6 +735,13 @@ the public name, the client MUST NOT fall back to cleartext SNI, as this allows
 a network attacker to disclose the SNI.  It MAY attempt to use another server
 from the DNS results, if one is provided.
 
+Client-facing servers with non-uniform cryptographic configurations across backend
+origin servers segment the ESNI anonymity set based on these configurations. For example,
+if a client-facing server hosts k backend origin servers, and exactly one of those
+backend origin servers supports a different set of cryptographic algorithms than the
+other (k - 1) servers, it may be possible to identify this single server based on
+what negotiated (cleartext) algorithms.
+
 ## Middleboxes
 
 A more serious problem is MITM proxies which do not support this
