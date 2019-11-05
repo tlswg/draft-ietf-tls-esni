@@ -185,12 +185,16 @@ ESNIConfig structure.
 
     struct {
         uint16 version;
+        opaque contents<1..2^16-1>;
+    } ESNIConfig;
+
+    struct {
         opaque public_name<1..2^16-1>;
         KeyShareEntry keys<4..2^16-1>;
         CipherSuite cipher_suites<2..2^16-2>;
         uint16 padded_length;
         Extension extensions<0..2^16-1>;
-    } ESNIConfig;
+    } ESNIConfigContents;
 ~~~~
 
 The ESNIConfig structure contains the following fields:
@@ -200,6 +204,12 @@ version
 SHALL be 0xff03. Clients MUST ignore any ESNIConfig structure with a
 version they do not understand.
 [[NOTE: This means that the RFC will presumably have a nonzero value.]]
+
+contents
+: An opaque byte string whose contents depend on the version of the structure.
+For this specification, the contents are an ESNIConfigContents structure.
+
+The ESNIConfigContents structure contains the following fields:
 
 public_name
 : The non-empty name of the entity trusted to update these encryption keys.
@@ -390,7 +400,7 @@ The client then creates a ClientESNIInner structure:
 ~~~~
    struct {
        opaque dns_name<1..2^16-1>;
-       opaque zeros[ESNIConfig.padded_length - length(dns_name)];
+       opaque zeros[ESNIConfigContents.padded_length - length(dns_name)];
    } PaddedServerNameList;
 
    struct {
@@ -410,14 +420,14 @@ unsupported since SNI extensibility failed {{SNIExtensibilityFailed}}).
 
 zeros
 : Zero padding whose length makes the serialized PaddedServerNameList
-struct have a length equal to ESNIConfig.padded_length.
+struct have a length equal to ESNIConfigContents.padded_length.
 
 This value consists of the serialized ServerNameList from the "server_name" extension,
-padded with enough zeroes to make the total structure ESNIConfig.padded_length
+padded with enough zeroes to make the total structure ESNIConfigContents.padded_length
 bytes long. The purpose of the padding is to prevent attackers
 from using the length of the "encrypted_server_name" extension
 to determine the true SNI. If the serialized ServerNameList is
-longer than ESNIConfig.padded_length, the client MUST NOT use
+longer than ESNIConfigContents.padded_length, the client MUST NOT use
 the "encrypted_server_name" extension.
 
 The ClientEncryptedSNI.encrypted_sni value is then computed using
@@ -445,7 +455,7 @@ to harmonize these to make sure that we maintain key separation.]]
 
 This value is placed in an "encrypted_server_name" extension.
 
-The client MUST place the value of ESNIConfig.public_name in the "server_name"
+The client MUST place the value of ESNIConfigContents.public_name in the "server_name"
 extension. (This is required for technical conformance with {{!RFC7540}};
 Section 9.2.) The client MUST NOT send a "cached_info" extension {{!RFC7924}}
 with a CachedObject entry whose CachedInformationType is "cert", since this
@@ -464,7 +474,7 @@ then processes the extension's "response_type" field:
   server.
 
 - If the value is "esni_retry_request", the client proceeds with the handshake,
-  authenticating for ESNIConfig.public_name as described in
+  authenticating for ESNIConfigContents.public_name as described in
   {{auth-public-name}}. If authentication or the handshake fails, the client
   MUST return a failure to the calling application. It MUST NOT use the retry
   keys.
@@ -494,7 +504,7 @@ then processes the extension's "response_type" field:
 If the server negotiates an earlier version of TLS, or if it does not
 provide an "encrypted_server_name" extension in EncryptedExtensions, the
 client proceeds with the handshake, authenticating for
-ESNIConfig.public_name as described in {{auth-public-name}}. If an earlier
+ESNIConfigContents.public_name as described in {{auth-public-name}}. If an earlier
 version was negotiated, the client MUST NOT enable the False Start optimization
 {{RFC7918}} for this handshake. If authentication or the handshake fails, the
 client MUST return a failure to the calling application. It MUST NOT treat this
@@ -539,7 +549,7 @@ authenticate the connection with the public name, as follows:
   requires the server to decline ESNI-established sessions if it did not accept
   ESNI.
 
-- The client MUST verify that the certificate is valid for ESNIConfig.public_name.
+- The client MUST verify that the certificate is valid for ESNIConfigContents.public_name.
   If invalid, it MUST abort the connection with the appropriate alert.
 
 - If the server requests a client certificate, the client MUST respond with an
@@ -636,7 +646,7 @@ case.
 If the ClientEncryptedSNI value does match a known ESNIConfig, the server
 performs the following checks:
 
-- If the ClientEncryptedSNI.key_share group does not match one in the ESNIConfig.keys,
+- If the ClientEncryptedSNI.key_share group does not match one in the ESNIConfigContents.keys,
   it MUST abort the connection with an "illegal_parameter" alert.
 
 - If the length of the "encrypted_server_name" extension is
@@ -649,7 +659,7 @@ and decrypts the ServerName value. If decryption fails, the server
 MUST abort the connection with a "decrypt_error" alert.
 
 If the decrypted value's length is different from
-the advertised ESNIConfig.padded_length or the padding consists of
+the advertised ESNIConfigContents.padded_length or the padding consists of
 any value other than 0, then the server MUST abort the
 connection with an "illegal_parameter" alert. Otherwise, the
 server uses the PaddedServerNameList.sni value as if it were
