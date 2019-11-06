@@ -190,7 +190,7 @@ ESNIConfigs structure.
 
     struct {
         opaque public_name<1..2^16-1>;
-        KeyShareEntry keys<4..2^16-1>;
+        KeyShareEntry key;
         CipherSuite cipher_suites<2..2^16-2>;
         uint16 padded_length;
         Extension extensions<0..2^16-1>;
@@ -201,7 +201,7 @@ ESNIConfigs structure.
 
 The ESNIConfigs structure contains one or more ESNIConfig structures in
 decreasing order of preference. This allows a server to support multiple
-versions of ESNI and multiple sets of ESNI extensions.
+versions of ESNI and multiple sets of ESNI parameters.
 
 The ESNIConfig structure contains the following fields:
 
@@ -222,9 +222,10 @@ public_name
 This is used to repair misconfigurations, as described in
 {{handle-server-response}}.
 
-keys
-: The list of keys which can be used by the client to encrypt the SNI.
-Every key being listed MUST belong to a different group.
+key
+: The key which can be used by the client to encrypt the SNI. Clients MUST
+ignore any ESNIConfig structure with a key using a NamedGroup they do not
+support or are unwilling to use.
 
 padded_length
 : The length to pad the ServerNameList value to prior to encryption.
@@ -243,10 +244,6 @@ may be tagged as mandatory by using an extension type codepoint with
 the high order bit set to 1. A client which receives a mandatory extension
 they do not understand must reject the ESNIConfig content.
 
-Any of the listed keys in the ESNIConfig value may
-be used to encrypt the SNI for the associated domain name.
-The cipher suite list is orthogonal to the
-list of keys, so each key may be used with any cipher suite.
 Clients MUST parse the extension list and check for unsupported
 mandatory extensions. If an unsupported mandatory extension is
 present, clients MUST reject the ESNIConfig value.
@@ -344,8 +341,7 @@ to client and server session states.
 
 In order to send an encrypted SNI, the client MUST first select one of the
 ESNIConfig values in the ESNIConfigs structure which it is able to process (see
-{{esni-configuration}}). It MUST then select one of the KeyShareEntry values in the
-ESNIConfig and generate an (EC)DHE share in the
+{{esni-configuration}}). It then generates an (EC)DHE share in the
 matching group. This share will then be sent to the server in the
 "encrypted_server_name" extension and used to derive the SNI encryption key. It does not affect the
 (EC)DHE shared secret used in the TLS key schedule. The client MUST also select
@@ -653,7 +649,7 @@ case.
 If the ClientEncryptedSNI value does match a known ESNIConfig, the server
 performs the following checks:
 
-- If the ClientEncryptedSNI.key_share group does not match one in the ESNIConfigContents.keys,
+- If the ClientEncryptedSNI.key_share group does not match ESNIConfigContents.key,
   it MUST abort the connection with an "illegal_parameter" alert.
 
 - If the length of the "encrypted_server_name" extension is
