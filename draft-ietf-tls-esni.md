@@ -930,15 +930,6 @@ IANA is requested to create an entry, esni_required(121) in the
 existing registry for Alerts (defined in {{!RFC8446}}), with the
 "DTLS-OK" column being set to "Y".
 
-## Update of the Resource Record (RR) TYPEs Registry
-
-IANA is requested to create an entry, ESNI(0xff9f), in the existing
-registry for Resource Record (RR) TYPEs (defined in {{!RFC6895}}) with
-"Meaning" column value being set to "Encrypted SNI".
-
---- back
-
-
 # Communicating SNI and Nonce to Backend Server {#communicating-sni}
 
 When operating in Split Mode, backend servers will not have access
