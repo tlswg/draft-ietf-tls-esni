@@ -901,20 +901,6 @@ registry for Resource Record (RR) TYPEs (defined in {{!RFC6895}}) with
 --- back
 
 
-# Communicating SNI and Nonce to Backend Server {#communicating-sni}
-
-When operating in Split Mode, backend servers will not have access
-to PaddedServerNameList.sni or ClientESNIInner.nonce without
-access to the ESNI keys or a way to decrypt ClientEncryptedSNI.encrypted_sni.
-
-One way to address this for a single connection, at the cost of having
-communication not be unmodified TLS 1.3, is as follows.
-Assume there is a shared (symmetric) key between the
-client-facing server and the backend server and use it to AEAD-encrypt Z
-and send the encrypted blob at the beginning of the connection before
-the ClientHello. The backend server can then decrypt ESNI to recover
-the true SNI and nonce.
-
 # Alternative SNI Protection Designs
 
 Alternative approaches to encrypted SNI may be implemented at the TLS or
