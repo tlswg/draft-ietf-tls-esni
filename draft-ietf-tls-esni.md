@@ -334,6 +334,46 @@ connection, whether the connection negotiated this extension with the
 Otherwise, it is a "non-ESNI PSK". This may be implemented by adding a new field
 to client and server session states.
 
+## Incorporating External Extensions {#external-extensions}
+
+Some TLS 1.3 extensions can be quite large
+and having them both in the inner and outer ClientHello wil lead to
+a very large overall size. One particularly pathological example
+is "key_share" with post-quantum algorithms. In order to reduce
+the impact of duplicated extensions, the client may use the
+"external_extension" extension.
+
+~~~
+   enum {
+       esni_extension(TBD), (65535)
+   } ExtensionType;
+
+   struct {
+       ExtensionType extension;
+       uint8 hash<32..255>;
+   } ExternalExtension;
+~~~~
+
+This extension MUST only be used in ClientHelloInner and contains
+a digest of the corresponding extension in ClientHelloOuter.
+When sending ClientHello, the client first computes ClientHelloInner,
+including the PSK binders, and then MAY substitute any extensions
+which it knows will be duplicated in ClientHelloOuter with
+the corresponding "external_extension". The hash value is computed
+over the entire extension, including the type and length field
+and uses the same hash as for the KDF used to encrypt ClienHelloInner.
+This process is reversed by client-facing server upon receipt.
+
+Clients SHOULD only use this mechanism for extensions which are
+large. All other extensions SHOULD appear in both ClientHelloInner
+and ClientHelloOuter even if they have identical values.
+
+Multiple "external_extension" extensions MAY appear in a ClientHelloInner
+(this is a violation of normal TLS rules, but the resulting ClientHelloInner
+is never processed directly). However, there MUST NOT be
+multiple "external_extension" extensions with the same extension code point.
+
+
 # Client Behavior {#client-behavior}
 
 ## Sending an encrypted ClientHello {#send-esni}
@@ -385,6 +425,10 @@ across ClientHello retries.)
 [[TODO: label swapping fixes a bug in the spec, though this may not be
 the best way to deal with HRR. See https://github.com/tlswg/draft-ietf-tls-esni/issues/121
 and https://github.com/tlswg/draft-ietf-tls-esni/pull/170 for more details.]]
+
+The client MAY replace any large, duplicated, extensions in ClientHelloInner
+with the corresponding "external_extensions" extension, as described in
+{{external-extensions}}.
 
 The encrypted ClientHello value is then computed as:
 
@@ -606,6 +650,13 @@ performs the following checks:
 Assuming these checks succeed, the server then computes K_sni
 and decrypts the ClientHelloInner value. If decryption fails, the server
 MUST abort the connection with a "decrypt_error" alert.
+
+Once the ClientHelloInner has been decrypted, the server MUST
+scan it for any "external_extension" extensions and substitute their
+values with the values in ClientHelloOuter. It MUST first verify that
+the hash found in the extension matches the hash of the extension
+to be interpolated in and if it does not, abort the connection
+with a "decrypt_error" alert.
 
 Upon determining the true SNI, the client-facing server then either
 serves the connection directly (if in Shared Mode), in which case
