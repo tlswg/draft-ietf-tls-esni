@@ -227,6 +227,9 @@ key
 ignore any ESNIConfig structure with a key using a NamedGroup they do not
 support or are unwilling to use.
 
+cipher_suites
+: The list of cipher suites which can be used by the client to encrypt the SNI.
+
 padded_length
 : The length to pad the ServerNameList value to prior to encryption.
 This value SHOULD be set to the largest ServerNameList the server
