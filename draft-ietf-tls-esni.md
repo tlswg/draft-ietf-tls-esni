@@ -49,6 +49,7 @@ informative:
   SNIExtensibilityFailed:
     title: Accepting that other SNI name types will never work
     target: https://mailarchive.ietf.org/arch/msg/tls/1t79gzNItZd71DwwoaqcQQ_4Yxc
+    date: March 2016
 
 
 --- abstract
@@ -162,7 +163,7 @@ defines the format of the SNI encryption public key and metadata,
 referred to as an ESNI configuration, and delegates DNS publication
 details to {{!HTTPSSVC=I-D.nygren-dnsop-svcb-httpssvc}}, though other
 delivery mechanisms are possible. In particular, if some of the
-clients of a private server are applications rather than Web browsers,
+clients of a private server are applications rather than web browsers,
 those applications might have the public key and metadata
 preconfigured.
 
@@ -183,24 +184,34 @@ or forward it to the backend server (in Split Mode).
 # Encrypted SNI Configuration {#esni-configuration}
 
 SNI Encryption configuration information is conveyed with the following
-ESNIConfig structure.
+ESNIConfigs structure.
 
 ~~~~
-    // Copied from TLS 1.3
-    struct {
-        NamedGroup group;
-        opaque key_exchange<1..2^16-1>;
-    } KeyShareEntry;
+    opaque HPKEPublicKey<1..2^16-1>;
+    uint16 HPKEKEMID; // Defined in I-D.irtf-cfrg-hpke
 
     struct {
         uint16 version;
+        opaque contents<1..2^16-1>;
+    } ESNIConfig;
+
+    struct {
         opaque public_name<1..2^16-1>;
-        KeyShareEntry keys<4..2^16-1>;
-        CipherSuite cipher_suites<2..2^16-2>;
+
+        HPKEPublicKey public_key;
+        HPKEKEMID kem_id;
+        Ciphersuite cipher_suites<2..2^16-2>;
+
         uint16 maximum_name_length;
         Extension extensions<0..2^16-1>;
-    } ESNIConfig;
+    } ESNIConfigContents;
+
+    ESNIConfig ESNIConfigs<1..2^16-1>;
 ~~~~
+
+The ESNIConfigs structure contains one or more ESNIConfig structures in
+decreasing order of preference. This allows a server to support multiple
+versions of ESNI and multiple sets of ESNI parameters.
 
 The ESNIConfig structure contains the following fields:
 
@@ -210,14 +221,26 @@ SHALL be 0xff03. Clients MUST ignore any ESNIConfig structure with a
 version they do not understand.
 [[NOTE: This means that the RFC will presumably have a nonzero value.]]
 
+contents
+: An opaque byte string whose contents depend on the version of the structure.
+For this specification, the contents are an ESNIConfigContents structure.
+
+The ESNIConfigContents structure contains the following fields:
+
 public_name
 : The non-empty name of the entity trusted to update these encryption keys.
 This is used to repair misconfigurations, as described in
 {{handle-server-response}}.
 
-keys
-: The list of keys which can be used by the client to encrypt the SNI.
-Every key being listed MUST belong to a different group.
+public_key
+: The HPKE {{!I-D.irtf-cfrg-hpke}} public key which can be used by the client to
+encrypt the SNI. Clients MUST ignore any ESNIConfig structure with a key using a
+KEM they do not support (as identified by the kem_id field).
+
+cipher_suites
+: The list of cipher suites which can be used by the client to encrypt the SNI.
+See {{hpke-map}} for information on how a Ciphersuite maps to corresponding
+HPKE algorithm identifiers.
 
 maximum_name_length
 : the largest name the server expects to support
@@ -228,17 +251,14 @@ greater than 256.
 
 extensions
 : A list of extensions that the client can take into consideration when
-generating a Client Hello message. The format is defined in
-{{RFC8446}}; Section 4.2. The purpose of the field is to
-provide room for additional features in the future. An extension
-may be tagged as mandatory by using an extension type codepoint with
-the high order bit set to 1. A client which receives a mandatory extension
-they do not understand must reject the ESNIConfig content.
+generating a Client Hello message. The purpose of the field is to provide room
+for additional features in the future. The format is defined in {{RFC8446}};
+Section 4.2. The same interpretation rules apply: extensions MAY appear in any
+order, but there MUST NOT be more than one extension of the same type in the
+extensions block. An extension may be tagged as mandatory by using an extension
+type codepoint with the high order bit set to 1. A client which receives a
+mandatory extension they do not understand must reject the ESNIConfig content.
 
-Any of the listed keys in the ESNIConfig value may
-be used to encrypt the SNI for the associated domain name.
-The cipher suite list is orthogonal to the
-list of keys, so each key may be used with any cipher suite.
 Clients MUST parse the extension list and check for unsupported
 mandatory extensions. If an unsupported mandatory extension is
 present, clients MUST reject the ESNIConfig value.
@@ -255,12 +275,11 @@ extension, defined as follows:
 ~~~
 
 For clients (in ClientHello), this extension contains the following
-ClientEncryptedSNI structure:
+ClientEncryptedCH structure:
 
 ~~~~
    struct {
        CipherSuite suite;
-       KeyShareEntry key_share;
        opaque record_digest<0..2^16-1>;
        opaque encrypted_ch<0..2^16-1>;
    } ClientEncryptedCH;
@@ -284,8 +303,7 @@ encrypted_sni
 cipher suite "suite" and the key generated as described below.
 {:br}
 
-
-If the server accepts ESNI, then does not send this extension.
+If the server accepts ESNI, it does not send this extension.
 If it rejects ESNI, then it sends the following structure in
 EncryptedExtensions:
 
@@ -324,8 +342,8 @@ extension, defined as follows:
 ~~~~
 
 nonce
-: A random 16-octet value generated by the client and echoed by the
-server.
+: A 16-byte nonce exported from the HPKE encryption context. See {{send-esni}}
+for details about its computation.
 
 Finally, requirements in {{client-behavior}} and {{server-behavior}} require
 implementations to track, alongside each PSK established by a previous
@@ -337,7 +355,7 @@ to client and server session states.
 ## Incorporating Outer Extensions {#outer-extensions}
 
 Some TLS 1.3 extensions can be quite large
-and having them both in the inner and outer ClientHello wil lead to
+and having them both in the inner and outer ClientHello will lead to
 a very large overall size. One particularly pathological example
 is "key_share" with post-quantum algorithms. In order to reduce
 the impact of duplicated extensions, the client may use the
@@ -345,7 +363,7 @@ the impact of duplicated extensions, the client may use the
 
 ~~~
    enum {
-       esni_extension(TBD), (65535)
+       outer_extension(TBD), (65535)
    } ExtensionType;
 
    struct {
@@ -402,49 +420,38 @@ When offering an encrypted SNI, the client MUST NOT offer to resume any non-ESNI
 PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2 or
 below.
 
-Let Z be the DH shared secret derived from a key share in ESNIConfig and the
-corresponding client share in ClientEncryptedSNI.key_share. The SNI encryption key is
-computed from Z as follows:
+Given an ESNIConfig with fields public_key and kem_id, carrying the the HPKEPublicKey and
+KEM identifier corresponding to the server, clients compute an HPKE encryption
+context as follows:
 
-~~~~
-   Zx = HKDF-Extract(0, Z)
-   key = HKDF-Expand-Label(Zx, KeyLabel, ClientHelloOuter.Random, key_length)
-   iv = HKDF-Expand-Label(Zx, IVLabel, ClientHelloOuter.Random, iv_length)
-~~~~
+~~~
+pkR = HPKE.KEM.Unmarshal(InitKey.init_key)
+enc, context = SetupBaseI(pkR, "tls13-echo")
+echo_nonce = context.Export("tls13-echo-nonce", 32)
+~~~
 
-Where the Hash for HKDF is the hash function associated with the HKDF
-instantiation. The salt argument for HKDF-Extract is a string
-consisting of Hash.length bytes set to zeros. For a client's first
-ClientHello, KeyLabel = "esni key" and IVLabel = "esni iv", whereas
-for a client's second ClientHello, sent in response to a
-HelloRetryRequest, KeyLabel = "hrr esni key" and IVLabel = "hrr esni
-iv". (This label variance is done to prevent nonce re-use since the
-client's ESNI key share, and thus the value of Zx, does not change
-across ClientHello retries.)
-
-[[TODO: label swapping fixes a bug in the spec, though this may not be
-the best way to deal with HRR. See https://github.com/tlswg/draft-ietf-tls-esni/issues/121
-and https://github.com/tlswg/draft-ietf-tls-esni/pull/170 for more details.]]
-
-The client MAY replace any large, duplicated, extensions in ClientHelloInner
-with the corresponding "outer_extensions" extension, as described in
-{{outer-extensions}}.
+Note that the HPKE algorithm identifiers are those which match the client's
+chosen Ciphersuite, according to {{hpke-map}}. The client MAY replace any large,
+duplicated extensions in ClientHelloInner with the corresponding "outer_extensions"
+extension, as described in {{outer-extensions}}.
 
 The encrypted ClientHello value is then computed as:
 
 ~~~~
-    encrypted_sni = AEAD-Encrypt(key, iv, "", ClientHelloIInner)
+    encrypted_ch_inner = context.Seal("", ClientHelloInner)
+    encrypted_ch = enc, encrypted_ch_inner
 ~~~~
-
-[[OPEN ISSUE: If in the future you were to reuse these keys for
-0-RTT priming, then you would have to worry about potentially
-expanding twice of Zx We should think about how
-to harmonize these to make sure that we maintain key separation.]]
 
 Finally, the client MUST generate a ClientHelloOuter message
 containing the "encrypted_client_hello" extension with the values as
-indicated above. The client MUST place the value of
-ESNIConfig.public_name in the "server_name" extension. The remaining
+indicated above. In particular,
+
+- suite contains the client's chosen ciphersuite;
+- record_digest contains the digest of the corresponding ESNIConfig structure; and
+- encrypted_ch contains the HPKE encapsulated key (enc) and the ClientHelloInner ciphertext (encrypted_ch_inner).
+
+The client MUST place the value of ESNIConfig.public_name in the
+ClientHelloOuter "server_name" extension. The remaining
 contents of the ClientHelloOuter MAY be identical to those in
 ClientHelloInner but MAY also differ.  The ClientHelloOuter MUST NOT
 contain a "cached_info" extension {{!RFC7924}} with a CachedObject
@@ -457,7 +464,7 @@ As described in {{server-behavior}}, the server MAY either accept ESNI
 and use ClientHelloInner or reject it and use ClientHelloOuter. However,
 there is no indication in ServerHello of which one the server has done
 and the client must therefore use trial decryption in order to determine
-this. 
+this.
 
 ### Accepted ESNI
 
@@ -498,7 +505,7 @@ with an "illegal_parameter" alert.
 If the server negotiates an earlier version of TLS, or if it does not
 provide an "encrypted_server_name" extension in EncryptedExtensions, the
 client proceeds with the handshake, authenticating for
-ESNIConfig.public_name as described in {{auth-public-name}}. If an earlier
+ESNIConfigContents.public_name as described in {{auth-public-name}}. If an earlier
 version was negotiated, the client MUST NOT enable the False Start optimization
 {{RFC7918}} for this handshake. If authentication or the handshake fails, the
 client MUST return a failure to the calling application. It MUST NOT treat this
@@ -532,7 +539,7 @@ authenticate the connection with the public name, as follows:
   requires the server to decline ESNI-established sessions if it did not accept
   ESNI.
 
-- The client MUST verify that the certificate is valid for ESNIConfig.public_name.
+- The client MUST verify that the certificate is valid for ESNIConfigContents.public_name.
   If invalid, it MUST abort the connection with the appropriate alert.
 
 - If the server requests a client certificate, the client MUST respond with an
@@ -549,8 +556,8 @@ error code.
 ### HelloRetryRequest
 
 If the server sends a HelloRetryRequest in response to the ClientHello
-and the client can send a second updated ClientHello per the rules in
-{{RFC8446}}. At this point, the client does not know whether the
+and the client sends a second updated ClientHello per the rules in
+{{RFC8446}}. However, at this point, the client does not know whether the
 server processed ClientHelloOuter or ClientHelloInner, and MUST
 regenerate both values to be acceptable. Note: if the inner and outer
 ClientHellos use different groups for their key shares or differ in
@@ -574,8 +581,9 @@ structure available for the server, it SHOULD send a GREASE
 {{I-D.ietf-tls-grease}} "encrypted_client_hello" extension as follows:
 
 - Select a supported cipher suite, named group, and padded_length
-  value. The padded_length value SHOULD be 260 or a multiple of 16 less than
-  260. Set the "suite" field  to the selected cipher suite. These selections
+  value. The padded_length value SHOULD be 260 (sum of the maximum DNS name
+  length and TLS encoding overhead) or a multiple of 16 less than 260.
+  Set the "suite" field  to the selected cipher suite. These selections
   SHOULD vary to exercise all supported configurations, but MAY be held constant
   for successive connections to the same server in the same session.
 
@@ -644,7 +652,7 @@ case.
 If the ClientEncryptedSNI value does match a known ESNIConfig, the server
 performs the following checks:
 
-- If the ClientEncryptedSNI.key_share group does not match one in the ESNIConfig.keys,
+- If the ClientEncryptedSNI.key_share group does not match ESNIConfigContents.key,
   it MUST abort the connection with an "illegal_parameter" alert.
 
 Assuming these checks succeed, the server then computes K_sni
@@ -706,6 +714,13 @@ the public name, the client MUST NOT fall back to cleartext SNI, as this allows
 a network attacker to disclose the SNI.  It MAY attempt to use another server
 from the DNS results, if one is provided.
 
+Client-facing servers with non-uniform cryptographic configurations across backend
+origin servers segment the ESNI anonymity set based on these configurations. For example,
+if a client-facing server hosts k backend origin servers, and exactly one of those
+backend origin servers supports a different set of cryptographic algorithms than the
+other (k - 1) servers, it may be possible to identify this single server based on
+the contents of the ServerHello as this message is not encrypted.
+
 ## Middleboxes
 
 A more serious problem is MITM proxies which do not support this
@@ -724,6 +739,20 @@ substituting its own KeyShare value, will result in
 the client-facing server recognizing the key, but failing to decrypt
 the SNI. This causes a hard failure. Clients SHOULD NOT attempt to repair the
 connection in this case.
+
+# TLS and HPKE Ciphersuite Mapping {#hpke-map}
+
+Per {{RFC8446}, TLS ciphersuites define an AEAD and hash algorithm. In contrast,
+HPKE composes AEAD algorithms and key derivation functions. The table below lists
+the mapping between ciphersuites and HPKE identifiers.
+
+| TLS Ciphersuite | HPKE AEAD | HPKE KDF |
+|:-------|:------------------------|:----------|
+| TLS_AES_128_GCM_SHA256 | AES-GCM-128 | HKDF-SHA256 |
+| TLS_AES_256_GCM_SHA384 | AES-GCM-256 | HKDF-SHA256 |
+| TLS_CHACHA20_POLY1305_SHA256 | ChaCha20Poly1305 | HKDF-SHA256 |
+| TLS_AES_128_CCM_SHA256 | AES-CCM-128 | HKDF-SHA256 |
+| TLS_AES_128_CCM_8_SHA256 | AES-CCM-128-8 | HKDF-SHA256 |
 
 # Security Considerations
 
@@ -851,7 +880,7 @@ from a trusted Recursive Resolver, spoofing a server operating in Split Mode
 is not possible. See {{cleartext-dns}} for more details regarding cleartext
 DNS.
 
-Authenticating the ESNIConfig structure naturally authenticates the
+Authenticating the ESNIConfigs structure naturally authenticates the
 included public name. This also authenticates any retry signals
 from the server because the client validates the server
 certificate against the public name before retrying.
@@ -891,12 +920,6 @@ in the existing registry for ExtensionType (defined in
 IANA is requested to create an entry, esni_required(121) in the
 existing registry for Alerts (defined in {{!RFC8446}}), with the
 "DTLS-OK" column being set to "Y".
-
-## Update of the Resource Record (RR) TYPEs Registry
-
-IANA is requested to create an entry, ESNI(0xff9f), in the existing
-registry for Resource Record (RR) TYPEs (defined in {{!RFC6895}}) with
-"Meaning" column value being set to "Encrypted SNI".
 
 --- back
 
@@ -972,9 +995,9 @@ It also has the following disadvantages:
   block that was encrypted to the backend server and not
   the client-facing server.
 - It requires a mechanism for the client-facing server to provide the
-  extension-encryption key to the backend server (as in {{communicating-sni}}
-  and thus cannot be used with an unmodified backend server.
-- A conformant middlebox will strip every extension, which might
+  extension-encryption key to the backend server and thus cannot be
+  used with an unmodified backend server.
+- A conforming middlebox will strip every extension, which might
   result in a ClientHello which is just unacceptable to the server
   (more analysis needed).
 
