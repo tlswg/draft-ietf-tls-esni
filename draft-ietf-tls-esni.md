@@ -166,7 +166,7 @@ defines the format of the SNI encryption public key and metadata,
 referred to as an ECHO configuration, and delegates DNS publication
 details to {{!HTTPSSVC=I-D.nygren-dnsop-svcb-httpssvc}}, though other
 delivery mechanisms are possible. In particular, if some of the
-clients of a private server are applications rather than web browsers,
+clients of a private server are applications rather than Web browsers,
 those applications might have the public key and metadata
 preconfigured.
 
@@ -194,20 +194,23 @@ ECHOConfigs structure.
     uint16 HPKEKEMID; // Defined in I-D.irtf-cfrg-hpke
 
     struct {
-        uint16 version;
-        opaque contents<1..2^16-1>;
-    } ECHOConfig;
-
-    struct {
         opaque public_name<1..2^16-1>;
 
         HPKEPublicKey public_key;
         HPKEKEMID kem_id;
         Ciphersuite cipher_suites<2..2^16-2>;
 
-        uint16 maximum_name_length;
+        uint16 maximum_message_length;
         Extension extensions<0..2^16-1>;
     } ECHOConfigContents;
+
+    struct {
+        uint16 version;
+        uint16 length;
+        select (ECHOConfig. version) {
+          case 0xff03: ECHOConfigContents;
+        }
+    } ECHOConfig;
 
     ECHOConfig ECHOConfigs<1..2^16-1>;
 ~~~~
@@ -248,12 +251,9 @@ cipher_suites
 See {{hpke-map}} for information on how a Ciphersuite maps to corresponding
 HPKE algorithm identifiers.
 
-maximum_name_length
-: the largest name the server expects to support
-rounded up the nearest multiple of 16. If the server supports
-arbitrary wildcard names, it SHOULD set this value to
-256. Clients SHOULD reject ECHOConfig as invalid if maximum_name_length is
-greater than 256.
+maximum_message_length
+: the largest ClientHello the server expects to support rounded up the nearest
+multiple of 16.
 
 extensions
 : A list of extensions that the client can take into consideration when
@@ -287,8 +287,8 @@ ClientEncryptedCH structure:
    struct {
        CipherSuite suite;
        opaque record_digest<0..2^16-1>;
-       opaque enc<0..2^16-1>;
-       opaque encrypted_ch<0..2^16-1>;
+       opaque enc<1..2^16-1>;
+       opaque encrypted_ch<1..2^16-1>;
    } ClientEncryptedCH;
 ~~~~
 
@@ -405,10 +405,8 @@ MUST also contain:
 
  - an "echo_nonce" extension
  - TLS padding {{!RFC7685}}. This SHOULD contain X bytes of padding
-   where X + the actual server name is equal to ECHOConfig.maximum_name_length
-
-[[OPEN ISSUE: should we adjust padding based on the complete CH, rather
-than just the SNI?]]
+   where X + the length of the non-padding bytes in ClientHelloInner
+   is equal to ECHOConfig.maximum_message_length.
 
 Then, the client determines if it supports the server's chosen KEM, as
 identified by ECHOConfig.kem_id. If one is supported, the client MUST
@@ -590,8 +588,8 @@ structure available for the server, it SHOULD send a GREASE
   SHOULD vary to exercise all supported configurations, but MAY be held constant
   for successive connections to the same server in the same session.
 
-- Set the "key_share" field to a randomly-generated valid public key
-  for the named group.
+- Set the "enc" field to a randomly-generated valid encapsulated public key
+  corresponding to the HPKE KEM.
 
 - Set the "record_digest" field to a randomly-generated string of hash_length
   bytes, where hash_length is the length of the hash function associated with
@@ -615,12 +613,12 @@ server MUST check that it is able to negotiate TLS 1.3 or greater. If not,
 it MUST abort the connection with a "handshake_failure" alert.
 
 The ClientEncryptedCH value is said to match a known ECHOConfig if there exists
-an ECHOConfig that can be used to successfully decrypt ClientEncryptedCH.encrypted_sni.
+an ECHOConfig that can be used to successfully decrypt ClientEncryptedCH.encrypted_ch.
 This matching procedure should be done using one of the following two checks:
 
 1. Compare ClientEncryptedCH.record_digest against cryptographic hashes of known ECHOConfig
 and choose the one that matches.
-2. Use trial decryption of ClientEncryptedCH.encrypted_sni with known ECHOConfig and choose
+2. Use trial decryption of ClientEncryptedCH.encrypted_ch with known ECHOConfig and choose
 the one that succeeds.
 
 Some uses of ECHO, such as local discovery mode, may omit the ClientEncryptedCH.record_digest
@@ -653,20 +651,23 @@ servers can measure occurrences of the "echo_required" alert to detect this
 case.
 
 If the ClientEncryptedCH value does match a known ECHOConfig, the server
-performs the following checks:
+then decrypts ClientEncryptedCH.encrypted_ch, using the private key skR
+corresponding to ESNIConfig, as follows:
 
-- If the ClientEncryptedCH.key_share group does not match ECHOConfigContents.key,
-  it MUST abort the connection with an "illegal_parameter" alert.
+~~~
+context = SetupBaseR(ClientEncryptedCH.enc, skR, "tls13-echo")
+ClientHelloInner = context.Open("", ClientEncryptedCH.encrypted_ch)
+echo_nonce = context.Export("tls13-echo-nonce", 16)
+~~~
 
-Assuming these checks succeed, the server then computes K_sni
-and decrypts the ClientHelloInner value. If decryption fails, the server
-MUST abort the connection with a "decrypt_error" alert.
-
-Once the ClientHelloInner has been decrypted, the server MUST
-scan it for any "outer_extension" extensions and substitute their
-values with the values in ClientHelloOuter. It MUST first verify that
-the hash found in the extension matches the hash of the extension
-to be interpolated in and if it does not, abort the connection
+If decryption fails, the server MUST abort the connection with
+a "decrypt_error" alert. Moreover, if there is no "echo_nonce"
+extension, and if its value does not match the derived echo_nonce,
+the server MUST abort the connection with a "decrypt_error" alert.
+Next, the server MUST scan ClientHelloInner for any "outer_extension"
+extensions and substitute their values with the values in ClientHelloOuter.
+It MUST first verify that the hash found in the extension matches the hash
+of the extension to be interpolated in and if it does not, abort the connections
 with a "decrypt_error" alert.
 
 Upon determining the true SNI, the client-facing server then either
@@ -747,15 +748,15 @@ connection in this case.
 
 Per {{RFC8446}, TLS ciphersuites define an AEAD and hash algorithm. In contrast,
 HPKE composes AEAD algorithms and key derivation functions. The table below lists
-the mapping between ciphersuites and HPKE identifiers.
+the mapping between ciphersuites and HPKE identifiers. TLS_AES_128_CCM_SHA256 and
+TLS_AES_128_CCM_8_SHA256 are not supported ECHO ciphersuites as they have no HPKE
+equivalent.
 
 | TLS Ciphersuite | HPKE AEAD | HPKE KDF |
 |:-------|:------------------------|:----------|
 | TLS_AES_128_GCM_SHA256 | AES-GCM-128 | HKDF-SHA256 |
 | TLS_AES_256_GCM_SHA384 | AES-GCM-256 | HKDF-SHA256 |
 | TLS_CHACHA20_POLY1305_SHA256 | ChaCha20Poly1305 | HKDF-SHA256 |
-| TLS_AES_128_CCM_SHA256 | AES-CCM-128 | HKDF-SHA256 |
-| TLS_AES_128_CCM_8_SHA256 | AES-CCM-128-8 | HKDF-SHA256 |
 
 # Security Considerations
 
@@ -818,7 +819,7 @@ the ECHO design against them.
 Since servers process either ClientHelloInner or ClientHelloOuter, and ClientHelloInner
 contains an HPKE-derived nonce, it is not possible for an attacker to "cut and paste"
 the ECHO value in a different Client Hello and learn information from ClientHelloInner.
-This is because attacker lacks access to the HPKE-derived nonce used to derive the
+This is because the attacker lacks access to the HPKE-derived nonce used to derive the
 handshake secrets.
 
 ### Avoid widely-deployed shared secrets
