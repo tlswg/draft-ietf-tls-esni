@@ -170,7 +170,7 @@ clients of a private server are applications rather than Web browsers,
 those applications might have the public key and metadata
 preconfigured.
 
-When a client wants to create a TLS connection to any of the domains
+When a client wants to form a TLS connection to any of the domains
 served by an ECHO-supporting provider, it constructs a ClientHello in
 the regular fashion containing the true SNI value (ClientHelloInner)
 and then encrypts it using the public key for the provider.  It then
