@@ -1,7 +1,7 @@
 ---
 title: Encrypted Server Name Indication for TLS 1.3
 abbrev: TLS 1.3 SNI Encryption
-docname: draft-ietf-tls-echo-latest
+docname: draft-ietf-tls-esni-latest
 category: exp
 
 ipr: trust200902
@@ -207,7 +207,7 @@ ECHOConfigs structure.
     struct {
         uint16 version;
         uint16 length;
-        select (ECHOConfig. version) {
+        select (ECHOConfig.version) {
           case 0xff03: ECHOConfigContents;
         }
     } ECHOConfig;
@@ -589,7 +589,7 @@ structure available for the server, it SHOULD send a GREASE
   for successive connections to the same server in the same session.
 
 - Set the "enc" field to a randomly-generated valid encapsulated public key
-  corresponding to the HPKE KEM.
+  output by the HPKE KEM.
 
 - Set the "record_digest" field to a randomly-generated string of hash_length
   bytes, where hash_length is the length of the hash function associated with
@@ -662,7 +662,7 @@ echo_nonce = context.Export("tls13-echo-nonce", 16)
 
 If decryption fails, the server MUST abort the connection with
 a "decrypt_error" alert. Moreover, if there is no "echo_nonce"
-extension, and if its value does not match the derived echo_nonce,
+extension, or if its value does not match the derived echo_nonce,
 the server MUST abort the connection with a "decrypt_error" alert.
 Next, the server MUST scan ClientHelloInner for any "outer_extension"
 extensions and substitute their values with the values in ClientHelloOuter.
