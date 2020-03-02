@@ -183,21 +183,25 @@ Upon receiving ClientHelloOuter, the server can then decrypt
 ClientHelloInner and either terminate the connection (in Shared Mode)
 or forward it to the backend server (in Split Mode).
 
+Note that both ClientHelloInner and ClientHelloOuter are both valid
+ClientHello messages. ClientHelloOuter carries an encrypted representation
+of ClientHelloInner in a "encrypted_client_hello" extension, defined
+in {{encrypted-client-hello}}.
 
-# Encrypted SNI Configuration {#echo-configuration}
+# Encrypted ClientHello Configuration {#echo-configuration}
 
-SNI Encryption configuration information is conveyed with the following
-ECHOConfigs structure.
+ClientHello encryption configuration information is conveyed with the
+following ECHOConfigs structure.
 
 ~~~~
-    opaque HPKEPublicKey<1..2^16-1>;
-    uint16 HPKEKEMID; // Defined in I-D.irtf-cfrg-hpke
+    opaque HpkePublicKey<1..2^16-1>;
+    uint16 HkpeKemId; // Defined in I-D.irtf-cfrg-hpke
 
     struct {
         opaque public_name<1..2^16-1>;
 
-        HPKEPublicKey public_key;
-        HPKEKEMID kem_id;
+        HpkePublicKey public_key;
+        HkpeKemId kem_id;
         Ciphersuite cipher_suites<2..2^16-2>;
 
         uint16 maximum_message_length;
@@ -316,13 +320,14 @@ EncryptedExtensions:
 
 ~~~
    struct {
-       ECHOConfig retry_keys<1..2^16-1>;
+       ECHOConfigs retry_configs;
    } ServerEncryptedCH;
 ~~~
 
-retry_keys
-: One or more ECHOConfig structures containing the keys that the client should use on
-subsequent connections to encrypt the ClientECHOInner structure.
+retry_configs
+: An ESNIConfigs structure containing one or more ECHOConfig structures in
+decreasing order of preference that the client should use on subsequent
+connections to encrypt the ClientHelloInner structure.
 
 This protocol also defines the "echo_required" alert, which is sent by the
 client when it offered an "encrypted_server_name" extension which was not
@@ -421,7 +426,7 @@ When offering an ECHO, the client MUST NOT offer to resume any non-ECHO
 PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2 or
 below.
 
-Given an ECHOConfig with fields public_key and kem_id, carrying the the HPKEPublicKey and
+Given an ECHOConfig with fields public_key and kem_id, carrying the the HpkePublicKey and
 KEM identifier corresponding to the server, clients compute an HPKE encryption
 context as follows:
 
