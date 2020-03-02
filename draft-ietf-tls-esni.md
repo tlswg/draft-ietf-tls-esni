@@ -432,8 +432,9 @@ context as follows:
 
 ~~~
 pkR = HPKE.KEM.Unmarshal(ECHOConfig.public_key)
-enc, context = SetupBaseI(pkR, "tls13-echo")
+enc, context = SetupBaseS(pkR, "tls13-echo")
 echo_nonce = context.Export("tls13-echo-nonce", 16)
+echo_hrr_key = context.Export("tls13-echo-hrr-key", 16)
 ~~~
 
 Note that the HPKE algorithm identifiers are those which match the client's
@@ -453,7 +454,7 @@ indicated above. In particular,
 
 - suite contains the client's chosen ciphersuite;
 - record_digest contains the digest of the corresponding ECHOConfig structure;
-- enc contains the encapsulated key as output by SetupBaseI; and
+- enc contains the encapsulated key as output by SetupBaseS; and
 - encrypted_ch contains the HPKE encapsulated key (enc) and the ClientHelloInner ciphertext (encrypted_ch_inner).
 
 The client MUST place the value of ECHOConfig.public_name in the
@@ -561,16 +562,37 @@ error code.
 
 ### HelloRetryRequest
 
-If the server sends a HelloRetryRequest in response to the ClientHello
-and the client sends a second updated ClientHello per the rules in
-{{RFC8446}}. However, at this point, the client does not know whether the
-server processed ClientHelloOuter or ClientHelloInner, and MUST
-regenerate both values to be acceptable. Note: if the inner and outer
-ClientHellos use different groups for their key shares or differ in
-some other way, then the HRR may actually be invalid for one or the
-other ClientHello. In that case, the Client MUST continue the
-handshake without changing the unaffected CH. Otherwise, the usual
-rules for HRR processing apply.
+If the server sends a HelloRetryRequest in response to the ClientHello,
+the client sends a second updated ClientHello per the rules in {{RFC8446}}.
+However, at this point, the client does not know whether the server processed
+ClientHelloOuter or ClientHelloInner, and MUST regenerate both values to
+be acceptable. Note: if the inner and outer ClientHellos use different groups
+for their key shares or differ in some other way, then the HRR may actually be
+invalid for one or the other ClientHello. In that case, the Client MUST continue
+the handshake without changing the unaffected CH. Otherwise, the usual rules for
+HRR processing apply.
+
+Clients bind encryption of the second ClientHelloInner to encryption of the first
+ClientHelloInner via the derived echo_hrr_key by modifying HPKE setup as follows:
+
+~~~
+pkR = HPKE.KEM.Unmarshal(ECHOConfig.public_key)
+enc, context = SetupPSKS(pkR, "tls13-echo-hrr", echo_hrr_key, "")
+echo_nonce = context.Export("tls13-echo-hrr-nonce", 16)
+~~~
+
+Clients then encrypt the second ClientHelloInner using this new HPKE context.
+In doing so, the encrypted value is also authenticated by the echo_hrr_key.
+Client-facing servers perform the corresponding process when decrypting second
+ClientHelloInner messages. In particular, upon receipt of a second ClientHello
+message with a ClientEncryptedCH value, servers setup their HPKE context and
+decrypt ClientEncryptedCH as follows:
+
+~~~
+context = SetupPSKR(ClientEncryptedCH.enc, skR, "tls13-echo-hrr", echo_hrr_key, "")
+ClientHelloInner = context.Open("", ClientEncryptedCH.encrypted_ch)
+echo_nonce = context.Export("tls13-echo-hrr-nonce", 16)
+~~~
 
 [[OPEN ISSUE: This, along with trial decryption is
 pretty gross. It would just be a lot easier if we were willing to
@@ -663,6 +685,7 @@ corresponding to ESNIConfig, as follows:
 context = SetupBaseR(ClientEncryptedCH.enc, skR, "tls13-echo")
 ClientHelloInner = context.Open("", ClientEncryptedCH.encrypted_ch)
 echo_nonce = context.Export("tls13-echo-nonce", 16)
+echo_hrr_key = context.Export("tls13-echo-hrr-key", 16)
 ~~~
 
 If decryption fails, the server MUST abort the connection with
