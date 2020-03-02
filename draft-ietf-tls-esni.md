@@ -183,7 +183,7 @@ Upon receiving ClientHelloOuter, the server can then decrypt
 ClientHelloInner and either terminate the connection (in Shared Mode)
 or forward it to the backend server (in Split Mode).
 
-Note that both ClientHelloInner and ClientHelloOuter are both valid
+Note that both ClientHelloInner and ClientHelloOuter are both valid, complete
 ClientHello messages. ClientHelloOuter carries an encrypted representation
 of ClientHelloInner in a "encrypted_client_hello" extension, defined
 in {{encrypted-client-hello}}.
