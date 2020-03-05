@@ -447,9 +447,10 @@ values, ClientHelloInner MUST also contain:
  - an "echo_nonce" extension
  - TLS padding {{!RFC7685}}
 
-The padding SHOULD contain X bytes of padding, where X = ECHOConfig.maximum_name_length - length(dns_name),
-rounded up to the nearest multiple of 16, and dns_name is the DNS name in the
-ClientHelloInner "server_name" extension.
+Padding SHOULD be P = L - D bytes, where
+
+- L = ECHOConfig.maximum_name_length, rounded up to the nearest multiple of 16
+- D = len(dns_name), where dns_nae is the DNS name in the ClientHelloInner "server_name" extension
 
 When offering an encrypted ClientHello, the client MUST NOT offer to resume any
 non-ECHO PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2
