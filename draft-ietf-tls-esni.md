@@ -202,9 +202,9 @@ following ECHOConfigs structure.
 
         HpkePublicKey public_key;
         HkpeKemId kem_id;
-        Ciphersuite cipher_suites<2..2^16-2>;
+        CipherSuite cipher_suites<2..2^16-2>;
 
-        uint16 maximum_message_length;
+        uint16 maximum_name_length;
         Extension extensions<0..2^16-1>;
     } ECHOConfigContents;
 
@@ -244,20 +244,21 @@ This is used to repair misconfigurations, as described in
 
 public_key
 : The HPKE {{!I-D.irtf-cfrg-hpke}} public key which can be used by the client to
-encrypt the SNI.
+encrypt the ClientHello.
 
 kem_id
 : The HPKE {{!I-D.irtf-cfrg-hpke}} KEM identifier corresponding to public_key.
 Clients MUST ignore any ECHOConfig structure with a key using a KEM they do not support.
 
 cipher_suites
-: The list of cipher suites which can be used by the client to encrypt the SNI.
-See {{hpke-map}} for information on how a Ciphersuite maps to corresponding
+: The list of cipher suites which can be used by the client to encrypt the ClientHello.
+See {{hpke-map}} for information on how a CipherSuite maps to corresponding
 HPKE algorithm identifiers.
 
-maximum_message_length
-: the largest ClientHello the server expects to support rounded up the nearest
-multiple of 16.
+maximum_name_length
+:  the largest name the server expects to support. If the server supports arbitrary
+wildcard names, it SHOULD set this value to 256. Clients SHOULD reject ESNIConfig as
+invalid if maximum_name_length is greater than 256.
 
 extensions
 : A list of extensions that the client can take into consideration when
@@ -404,30 +405,17 @@ multiple "outer_extension" extensions with the same extension code point.
 
 ## Sending an encrypted ClientHello {#send-echo}
 
-In order to send an encrypted ClientHello, the client MUST first generate its
-ClientHelloInner value. In addition to the normal values, ClientHelloInner
-MUST also contain:
-
- - an "echo_nonce" extension
- - TLS padding {{!RFC7685}}. This SHOULD contain X bytes of padding
-   where X + the length of the non-padding bytes in ClientHelloInner
-   is equal to ECHOConfig.maximum_message_length.
-
-Then, the client determines if it supports the server's chosen KEM, as
-identified by ECHOConfig.kem_id. If one is supported, the client MUST
-select an appropriate cipher suite from the list of
+In order to send an encrypted ClientHello, the client first determines if it
+supports the server's chosen KEM, as identified by ECHOConfig.kem_id. If one
+is supported, the client MUST select an appropriate cipher suite from the list of
 suites offered by the server. If the client does not support the corresponding
 KEM or is unable to select an appropriate group or suite, it SHOULD ignore
 that ECHOConfig value and MAY attempt to use another value provided by
 the server. The client MUST NOT send ECHO using HPKE algorithms not advertised
 by the server.
 
-When offering an ECHO, the client MUST NOT offer to resume any non-ECHO
-PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2 or
-below.
-
-Given an ECHOConfig with fields public_key and kem_id, carrying the the HpkePublicKey and
-KEM identifier corresponding to the server, clients compute an HPKE encryption
+Given a compatible ECHOConfig with fields public_key and kem_id, carrying the HpkePublicKey
+and KEM identifier corresponding to the server, clients compute an HPKE encryption
 context as follows:
 
 ~~~
@@ -438,9 +426,23 @@ echo_hrr_key = context.Export("tls13-echo-hrr-key", 16)
 ~~~
 
 Note that the HPKE algorithm identifiers are those which match the client's
-chosen Ciphersuite, according to {{hpke-map}}. The client MAY replace any large,
+chosen CipherSuite, according to {{hpke-map}}. The client MAY replace any large,
 duplicated extensions in ClientHelloInner with the corresponding "outer_extensions"
 extension, as described in {{outer-extensions}}.
+
+The client then generates a ClientHelloInner value. In addition to the normal
+values, ClientHelloInner MUST also contain:
+
+ - an "echo_nonce" extension
+ - TLS padding {{!RFC7685}}
+
+The padding SHOULD contain X bytes of padding, where X = ECHOConfig.maximum_name_length - length(dns_name),
+rounded up to the nearest multiple of 16, and dns_name is the DNS name in the
+ClientHelloInner "server_name" extension.
+
+When offering an encrypted ClientHello, the client MUST NOT offer to resume any
+non-ECHO PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2
+or below.
 
 The encrypted ClientHello value is then computed as:
 
@@ -567,10 +569,14 @@ the client sends a second updated ClientHello per the rules in {{RFC8446}}.
 However, at this point, the client does not know whether the server processed
 ClientHelloOuter or ClientHelloInner, and MUST regenerate both values to
 be acceptable. Note: if the inner and outer ClientHellos use different groups
-for their key shares or differ in some other way, then the HRR may actually be
-invalid for one or the other ClientHello. In that case, the Client MUST continue
-the handshake without changing the unaffected CH. Otherwise, the usual rules for
-HRR processing apply.
+for their key shares or differ in some other way, then the HelloRetryRequest may
+actually be invalid for one or the other ClientHello. If the inner ClientHello
+is unaffected by this retry, then the client only changes the outer ClientHello.
+In contrast, if the outer ClientHello is unaffected by this retry, then the client
+changes the inner ClientHello and recomputes any fields necessary in the outer
+ClientHello ("encrypted_client_hello" extension contents, PSK binders, etc.)
+
+Otherwise, the usual rules for HelloRetryRequest processing apply.
 
 Clients bind encryption of the second ClientHelloInner to encryption of the first
 ClientHelloInner via the derived echo_hrr_key by modifying HPKE setup as follows:
@@ -582,7 +588,7 @@ echo_nonce = context.Export("tls13-echo-hrr-nonce", 16)
 ~~~
 
 Clients then encrypt the second ClientHelloInner using this new HPKE context.
-In doing so, the encrypted value is also authenticated by the echo_hrr_key.
+In doing so, the encrypted value is also authenticated by echo_hrr_key.
 Client-facing servers perform the corresponding process when decrypting second
 ClientHelloInner messages. In particular, upon receipt of a second ClientHello
 message with a ClientEncryptedCH value, servers setup their HPKE context and
@@ -707,8 +713,7 @@ messages, but just blindly forwards them.
 
 If the server sends a NewSessionTicket message, the corresponding ECHO PSK MUST
 be ignored by all other servers in the deployment when not negotiating ECHO,
-including servers which do not implement this specification (in Split mode,
-the server can detect this case by the presence of the "echo_info" extension).
+including servers which do not implement this specification.
 
 
 # Compatibility Issues
@@ -772,7 +777,7 @@ the client-facing server recognizing the key, but failing to decrypt
 the SNI. This causes a hard failure. Clients SHOULD NOT attempt to repair the
 connection in this case.
 
-# TLS and HPKE Ciphersuite Mapping {#hpke-map}
+# TLS and HPKE CipherSuite Mapping {#hpke-map}
 
 Per {{RFC8446}, TLS ciphersuites define an AEAD and hash algorithm. In contrast,
 HPKE composes AEAD algorithms and key derivation functions. The table below lists
@@ -780,7 +785,7 @@ the mapping between ciphersuites and HPKE identifiers. TLS_AES_128_CCM_SHA256 an
 TLS_AES_128_CCM_8_SHA256 are not supported ECHO ciphersuites as they have no HPKE
 equivalent.
 
-| TLS Ciphersuite | HPKE AEAD | HPKE KDF |
+| TLS CipherSuite | HPKE AEAD | HPKE KDF |
 |:-------|:------------------------|:----------|
 | TLS_AES_128_GCM_SHA256 | AES-GCM-128 | HKDF-SHA256 |
 | TLS_AES_256_GCM_SHA384 | AES-GCM-256 | HKDF-SHA256 |
