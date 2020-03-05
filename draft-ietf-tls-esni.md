@@ -368,7 +368,7 @@ and having them both in the inner and outer ClientHello will lead to
 a very large overall size. One particularly pathological example
 is "key_share" with post-quantum algorithms. In order to reduce
 the impact of duplicated extensions, the client may use the
-"outer_extension" extension.
+"outer_extensions" extension.
 
 ~~~
    enum {
@@ -376,20 +376,31 @@ the impact of duplicated extensions, the client may use the
    } ExtensionType;
 
    struct {
-       ExtensionType extension;
+       ExtensionType outer_extensions<2..254>;
        uint8 hash<32..255>;
-   } OuterExtension;
+   } OuterExtensions;
 ~~~~
 
-This extension MUST only be used in ClientHelloInner and contains
-a digest of the corresponding extension in ClientHelloOuter.
+OuterExtensions MUST only be used in ClientHelloInner. It consists
+of one or more ExtensionType values, each of which reference an
+extension in ClientHelloOuter, and a digest of the complete
+ClientHelloInner.
+
 When sending ClientHello, the client first computes ClientHelloInner,
-including the PSK binders, and then MAY substitute any extensions
-which it knows will be duplicated in ClientHelloOuter with
-the corresponding "outer_extension". The hash value is computed
-over the entire extension, including the type and length field
-and uses the same hash as for the KDF used to encrypt ClienHelloInner.
-This process is reversed by client-facing server upon receipt.
+including any PSK binders, and then MAY substitute extensions which
+it knows will be duplicated in ClientHelloOuter. To do so, the client
+computes a hash H of the entire ClientHelloInner message with the same
+hash as for the KDF used to encrypt ClienHelloInner. Then, the client
+removes and and replaces extensions from ClientHelloInner with a single
+"outer_extensions" extension. The list of outer_extensions include those
+which were removed from ClientHelloInner, in the order in which they were
+removed. The hash contains full ClientHelloInner hash H computed above.
+
+This process is reversed by client-facing servers upon receipt. Specifically,
+the server replaces the "outer_extensions" with extensions contained in
+ClientHelloOuter. The server then computes a hash H' of the reconstructed
+ClientHelloInner. If H' does not equal OuterExtensions.hash, the server aborts
+the connection with an "illegal_parameter" alert.
 
 Clients SHOULD only use this mechanism for extensions which are
 large. All other extensions SHOULD appear in both ClientHelloInner
