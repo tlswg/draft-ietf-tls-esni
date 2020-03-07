@@ -251,8 +251,8 @@ kem_id
 Clients MUST ignore any ECHOConfig structure with a key using a KEM they do not support.
 
 cipher_suites
-: The list of cipher suites which can be used by the client to encrypt the ClientHello.
-See {{hpke-map}} for information on how a CipherSuite maps to corresponding
+: The list of TLS cipher suites which can be used by the client to encrypt the ClientHello.
+See {{hpke-map}} for information on how a cipher suite maps to corresponding
 HPKE algorithm identifiers.
 
 maximum_name_length
