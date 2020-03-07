@@ -338,7 +338,11 @@ accepted by the server.
 
 When using ECHO, the client MUST also add an extension of type
 "echo_nonce" to the ClientHelloInner (but not to the outer
-ClientHello). This extension is defined as follows:
+ClientHello). This nonce ensures that the server's encrypted
+Certificate can only be read by the entity which sent this
+ClientHello. [[TODO: Describe HRR cut-and-paste 1 in
+Security Considerations.]]
+This extension is defined as follows:
 
 ~~~
    enum {
