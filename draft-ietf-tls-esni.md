@@ -796,7 +796,7 @@ connection in this case.
 # TLS and HPKE CipherSuite Mapping {#hpke-map}
 
 Per {{RFC8446}, TLS ciphersuites define an AEAD and hash algorithm. In contrast,
-HPKE composes AEAD algorithms and key derivation functions. The table below lists
+HPKE defines separate AEAD algorithms and key derivation functions. The table below lists
 the mapping between ciphersuites and HPKE identifiers. TLS_AES_128_CCM_SHA256 and
 TLS_AES_128_CCM_8_SHA256 are not supported ECHO ciphersuites as they have no HPKE
 equivalent.
