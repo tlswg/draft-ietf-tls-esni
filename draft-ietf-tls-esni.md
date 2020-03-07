@@ -454,7 +454,7 @@ values, ClientHelloInner MUST also contain:
 Padding SHOULD be P = L - D bytes, where
 
 - L = ECHOConfig.maximum_name_length, rounded up to the nearest multiple of 16
-- D = len(dns_name), where dns_nae is the DNS name in the ClientHelloInner "server_name" extension
+- D = len(dns_name), where dns_name is the DNS name in the ClientHelloInner "server_name" extension
 
 When offering an encrypted ClientHello, the client MUST NOT offer to resume any
 non-ECHO PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2
