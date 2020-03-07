@@ -157,7 +157,7 @@ not have access to the plaintext of the connection.
 
 ## ClientHello Encryption
 
-SNI encryption works by encrypting the entire ClientHello, including
+ECHO works by encrypting the entire ClientHello, including
 the SNI and any additional extensions such as ALPN.
 This requires that each provider publish a public key and
 metadata which is used for ClientHello encryption for all the domains for
@@ -229,7 +229,6 @@ version
 : The version of the structure. For this specification, that value
 SHALL be 0xff03. Clients MUST ignore any ECHOConfig structure with a
 version they do not understand.
-[[NOTE: This means that the RFC will presumably have a nonzero value.]]
 
 contents
 : An opaque byte string whose contents depend on the version of the structure.
@@ -615,6 +614,10 @@ context = SetupPSKR(ClientEncryptedCH.enc, skR, "tls13-echo-hrr", echo_hrr_key, 
 ClientHelloInner = context.Open("", ClientEncryptedCH.encrypted_ch)
 echo_nonce = context.Export("tls13-echo-hrr-nonce", 16)
 ~~~
+
+[[OPEN ISSUE: Should we be using the PSK input or the info input?
+On the one hand, the requirements on info seem weaker, but maybe
+actually this needs to be secret? Analysis needed.]]
 
 [[OPEN ISSUE: This, along with trial decryption is
 pretty gross. It would just be a lot easier if we were willing to
