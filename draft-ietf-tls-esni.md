@@ -398,7 +398,7 @@ hash as for the KDF used to encrypt ClienHelloInner. Then, the client
 removes and and replaces extensions from ClientHelloInner with a single
 "outer_extensions" extension. The list of outer_extensions include those
 which were removed from ClientHelloInner, in the order in which they were
-removed. The hash contains full ClientHelloInner hash H computed above.
+removed. The hash contains the full ClientHelloInner hash H computed above.
 
 This process is reversed by client-facing servers upon receipt. Specifically,
 the server replaces the "outer_extensions" with extensions contained in
