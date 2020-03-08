@@ -409,12 +409,6 @@ Clients SHOULD only use this mechanism for extensions which are
 large. All other extensions SHOULD appear in both ClientHelloInner
 and ClientHelloOuter even if they have identical values.
 
-Multiple "outer_extension" extensions MAY appear in a ClientHelloInner
-(this is a violation of normal TLS rules, but the resulting ClientHelloInner
-is never processed directly). However, there MUST NOT be
-multiple "outer_extension" extensions with the same extension code point.
-
-
 # Client Behavior {#client-behavior}
 
 ## Sending an encrypted ClientHello {#send-echo}
