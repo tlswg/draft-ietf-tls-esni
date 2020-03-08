@@ -585,12 +585,8 @@ However, at this point, the client does not know whether the server processed
 ClientHelloOuter or ClientHelloInner, and MUST regenerate both values to
 be acceptable. Note: if the inner and outer ClientHellos use different groups
 for their key shares or differ in some other way, then the HelloRetryRequest may
-actually be invalid for one or the other ClientHello. If the inner ClientHello
-is unaffected by this retry, then the client only changes the outer ClientHello.
-In contrast, if the outer ClientHello is unaffected by this retry, then the client
-changes the inner ClientHello and recomputes any fields necessary in the outer
-ClientHello ("encrypted_client_hello" extension contents, PSK binders, etc.)
-
+actually be invalid for one or the other ClientHello, in which case a
+fresh ClientHello MUST be generated, ignoring the instructions in HelloRetryRequest.
 Otherwise, the usual rules for HelloRetryRequest processing apply.
 
 Clients bind encryption of the second ClientHelloInner to encryption of the first
@@ -604,6 +600,7 @@ echo_nonce = context.Export("tls13-echo-hrr-nonce", 16)
 
 Clients then encrypt the second ClientHelloInner using this new HPKE context.
 In doing so, the encrypted value is also authenticated by echo_hrr_key.
+
 Client-facing servers perform the corresponding process when decrypting second
 ClientHelloInner messages. In particular, upon receipt of a second ClientHello
 message with a ClientEncryptedCH value, servers setup their HPKE context and
