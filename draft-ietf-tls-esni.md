@@ -96,8 +96,9 @@ coverage, or both.
 
 The design in this document takes a different approach: it assumes
 that private origins will co-locate with or hide behind a provider (CDN, app server,
-etc.) which is able to activate encrypted SNI (ESNI) for all of the domains
-it hosts. Thus, the use of encrypted SNI does not indicate that the
+etc.) which is able to activate encrypted SNI, by encrypting the entire
+ClientHello (ECHO), for all of the domains it hosts.
+As a result, the use of ECHO to protect the SNI does not indicate that the
 client is attempting to reach a private origin, but only that it is
 going to a particular service provider, which the observer could
 already tell from the IP address.
@@ -154,90 +155,109 @@ and the provider's server relays the connection back to the
 backend server, which is the true origin server. The provider does
 not have access to the plaintext of the connection.
 
-## SNI Encryption
+## ClientHello Encryption
 
-SNI encryption requires that each provider publish a public key and metadata which
-is used for SNI encryption for all the domains for which it serves directly or
-indirectly (via Split Mode). This document defines the format of the SNI encryption
-public key and metadata, referred to as an ESNI configuration, and delegates DNS
-publication details to {{!HTTPSSVC=I-D.nygren-dnsop-svcb-httpssvc}}, though other delivery
-mechanisms are possible. In particular, if some of the clients of a private
-server are applications rather than Web browsers, those applications might have
-the public key and metadata preconfigured.
+ECHO works by encrypting the entire ClientHello, including
+the SNI and any additional extensions such as ALPN.
+This requires that each provider publish a public key and
+metadata which is used for ClientHello encryption for all the domains for
+which it serves directly or indirectly (via Split Mode). This document
+defines the format of the SNI encryption public key and metadata,
+referred to as an ECHO configuration, and delegates DNS publication
+details to {{!HTTPSSVC=I-D.nygren-dnsop-svcb-httpssvc}}, though other
+delivery mechanisms are possible. In particular, if some of the
+clients of a private server are applications rather than Web browsers,
+those applications might have the public key and metadata
+preconfigured.
 
 When a client wants to form a TLS connection to any of the domains
-served by an ESNI-supporting provider, it sends an "encrypted_server_name"
-extension, which contains the true extension encrypted under the
-provider's public key. The provider can then decrypt the extension
-and either terminate the connection (in Shared Mode) or forward
-it to the backend server (in Split Mode).
+served by an ECHO-supporting provider, it constructs a ClientHello in
+the regular fashion containing the true SNI value (ClientHelloInner)
+and then encrypts it using the public key for the provider.  It then
+constructs a new ClientHello (ClientHelloOuter) with an innocuous SNI
+(and potentially innocuous versions of other extensions such as ALPN
+{{?RFC7301}}) and containing the encrypted ClientHelloInner as an
+extension. It sends ClientHelloOuter to the server.
 
-# Encrypted SNI Configuration {#esni-configuration}
+Upon receiving ClientHelloOuter, the server can then decrypt
+ClientHelloInner and either terminate the connection (in Shared Mode)
+or forward it to the backend server (in Split Mode).
 
-SNI Encryption configuration information is conveyed with the following
-ESNIConfigs structure.
+Note that both ClientHelloInner and ClientHelloOuter are both valid, complete
+ClientHello messages. ClientHelloOuter carries an encrypted representation
+of ClientHelloInner in a "encrypted_client_hello" extension, defined
+in {{encrypted-client-hello}}.
+
+# Encrypted ClientHello Configuration {#echo-configuration}
+
+ClientHello encryption configuration information is conveyed with the
+following ECHOConfigs structure.
 
 ~~~~
-    // Copied from TLS 1.3
-    struct {
-        NamedGroup group;
-        opaque key_exchange<1..2^16-1>;
-    } KeyShareEntry;
-
-    struct {
-        uint16 version;
-        opaque contents<1..2^16-1>;
-    } ESNIConfig;
+    opaque HpkePublicKey<1..2^16-1>;
+    uint16 HkpeKemId; // Defined in I-D.irtf-cfrg-hpke
 
     struct {
         opaque public_name<1..2^16-1>;
-        KeyShareEntry key;
-        CipherSuite cipher_suites<2..2^16-2>;
-        uint16 padded_length;
-        Extension extensions<0..2^16-1>;
-    } ESNIConfigContents;
 
-    ESNIConfig ESNIConfigs<1..2^16-1>;
+        HpkePublicKey public_key;
+        HkpeKemId kem_id;
+        CipherSuite cipher_suites<2..2^16-2>;
+
+        uint16 maximum_name_length;
+        Extension extensions<0..2^16-1>;
+    } ECHOConfigContents;
+
+    struct {
+        uint16 version;
+        uint16 length;
+        select (ECHOConfig.version) {
+          case 0xff03: ECHOConfigContents;
+        }
+    } ECHOConfig;
+
+    ECHOConfig ECHOConfigs<1..2^16-1>;
 ~~~~
 
-The ESNIConfigs structure contains one or more ESNIConfig structures in
+The ECHOConfigs structure contains one or more ECHOConfig structures in
 decreasing order of preference. This allows a server to support multiple
-versions of ESNI and multiple sets of ESNI parameters.
+versions of ECHO and multiple sets of ECHO parameters.
 
-The ESNIConfig structure contains the following fields:
+The ECHOConfig structure contains the following fields:
 
 version
 : The version of the structure. For this specification, that value
-SHALL be 0xff03. Clients MUST ignore any ESNIConfig structure with a
+SHALL be 0xff03. Clients MUST ignore any ECHOConfig structure with a
 version they do not understand.
-[[NOTE: This means that the RFC will presumably have a nonzero value.]]
 
 contents
 : An opaque byte string whose contents depend on the version of the structure.
-For this specification, the contents are an ESNIConfigContents structure.
+For this specification, the contents are an ECHOConfigContents structure.
 
-The ESNIConfigContents structure contains the following fields:
+The ECHOConfigContents structure contains the following fields:
 
 public_name
 : The non-empty name of the entity trusted to update these encryption keys.
 This is used to repair misconfigurations, as described in
 {{handle-server-response}}.
 
-key
-: The key which can be used by the client to encrypt the SNI. Clients MUST
-ignore any ESNIConfig structure with a key using a NamedGroup they do not
-support or are unwilling to use.
+public_key
+: The HPKE {{!I-D.irtf-cfrg-hpke}} public key which can be used by the client to
+encrypt the ClientHello.
+
+kem_id
+: The HPKE {{!I-D.irtf-cfrg-hpke}} KEM identifier corresponding to public_key.
+Clients MUST ignore any ECHOConfig structure with a key using a KEM they do not support.
 
 cipher_suites
-: The list of cipher suites which can be used by the client to encrypt the SNI.
+: The list of TLS cipher suites which can be used by the client to encrypt the ClientHello.
+See {{hpke-map}} for information on how a cipher suite maps to corresponding
+HPKE algorithm identifiers.
 
-padded_length
-: The length to pad the ServerNameList value to prior to encryption.
-This value SHOULD be set to the largest ServerNameList the server
-expects to support rounded up the nearest multiple of 16. If the
-server supports arbitrary wildcard names, it SHOULD set this value to
-260. Clients SHOULD reject ESNIConfig as invalid if padded_length is
-greater than 260.
+maximum_name_length
+:  the largest name the server expects to support. If the server supports arbitrary
+wildcard names, it SHOULD set this value to 256. Clients SHOULD reject ESNIConfig as
+invalid if maximum_name_length is greater than 256.
 
 extensions
 : A list of extensions that the client can take into consideration when
@@ -247,318 +267,297 @@ Section 4.2. The same interpretation rules apply: extensions MAY appear in any
 order, but there MUST NOT be more than one extension of the same type in the
 extensions block. An extension may be tagged as mandatory by using an extension
 type codepoint with the high order bit set to 1. A client which receives a
-mandatory extension they do not understand must reject the ESNIConfig content.
+mandatory extension they do not understand must reject the ECHOConfig content.
 
 Clients MUST parse the extension list and check for unsupported
 mandatory extensions. If an unsupported mandatory extension is
-present, clients MUST reject the ESNIConfig value.
+present, clients MUST reject the ECHOConfig value.
 
-# The "encrypted_server_name" extension {#esni-extension}
+# The "encrypted_client_hello" extension {#encrypted-client-hello}
 
-The encrypted SNI is carried in an "encrypted_server_name"
+The encrypted ClientHelloInner is carried in an "encrypted_client_hello"
 extension, defined as follows:
 
 ~~~
    enum {
-       encrypted_server_name(0xffce), (65535)
+       encrypted_client_hello(TBD), (65535)
    } ExtensionType;
 ~~~
 
 For clients (in ClientHello), this extension contains the following
-ClientEncryptedSNI structure:
+ClientEncryptedCH structure:
 
 ~~~~
    struct {
        CipherSuite suite;
-       KeyShareEntry key_share;
        opaque record_digest<0..2^16-1>;
-       opaque encrypted_sni<0..2^16-1>;
-   } ClientEncryptedSNI;
+       opaque enc<1..2^16-1>;
+       opaque encrypted_ch<1..2^16-1>;
+   } ClientEncryptedCH;
 ~~~~
 
 suite
-: The cipher suite used to encrypt the SNI.
-
-key_share
-: The KeyShareEntry carrying the client's public ephemeral key share
-used to derive the ESNI key.
+: The cipher suite used to encrypt ClientHelloInner.
 
 record_digest
-: A cryptographic hash of the ESNIConfig structure from which the ESNI
+: A cryptographic hash of the ECHOConfig structure from which the ECHO
 key was obtained, i.e., from the first byte of "version" to the end
 of the structure.  This hash is computed using the hash function
 associated with `suite`.
 
-encrypted_sni
-: The ClientESNIInner structure, AEAD-encrypted using cipher suite "suite" and
-the key generated as described below.
+enc
+: The HPKE encapsulated key, used by servers to decrypt the corresponding
+encrypted_ch field.
+
+encrypted_ch
+: The serialized and encrypted ClientHelloInner structure, AEAD-encrypted using
+cipher suite "suite" and the key generated as described below.
 {:br}
 
-For servers (in EncryptedExtensions), this extension contains the following
-structure:
+If the server accepts ECHO, it does not send this extension.
+If it rejects ECHO, then it sends the following structure in
+EncryptedExtensions:
 
 ~~~
-   enum {
-       esni_accept(0),
-       esni_retry_request(1),
-   } ServerESNIResponseType;
-
    struct {
-       ServerESNIResponseType response_type;
-       select (response_type) {
-           case esni_accept:        uint8 nonce[16];
-           case esni_retry_request: ESNIConfigs retry_configs;
-       }
-   } ServerEncryptedSNI;
+       ECHOConfigs retry_configs;
+   } ServerEncryptedCH;
 ~~~
-
-response_type
-: Indicates whether the server processed the client ESNI extension. (See
-{{handle-server-response}} and {{server-behavior}}.}
-
-nonce
-: The contents of ClientESNIInner.nonce. (See {{client-behavior}}.)
 
 retry_configs
-: One or more ESNIConfig structures containing the keys that the client should use on
-subsequent connections to encrypt the ClientESNIInner structure.
+: An ESNIConfigs structure containing one or more ECHOConfig structures in
+decreasing order of preference that the client should use on subsequent
+connections to encrypt the ClientHelloInner structure.
 
-This protocol also defines the "esni_required" alert, which is sent by the
+This protocol also defines the "echo_required" alert, which is sent by the
 client when it offered an "encrypted_server_name" extension which was not
 accepted by the server.
 
-~~~~
+# The "echo_nonce" extension {#echo-nonce}
+
+When using ECHO, the client MUST also add an extension of type
+"echo_nonce" to the ClientHelloInner (but not to the outer
+ClientHello). This nonce ensures that the server's encrypted
+Certificate can only be read by the entity which sent this
+ClientHello. [[TODO: Describe HRR cut-and-paste 1 in
+Security Considerations.]]
+This extension is defined as follows:
+
+~~~
    enum {
-       esni_required(121),
-   } AlertDescription;
+       echo_nonce(0xffce), (65535)
+   } ExtensionType;
+
+   struct {
+       uint8 nonce[16];
+   } ECHONonce;
 ~~~~
+
+nonce
+: A 16-byte nonce exported from the HPKE encryption context. See {{send-echo}}
+for details about its computation.
 
 Finally, requirements in {{client-behavior}} and {{server-behavior}} require
 implementations to track, alongside each PSK established by a previous
 connection, whether the connection negotiated this extension with the
-"esni_accept" response type. If so, this is referred to as an "ESNI PSK".
-Otherwise, it is a "non-ESNI PSK". This may be implemented by adding a new field
+"echo_accept" response type. If so, this is referred to as an "ECHO PSK".
+Otherwise, it is a "non-ECHO PSK". This may be implemented by adding a new field
 to client and server session states.
 
-## Client Behavior {#client-behavior}
+## Incorporating Outer Extensions {#outer-extensions}
 
-### Sending an encrypted SNI {#send-esni}
-
-In order to send an encrypted SNI, the client MUST first select one of the
-ESNIConfig values in the ESNIConfigs structure which it is able to process (see
-{{esni-configuration}}). It then generates an (EC)DHE share in the
-matching group. This share will then be sent to the server in the
-"encrypted_server_name" extension and used to derive the SNI encryption key. It does not affect the
-(EC)DHE shared secret used in the TLS key schedule. The client MUST also select
-an appropriate cipher suite from the list of suites offered by the
-server. If the client is unable to select an appropriate group or suite it
-SHOULD ignore that ESNIConfig value and MAY attempt to use another value provided
-by the server. The client MUST NOT send encrypted SNI using groups or cipher suites
-not advertised by the server.
-
-When offering an encrypted SNI, the client MUST NOT offer to resume any non-ESNI
-PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2 or
-below.
-
-Let Z be the DH shared secret derived from a key share in ESNIConfig and the
-corresponding client share in ClientEncryptedSNI.key_share. The SNI encryption key is
-computed from Z as follows:
-
-~~~~
-   Zx = HKDF-Extract(0, Z)
-   key = HKDF-Expand-Label(Zx, KeyLabel, Hash(ESNIContents), key_length)
-   iv = HKDF-Expand-Label(Zx, IVLabel, Hash(ESNIContents), iv_length)
-~~~~
-
-where ESNIContents is as specified below and Hash is the hash function
-associated with the HKDF instantiation. The salt argument for HKDF-Extract is a
-string consisting of Hash.length bytes set to zeros. For a client's first
-ClientHello, KeyLabel = "esni key" and IVLabel = "esni iv", whereas for a
-client's second ClientHello, sent in response to a HelloRetryRequest,
-KeyLabel = "hrr esni key" and IVLabel = "hrr esni iv". (This label variance
-is done to prevent nonce re-use since the client's ESNI key share, and
-thus the value of Zx, does not change across ClientHello retries.)
-
-Note that ESNIContents will not be directly transmitted to the server in the
-ClientHello. The server will instead reconstruct the same object by obtaining
-its values from ClientEncryptedSNI and ClientHello.
-
-[[TODO: label swapping fixes a bug in the spec, though this may not be
-the best way to deal with HRR. See https://github.com/tlswg/draft-ietf-tls-esni/issues/121
-and https://github.com/tlswg/draft-ietf-tls-esni/pull/170 for more details.]]
+Some TLS 1.3 extensions can be quite large
+and having them both in the inner and outer ClientHello will lead to
+a very large overall size. One particularly pathological example
+is "key_share" with post-quantum algorithms. In order to reduce
+the impact of duplicated extensions, the client may use the
+"outer_extensions" extension.
 
 ~~~
+   enum {
+       outer_extension(TBD), (65535)
+   } ExtensionType;
+
    struct {
-       opaque record_digest<0..2^16-1>;
-       KeyShareEntry esni_key_share;
-       Random client_hello_random;
-   } ESNIContents;
+       ExtensionType outer_extensions<2..254>;
+       uint8 hash<32..255>;
+   } OuterExtensions;
+~~~~
+
+OuterExtensions MUST only be used in ClientHelloInner. It consists
+of one or more ExtensionType values, each of which reference an
+extension in ClientHelloOuter, and a digest of the complete
+ClientHelloInner.
+
+When sending ClientHello, the client first computes ClientHelloInner,
+including any PSK binders, and then MAY substitute extensions which
+it knows will be duplicated in ClientHelloOuter. To do so, the client
+computes a hash H of the entire ClientHelloInner message with the same
+hash as for the KDF used to encrypt ClienHelloInner. Then, the client
+removes and and replaces extensions from ClientHelloInner with a single
+"outer_extensions" extension. The list of outer_extensions include those
+which were removed from ClientHelloInner, in the order in which they were
+removed. The hash contains the full ClientHelloInner hash H computed above.
+
+This process is reversed by client-facing servers upon receipt. Specifically,
+the server replaces the "outer_extensions" with extensions contained in
+ClientHelloOuter. The server then computes a hash H' of the reconstructed
+ClientHelloInner. If H' does not equal OuterExtensions.hash, the server aborts
+the connection with an "illegal_parameter" alert.
+
+Clients SHOULD only use this mechanism for extensions which are
+large. All other extensions SHOULD appear in both ClientHelloInner
+and ClientHelloOuter even if they have identical values.
+
+# Client Behavior {#client-behavior}
+
+## Sending an encrypted ClientHello {#send-echo}
+
+In order to send an encrypted ClientHello, the client first determines if it
+supports the server's chosen KEM, as identified by ECHOConfig.kem_id. If one
+is supported, the client MUST select an appropriate cipher suite from the list of
+suites offered by the server. If the client does not support the corresponding
+KEM or is unable to select an appropriate group or suite, it SHOULD ignore
+that ECHOConfig value and MAY attempt to use another value provided by
+the server. The client MUST NOT send ECHO using HPKE algorithms not advertised
+by the server.
+
+Given a compatible ECHOConfig with fields public_key and kem_id, carrying the HpkePublicKey
+and KEM identifier corresponding to the server, clients compute an HPKE encryption
+context as follows:
+
+~~~
+pkR = HPKE.KEM.Unmarshal(ECHOConfig.public_key)
+enc, context = SetupBaseS(pkR, "tls13-echo")
+echo_nonce = context.Export("tls13-echo-nonce", 16)
+echo_hrr_key = context.Export("tls13-echo-hrr-key", 16)
 ~~~
 
-record_digest
-: Same value as ClientEncryptedSNI.record_digest.
+Note that the HPKE algorithm identifiers are those which match the client's
+chosen CipherSuite, according to {{hpke-map}}. The client MAY replace any large,
+duplicated extensions in ClientHelloInner with the corresponding "outer_extensions"
+extension, as described in {{outer-extensions}}.
 
-esni_key_share
-: Same value as ClientEncryptedSNI.key_share.
+The client then generates a ClientHelloInner value. In addition to the normal
+values, ClientHelloInner MUST also contain:
 
-client_hello_random
-: Same nonce as ClientHello.random.
+ - an "echo_nonce" extension
+ - TLS padding {{!RFC7685}}
 
-The client then creates a ClientESNIInner structure:
+Padding SHOULD be P = L - D bytes, where
+
+- L = ECHOConfig.maximum_name_length, rounded up to the nearest multiple of 16
+- D = len(dns_name), where dns_name is the DNS name in the ClientHelloInner "server_name" extension
+
+When offering an encrypted ClientHello, the client MUST NOT offer to resume any
+non-ECHO PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2
+or below.
+
+The encrypted ClientHello value is then computed as:
 
 ~~~~
-   struct {
-       opaque dns_name<1..2^16-1>;
-       opaque zeros[ESNIConfigContents.padded_length - length(dns_name)];
-   } PaddedServerNameList;
-
-   struct {
-       uint8 nonce[16];
-       PaddedServerNameList realSNI;
-   } ClientESNIInner;
+    encrypted_ch = context.Seal("", ClientHelloInner)
 ~~~~
 
-nonce
-: A random 16-octet value to be echoed by the server in the
+Finally, the client MUST generate a ClientHelloOuter message
+containing the "encrypted_client_hello" extension with the values as
+indicated above. In particular,
+
+- suite contains the client's chosen ciphersuite;
+- record_digest contains the digest of the corresponding ECHOConfig structure;
+- enc contains the encapsulated key as output by SetupBaseS; and
+- encrypted_ch contains the HPKE encapsulated key (enc) and the ClientHelloInner ciphertext (encrypted_ch_inner).
+
+The client MUST place the value of ECHOConfig.public_name in the
+ClientHelloOuter "server_name" extension. The remaining
+contents of the ClientHelloOuter MAY be identical to those in
+ClientHelloInner but MAY also differ.  The ClientHelloOuter MUST NOT
+contain a "cached_info" extension {{!RFC7924}} with a CachedObject
+entry whose CachedInformationType is "cert", since this indication
+would divulge the true server name.
+
+## Handling the server response {#handle-server-response}
+
+As described in {{server-behavior}}, the server MAY either accept ECHO
+and use ClientHelloInner or reject it and use ClientHelloOuter. However,
+there is no indication in ServerHello of which one the server has done
+and the client must therefore use trial decryption in order to determine
+this.
+
+### Accepted ECHO
+
+If the server used ClientHelloInner, the client proceeds with the
+connection as usual, authenticating the connection for the origin
+server.
+
+### Rejected ECHO
+
+If the server used ClientHelloOuter, the client proceeds with the handshake,
+authenticating for ECHOConfig.public_name as described in
+{{auth-public-name}}. If authentication or the handshake fails, the client
+MUST return a failure to the calling application. It MUST NOT use the retry
+keys.
+
+Otherwise, when the handshake completes successfully with the public name
+authenticated, the client MUST abort the connection with an "echo_required"
+alert. It then processes the "retry_keys" field from the server's
 "encrypted_server_name" extension.
 
-dns_name
-: The true SNI DNS name, that is, the HostName value that would have been sent in the
-plaintext "server_name" extension. (NameType values other than "host_name" are
-unsupported since SNI extensibility failed {{SNIExtensibilityFailed}}).
+If one of the values contains a version supported by the client, it can regard
+the ECHO keys as securely replaced by the server. It SHOULD retry the
+handshake with a new transport connection, using that value to encrypt the
+ClientHello. The value may only be applied to the retry connection. The client
+MUST continue to use the previously-advertised keys for subsequent
+connections. This avoids introducing pinning concerns or a tracking vector,
+should a malicious server present client-specific retry keys to identify
+clients.
 
-zeros
-: Zero padding whose length makes the serialized PaddedServerNameList
-struct have a length equal to ESNIConfigContents.padded_length.
+If none of the values provided in "retry_keys" contains a supported version,
+the client can regard ECHO as securely disabled by the server. As below, it
+SHOULD then retry the handshake with a new transport connection and ECHO
+disabled.
 
-This value consists of the serialized ServerNameList from the "server_name" extension,
-padded with enough zeroes to make the total structure ESNIConfigContents.padded_length
-bytes long. The purpose of the padding is to prevent attackers
-from using the length of the "encrypted_server_name" extension
-to determine the true SNI. If the serialized ServerNameList is
-longer than ESNIConfigContents.padded_length, the client MUST NOT use
-the "encrypted_server_name" extension.
-
-The ClientEncryptedSNI.encrypted_sni value is then computed using
-AEAD-Encrypt ({{!RFC5116}}; Section 2.1) with the AEAD corresponding to
-ClientEncryptedSNI.suite as follows:
-
-~~~~
-    encrypted_sni = AEAD-Encrypt(key, iv, KeyShareClientHello, ClientESNIInner)
-~~~~
-
-Where KeyShareClientHello is the "extension_data" field of the "key_share"
-extension in a Client Hello (Section 4.2.8 of {{!RFC8446}})). Including
-KeyShareClientHello in the AAD of AEAD-Encrypt binds the ClientEncryptedSNI
-value to the ClientHello and prevents cut-and-paste attacks.
-
-Note: future extensions may end up reusing the server's KeyShareEntry
-for other purposes within the same message (e.g., encrypting other
-values). Those usages MUST have their own HKDF labels to avoid
-reuse.
-
-[[OPEN ISSUE: If in the future you were to reuse these keys for
-0-RTT priming, then you would have to worry about potentially
-expanding twice of Z_extracted. We should think about how
-to harmonize these to make sure that we maintain key separation.]]
-
-This value is placed in an "encrypted_server_name" extension.
-
-The client MUST place the value of ESNIConfigContents.public_name in the "server_name"
-extension. (This is required for technical conformance with {{!RFC7540}};
-Section 9.2.) The client MUST NOT send a "cached_info" extension {{!RFC7924}}
-with a CachedObject entry whose CachedInformationType is "cert", since this
-indication would divulge the true server name.
-
-### Handling the server response {#handle-server-response}
-
-If the server negotiates TLS 1.3 or above and provides an
-"encrypted_server_name" extension in EncryptedExtensions, the client
-then processes the extension's "response_type" field:
-
-- If the value is "esni_accept", the client MUST check that the extension's
-  "nonce" field matches ClientESNIInner.nonce and otherwise abort the
-  connection with an "illegal_parameter" alert. The client then proceeds
-  with the connection as usual, authenticating the connection for the origin
-  server.
-
-- If the value is "esni_retry_request", the client proceeds with the handshake,
-  authenticating for ESNIConfigContents.public_name as described in
-  {{auth-public-name}}. If authentication or the handshake fails, the client
-  MUST return a failure to the calling application. It MUST NOT use the retry
-  keys.
-
-  Otherwise, when the handshake completes successfully with the public name
-  authenticated, the client MUST abort the connection with an "esni_required"
-  alert. It then processes the "retry_keys" field from the server's
-  "encrypted_server_name" extension.
-
-  If one of the values contains a version supported by the client, it can regard
-  the ESNI keys as securely replaced by the server. It SHOULD retry the
-  handshake with a new transport connection, using that value to encrypt the
-  SNI. The value may only be applied to the retry connection. The client
-  MUST continue to use the previously-advertised keys for subsequent
-  connections. This avoids introducing pinning concerns or a tracking vector,
-  should a malicious server present client-specific retry keys to identify
-  clients.
-
-  If none of the values provided in "retry_keys" contains a supported version,
-  the client can regard ESNI as securely disabled by the server. As below, it
-  SHOULD then retry the handshake with a new transport connection and ESNI
-  disabled.
-
-- If the field contains any other value, the client MUST abort the connection
-  with an "illegal_parameter" alert.
+If the field contains any other value, the client MUST abort the connection
+with an "illegal_parameter" alert.
 
 If the server negotiates an earlier version of TLS, or if it does not
 provide an "encrypted_server_name" extension in EncryptedExtensions, the
 client proceeds with the handshake, authenticating for
-ESNIConfigContents.public_name as described in {{auth-public-name}}. If an earlier
+ECHOConfigContents.public_name as described in {{auth-public-name}}. If an earlier
 version was negotiated, the client MUST NOT enable the False Start optimization
 {{RFC7918}} for this handshake. If authentication or the handshake fails, the
 client MUST return a failure to the calling application. It MUST NOT treat this
-as a secure signal to disable ESNI.
+as a secure signal to disable ECHO.
 
 Otherwise, when the handshake completes successfully with the public name
-authenticated, the client MUST abort the connection with an "esni_required"
-alert. The client can then regard ESNI as securely disabled by the server. It
-SHOULD retry the handshake with a new transport connection and ESNI disabled.
+authenticated, the client MUST abort the connection with an "echo_required"
+alert. The client can then regard ECHO as securely disabled by the server. It
+SHOULD retry the handshake with a new transport connection and ECHO disabled.
 
-[[TODO: Key replacement is significantly less scary than saying that ESNI-naive
-  servers bounce ESNI off. Is it worth defining a strict mode toggle in the ESNI
+[[TODO: Key replacement is significantly less scary than saying that ECHO-naive
+  servers bounce ECHO off. Is it worth defining a strict mode toggle in the ECHO
   keys, for a deployment to indicate it is ready for that? ]]
 
-Clients SHOULD implement a limit on retries caused by "esni_retry_request" or
+Clients SHOULD implement a limit on retries caused by "echo_retry_request" or
 servers which do not acknowledge the "encrypted_server_name" extension. If the
 client does not retry in either scenario, it MUST report an error to the
 calling application.
 
-If the server sends a HelloRetryRequest in response to the ClientHello
-and the client can send a second updated ClientHello per the rules in
-{{RFC8446}}, the "encrypted_server_name" extension values which do not depend
-on the (possibly updated) KeyShareClientHello, i.e,,
-ClientEncryptedSNI.suite, ClientEncryptedSNI.key_share, and
-ClientEncryptedSNI.record_digest, MUST NOT change across ClientHello messages.
-Moreover, ClientESNIInner MUST not change across ClientHello messages.
-Informally, the values of all unencrypted extension information, as well as
-the inner extension plaintext, must be consistent between the first and
-second ClientHello messages.
-
-### Authenticating for the public name {#auth-public-name}
+#### Authenticating for the public name {#auth-public-name}
 
 When the server cannot decrypt or does not process the "encrypted_server_name"
 extension, it continues with the handshake using the cleartext "server_name"
-extension instead (see {{server-behavior}}). Clients that offer ESNI then
+extension instead (see {{server-behavior}}). Clients that offer ECHO then
 authenticate the connection with the public name, as follows:
 
 - If the server resumed a session or negotiated a session that did not use a
   certificate for authentication, the client MUST abort the connection with an
-  "illegal_parameter" alert. This case is invalid because {{send-esni}} requires
-  the client to only offer ESNI-established sessions, and {{server-behavior}}
-  requires the server to decline ESNI-established sessions if it did not accept
-  ESNI.
+  "illegal_parameter" alert. This case is invalid because {{send-echo}} requires
+  the client to only offer ECHO-established sessions, and {{server-behavior}}
+  requires the server to decline ECHO-established sessions if it did not accept
+  ECHO.
 
-- The client MUST verify that the certificate is valid for ESNIConfigContents.public_name.
+- The client MUST verify that the certificate is valid for ECHOConfigContents.public_name.
   If invalid, it MUST abort the connection with the appropriate alert.
 
 - If the server requests a client certificate, the client MUST respond with an
@@ -572,12 +571,58 @@ trigger retries, as described in {{handle-server-response}}. This may be
 implemented, for instance, by reporting a failed connection with a dedicated
 error code.
 
-### GREASE extensions {#grease-extensions}
+### HelloRetryRequest
 
-If the client attempts to connect to a server and does not have an ESNIConfigs
-structure available for the server or was unable to select an appropriate
-ESNIConfig value, it SHOULD send a GREASE {{I-D.ietf-tls-grease}}
-"encrypted_server_name" extension as follows:
+If the server sends a HelloRetryRequest in response to the ClientHello,
+the client sends a second updated ClientHello per the rules in {{RFC8446}}.
+However, at this point, the client does not know whether the server processed
+ClientHelloOuter or ClientHelloInner, and MUST regenerate both values to
+be acceptable. Note: if the inner and outer ClientHellos use different groups
+for their key shares or differ in some other way, then the HelloRetryRequest may
+actually be invalid for one or the other ClientHello, in which case a
+fresh ClientHello MUST be generated, ignoring the instructions in HelloRetryRequest.
+Otherwise, the usual rules for HelloRetryRequest processing apply.
+
+Clients bind encryption of the second ClientHelloInner to encryption of the first
+ClientHelloInner via the derived echo_hrr_key by modifying HPKE setup as follows:
+
+~~~
+pkR = HPKE.KEM.Unmarshal(ECHOConfig.public_key)
+enc, context = SetupPSKS(pkR, "tls13-echo-hrr", echo_hrr_key, "")
+echo_nonce = context.Export("tls13-echo-hrr-nonce", 16)
+~~~
+
+Clients then encrypt the second ClientHelloInner using this new HPKE context.
+In doing so, the encrypted value is also authenticated by echo_hrr_key.
+
+Client-facing servers perform the corresponding process when decrypting second
+ClientHelloInner messages. In particular, upon receipt of a second ClientHello
+message with a ClientEncryptedCH value, servers setup their HPKE context and
+decrypt ClientEncryptedCH as follows:
+
+~~~
+context = SetupPSKR(ClientEncryptedCH.enc, skR, "tls13-echo-hrr", echo_hrr_key, "")
+ClientHelloInner = context.Open("", ClientEncryptedCH.encrypted_ch)
+echo_nonce = context.Export("tls13-echo-hrr-nonce", 16)
+~~~
+
+[[OPEN ISSUE: Should we be using the PSK input or the info input?
+On the one hand, the requirements on info seem weaker, but maybe
+actually this needs to be secret? Analysis needed.]]
+
+[[OPEN ISSUE: This, along with trial decryption is
+pretty gross. It would just be a lot easier if we were willing to
+have the server indicate whether ECHO had been accepted or not.
+Given that the server is supposed to only reject ECHO when it doesn't
+know the key, and this is easy to probe for, can we just instead
+have an extension to indicate what has happened.]]
+
+
+## GREASE extensions {#grease-extensions}
+
+If the client attempts to connect to a server and does not have an ECHOConfig
+structure available for the server, it SHOULD send a GREASE
+{{I-D.ietf-tls-grease}} "encrypted_client_hello" extension as follows:
 
 - Select a supported cipher suite, named group, and padded_length
   value. The padded_length value SHOULD be 260 (sum of the maximum DNS name
@@ -586,94 +631,88 @@ ESNIConfig value, it SHOULD send a GREASE {{I-D.ietf-tls-grease}}
   SHOULD vary to exercise all supported configurations, but MAY be held constant
   for successive connections to the same server in the same session.
 
-- Set the "key_share" field to a randomly-generated valid public key
-  for the named group.
+- Set the "enc" field to a randomly-generated valid encapsulated public key
+  output by the HPKE KEM.
 
 - Set the "record_digest" field to a randomly-generated string of hash_length
   bytes, where hash_length is the length of the hash function associated with
   the chosen cipher suite.
 
-- Set the "encrypted_sni" field to a randomly-generated string of
-  16 + padded_length + tag_length bytes, where tag_length is the tag length
-  of the chosen cipher suite's associated AEAD.
+- Set the "encrypted_client_hello" field to a randomly-generated string of
+  [TODO] bytes.
 
-If the server sends an "encrypted_server_name" extension, the client
+If the server sends an "encrypted_client_hello" extension, the client
 MUST check the extension syntactically and abort the connection with a
-"decode_error" alert if it is invalid. If the "response_type" field
-contains "esni_retry_requested", the client MUST ignore the extension
-and proceed with the handshake. If it contains "esni_accept" or any other
-value, the client MUST abort the connection with an "illegal_parameter" alert.
+"decode_error" alert if it is invalid.
 
-Offering a GREASE extension is not considered offering an encrypted SNI for
+Offering a GREASE extension is not considered offering an encrypted ClientHello for
 purposes of requirements in {{client-behavior}}. In particular, the client MAY
-offer to resume sessions established without ESNI.
+offer to resume sessions established without ECHO.
 
-## Client-Facing Server Behavior {#server-behavior}
+# Client-Facing Server Behavior {#server-behavior}
 
-Upon receiving an "encrypted_server_name" extension, the client-facing
+Upon receiving an "encrypted_client_hello" extension, the client-facing
 server MUST check that it is able to negotiate TLS 1.3 or greater. If not,
 it MUST abort the connection with a "handshake_failure" alert.
 
-The ClientEncryptedSNI value is said to match a known ESNIConfig if there exists
-an ESNIConfig that can be used to successfully decrypt ClientEncryptedSNI.encrypted_sni.
+The ClientEncryptedCH value is said to match a known ECHOConfig if there exists
+an ECHOConfig that can be used to successfully decrypt ClientEncryptedCH.encrypted_ch.
 This matching procedure should be done using one of the following two checks:
 
-1. Compare ClientEncryptedSNI.record_digest against cryptographic hashes of known ESNIConfig
+1. Compare ClientEncryptedCH.record_digest against cryptographic hashes of known ECHOConfig
 and choose the one that matches.
-2. Use trial decryption of ClientEncryptedSNI.encrypted_sni with known ESNIConfig and choose
+2. Use trial decryption of ClientEncryptedCH.encrypted_ch with known ECHOConfig and choose
 the one that succeeds.
 
-Some uses of ESNI, such as local discovery mode, may omit the ClientEncryptedSNI.record_digest
+Some uses of ECHO, such as local discovery mode, may omit the ClientEncryptedCH.record_digest
 since it can be used as a tracking vector. In such cases, trial decryption should be
-used for matching ClientEncryptedSNI to known ESNIConfig. Unless specified by the application
+used for matching ClientEncryptedCH to known ECHOConfig. Unless specified by the application
 using (D)TLS or externally configured on both sides, implementations MUST use the first method.
 
-If the ClientEncryptedSNI value does not match any known ESNIConfig
+If the ClientEncryptedCH value does not match any known ECHOConfig
 structure, it MUST ignore the extension and proceed with the connection,
 with the following added behavior:
 
-- It MUST include the "encrypted_server_name" extension in
-  EncryptedExtensions message with the "response_type" field set to
-  "esni_retry_requested" and the "retry_configs" field set to an up-to-date
-  ESNIConfigs structure.
+- It MUST include the "encrypted_client_hello" extension with the
+  "retry_keys" field set to one or more ECHOConfig structures with
+  up-to-date keys. Servers MAY supply multiple ECHOConfig values of
+  different versions. This allows a server to support multiple
+  versions at once.
 
 - The server MUST ignore all PSK identities in the ClientHello which correspond
-  to ESNI PSKs. ESNI PSKs offered by the client are associated with the ESNI
-  name. The server was unable to decrypt then ESNI name, so it should not resume
+  to ECHO PSKs. ECHO PSKs offered by the client are associated with the ECHO
+  name. The server was unable to decrypt then ECHO name, so it should not resume
   them when using the cleartext SNI name. This restriction allows a client to
   reject resumptions in {{auth-public-name}}.
 
-Note that an unrecognized ClientEncryptedSNI.record_digest value may be
-a GREASE ESNI extension (see {{grease-extensions}}), so it is necessary
+Note that an unrecognized ClientEncryptedCH.record_digest value may be
+a GREASE ECHO extension (see {{grease-extensions}}), so it is necessary
 for servers to proceed with the connection and rely on the client to abort if
-ESNI was required. In particular, the unrecognized value alone does not
-indicate a misconfigured ESNI advertisement ({{misconfiguration}}). Instead,
-servers can measure occurrences of the "esni_required" alert to detect this
+ECHO was required. In particular, the unrecognized value alone does not
+indicate a misconfigured ECHO advertisement ({{misconfiguration}}). Instead,
+servers can measure occurrences of the "echo_required" alert to detect this
 case.
 
-If the ClientEncryptedSNI value does match a known ESNIConfig, the server
-performs the following checks:
+If the ClientEncryptedCH value does match a known ECHOConfig, the server
+then decrypts ClientEncryptedCH.encrypted_ch, using the private key skR
+corresponding to ESNIConfig, as follows:
 
-- If the ClientEncryptedSNI.key_share group does not match ESNIConfigContents.key,
-  it MUST abort the connection with an "illegal_parameter" alert.
+~~~
+context = SetupBaseR(ClientEncryptedCH.enc, skR, "tls13-echo")
+ClientHelloInner = context.Open("", ClientEncryptedCH.encrypted_ch)
+echo_nonce = context.Export("tls13-echo-nonce", 16)
+echo_hrr_key = context.Export("tls13-echo-hrr-key", 16)
+~~~
 
-- If the length of the "encrypted_server_name" extension is
-  inconsistent with the advertised padding length (plus AEAD
-  expansion) the server MAY abort the connection with an
-  "illegal_parameter" alert without attempting to decrypt.
-
-Assuming these checks succeed, the server then computes K_sni
-and decrypts the ServerName value. If decryption fails, the server
-MUST abort the connection with a "decrypt_error" alert.
-
-If the decrypted value's length is different from
-the advertised ESNIConfigContents.padded_length or the padding consists of
-any value other than 0, then the server MUST abort the
-connection with an "illegal_parameter" alert. Otherwise, the
-server uses the PaddedServerNameList.sni value as if it were
-the "server_name" extension. Any actual "server_name" extension is
-ignored, which also means the server MUST NOT send the "server_name"
-extension to the client.
+If decryption fails, the server MUST abort the connection with
+a "decrypt_error" alert. Moreover, if there is no "echo_nonce"
+extension, or if its value does not match the derived echo_nonce,
+the server MUST abort the connection with a "decrypt_error" alert.
+Next, the server MUST scan ClientHelloInner for any "outer_extension"
+extensions and substitute their values with the values in ClientHelloOuter.
+It MUST first verify that the hash found in the extension matches the hash
+of the extension to be interpolated in and if it does not, abort the connections
+with a "decrypt_error" alert.
 
 Upon determining the true SNI, the client-facing server then either
 serves the connection directly (if in Shared Mode), in which case
@@ -682,81 +721,48 @@ the TLS connection to the backend server (if in Split Mode). In
 the latter case, it does not make any changes to the TLS
 messages, but just blindly forwards them.
 
-If the ClientHello is the result of a HelloRetryRequest, servers MUST
-abort the connection with an "illegal_parameter" alert if any of the
-ClientEncryptedSNI.suite, ClientEncryptedSNI.key_share, ClientEncryptedSNI.record_digest,
-or decrypted ClientESNIInner values from the second ClientHello do not
-match that of the first ClientHello.
-
-## Shared Mode Server Behavior
-
-A server operating in Shared Mode uses PaddedServerNameList.sni as
-if it were the "server_name" extension to finish the handshake. It
-SHOULD pad the Certificate message, via padding at the record layer,
-such that its length equals the size of the largest possible Certificate
-(message) covered by the same ESNI key. Moreover, the server MUST
-include the "encrypted_server_name" extension in EncryptedExtensions
-with the "response_type" field set to "esni_accept" and the "nonce"
-field set to the decrypted PaddedServerNameList.nonce value from the client
-"encrypted_server_name" extension.
-
-If the server sends a NewSessionTicket message, the corresponding ESNI PSK MUST
-be ignored by all other servers in the deployment when not negotiating ESNI,
+If the server sends a NewSessionTicket message, the corresponding ECHO PSK MUST
+be ignored by all other servers in the deployment when not negotiating ECHO,
 including servers which do not implement this specification.
 
-This restriction provides robustness for rollbacks (see {{misconfiguration}}).
-
-## Split Mode Server Behavior {#backend-server-behavior}
-
-In Split Mode, the backend server must know PaddedServerNameList.nonce
-to echo it back in EncryptedExtensions and complete the handshake.
-{{communicating-sni}} describes one mechanism for sending both
-PaddedServerNameList.sni and ClientESNIInner.nonce to the backend
-server. Thus, backend servers function the same as servers operating
-in Shared Mode.
-
-As in Shared Mode, if the backend server sends a NewSessionTicket message, the
-corresponding ESNI PSK MUST be ignored by other servers in the deployment when
-not negotiating ESNI, including servers which do not implement this
-specification.
 
 # Compatibility Issues
 
-Unlike most TLS extensions, placing the SNI value in an ESNI extension
+Unlike most TLS extensions, placing the SNI value in an ECHO extension
 is not interoperable with existing servers, which expect the value in
 the existing cleartext extension. Thus server operators SHOULD ensure
-servers understand a given set of ESNI keys before advertising them.
+servers understand a given set of ECHO keys before advertising them.
 Additionally, servers SHOULD retain support for any
-previously-advertised keys for the duration of their validity.
+previously-advertised keys for the duration of their validity
 
 However, in more complex deployment scenarios, this may be difficult
 to fully guarantee. Thus this protocol was designed to be robust in case
-of inconsistencies between systems that advertise ESNI keys and servers, at the
+of inconsistencies between systems that advertise ECHO keys and servers, at the
 cost of extra round-trips due to a retry. Two specific scenarios are detailed
 below.
 
 ## Misconfiguration and Deployment Concerns {#misconfiguration}
 
-It is possible for ESNI advertisements and servers to become inconsistent. This
+It is possible for ECHO advertisements and servers to become inconsistent. This
 may occur, for instance, from DNS misconfiguration, caching issues, or an
 incomplete rollout in a multi-server deployment. This may also occur if a server
-loses its ESNI keys, or if a deployment of ESNI must be rolled back on the
+loses its ECHO keys, or if a deployment of ECHO must be rolled back on the
 server.
 
 The retry mechanism repairs inconsistencies, provided the server is
 authoritative for the public name. If server and advertised keys mismatch,
-the server will respond with esni_retry_requested. If the server does not understand the
+the server will respond with echo_retry_requested. If the server does not understand the
 "encrypted_server_name" extension at all, it will ignore it as required by {{RFC8446}};
 Section 4.1.2. Provided the server can present a certificate valid for the public name,
 the client can safely retry with updated settings, as described in {{handle-server-response}}.
 
-Unless ESNI is disabled as a result of successfully establishing a connection to
-the public name, the client MUST NOT fall back to cleartext SNI, as this allows
-a network attacker to disclose the SNI.  It MAY attempt to use another server
-from the DNS results, if one is provided.
+Unless ECHO is disabled as a result of successfully establishing a connection to
+the public name, the client MUST NOT fall back to using unencrypted ClientHellos, as this allows
+a network attacker to disclose the contents of this ClientHello, including the SNI.
+It MAY attempt to use another server from the DNS results, if one is provided.
 
 Client-facing servers with non-uniform cryptographic configurations across backend
-origin servers segment the ESNI anonymity set based on these configurations. For example,
+origin servers segment the ECHO anonymity set based on these configurations. For example,
 if a client-facing server hosts k backend origin servers, and exactly one of those
 backend origin servers supports a different set of cryptographic algorithms than the
 other (k - 1) servers, it may be possible to identify this single server based on
@@ -773,61 +779,62 @@ then present a certificate based on the public name, without echoing the
 Depending on whether the client is configured to accept the proxy's certificate
 as authoritative for the public name, this may trigger the retry logic described
 in {{handle-server-response}} or result in a connection failure. A proxy which
-is not authoritative for the public name cannot forge a signal to disable ESNI.
+is not authoritative for the public name cannot forge a signal to disable ECHO.
 
-A non-conformant MITM proxy which instead forwards the ESNI extension,
+A non-conformant MITM proxy which instead forwards the ECHO extension,
 substituting its own KeyShare value, will result in
 the client-facing server recognizing the key, but failing to decrypt
 the SNI. This causes a hard failure. Clients SHOULD NOT attempt to repair the
 connection in this case.
+
+# TLS and HPKE CipherSuite Mapping {#hpke-map}
+
+Per {{RFC8446}, TLS ciphersuites define an AEAD and hash algorithm. In contrast,
+HPKE defines separate AEAD algorithms and key derivation functions. The table below lists
+the mapping between ciphersuites and HPKE identifiers. TLS_AES_128_CCM_SHA256 and
+TLS_AES_128_CCM_8_SHA256 are not supported ECHO ciphersuites as they have no HPKE
+equivalent.
+
+| TLS CipherSuite | HPKE AEAD | HPKE KDF |
+|:-------|:------------------------|:----------|
+| TLS_AES_128_GCM_SHA256 | AES-GCM-128 | HKDF-SHA256 |
+| TLS_AES_256_GCM_SHA384 | AES-GCM-256 | HKDF-SHA256 |
+| TLS_CHACHA20_POLY1305_SHA256 | ChaCha20Poly1305 | HKDF-SHA256 |
 
 # Security Considerations
 
 ## Why is cleartext DNS OK? {#cleartext-dns}
 
 In comparison to {{?I-D.kazuho-protected-sni}}, wherein DNS Resource
-Records are signed via a server private key, ESNI records have no
+Records are signed via a server private key, ECHO records have no
 authenticity or provenance information. This means that any attacker
 which can inject DNS responses or poison DNS caches, which is a common
 scenario in client access networks, can supply clients with fake
-ESNI records (so that the client encrypts SNI to them) or strip the
-ESNI record from the response. However, in the face of an attacker that
-controls DNS, no SNI encryption scheme can work because the attacker
+ECHO records (so that the client encrypts data to them) or strip the
+ECHO record from the response. However, in the face of an attacker that
+controls DNS, no encryption scheme can work because the attacker
 can replace the IP address, thus blocking client connections, or
 substituting a unique IP address which is 1:1 with the DNS name that
-was looked up (modulo DNS wildcards). Thus, allowing the ESNI records in
+was looked up (modulo DNS wildcards). Thus, allowing the ECHO records in
 the clear does not make the situation significantly worse.
 
 Clearly, DNSSEC (if the client validates and hard fails) is a defense against
 this form of attack, but DoH/DPRIVE are also defenses against DNS attacks
-by attackers on the local network, which is a common case where SNI is
-desired.
-Moreover, as noted in the introduction, SNI encryption is less useful
-without encryption of DNS queries in transit via DoH or DPRIVE mechanisms.
+by attackers on the local network, which is a common case where ClientHello and SNI
+encryption are desired. Moreover, as noted in the introduction, SNI encryption is
+less useful without encryption of DNS queries in transit via DoH or DPRIVE mechanisms.
 
 ## Optional Record Digests and Trial Decryption
 
 Supporting optional record digests and trial decryption opens oneself up to
 DoS attacks. Specifically, an adversary may send malicious ClientHello messages, i.e.,
-those which will not decrypt with any known ESNI key, in order to force
+those which will not decrypt with any known ECHO key, in order to force
 decryption. Servers that support this feature should, for example, implement
 some form of rate limiting mechanism to limit the damage caused by such attacks.
 
-## Encrypting other Extensions
-
-ESNI protects only the SNI in transit. Other ClientHello extensions,
-such as ALPN, might also reveal privacy-sensitive information to the
-network. As such, it might be desirable to encrypt other extensions
-alongside the SNI. However, the SNI extension is unique in that
-non-TLS-terminating servers or load balancers may act on its contents.
-Thus, using keys specifically for SNI encryption promotes key separation
-between client-facing servers and endpoints party to TLS connections.
-Moreover, the ESNI design described herein does not preclude a mechanism
-for generic ClientHello extension encryption.
-
 ## Related Privacy Leaks
 
-ESNI requires encrypted DNS to be an effective privacy protection mechanism.
+ECHO requires encrypted DNS to be an effective privacy protection mechanism.
 However, verifying the server's identity from the Certificate message, particularly
 when using the X509 CertificateType, may result in additional network traffic
 that may reveal the server identity. Examples of this traffic may include requests
@@ -848,50 +855,49 @@ certificate validation.
 
 {{?I-D.ietf-tls-sni-encryption}} lists several requirements for SNI
 encryption. In this section, we re-iterate these requirements and assess
-the ESNI design against them.
+the ECHO design against them.
 
 ### Mitigate against replay attacks
 
-Since the SNI encryption key is derived from a (EC)DH operation
-between the client's ephemeral and server's semi-static ESNI key, the ESNI
-encryption is bound to the Client Hello. It is not possible for
-an attacker to "cut and paste" the ESNI value in a different Client
-Hello, with a different ephemeral key share, as the terminating server
-will fail to decrypt and verify the ESNI value.
+Since servers process either ClientHelloInner or ClientHelloOuter, and ClientHelloInner
+contains an HPKE-derived nonce, it is not possible for an attacker to "cut and paste"
+the ECHO value in a different Client Hello and learn information from ClientHelloInner.
+This is because the attacker lacks access to the HPKE-derived nonce used to derive the
+handshake secrets.
 
 ### Avoid widely-deployed shared secrets
 
 This design depends upon DNS as a vehicle for semi-static public key distribution.
 Server operators may partition their private keys however they see fit provided
 each server behind an IP address has the corresponding private key to decrypt
-a key. Thus, when one ESNI key is provided, sharing is optimally bound by the number
+a key. Thus, when one ECHO key is provided, sharing is optimally bound by the number
 of hosts that share an IP address. Server operators may further limit sharing
-by publishing different DNS records containing ESNIConfig values with different
+by publishing different DNS records containing ECHOConfig values with different
 keys using a short TTL.
 
 ### Prevent SNI-based DoS attacks
 
-This design requires servers to decrypt ClientHello messages with ClientEncryptedSNI
+This design requires servers to decrypt ClientHello messages with ClientEncryptedCH
 extensions carrying valid digests. Thus, it is possible for an attacker to force
 decryption operations on the server. This attack is bound by the number of
 valid TCP connections an attacker can open.
 
 ### Do not stick out
 
-As more clients enable ESNI support, e.g., as normal part of Web browser
+As more clients enable ECHO support, e.g., as normal part of Web browser
 functionality, with keys supplied by shared hosting providers, the presence
-of ESNI extensions becomes less suspicious and part of common or predictable
-client behavior. In other words, if all Web browsers start using ESNI,
+of ECHO extensions becomes less suspicious and part of common or predictable
+client behavior. In other words, if all Web browsers start using ECHO,
 the presence of this value does not signal suspicious behavior to passive
 eavesdroppers.
 
-Additionally, this specification allows for clients to send GREASE ESNI
+Additionally, this specification allows for clients to send GREASE ECHO
 extensions (see {{grease-extensions}}), which helps ensure the ecosystem
 handles the values correctly.
 
 ### Forward secrecy
 
-This design is not forward secret because the server's ESNI key is static.
+This design is not forward secret because the server's ECHO key is static.
 However, the window of exposure is bound by the key lifetime. It is
 RECOMMENDED that servers rotate keys frequently.
 
@@ -902,12 +908,12 @@ directly to backend origin servers, thereby avoiding unnecessary MiTM attacks.
 
 ### Split server spoofing
 
-Assuming ESNI records retrieved from DNS are authenticated, e.g., via DNSSEC or fetched
+Assuming ECHO records retrieved from DNS are authenticated, e.g., via DNSSEC or fetched
 from a trusted Recursive Resolver, spoofing a server operating in Split Mode
 is not possible. See {{cleartext-dns}} for more details regarding cleartext
 DNS.
 
-Authenticating the ESNIConfigs structure naturally authenticates the
+Authenticating the ECHOConfigs structure naturally authenticates the
 included public name. This also authenticates any retry signals
 from the server because the client validates the server
 certificate against the public name before retrying.
@@ -930,7 +936,7 @@ still complete).  However, the client is still responsible for
 verifying the server's identity in its certificate.
 
 [[TODO: Some more analysis needed in this case, as it is a little
-odd, and probably some precise rules about handling ESNI and no
+odd, and probably some precise rules about handling ECHO and no
 SNI uniformly?]]
 
 # IANA Considerations
@@ -944,23 +950,12 @@ in the existing registry for ExtensionType (defined in
 
 ## Update of the TLS Alert Registry
 
-IANA is requested to create an entry, esni_required(121) in the
+IANA is requested to create an entry, echo_required(121) in the
 existing registry for Alerts (defined in {{!RFC8446}}), with the
 "DTLS-OK" column being set to "Y".
 
-# Communicating SNI and Nonce to Backend Server {#communicating-sni}
+--- back
 
-When operating in Split Mode, backend servers will not have access
-to PaddedServerNameList.sni or ClientESNIInner.nonce without
-access to the ESNI keys or a way to decrypt ClientEncryptedSNI.encrypted_sni.
-
-One way to address this for a single connection, at the cost of having
-communication not be unmodified TLS 1.3, is as follows.
-Assume there is a shared (symmetric) key between the
-client-facing server and the backend server and use it to AEAD-encrypt Z
-and send the encrypted blob at the beginning of the connection before
-the ClientHello. The backend server can then decrypt ESNI to recover
-the true SNI and nonce.
 
 # Alternative SNI Protection Designs
 
@@ -1017,7 +1012,7 @@ SNI induces no additional round trip and operates below the application layer.
 The design described here only provides encryption for the SNI, but
 not for other extensions, such as ALPN. Another potential design
 would be to encrypt all of the extensions using the same basic
-structure as we use here for ESNI. That design has the following
+structure as we use here for ECHO. That design has the following
 advantages:
 
 - It protects all the extensions from ordinary eavesdroppers
@@ -1033,9 +1028,9 @@ It also has the following disadvantages:
   block that was encrypted to the backend server and not
   the client-facing server.
 - It requires a mechanism for the client-facing server to provide the
-  extension-encryption key to the backend server (as in {{communicating-sni}}
-  and thus cannot be used with an unmodified backend server.
-- A conformant middlebox will strip every extension, which might
+  extension-encryption key to the backend server and thus cannot be
+  used with an unmodified backend server.
+- A conforming middlebox will strip every extension, which might
   result in a ClientHello which is just unacceptable to the server
   (more analysis needed).
 
@@ -1043,6 +1038,6 @@ It also has the following disadvantages:
 
 This document draws extensively from ideas in {{?I-D.kazuho-protected-sni}}, but
 is a much more limited mechanism because it depends on the DNS for the
-protection of the ESNI key. Richard Barnes, Christian Huitema, Patrick McManus,
+protection of the ECHO key. Richard Barnes, Christian Huitema, Patrick McManus,
 Matthew Prince, Nick Sullivan, Martin Thomson, and David Benjamin also provided
 important ideas and contributions.
