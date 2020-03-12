@@ -631,15 +631,15 @@ structure available for the server, it SHOULD send a GREASE
   SHOULD vary to exercise all supported configurations, but MAY be held constant
   for successive connections to the same server in the same session.
 
-- Set the "enc" field to a randomly-generated valid encapsulated public key
-  output by the HPKE KEM.
-
 - Set the "record_digest" field to a randomly-generated string of hash_length
   bytes, where hash_length is the length of the hash function associated with
   the chosen cipher suite.
 
-- Set the "encrypted_client_hello" field to a randomly-generated string of
-  [TODO] bytes.
+- Set the "enc" field to a randomly-generated valid encapsulated public key
+  output by the HPKE KEM.
+
+- Set the "encrypted_ch" field to a randomly-generated string of padded_length
+  bytes.
 
 If the server sends an "encrypted_client_hello" extension, the client
 MUST check the extension syntactically and abort the connection with a
