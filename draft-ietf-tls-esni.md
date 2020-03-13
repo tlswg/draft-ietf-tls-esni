@@ -624,10 +624,7 @@ If the client attempts to connect to a server and does not have an ECHOConfig
 structure available for the server, it SHOULD send a GREASE
 {{I-D.ietf-tls-grease}} "encrypted_client_hello" extension as follows:
 
-- Select a supported cipher suite, named group, and padded_length
-  value. The padded_length value SHOULD be 260 (sum of the maximum DNS name
-  length and TLS encoding overhead) or a multiple of 16 less than 260.
-  Set the "suite" field  to the selected cipher suite. These selections
+- Set the "suite" field  to a supported cipher suite. These selections
   SHOULD vary to exercise all supported configurations, but MAY be held constant
   for successive connections to the same server in the same session.
 
