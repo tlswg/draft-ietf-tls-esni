@@ -624,7 +624,7 @@ If the client attempts to connect to a server and does not have an ECHOConfig
 structure available for the server, it SHOULD send a GREASE
 {{I-D.ietf-tls-grease}} "encrypted_client_hello" extension as follows:
 
-- Set the "suite" field  to a supported cipher suite. These selections
+- Set the "suite" field  to a supported cipher suite. The selection
   SHOULD vary to exercise all supported configurations, but MAY be held constant
   for successive connections to the same server in the same session.
 
@@ -635,8 +635,7 @@ structure available for the server, it SHOULD send a GREASE
 - Set the "enc" field to a randomly-generated valid encapsulated public key
   output by the HPKE KEM.
 
-- Set the "encrypted_ch" field to a randomly-generated string of padded_length
-  bytes.
+- Set the "encrypted_ch" field to a randomly-generated string of [TODO] bytes.
 
 If the server sends an "encrypted_client_hello" extension, the client
 MUST check the extension syntactically and abort the connection with a
