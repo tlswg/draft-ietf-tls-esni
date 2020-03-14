@@ -204,7 +204,7 @@ following ECHOConfigs structure.
         HkpeKemId kem_id;
         CipherSuite cipher_suites<2..2^16-2>;
 
-        uint16 maximum_name_length;
+        uint16 minimum_inner_length;
         Extension extensions<0..2^16-1>;
     } ECHOConfigContents;
 
@@ -254,10 +254,11 @@ cipher_suites
 See {{hpke-map}} for information on how a cipher suite maps to corresponding
 HPKE algorithm identifiers.
 
-maximum_name_length
-:  the largest name the server expects to support. If the server supports arbitrary
-wildcard names, it SHOULD set this value to 256. Clients SHOULD reject ESNIConfig as
-invalid if maximum_name_length is greater than 256.
+minimum_inner_length
+:  The minimum (encoded) length ClientHelloInner recommended by the server.
+Sending a ClientHelloInner that is shorter than this will likely stand out.
+Clients can use a padding extension within the ClientHelloInner to ensure
+the plaintext is at leat this long.
 
 extensions
 : A list of extensions that the client can take into consideration when
@@ -444,10 +445,33 @@ values, ClientHelloInner MUST also contain:
  - an "echo_nonce" extension
  - TLS padding {{!RFC7685}}
 
-Padding SHOULD be P = L - D bytes, where
+An encoded ClientHelloInner can be around 300 octets long, but variations in
+the length of the ciphertext version of that could defeat the entire purpose of
+ECHO, if for example those expose the chosen server_name field in the
+ClientHelloInner.  The padding ClientHello extension, if well used, can ensure
+that length information does not expose what is contained in the
+ClientHelloInner. Clients MUST add padding to the ClientHelloInner to try meet
+this requirement.
 
-- L = ECHOConfig.maximum_name_length, rounded up to the nearest multiple of 16
-- D = len(dns_name), where dns_name is the DNS name in the ClientHelloInner "server_name" extension
+Given that new extensions may be defined in future that contain sensitive
+length fields, we cannot describe all the ways in which length information
+could expose sensitive content. Implementers ought therefore be aware that they
+might have to change their padding scheme as the set of supported extensions
+changes. In addition to padding the ClientHelloInner, clients and servers MUST
+both pad all other handshake messages that have sensitive length fields. For
+example, if the client proposes ALPN values in the ClientHelloInner, the
+server-selected value will be returned in an EncryptedExtension, so that
+handshake message needs to be padded with TLS record layer padding. 
+
+One approach that may be relative safe and simple is once ECHO is in use:
+
+- When constructing the ClientHelloInner, use padding bytes so that the length
+  of the plaintext erncoding of ClienHelloInner is greater than
+ECHOConfig.minimum_inner_length and is a multiple of 16
+- Both clients and servers pad all handshake messages so that plaintexts are a
+  multiple of 16 octets long.
+- Clients or servers MAY send additional padding bytes. This MUST NOT be
+  treated as an error.
 
 When offering an encrypted ClientHello, the client MUST NOT offer to resume any
 non-ECHO PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2
