@@ -258,7 +258,7 @@ minimum_inner_length
 :  The minimum (encoded) length ClientHelloInner recommended by the server.
 Sending a ClientHelloInner that is shorter than this will likely stand out.
 Clients can use a padding extension within the ClientHelloInner to ensure
-the plaintext is at leat this long.
+the plaintext is at least this long.
 
 extensions
 : A list of extensions that the client can take into consideration when
