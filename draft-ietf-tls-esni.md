@@ -466,7 +466,7 @@ handshake message needs to be padded with TLS record layer padding.
 One approach that may be relative safe and simple is once ECHO is in use:
 
 - When constructing the ClientHelloInner, use padding bytes so that the length
-  of the plaintext erncoding of ClienHelloInner is greater than
+  of the plaintext encoding of ClienHelloInner is greater than
 ECHOConfig.minimum_inner_length and is a multiple of 16
 - Both clients and servers pad all handshake messages so that plaintexts are a
   multiple of 16 octets long.
