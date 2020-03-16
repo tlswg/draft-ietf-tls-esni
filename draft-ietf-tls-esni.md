@@ -453,8 +453,8 @@ that length information does not expose what is contained in the
 ClientHelloInner. Clients MUST add padding to the ClientHelloInner to try meet
 this requirement.
 
-Given that new extensions may be defined in future that contain sensitive
-length fields, we cannot describe all the ways in which length information
+Given that extensions could be defined in the future that reveal sensitive information
+through their length, we cannot describe all the ways in which length information
 could expose sensitive content. Implementers ought therefore be aware that they
 might have to change their padding scheme as the set of supported extensions
 changes. In addition to padding the ClientHelloInner, clients and servers MUST
