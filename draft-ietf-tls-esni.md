@@ -330,7 +330,7 @@ decreasing order of preference that the client should use on subsequent
 connections to encrypt the ClientHelloInner structure.
 
 This protocol also defines the "echo_required" alert, which is sent by the
-client when it offered an "encrypted_server_name" extension which was not
+client when it offered an "encrypted_client_hello" extension which was not
 accepted by the server.
 
 # The "echo_nonce" extension {#echo-nonce}
@@ -501,7 +501,7 @@ keys.
 Otherwise, when the handshake completes successfully with the public name
 authenticated, the client MUST abort the connection with an "echo_required"
 alert. It then processes the "retry_keys" field from the server's
-"encrypted_server_name" extension.
+"encrypted_client_hello" extension.
 
 If one of the values contains a version supported by the client, it can regard
 the ECHO keys as securely replaced by the server. It SHOULD retry the
@@ -521,7 +521,7 @@ If the field contains any other value, the client MUST abort the connection
 with an "illegal_parameter" alert.
 
 If the server negotiates an earlier version of TLS, or if it does not
-provide an "encrypted_server_name" extension in EncryptedExtensions, the
+provide an "encrypted_client_hello" extension in EncryptedExtensions, the
 client proceeds with the handshake, authenticating for
 ECHOConfigContents.public_name as described in {{auth-public-name}}. If an earlier
 version was negotiated, the client MUST NOT enable the False Start optimization
@@ -539,13 +539,13 @@ SHOULD retry the handshake with a new transport connection and ECHO disabled.
   keys, for a deployment to indicate it is ready for that? ]]
 
 Clients SHOULD implement a limit on retries caused by "echo_retry_request" or
-servers which do not acknowledge the "encrypted_server_name" extension. If the
+servers which do not acknowledge the "encrypted_client_hello" extension. If the
 client does not retry in either scenario, it MUST report an error to the
 calling application.
 
 #### Authenticating for the public name {#auth-public-name}
 
-When the server cannot decrypt or does not process the "encrypted_server_name"
+When the server cannot decrypt or does not process the "encrypted_client_hello"
 extension, it continues with the handshake using the cleartext "server_name"
 extension instead (see {{server-behavior}}). Clients that offer ECHO then
 authenticate the connection with the public name, as follows:
@@ -689,7 +689,7 @@ indicate a misconfigured ECHO advertisement ({{misconfiguration}}). Instead,
 servers can measure occurrences of the "echo_required" alert to detect this
 case.
 
-If the ClientEncryptedCH value does match a known ECHOConfig, the server
+If the ClientEncryptedCH value matches a known ECHOConfig, the server
 then decrypts ClientEncryptedCH.encrypted_ch, using the private key skR
 corresponding to ESNIConfig, as follows:
 
@@ -748,7 +748,7 @@ server.
 The retry mechanism repairs inconsistencies, provided the server is
 authoritative for the public name. If server and advertised keys mismatch,
 the server will respond with echo_retry_requested. If the server does not understand the
-"encrypted_server_name" extension at all, it will ignore it as required by {{RFC8446}};
+"encrypted_client_hello" extension at all, it will ignore it as required by {{RFC8446}};
 Section 4.1.2. Provided the server can present a certificate valid for the public name,
 the client can safely retry with updated settings, as described in {{handle-server-response}}.
 
@@ -770,7 +770,7 @@ A more serious problem is MITM proxies which do not support this
 extension. {{RFC8446}}; Section 9.3 requires that
 such proxies remove any extensions they do not understand. The handshake will
 then present a certificate based on the public name, without echoing the
-"encrypted_server_name" extension to the client.
+"encrypted_client_hello" extension to the client.
 
 Depending on whether the client is configured to accept the proxy's certificate
 as authoritative for the public name, this may trigger the retry logic described
@@ -939,7 +939,7 @@ SNI uniformly?]]
 
 ## Update of the TLS ExtensionType Registry
 
-IANA is requested to create an entry, encrypted_server_name(0xffce),
+IANA is requested to create an entry, encrypted_client_hello(0xffce),
 in the existing registry for ExtensionType (defined in
 {{!RFC8446}}), with "TLS 1.3" column values being set to
 "CH, EE", and "Recommended" column being set to "Yes".
