@@ -702,12 +702,10 @@ outer_binder_identity = context.Export("tls13-echo-binder-identity", TODO)
 outer_binder_key = context.Export("tls13-echo-binder-key", 16)
 ~~~
 
-If there is no PSK binder in ClientHelloOuter, or if there is no PSK identity matching
-outer_binder_identity, the server ignores the "encrypted_client_hello" extension.
-Otherwise, it attempts to verify the PSK binder using outer_binder_key. If verification
-fails, the server MUST abort the connection with a "decrypt_error" alert.
-If verification succeeds, the server then attempts to decrypt the "encrypted_client_hello"
-extension value as follows:
+If there is no PSK binder in ClientHelloOuter, there is no PSK identity matching
+outer_binder_identity, or if binder verification fails, the server ignores the
+"encrypted_client_hello" extension. Otherwise, the server then attempts to
+decrypt the "encrypted_client_hello" extension value as follows:
 
 ~~~
 ClientHelloInner = context.Open("", ClientEncryptedCH.encrypted_ch)
@@ -715,15 +713,14 @@ echo_nonce = context.Export("tls13-echo-nonce", 16)
 echo_hrr_key = context.Export("tls13-echo-hrr-key", 16)
 ~~~
 
-If decryption fails, the server MUST abort the connection with
-a "decrypt_error" alert. Moreover, if there is no "echo_nonce"
-extension, or if its value does not match the derived echo_nonce,
-the server MUST abort the connection with a "decrypt_error" alert.
-Next, the server MUST scan ClientHelloInner for any "outer_extension"
-extensions and substitute their values with the values in ClientHelloOuter.
-It MUST first verify that the hash found in the extension matches the hash
-of the extension to be interpolated in and if it does not, abort the connections
-with a "decrypt_error" alert.
+If decryption fails, the server ignores the "encrypted_client_hello" extension.
+Otherwise, if there is no "echo_nonce" extension, or if its value does not
+match the derived echo_nonce, the server MUST abort the connection with a
+"decrypt_error" alert. Next, the server MUST scan ClientHelloInner for any
+"outer_extension" extensions and substitute their values with the values in
+ClientHelloOuter. It MUST first verify that the hash found in the extension
+matches the hash of the extension to be interpolated in and if it does not,
+abort the connections with a "decrypt_error" alert.
 
 Upon determining the true SNI, the client-facing server then either
 serves the connection directly (if in Shared Mode), in which case
