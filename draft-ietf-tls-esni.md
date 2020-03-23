@@ -380,7 +380,6 @@ the impact of duplicated extensions, the client may use the
 
    struct {
        ExtensionType outer_extensions<2..254>;
-       uint8 hash<32..255>;
    } OuterExtensions;
 ~~~~
 
@@ -392,18 +391,14 @@ ClientHelloInner.
 When sending ClientHello, the client first computes ClientHelloInner,
 including any PSK binders, and then MAY substitute extensions which
 it knows will be duplicated in ClientHelloOuter. To do so, the client
-computes a hash H of the entire ClientHelloInner message with the same
-hash as for the KDF used to encrypt ClienHelloInner. Then, the client
 removes and and replaces extensions from ClientHelloInner with a single
 "outer_extensions" extension. The list of outer_extensions include those
 which were removed from ClientHelloInner, in the order in which they were
-removed. The hash contains the full ClientHelloInner hash H computed above.
+removed.
 
 This process is reversed by client-facing servers upon receipt. Specifically,
 the server replaces the "outer_extensions" with extensions contained in
-ClientHelloOuter. The server then computes a hash H' of the reconstructed
-ClientHelloInner. If H' does not equal OuterExtensions.hash, the server aborts
-the connection with an "illegal_parameter" alert.
+ClientHelloOuter.
 
 Clients SHOULD only use this mechanism for extensions which are
 large. All other extensions SHOULD appear in both ClientHelloInner
