@@ -718,9 +718,12 @@ Otherwise, if there is no "echo_nonce" extension, or if its value does not
 match the derived echo_nonce, the server MUST abort the connection with a
 "decrypt_error" alert. Next, the server MUST scan ClientHelloInner for any
 "outer_extension" extensions and substitute their values with the values in
-ClientHelloOuter. It MUST first verify that the hash found in the extension
-matches the hash of the extension to be interpolated in and if it does not,
-abort the connections with a "decrypt_error" alert.
+ClientHelloOuter.
+
+If ClientHelloInner contains a resumption PSK binder, the server SHOULD process it
+as per the rules in {{!RFC8446}}. Note that this requires servers process more than
+one binder when resuming an ECHO connection: one in ClientHelloOuter and another
+in ClientHelloInner.
 
 Upon determining the true SNI, the client-facing server then either
 serves the connection directly (if in Shared Mode), in which case
