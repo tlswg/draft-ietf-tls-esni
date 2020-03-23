@@ -610,14 +610,6 @@ echo_nonce = context.Export("tls13-echo-hrr-nonce", 16)
 On the one hand, the requirements on info seem weaker, but maybe
 actually this needs to be secret? Analysis needed.]]
 
-[[OPEN ISSUE: This, along with trial decryption is
-pretty gross. It would just be a lot easier if we were willing to
-have the server indicate whether ECHO had been accepted or not.
-Given that the server is supposed to only reject ECHO when it doesn't
-know the key, and this is easy to probe for, can we just instead
-have an extension to indicate what has happened.]]
-
-
 ## GREASE extensions {#grease-extensions}
 
 If the client attempts to connect to a server and does not have an ECHOConfig
