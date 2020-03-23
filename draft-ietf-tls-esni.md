@@ -256,7 +256,7 @@ HPKE algorithm identifiers.
 
 maximum_name_length
 :  the largest name the server expects to support. If the server supports arbitrary
-wildcard names, it SHOULD set this value to 256. Clients SHOULD reject ESNIConfig as
+wildcard names, it SHOULD set this value to 256. Clients SHOULD reject ECHOConfig as
 invalid if maximum_name_length is greater than 256.
 
 extensions
@@ -431,6 +431,8 @@ pkR = HPKE.KEM.Unmarshal(ECHOConfig.public_key)
 enc, context = SetupBaseS(pkR, "tls13-echo")
 echo_nonce = context.Export("tls13-echo-nonce", 16)
 echo_hrr_key = context.Export("tls13-echo-hrr-key", 16)
+outer_binder_identity = context.Export("tls13-echo-binder-identity", TODO)
+outer_binder_key = context.Export("tls13-echo-binder-key", 16)
 ~~~
 
 Note that the HPKE algorithm identifiers are those which match the client's
@@ -475,6 +477,10 @@ ClientHelloInner but MAY also differ.  The ClientHelloOuter MUST NOT
 contain a "cached_info" extension {{!RFC7924}} with a CachedObject
 entry whose CachedInformationType is "cert", since this indication
 would divulge the true server name.
+
+Finally, client computes a PSK binder using outer_binder_key with the identity
+outer_binder_identity. This binds the encryption of ClientHelloInner to
+ClientHelloOuter.
 
 ## Handling the server response {#handle-server-response}
 
@@ -604,6 +610,8 @@ decrypt ClientEncryptedCH as follows:
 context = SetupPSKR(ClientEncryptedCH.enc, skR, "tls13-echo-hrr", echo_hrr_key, "")
 ClientHelloInner = context.Open("", ClientEncryptedCH.encrypted_ch)
 echo_nonce = context.Export("tls13-echo-hrr-nonce", 16)
+outer_binder_identity = context.Export("tls13-echo-binder-identity", TODO)
+outer_binder_key = context.Export("tls13-echo-binder-key", 16)
 ~~~
 
 [[OPEN ISSUE: Should we be using the PSK input or the info input?
@@ -690,11 +698,23 @@ servers can measure occurrences of the "echo_required" alert to detect this
 case.
 
 If the ClientEncryptedCH value matches a known ECHOConfig, the server
-then decrypts ClientEncryptedCH.encrypted_ch, using the private key skR
-corresponding to ESNIConfig, as follows:
+then verifies the outer ClientHello binding, using the private key skR
+corresponding to ECHOConfig, as follows:
 
 ~~~
 context = SetupBaseR(ClientEncryptedCH.enc, skR, "tls13-echo")
+outer_binder_identity = context.Export("tls13-echo-binder-identity", TODO)
+outer_binder_key = context.Export("tls13-echo-binder-key", 16)
+~~~
+
+If there is no PSK binder in ClientHelloOuter, or if there is no PSK identity matching
+outer_binder_identity, the server ignores the "encrypted_client_hello" extension.
+Otherwise, it attempts to verify the PSK binder using outer_binder_key. If verification
+fails, the server MUST abort the connection with a "decrypt_error" alert.
+If verification succeeds, the server then attempts to decrypt the "encrypted_client_hello"
+extension value as follows:
+
+~~~
 ClientHelloInner = context.Open("", ClientEncryptedCH.encrypted_ch)
 echo_nonce = context.Export("tls13-echo-nonce", 16)
 echo_hrr_key = context.Export("tls13-echo-hrr-key", 16)
