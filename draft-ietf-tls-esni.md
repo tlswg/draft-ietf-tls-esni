@@ -446,38 +446,40 @@ values, ClientHelloInner MUST also contain:
  - an "echo_nonce" extension
  - TLS padding {{!RFC7685}}
 
-An encoded ClientHelloInner can be around 300 octets long, but variations in
-the length of the ciphertext version of that could defeat the entire purpose of
-ECHO, if for example those expose the chosen server_name field in the
-ClientHelloInner.  The padding ClientHello extension, if well used, can ensure
-that length information does not expose what is contained in the
-ClientHelloInner. Clients add padding to the ClientHelloInner to try meet
-this requirement.
+Variations in the length of the ciphertext version of the ClientHelloInner
+could defeat the purpose of ECHO, if those expose the chosen server_name field
+in the ClientHelloInner. The padding ClientHello extension, if well used, can
+ensure that length information does not expose what is contained in the
+ClientHelloInner. Clients SHOULD add padding to the ClientHelloInner to meet this
+requirement.
 
 Given that extensions could be defined in the future that reveal sensitive information
 through their length, we cannot describe all the ways in which length information
 could expose sensitive content. Implementers ought therefore be aware that they
 might have to change their padding scheme as the set of supported extensions
-changes. In addition to padding the ClientHelloInner, clients and servers will
-both need to pad all other handshake messages that have sensitive-length fields. For
-example, if the client proposes ALPN values in the ClientHelloInner, the
+changes. 
+
+For each field in the inner ClientHello, clients need to determine how much to
+pad given the semantics of that field.  For example, if a client can propose
+various ALPN values, it could add padding to round up to the longest of those.
+
+For most fields in a ClientHello this can be determined without server help.
+For the server_name, however, if ECHOConfig.maximum_name_length is longer than
+the actual server_name then clients SHOULD add padding to make up that
+difference. If the maximum_name_length is zero or less than the length of the
+actual server_name then round the server_name up to a multiple of 32 octets and
+randomly add another 32 octets 50% of the time and then include that amount
+of additional padding.
+
+Sum all the padding together, then in order to reduce entropy across different
+client implementationss, round up so that the inner ClientHello encoding length 
+is a multiple of 32.
+
+In addition to padding the ClientHelloInner, clients and servers will also need
+to pad all other handshake messages that have sensitive-length fields. For
+example, if a client proposes ALPN values in the ClientHelloInner, the
 server-selected value will be returned in an EncryptedExtension, so that
-handshake message needs to be padded with TLS record layer padding. 
-
-One approach that may be relative safe and simple is once ECHO is in use is for
-each field, determine how much it makes sense to pad given what kinds of things
-it sends. If it varies ALPN, maybe round up to the largest of those. Most of
-this can be determined without server help.  For fields where server help is
-useful, like the server_name, apply that help if available.  
-
-If the maximum_name_length is longer than the actual server_name then clients
-should add padding to make up the difference. If the maximum_name_length is
-zero or less than the length of the actual server_name then round the
-server_name up to a multiple of 32 octets and randomly add another 32 octets
-50% of the time.
-
-Sum all that padding together, then in order to reduce entropy across different
-kinds of clients, round up to a multiple of 32.
+handshake message also needs to be padded using TLS record layer padding. 
 
 When offering an encrypted ClientHello, the client MUST NOT offer to resume any
 non-ECHO PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2
