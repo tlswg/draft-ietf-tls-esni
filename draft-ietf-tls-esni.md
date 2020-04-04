@@ -471,9 +471,10 @@ of the actual server_name then round the server_name up to a multiple of 32 octe
 and randomly add another 32 octets 50% of the time and then include that amount
 of additional padding.
 
-Sum all the padding together, then in order to reduce entropy across different
-client implementationss, round up so that the inner ClientHello encoding length 
-is a multiple of 32.
+The amount of padding applied to the ClientHello is then computed as the sum of 
+all per-extension padding values, rounded up to the nearest multiple of 32. 
+(This additional rounding step aims to hide variance across different client
+implementations.)
 
 In addition to padding the ClientHelloInner, clients and servers will also need
 to pad all other handshake messages that have sensitive-length fields. For
