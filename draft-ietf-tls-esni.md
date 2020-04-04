@@ -476,11 +476,11 @@ all per-extension padding values, rounded up to the nearest multiple of 32.
 (This additional rounding step aims to hide variance across different client
 implementations.)
 
-In addition to padding the ClientHelloInner, clients and servers will also need
+In addition to padding ClientHelloInner, clients and servers will also need
 to pad all other handshake messages that have sensitive-length fields. For
-example, if a client proposes ALPN values in the ClientHelloInner, the
+example, if a client proposes ALPN values in ClientHelloInner, the
 server-selected value will be returned in an EncryptedExtension, so that
-handshake message also needs to be padded using TLS record layer padding. 
+handshake message also needs to be padded using TLS record layer padding.
 
 When offering an encrypted ClientHello, the client MUST NOT offer to resume any
 non-ECHO PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2
