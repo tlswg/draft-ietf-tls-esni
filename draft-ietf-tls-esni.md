@@ -257,7 +257,7 @@ HPKE algorithm identifiers.
 maximum_name_length  
 : The largest name the server expects to support, if known.
 If this value is not known (e.g. if wildcard names are in use, or names can be
-added or removed from tne anonymity set during the lifetime of a particular
+added or removed from the anonymity set during the lifetime of a particular
 resource record value), then this value can be set to zero, in which case
 clients SHOULD use the inner ClientHello padding scheme described below.
 
