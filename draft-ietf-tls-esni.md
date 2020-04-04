@@ -453,11 +453,8 @@ ensure that length information does not expose what is contained in the
 ClientHelloInner. Clients SHOULD add padding to the ClientHelloInner to meet this
 requirement.
 
-Given that extensions could be defined in the future that reveal sensitive information
-through their length, we cannot describe all the ways in which length information
-could expose sensitive content. Implementers ought therefore be aware that they
-might have to change their padding scheme as the set of supported extensions
-changes. 
+Future extensions could reveal sensitive information through their length. Consequently, 
+padding should be flexible and support arbitrary extension changes. 
 
 For each field in the inner ClientHello, clients need to determine how much to
 pad given the semantics of that field.  For example, if a client can propose
