@@ -461,11 +461,14 @@ pad given the semantics of that field.  For example, if a client can propose
 various ALPN values, it could add padding to round up to the longest of those.
 
 The target padding length of most ClientHello extensions can be determined without server help.
-For the server_name, however, if ECHOConfig.maximum_name_length is longer than
-the actual server_name then clients SHOULD add padding to make up that
-difference. If the maximum_name_length is zero or less than the length of the
-actual server_name then round the server_name up to a multiple of 32 octets and
-randomly add another 32 octets 50% of the time and then include that amount
+However, the "server_name" extension could benefit from server input (ECHOConfig.maximum_name_length). 
+Clients SHOULD compute the padding for this extension as follows:
+
+1. If ECHOConfig.maximum_name_length is longer than the actual server_name then 
+clients SHOULD add padding to make up that difference.
+2. Otherwise, if ECHOConfig.maximum_name_length is zero or less than the length 
+of the actual server_name then round the server_name up to a multiple of 32 octets 
+and randomly add another 32 octets 50% of the time and then include that amount
 of additional padding.
 
 Sum all the padding together, then in order to reduce entropy across different
