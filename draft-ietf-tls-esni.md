@@ -460,7 +460,7 @@ For each field in the inner ClientHello, clients need to determine how much to
 pad given the semantics of that field.  For example, if a client can propose
 various ALPN values, it could add padding to round up to the longest of those.
 
-For most fields in a ClientHello this can be determined without server help.
+The target padding length of most ClientHello extensions can be determined without server help.
 For the server_name, however, if ECHOConfig.maximum_name_length is longer than
 the actual server_name then clients SHOULD add padding to make up that
 difference. If the maximum_name_length is zero or less than the length of the
