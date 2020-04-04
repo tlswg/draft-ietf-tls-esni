@@ -444,14 +444,36 @@ The client then generates a ClientHelloInner value. In addition to the normal
 values, ClientHelloInner MUST also contain:
 
  - an "echo_nonce" extension
- - TLS padding {{!RFC7685}}
+ - TLS padding {{!RFC7685}} (see section {{!padding}})
 
-Variations in the length of the ciphertext version of the ClientHelloInner
-could defeat the purpose of ECHO, if those expose the chosen server_name field
-in the ClientHelloInner. The padding ClientHello extension, if well used, can
-ensure that length information does not expose what is contained in the
-ClientHelloInner. Clients SHOULD add padding to the ClientHelloInner to meet this
-requirement.
+When offering an encrypted ClientHello, the client MUST NOT offer to resume any
+non-ECHO PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2
+or below.
+
+The encrypted ClientHello value is then computed as:
+
+~~~~
+    encrypted_ch = context.Seal("", ClientHelloInner)
+~~~~
+
+Finally, the client MUST generate a ClientHelloOuter message
+containing the "encrypted_client_hello" extension with the values as
+indicated above. In particular,
+
+- suite contains the client's chosen ciphersuite;
+- record_digest contains the digest of the corresponding ECHOConfig structure;
+- enc contains the encapsulated key as output by SetupBaseS; and
+- encrypted_ch contains the HPKE encapsulated key (enc) and the ClientHelloInner ciphertext (encrypted_ch_inner).
+
+The client MUST place the value of ECHOConfig.public_name in the
+ClientHelloOuter "server_name" extension. The remaining
+contents of the ClientHelloOuter MAY be identical to those in
+ClientHelloInner but MAY also differ.  The ClientHelloOuter MUST NOT
+contain a "cached_info" extension {{!RFC7924}} with a CachedObject
+entry whose CachedInformationType is "cert", since this indication
+would divulge the true server name.
+
+## Recommended Padding Scheme {#padding}
 
 Future extensions could reveal sensitive information through their length. Consequently, 
 padding should be flexible and support arbitrary extension changes. 
@@ -481,33 +503,6 @@ to pad all other handshake messages that have sensitive-length fields. For
 example, if a client proposes ALPN values in ClientHelloInner, the
 server-selected value will be returned in an EncryptedExtension, so that
 handshake message also needs to be padded using TLS record layer padding.
-
-When offering an encrypted ClientHello, the client MUST NOT offer to resume any
-non-ECHO PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2
-or below.
-
-The encrypted ClientHello value is then computed as:
-
-~~~~
-    encrypted_ch = context.Seal("", ClientHelloInner)
-~~~~
-
-Finally, the client MUST generate a ClientHelloOuter message
-containing the "encrypted_client_hello" extension with the values as
-indicated above. In particular,
-
-- suite contains the client's chosen ciphersuite;
-- record_digest contains the digest of the corresponding ECHOConfig structure;
-- enc contains the encapsulated key as output by SetupBaseS; and
-- encrypted_ch contains the HPKE encapsulated key (enc) and the ClientHelloInner ciphertext (encrypted_ch_inner).
-
-The client MUST place the value of ECHOConfig.public_name in the
-ClientHelloOuter "server_name" extension. The remaining
-contents of the ClientHelloOuter MAY be identical to those in
-ClientHelloInner but MAY also differ.  The ClientHelloOuter MUST NOT
-contain a "cached_info" extension {{!RFC7924}} with a CachedObject
-entry whose CachedInformationType is "cert", since this indication
-would divulge the true server name.
 
 ## Handling the server response {#handle-server-response}
 
@@ -971,6 +966,17 @@ verifying the server's identity in its certificate.
 [[TODO: Some more analysis needed in this case, as it is a little
 odd, and probably some precise rules about handling ECHO and no
 SNI uniformly?]]
+
+## Padding
+
+Variations in the length of the ciphertext version of the ClientHelloInner
+could defeat the purpose of ECHO, if those expose the chosen server_name field
+in the ClientHelloInner. The padding ClientHello extension, if well used, can
+ensure that length information does not expose what is contained in the
+ClientHelloInner. Clients SHOULD add padding to the ClientHelloInner to meet this
+requirement.
+
+[[TODO: once the padding scheme is final, revisit the above.]]
 
 # IANA Considerations
 
