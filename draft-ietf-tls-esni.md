@@ -256,10 +256,10 @@ HPKE algorithm identifiers.
 
 maximum_name_length  
 : The largest name the server expects to support, if known.
-If this value is not known (e.g. if wildcard names are in use, or names can be
-added or removed from the anonymity set during the lifetime of a particular
-resource record value), then this value can be set to zero, in which case
-clients SHOULD use the inner ClientHello padding scheme described below.
+If this value is not known it can be set to zero, in which case clients SHOULD
+use the inner ClientHello padding scheme described below.  That could happen if
+wildcard names are in use, or if names can be added or removed from the
+anonymity set during the lifetime of a particular resource record value.
 
 extensions
 : A list of extensions that the client can take into consideration when
@@ -969,12 +969,12 @@ SNI uniformly?]]
 
 ## Padding
 
-Variations in the length of the ciphertext version of the ClientHelloInner
-could defeat the purpose of ECHO, if those expose the chosen server_name field
-in the ClientHelloInner. The padding ClientHello extension, if well used, can
-ensure that length information does not expose what is contained in the
-ClientHelloInner. Clients SHOULD add padding to the ClientHelloInner to meet this
-requirement.
+Variations in the length of the ClientHelloInner ciphertext could defeat the
+purpose of ECHO, if those expose the chosen server_name field in the
+ClientHelloInner. The padding ClientHello extension, if well used, can ensure
+that length information does not expose what is contained in the
+ClientHelloInner. Clients SHOULD add padding to the ClientHelloInner to meet
+this requirement.
 
 [[TODO: once the padding scheme is final, revisit the above.]]
 
