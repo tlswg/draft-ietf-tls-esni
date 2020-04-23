@@ -256,7 +256,7 @@ HPKE algorithm identifiers.
 
 maximum_name_length
 :  the largest name the server expects to support. If the server supports arbitrary
-wildcard names, it SHOULD set this value to 256. Clients SHOULD reject ESNIConfig as
+wildcard names, it SHOULD set this value to 256. Clients SHOULD reject ECHOConfig as
 invalid if maximum_name_length is greater than 256.
 
 extensions
@@ -325,7 +325,7 @@ EncryptedExtensions:
 ~~~
 
 retry_configs
-: An ESNIConfigs structure containing one or more ECHOConfig structures in
+: An ECHOConfigs structure containing one or more ECHOConfig structures in
 decreasing order of preference that the client should use on subsequent
 connections to encrypt the ClientHelloInner structure.
 
@@ -683,7 +683,7 @@ case.
 
 If the ClientEncryptedCH value matches a known ECHOConfig, the server
 then decrypts ClientEncryptedCH.encrypted_ch, using the private key skR
-corresponding to ESNIConfig, as follows:
+corresponding to ECHOConfig, as follows:
 
 ~~~
 context = SetupBaseR(ClientEncryptedCH.enc, skR, "tls13-echo")
