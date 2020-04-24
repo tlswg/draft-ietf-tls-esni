@@ -469,12 +469,12 @@ indicated above. In particular,
 - encrypted_ch contains the HPKE encapsulated key (enc) and the ClientHelloInner ciphertext (encrypted_ch_inner).
 
 The client MUST place the value of ECHOConfig.public_name in the
-ClientHelloOuter "server_name" extension. The remaining
-contents of the ClientHelloOuter MAY be identical to those in
-ClientHelloInner but MAY also differ.  The ClientHelloOuter MUST NOT
+ClientHelloOuter "server_name" extension. The ClientHelloOuter MUST NOT
 contain a "cached_info" extension {{!RFC7924}} with a CachedObject
 entry whose CachedInformationType is "cert", since this indication
-would divulge the true server name.
+would divulge the true server name. The remaining
+contents of the ClientHelloOuter MAY be identical to those in
+ClientHelloInner but MAY also differ.
 
 ## Handling the server response {#handle-server-response}
 
