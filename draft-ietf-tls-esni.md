@@ -195,14 +195,21 @@ following ECHOConfigs structure.
 
 ~~~~
     opaque HpkePublicKey<1..2^16-1>;
-    uint16 HkpeKemId; // Defined in I-D.irtf-cfrg-hpke
+    uint16 HkpeKemId;  // Defined in I-D.irtf-cfrg-hpke
+    uint16 HkpeKdfId;  // Defined in I-D.irtf-cfrg-hpke
+    uint16 HkpeAeadId; // Defined in I-D.irtf-cfrg-hpke
+
+    struct {
+        HkpeKdfId kdf_id;
+        HkpeAeadId aead_id;
+    } HpkeCipherSuite;
 
     struct {
         opaque public_name<1..2^16-1>;
 
         HpkePublicKey public_key;
         HkpeKemId kem_id;
-        CipherSuite cipher_suites<2..2^16-2>;
+        HpkeCipherSuite cipher_suites<4..2^16-2>;
 
         uint16 maximum_name_length;
         Extension extensions<0..2^16-1>;
@@ -250,9 +257,8 @@ kem_id
 Clients MUST ignore any ECHOConfig structure with a key using a KEM they do not support.
 
 cipher_suites
-: The list of TLS cipher suites which can be used by the client to encrypt the ClientHello.
-See {{hpke-map}} for information on how a cipher suite maps to corresponding
-HPKE algorithm identifiers.
+: The list of HPKE {{!I-D.irtf-cfrg-hpke}} AEAD and KDF identifier pairs clients can
+use for encrypting the ClientHello.
 
 maximum_name_length
 :  the largest name the server expects to support. If the server supports arbitrary
@@ -434,7 +440,7 @@ echo_hrr_key = context.Export("tls13-echo-hrr-key", 16)
 ~~~
 
 Note that the HPKE algorithm identifiers are those which match the client's
-chosen CipherSuite, according to {{hpke-map}}. The client MAY replace any large,
+chosen preference from ECHOConfig.cipher_suites. The client MAY replace any large,
 duplicated extensions in ClientHelloInner with the corresponding "outer_extensions"
 extension, as described in {{outer-extensions}}.
 
@@ -774,20 +780,6 @@ substituting its own KeyShare value, will result in
 the client-facing server recognizing the key, but failing to decrypt
 the SNI. This causes a hard failure. Clients SHOULD NOT attempt to repair the
 connection in this case.
-
-# TLS and HPKE CipherSuite Mapping {#hpke-map}
-
-Per {{RFC8446}, TLS ciphersuites define an AEAD and hash algorithm. In contrast,
-HPKE defines separate AEAD algorithms and key derivation functions. The table below lists
-the mapping between ciphersuites and HPKE identifiers. TLS_AES_128_CCM_SHA256 and
-TLS_AES_128_CCM_8_SHA256 are not supported ECHO ciphersuites as they have no HPKE
-equivalent.
-
-| TLS CipherSuite | HPKE AEAD | HPKE KDF |
-|:-------|:------------------------|:----------|
-| TLS_AES_128_GCM_SHA256 | AES-GCM-128 | HKDF-SHA256 |
-| TLS_AES_256_GCM_SHA384 | AES-GCM-256 | HKDF-SHA256 |
-| TLS_CHACHA20_POLY1305_SHA256 | ChaCha20Poly1305 | HKDF-SHA256 |
 
 # Security Considerations
 
