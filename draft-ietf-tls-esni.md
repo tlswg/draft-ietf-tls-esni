@@ -487,9 +487,9 @@ length. Thus, each extension in the inner ClientHello may require different amou
 of padding. This padding may be fully determined by the client's configuration or
 may require server input.
 
-By way of example, a client's set of ALPN values is typically fixed. Sensible padding
-for this extension should therefore round up to the longest of those values. The
-target padding length of most ClientHello extensions can be computed in this way.
+By way of example, a client's set of ALPN values is typically fixed. Clients SHOULD
+pad this extension by rounding up to the longest of those values. The target padding
+length of most ClientHello extensions can be computed in this way.
 
 In contrast, clients do not know the longest SNI value in the client-facing server's
 anonymity set without server input. For the "server_name" extension with length D,
