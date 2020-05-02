@@ -39,18 +39,8 @@ author:
 
 
 normative:
-  RFC1035:
   RFC2119:
-  RFC6234:
   RFC7918:
-
-informative:
-  I-D.ietf-tls-grease:
-  SNIExtensibilityFailed:
-    title: Accepting that other SNI name types will never work
-    target: https://mailarchive.ietf.org/arch/msg/tls/1t79gzNItZd71DwwoaqcQQ_4Yxc
-    date: March 2016
-
 
 --- abstract
 
@@ -450,7 +440,7 @@ The client then generates a ClientHelloInner value. In addition to the normal
 values, ClientHelloInner MUST also contain:
 
  - an "echo_nonce" extension
- - TLS padding {{!RFC7685}} (see section {{!padding}})
+ - TLS padding {{!RFC7685}} (see {{padding}})
 
 When offering an encrypted ClientHello, the client MUST NOT offer to resume any
 non-ECHO PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2
@@ -650,7 +640,7 @@ actually this needs to be secret? Analysis needed.]]
 
 If the client attempts to connect to a server and does not have an ECHOConfig
 structure available for the server, it SHOULD send a GREASE
-{{I-D.ietf-tls-grease}} "encrypted_client_hello" extension as follows:
+{{?RFC8701}} "encrypted_client_hello" extension as follows:
 
 - Set the "suite" field  to a supported cipher suite. The selection
   SHOULD vary to exercise all supported configurations, but MAY be held constant
@@ -949,7 +939,7 @@ verifying the server's identity in its certificate.
 odd, and probably some precise rules about handling ECHO and no
 SNI uniformly?]]
 
-## Padding
+## Padding Policy
 
 Variations in the length of the ClientHelloInner ciphertext could leak information
 about the corresponding plaintext. {{padding}} describes a RECOMMENDED padding
