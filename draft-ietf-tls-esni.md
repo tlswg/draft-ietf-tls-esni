@@ -496,8 +496,10 @@ anonymity set without server input. For the "server_name" extension with length 
 clients SHOULD use the server's length hint L (ECHOCOnfig.maximum_name_length) when
 computing the padding as follows:
 
-1. If L > D, add L - D bytes of padding.
-2. Otherwise, add 32 - (D % 32) bytes of padding.
+1. If L > D, add L - D bytes of padding. This rounds to the server's advertised
+hint, i.e., ECHOCOnfig.maximum_name_length.
+2. Otherwise, add 32 - (D % 32) bytes of padding. This rounds D up to the nearest
+multiple of 32 bytes.
 
 The amount of padding applied to the ClientHello is computed as the sum of
 all per-extension padding values, rounded up to the nearest multiple of 32.
