@@ -864,16 +864,16 @@ valid TCP connections an attacker can open.
 
 ### Do not stick out
 
-As more clients enable ECHO support, e.g., as normal part of Web browser
-functionality, with keys supplied by shared hosting providers, the presence
-of ECHO extensions becomes less suspicious and part of common or predictable
-client behavior. In other words, if all Web browsers start using ECHO,
-the presence of this value does not signal suspicious behavior to passive
-eavesdroppers.
-
-Additionally, this specification allows for clients to send GREASE ECHO
-extensions (see {{grease-extensions}}), which helps ensure the ecosystem
-handles the values correctly.
+The only explicit signal indicating possible use of ECHO is the ClientHello
+"encrypted_client_hello" extension. Server handshake messages do not contain any
+signal indicating use or negotiation of ECHO. Clients may GREASE the
+"encrypted_client_hello" extension, as described in {{grease-extensions}}, which
+helps ensure the ecosystem handles ECHO correctly. Moreover, as more clients
+enable ECHO support, e.g., as normal part of Web browser functionality, with keys
+supplied by shared hosting providers, the presence of ECHO extensions becomes less
+suspicious and part of typical client behavior. In other words, if all Web browsers
+start using ECHO, the presence of this value will not signal suspicious behavior
+to passive eavesdroppers.
 
 ### Forward secrecy
 
