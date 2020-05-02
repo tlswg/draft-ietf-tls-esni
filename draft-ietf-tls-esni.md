@@ -267,17 +267,20 @@ invalid if maximum_name_length is greater than 256.
 
 extensions
 : A list of extensions that the client can take into consideration when
-generating a Client Hello message. The purpose of the field is to provide room
-for additional features in the future. The format is defined in {{RFC8446}};
-Section 4.2. The same interpretation rules apply: extensions MAY appear in any
-order, but there MUST NOT be more than one extension of the same type in the
-extensions block. An extension may be tagged as mandatory by using an extension
-type codepoint with the high order bit set to 1. A client which receives a
-mandatory extension they do not understand must reject the ECHOConfig content.
+generating a ClientHello message. The purpose of the field is to provide room
+for additional features in the future. See {{config-extensions}} for guidance
+on what type of extensions are appropriate for this structure.
 
-Clients MUST parse the extension list and check for unsupported
-mandatory extensions. If an unsupported mandatory extension is
-present, clients MUST reject the ECHOConfig value.
+The format is defined in {{RFC8446}}; Section 4.2. The same interpretation rules
+apply: extensions MAY appear in any order, but there MUST NOT be more than one
+extension of the same type in the extensions block. An extension can be tagged as
+mandatory by using an extension type codepoint with the high order bit set to 1.
+A client which receives a mandatory extension they do not understand MUST reject
+the ECHOConfig content.
+
+Clients MUST parse the extension list and check for unsupported mandatory
+extensions. If an unsupported mandatory extension is present, clients MUST
+reject the ECHOConfig value.
 
 # The "encrypted_client_hello" extension {#encrypted-client-hello}
 
@@ -933,6 +936,17 @@ in the existing registry for ExtensionType (defined in
 IANA is requested to create an entry, echo_required(121) in the
 existing registry for Alerts (defined in {{!RFC8446}}), with the
 "DTLS-OK" column being set to "Y".
+
+# ECHOConfig Extension Guidance {#config-extensions}
+
+Any future information or hints that influence the outer ClientHello should be
+specified as ECHOConfig extensions. This is primarily because the outer ClientHello
+exists only in support of ECHO. Namely, it is both an envelope for the encrypted
+inner ClientHello and enabler for authenticated key mismatch signals
+(see {{server-behavior}}). In contrast, the inner ClientHello is the true ClientHello
+used upon ECHO negotiation. Any information that influences the inner ClientHello,
+if needed, therefore belongs elsewhere, such as the corresponding HTTPSSVC
+record {{!HTTPSSVC}}.
 
 --- back
 
