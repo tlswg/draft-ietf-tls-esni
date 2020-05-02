@@ -806,11 +806,14 @@ less useful without encryption of DNS queries in transit via DoH or DPRIVE mecha
 
 ## Optional Record Digests and Trial Decryption
 
-Supporting optional record digests and trial decryption opens oneself up to
-DoS attacks. Specifically, an adversary may send malicious ClientHello messages, i.e.,
-those which will not decrypt with any known ECHO key, in order to force
-decryption. Servers that support this feature should, for example, implement
-some form of rate limiting mechanism to limit the damage caused by such attacks.
+Optional record digests may be useful in scenarios where clients and client-facing
+servers do not want to reveal information about the client-facing server in the
+"encrypted_client_hello" extension. In such settings, servers must perform trial
+decrypt upon receipt of an empty record digest, which may exacerbate DoS attacks.
+Specifically, an adversary may send malicious ClientHello messages, i.e., those
+which will not decrypt with any known ECHO key, in order to force wasteful decryption.
+Servers that support this feature should, for example, implement some form of rate
+limiting mechanism to limit the damage caused by such attacks.
 
 ## Related Privacy Leaks
 
