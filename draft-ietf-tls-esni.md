@@ -490,7 +490,7 @@ clients SHOULD use the server's length hint L (ECHOCOnfig.maximum_name_length) w
 computing the padding as follows:
 
 1. If L > D, add L - D bytes of padding. This rounds to the server's advertised
-hint, i.e., ECHOCOnfig.maximum_name_length.
+hint, i.e., ECHOConfig.maximum_name_length.
 2. Otherwise, add 32 - (D % 32) bytes of padding. This rounds D up to the nearest
 multiple of 32 bytes.
 
