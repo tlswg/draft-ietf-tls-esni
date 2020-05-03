@@ -39,18 +39,8 @@ author:
 
 
 normative:
-  RFC1035:
   RFC2119:
-  RFC6234:
   RFC7918:
-
-informative:
-  I-D.ietf-tls-grease:
-  SNIExtensibilityFailed:
-    title: Accepting that other SNI name types will never work
-    target: https://mailarchive.ietf.org/arch/msg/tls/1t79gzNItZd71DwwoaqcQQ_4Yxc
-    date: March 2016
-
 
 --- abstract
 
@@ -261,9 +251,11 @@ cipher_suites
 use for encrypting the ClientHello.
 
 maximum_name_length
-:  the largest name the server expects to support. If the server supports arbitrary
-wildcard names, it SHOULD set this value to 256. Clients SHOULD reject ECHOConfig as
-invalid if maximum_name_length is greater than 256.
+: The largest name the server expects to support, if known.
+If this value is not known it can be set to zero, in which case clients SHOULD
+use the inner ClientHello padding scheme described below.  That could happen if
+wildcard names are in use, or if names can be added or removed from the
+anonymity set during the lifetime of a particular resource record value.
 
 extensions
 : A list of extensions that the client can take into consideration when
@@ -448,12 +440,7 @@ The client then generates a ClientHelloInner value. In addition to the normal
 values, ClientHelloInner MUST also contain:
 
  - an "echo_nonce" extension
- - TLS padding {{!RFC7685}}
-
-Padding SHOULD be P = L - D bytes, where
-
-- L = ECHOConfig.maximum_name_length, rounded up to the nearest multiple of 16
-- D = len(dns_name), where dns_name is the DNS name in the ClientHelloInner "server_name" extension
+ - TLS padding {{!RFC7685}} (see {{padding}})
 
 When offering an encrypted ClientHello, the client MUST NOT offer to resume any
 non-ECHO PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2
@@ -481,6 +468,37 @@ entry whose CachedInformationType is "cert", since this indication
 would divulge the true server name. The remaining
 contents of the ClientHelloOuter MAY be identical to those in
 ClientHelloInner but MAY also differ.
+
+## Recommended Padding Scheme {#padding}
+
+This section describes a deterministic padding mechanism based on the following
+observation: individual extensions can reveal sensitive information through their
+length. Thus, each extension in the inner ClientHello may require different amounts
+of padding. This padding may be fully determined by the client's configuration or
+may require server input.
+
+By way of example, clients typically support a small number of application profiles.
+For instance, a browser might support HTTP with ALPN values ["http/1.1, "h2"] and
+WebRTC media with ALPNs ["webrtc", "c-webrtc"]. Clients SHOULD pad this extension by
+rounding up to the total size of the longest ALPN extension across all application
+profiles. The target padding length of most ClientHello extensions can be computed
+in this way.
+
+In contrast, clients do not know the longest SNI value in the client-facing server's
+anonymity set without server input. For the "server_name" extension with length D,
+clients SHOULD use the server's length hint L (ECHOCOnfig.maximum_name_length) when
+computing the padding as follows:
+
+1. If L > D, add L - D bytes of padding. This rounds to the server's advertised
+hint, i.e., ECHOConfig.maximum_name_length.
+2. Otherwise, add 32 - (D % 32) bytes of padding. This rounds D up to the nearest
+multiple of 32 bytes.
+
+In addition to padding ClientHelloInner, clients and servers will also need
+to pad all other handshake messages that have sensitive-length fields. For
+example, if a client proposes ALPN values in ClientHelloInner, the
+server-selected value will be returned in an EncryptedExtension, so that
+handshake message also needs to be padded using TLS record layer padding.
 
 ## Handling the server response {#handle-server-response}
 
@@ -620,7 +638,7 @@ actually this needs to be secret? Analysis needed.]]
 
 If the client attempts to connect to a server and does not have an ECHOConfig
 structure available for the server, it SHOULD send a GREASE
-{{I-D.ietf-tls-grease}} "encrypted_client_hello" extension as follows:
+{{?RFC8701}} "encrypted_client_hello" extension as follows:
 
 - Set the "suite" field  to a supported cipher suite. The selection
   SHOULD vary to exercise all supported configurations, but MAY be held constant
@@ -921,6 +939,12 @@ verifying the server's identity in its certificate.
 [[TODO: Some more analysis needed in this case, as it is a little
 odd, and probably some precise rules about handling ECHO and no
 SNI uniformly?]]
+
+## Padding Policy
+
+Variations in the length of the ClientHelloInner ciphertext could leak information
+about the corresponding plaintext. {{padding}} describes a RECOMMENDED padding
+mechanism for clients aimed at reducing potential information leakage.
 
 # IANA Considerations
 
