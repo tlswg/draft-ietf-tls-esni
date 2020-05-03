@@ -86,7 +86,7 @@ has been unable to develop a completely generic
 solution. {{?I-D.ietf-tls-sni-encryption}} provides a description
 of the problem space and some of the proposed techniques. One of the
 more difficult problems is "Do not stick out"
-({{?I-D.ietf-tls-sni-encryption}}; Section 3.4): if only sensitive/private
+({{?I-D.ietf-tls-sni-encryption}}, Section 3.4): if only sensitive/private
 services use SNI encryption, then SNI encryption is a signal that
 a client is going to such a service. For this reason,
 much recent work has focused on
@@ -110,7 +110,7 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
 "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
 document are to be interpreted as described in BCP 14 {{RFC2119}} {{!RFC8174}}
 when, and only when, they appear in all capitals, as shown here. All TLS notation
-comes from {{RFC8446}}; Section 3.
+comes from {{RFC8446}}, Section 3.
 
 # Overview
 
@@ -271,7 +271,7 @@ generating a ClientHello message. The purpose of the field is to provide room
 for additional features in the future. See {{config-extensions}} for guidance
 on what type of extensions are appropriate for this structure.
 
-The format is defined in {{RFC8446}}; Section 4.2. The same interpretation rules
+The format is defined in {{RFC8446}}, Section 4.2. The same interpretation rules
 apply: extensions MAY appear in any order, but there MUST NOT be more than one
 extension of the same type in the extensions block. An extension can be tagged as
 mandatory by using an extension type codepoint with the high order bit set to 1.
@@ -768,7 +768,7 @@ the contents of the ServerHello as this message is not encrypted.
 ## Middleboxes
 
 A more serious problem is MITM proxies which do not support this
-extension. {{RFC8446}}; Section 9.3 requires that
+extension. {{RFC8446}}, Section 9.3 requires that
 such proxies remove any extensions they do not understand. The handshake will
 then present a certificate based on the public name, without echoing the
 "encrypted_client_hello" extension to the client.
@@ -939,7 +939,7 @@ existing registry for Alerts (defined in {{!RFC8446}}), with the
 
 # ECHOConfig Extension Guidance {#config-extensions}
 
-Any future information or hints that influence the outer ClientHello should be
+Any future information or hints that influence the outer ClientHello SHOULD be
 specified as ECHOConfig extensions. This is primarily because the outer ClientHello
 exists only in support of ECHO. Namely, it is both an envelope for the encrypted
 inner ClientHello and enabler for authenticated key mismatch signals
