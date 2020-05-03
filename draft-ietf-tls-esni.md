@@ -477,9 +477,12 @@ length. Thus, each extension in the inner ClientHello may require different amou
 of padding. This padding may be fully determined by the client's configuration or
 may require server input.
 
-By way of example, a client's set of ALPN values is typically fixed. Clients SHOULD
-pad this extension by rounding up to the longest of those values. The target padding
-length of most ClientHello extensions can be computed in this way.
+By way of example, clients typically support a small number of application profiles.
+For instance, a browser might support HTTP with ALPN values ["http/1.1, "h2"] and
+WebRTC media with ALPNs ["webrtc", "c-webrtc"]. Clients SHOULD pad this extension by
+rounding up to the total size of the longest ALPN extension across all application
+profiles. The target padding length of most ClientHello extensions can be computed
+in this way.
 
 In contrast, clients do not know the longest SNI value in the client-facing server's
 anonymity set without server input. For the "server_name" extension with length D,
@@ -490,11 +493,6 @@ computing the padding as follows:
 hint, i.e., ECHOCOnfig.maximum_name_length.
 2. Otherwise, add 32 - (D % 32) bytes of padding. This rounds D up to the nearest
 multiple of 32 bytes.
-
-The amount of padding applied to the ClientHello is computed as the sum of
-all per-extension padding values, rounded up to the nearest multiple of 32.
-(This additional rounding step aims to hide variance across different client
-implementations.)
 
 In addition to padding ClientHelloInner, clients and servers will also need
 to pad all other handshake messages that have sensitive-length fields. For
