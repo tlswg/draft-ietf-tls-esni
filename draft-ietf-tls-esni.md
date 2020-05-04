@@ -287,7 +287,7 @@ ClientEncryptedCH structure:
 
 ~~~~
    struct {
-       CipherSuite suite;
+       HpkeCipherSuite suite;
        opaque record_digest<0..2^16-1>;
        opaque enc<1..2^16-1>;
        opaque encrypted_ch<1..2^16-1>;
@@ -295,13 +295,14 @@ ClientEncryptedCH structure:
 ~~~~
 
 suite
-: The cipher suite used to encrypt ClientHelloInner.
+: The HpkeCipherSuite cipher suite used to encrypt ClientHelloInner. This MUST
+match a value provided in the corresponding ECHOConfig.cipher_suites list.
 
 record_digest
 : A cryptographic hash of the ECHOConfig structure from which the ECHO
 key was obtained, i.e., from the first byte of "version" to the end
 of the structure.  This hash is computed using the hash function
-associated with `suite`.
+associated with `suite`, i.e., the corresponding HPKE KDF algorithm hash.
 
 enc
 : The HPKE encapsulated key, used by servers to decrypt the corresponding
@@ -309,7 +310,7 @@ encrypted_ch field.
 
 encrypted_ch
 : The serialized and encrypted ClientHelloInner structure, AEAD-encrypted using
-cipher suite "suite" and the key generated as described below.
+HPKE with the selected KEM, KDF, and AEAD algorithm and key generated as described below.
 {:br}
 
 If the server accepts ECHO, it does not send this extension.
@@ -413,9 +414,9 @@ and ClientHelloOuter even if they have identical values.
 
 In order to send an encrypted ClientHello, the client first determines if it
 supports the server's chosen KEM, as identified by ECHOConfig.kem_id. If one
-is supported, the client MUST select an appropriate cipher suite from the list of
+is supported, the client MUST select an appropriate HpkeCipherSuite from the list of
 suites offered by the server. If the client does not support the corresponding
-KEM or is unable to select an appropriate group or suite, it SHOULD ignore
+KEM or is unable to select an appropriate group or HpkeCipherSuite, it SHOULD ignore
 that ECHOConfig value and MAY attempt to use another value provided by
 the server. The client MUST NOT send ECHO using HPKE algorithms not advertised
 by the server.
@@ -456,7 +457,7 @@ Finally, the client MUST generate a ClientHelloOuter message
 containing the "encrypted_client_hello" extension with the values as
 indicated above. In particular,
 
-- suite contains the client's chosen ciphersuite;
+- suite contains the client's chosen HpkeCipherSuite;
 - record_digest contains the digest of the corresponding ECHOConfig structure;
 - enc contains the encapsulated key as output by SetupBaseS; and
 - encrypted_ch contains the HPKE encapsulated key (enc) and the ClientHelloInner ciphertext (encrypted_ch_inner).
@@ -640,13 +641,13 @@ If the client attempts to connect to a server and does not have an ECHOConfig
 structure available for the server, it SHOULD send a GREASE
 {{?RFC8701}} "encrypted_client_hello" extension as follows:
 
-- Set the "suite" field  to a supported cipher suite. The selection
+- Set the "suite" field  to a supported HpkeCipherSuite. The selection
   SHOULD vary to exercise all supported configurations, but MAY be held constant
   for successive connections to the same server in the same session.
 
 - Set the "record_digest" field to a randomly-generated string of hash_length
   bytes, where hash_length is the length of the hash function associated with
-  the chosen cipher suite.
+  the chosen HpkeCipherSuite.
 
 - Set the "enc" field to a randomly-generated valid encapsulated public key
   output by the HPKE KEM.
