@@ -809,11 +809,13 @@ less useful without encryption of DNS queries in transit via DoH or DPRIVE mecha
 A malicious client-facing server could distribute unique, per-client ECHOConfig
 structures as a way of tracking clients across subsequent connections. On-path
 adversaries which know about these unique keys could also track clients in this
-way by observing TLS connection attempts. This type of attack scales linearly
-with the desired number of target clients. Also, DNS caching behavior makes
-distribution of per-client ECHOConfig structures via HTTPSSVC RRs with high TTLs
-challenging. Moreover, given the existence of other tracking vectors, such as
-IPv6 addresses, this does not pose an immediate threat to clients.
+way by observing TLS connection attempts.
+
+The cost of this type of attack scales linearly with the desired number of target
+clients. Moreover, DNS caching behavior makes targeting individual users for extended
+periods of time, e.g., using per-client ECHOConfig structures delivered via HTTPSSVC
+RRs with high TTLs, challenging. Also, clients can help mitigate this problem by
+flushing any ECHOConfig state upon changing networks.
 
 ## Optional Record Digests and Trial Decryption
 
