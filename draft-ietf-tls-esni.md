@@ -823,6 +823,19 @@ by attackers on the local network, which is a common case where ClientHello and 
 encryption are desired. Moreover, as noted in the introduction, SNI encryption is
 less useful without encryption of DNS queries in transit via DoH or DPRIVE mechanisms.
 
+## Client Tracking
+
+A malicious client-facing server could distribute unique, per-client ECHOConfig
+structures as a way of tracking clients across subsequent connections. On-path
+adversaries which know about these unique keys could also track clients in this
+way by observing TLS connection attempts.
+
+The cost of this type of attack scales linearly with the desired number of target
+clients. Moreover, DNS caching behavior makes targeting individual users for extended
+periods of time, e.g., using per-client ECHOConfig structures delivered via HTTPSSVC
+RRs with high TTLs, challenging. Clients can help mitigate this problem by
+flushing any DNS or ECHOConfig state upon changing networks.
+
 ## Optional Record Digests and Trial Decryption
 
 Optional record digests may be useful in scenarios where clients and client-facing
