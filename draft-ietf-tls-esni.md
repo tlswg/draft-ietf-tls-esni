@@ -866,7 +866,7 @@ valid TCP connections an attacker can open.
 
 The only explicit signal indicating possible use of ECHO is the ClientHello
 "encrypted_client_hello" extension. Server handshake messages do not contain any
-signal indicating use or negotiation of ECHO. Clients may GREASE the
+signal indicating use or negotiation of ECHO. Clients MAY GREASE the
 "encrypted_client_hello" extension, as described in {{grease-extensions}}, which
 helps ensure the ecosystem handles ECHO correctly. Moreover, as more clients
 enable ECHO support, e.g., as normal part of Web browser functionality, with keys
