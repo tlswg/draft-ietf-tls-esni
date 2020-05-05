@@ -871,8 +871,8 @@ signal indicating use or negotiation of ECHO. Clients MAY GREASE the
 helps ensure the ecosystem handles ECHO correctly. Moreover, as more clients
 enable ECHO support, e.g., as normal part of Web browser functionality, with keys
 supplied by shared hosting providers, the presence of ECHO extensions becomes less
-suspicious and part of typical client behavior. In other words, if all Web browsers
-start using ECHO, the presence of this value will not signal suspicious behavior
+unusual and part of typical client behavior. In other words, if all Web browsers
+start using ECHO, the presence of this value will not signal unusual behavior
 to passive eavesdroppers.
 
 ### Forward secrecy
