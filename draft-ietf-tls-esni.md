@@ -814,7 +814,7 @@ way by observing TLS connection attempts.
 The cost of this type of attack scales linearly with the desired number of target
 clients. Moreover, DNS caching behavior makes targeting individual users for extended
 periods of time, e.g., using per-client ECHOConfig structures delivered via HTTPSSVC
-RRs with high TTLs, challenging. Also, clients can help mitigate this problem by
+RRs with high TTLs, challenging. Clients can help mitigate this problem by
 flushing any DNS or ECHOConfig state upon changing networks.
 
 ## Optional Record Digests and Trial Decryption
