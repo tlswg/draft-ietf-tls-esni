@@ -341,9 +341,7 @@ When using ECHO, the client MUST also add an extension of type
 "echo_nonce" to the ClientHelloInner (but not to the outer
 ClientHello). This nonce ensures that the server's encrypted
 Certificate can only be read by the entity which sent this
-ClientHello. [[TODO: Describe HRR cut-and-paste 1 in
-Security Considerations.]]
-This extension is defined as follows:
+ClientHello. This extension is defined as follows:
 
 ~~~
    enum {
@@ -621,7 +619,8 @@ echo_nonce = context.Export("tls13-echo-hrr-nonce", 16)
 ~~~
 
 Clients then encrypt the second ClientHelloInner using this new HPKE context.
-In doing so, the encrypted value is also authenticated by echo_hrr_key.
+In doing so, the encrypted value is also authenticated by echo_hrr_key. The rationale
+for this is described in {{flow-hrr-hijack}}.
 
 Client-facing servers perform the corresponding process when decrypting second
 ClientHelloInner messages. In particular, upon receipt of a second ClientHello
@@ -962,6 +961,131 @@ SNI uniformly?]]
 Variations in the length of the ClientHelloInner ciphertext could leak information
 about the corresponding plaintext. {{padding}} describes a RECOMMENDED padding
 mechanism for clients aimed at reducing potential information leakage.
+
+## Active Attack Mitigations
+
+This section describes rationale for ECHO properties and mechanics as mitigations 
+against active attacks.
+
+### Client Reaction Attack Mitigation {#flow-client-reaction}
+
+In this attack, the attacker sits between the client and server and aims relies on
+how clients react to SNI and certificate mismatch as an oracle. In particular, the attacker 
+intercepts a legitimate ClientHello and replies with a ServerHello, Certificate, 
+CertificateVerify, and Finished messages, wherein the Certificate message contains 
+a "test" certificate for the domain name it wishes to query. If the client decrypted
+the Certificate and failed verification (or leaked information about its verification 
+process by a timing side channel), the attacker learns that its test certificate name
+was incorrect. As an example, suppose the client's SNI value in its inner ClientHello is
+"example.com," and the attacker replied with a Certificate for "test.com". If the client
+produces a verification failure alert because of the mismatch faster than it would due to
+the Certificate signature validation, information about the name leaks. 
+
+~~~
+ Client                         Attacker                      Server
+   ClientHello
+   + key_share
+   + echo        ------>      (intercept)     -----> X (drop)
+
+                             ServerHello
+                             + key_share
+                   {EncryptedExtensions}
+                   {CertificateRequest*}
+                          {Certificate*}
+                    {CertificateVerify*}
+                 <------
+   Alert
+                 ------>
+~~~
+{: #flow-diagram-client-reaction title="Client reaction attack"}
+
+The "echo_nonce" extension in the inner ClientHello prevents this attack. In particular,
+since the attacker does not have access to this value, it cannot produce the right transcript
+and handshake keys needed for encrypting the Certificate message. Thus, the client will fail
+to decrypt before any verification check occurs.
+
+### HelloRetryRequest Hijack Mitigation {#flow-hrr-hijack}
+
+In this attack, the attacker sits between the client and server. It forwards
+a legitimate ClientHello with an echo (encrypted_client_hello) extension to
+the server, which triggers a HelloRetryRequest in return. Rather than forward
+the retry to the client, the attacker, attempts to generates its own ClientHello 
+in response based on the contents of the first ClientHello and HelloRetryRequest
+exchange.
+
+~~~
+ Client                         Attacker                      Server
+   ClientHello
+   + key_share
+   + echo        ------>       (forward)        ------->
+                                                   HelloRetryRequest
+                                                         + key_share
+                              (intercept)       <-------
+                                   
+                              ClientHello
+                              + key_share'
+                              + echo'           ------->
+                                                         ServerHello
+                                                         + key_share
+                                               {EncryptedExtensions}
+                                               {CertificateRequest*}
+                                                      {Certificate*}
+                                                {CertificateVerify*}
+                                                          {Finished}
+                                                <-------        
+                         (process server flight)
+~~~
+{: #flow-diagram-hrr-hijack title="HelloRetryRequest hijack attack"}
+
+This attack is mitigated by binding the first and second ClientHello messages together.
+In particular, since the attacker does not possess the echo_hrr_key, it cannot
+generate a valid encryption of the second inner ClientHello. The server will
+attempt decryption using echo_hrr_key, detect failure, and fail the connection.
+
+If the second ClientHello were not bound to the first, it might be possible
+for the server to act as an oracle if it required parameters from the first
+ClientHello to match that of the second ClientHello. For example, imagine 
+the client's original SNI value in the inner ClientHello is "example.com", 
+and the attacker's hijacked SNI value in its inner ClientHello is "test.com".
+A server which checks these for equality and changes behavior based on the 
+result can be used as an oracle to learn the client's SNI.
+
+### Resumption PSK Oracle Mitigation {#flow-resumption-oracle}
+
+In this attack, the attacker sits between the client and server. To begin,
+it first interacts with a server to obtain a resumption ticket for a given 
+test domain, such as "test.com". Later, upon receipt of a legitimate
+ClientHello without a PSK binder, it computes a PSK binder using its 
+own ticket and forwards the resulting ClientHello. Assume the server then
+validates the PSK binder on the outer ClientHello and chooses connection 
+parameters based on the inner ClientHello. A server which then validates 
+information in the outer ClientHello ticket against information in the 
+inner ClientHello, such as the SNI, introduces an oracle that can be used
+to test the encrypted SNI value of specific ClientHello messages.
+
+~~~
+       Client                    Attacker                    Server
+ 
+                                        handshake and ticket
+                                           for "test.com"
+                                             <-------->
+
+       ClientHello
+       + key_share  -------->  (intercept)
+                                  ClientHello
+                                  + key_share
+                                  + pre_shared_key
+                                             -------->
+                                                             Alert
+                                             <-------- 
+~~~
+{: #tls-resumption-psk title="Message flow for resumption and PSK"}
+
+ECHO mitigates against this attack by requiring servers not mix-and-match
+information from the inner and outer ClientHello. For example, if the server
+accepts the inner ClientHello, it does not validate binders in the outer
+ClientHello. This means that ECHO PSKs are used within the HPKE encryption
+envelope.
 
 # IANA Considerations
 
