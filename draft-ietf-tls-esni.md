@@ -260,7 +260,7 @@ anonymity set during the lifetime of a particular resource record value.
 extensions
 : A list of extensions that the client can take into consideration when
 generating a ClientHello message. The purpose of the field is to provide room
-for additional functionality in the future. See {{config-extensions}} for 
+for additional functionality in the future. See {{config-extensions}} for
 guidance on what type of extensions are appropriate for this structure.
 
 The format is defined in {{RFC8446}}, Section 4.2. The same interpretation rules
@@ -964,22 +964,23 @@ mechanism for clients aimed at reducing potential information leakage.
 
 ## Active Attack Mitigations
 
-This section describes rationale for ECHO properties and mechanics as mitigations 
-against active attacks.
+This section describes rationale for ECHO properties and mechanics as mitigations
+against active attacks. In all attacks below, the attacker is on-path between
+the target client and server. The goal of the attacker is to learn private information
+in the inner ClientHello, such as the true SNI value.
 
 ### Client Reaction Attack Mitigation {#flow-client-reaction}
 
-In this attack, the attacker sits between the client and server and aims relies on
-how clients react to SNI and certificate mismatch as an oracle. In particular, the attacker 
-intercepts a legitimate ClientHello and replies with a ServerHello, Certificate, 
-CertificateVerify, and Finished messages, wherein the Certificate message contains 
-a "test" certificate for the domain name it wishes to query. If the client decrypted
-the Certificate and failed verification (or leaked information about its verification 
+This attack relies on how clients react to SNI and certificate mismatch as an oracle.
+In particular, the attacker intercepts a legitimate ClientHello and replies with a
+ServerHello, Certificate, CertificateVerify, and Finished messages, wherein the Certificate
+message contains a "test" certificate for the domain name it wishes to query. If the client
+decrypted the Certificate and failed verification (or leaked information about its verification
 process by a timing side channel), the attacker learns that its test certificate name
 was incorrect. As an example, suppose the client's SNI value in its inner ClientHello is
 "example.com," and the attacker replied with a Certificate for "test.com". If the client
 produces a verification failure alert because of the mismatch faster than it would due to
-the Certificate signature validation, information about the name leaks. 
+the Certificate signature validation, information about the name leaks.
 
 ~~~
  Client                         Attacker                      Server
@@ -1006,12 +1007,13 @@ to decrypt before any verification check occurs.
 
 ### HelloRetryRequest Hijack Mitigation {#flow-hrr-hijack}
 
-In this attack, the attacker sits between the client and server. It forwards
-a legitimate ClientHello with an echo (encrypted_client_hello) extension to
-the server, which triggers a HelloRetryRequest in return. Rather than forward
-the retry to the client, the attacker, attempts to generates its own ClientHello 
-in response based on the contents of the first ClientHello and HelloRetryRequest
-exchange.
+This attack aims to exploit server HRR state management to recover information about
+a legitimate ClientHello using its own adversarially-controlled ClientHello.
+To begin, the attacker intercepts and forwards a legitimate ClientHello with an
+"encrypted_client_hello" (echo) extension to the server, which triggers a HelloRetryRequest
+in return. Rather than forward the retry to the client, the attacker, attempts to
+generates its own ClientHello in response based on the contents of the first ClientHello
+and HelloRetryRequest exchange.
 
 ~~~
  Client                         Attacker                      Server
@@ -1021,7 +1023,7 @@ exchange.
                                                    HelloRetryRequest
                                                          + key_share
                               (intercept)       <-------
-                                   
+
                               ClientHello
                               + key_share'
                               + echo'           ------->
@@ -1032,7 +1034,7 @@ exchange.
                                                       {Certificate*}
                                                 {CertificateVerify*}
                                                           {Finished}
-                                                <-------        
+                                                <-------
                          (process server flight)
 ~~~
 {: #flow-diagram-hrr-hijack title="HelloRetryRequest hijack attack"}
@@ -1044,40 +1046,42 @@ attempt decryption using echo_hrr_key, detect failure, and fail the connection.
 
 If the second ClientHello were not bound to the first, it might be possible
 for the server to act as an oracle if it required parameters from the first
-ClientHello to match that of the second ClientHello. For example, imagine 
-the client's original SNI value in the inner ClientHello is "example.com", 
+ClientHello to match that of the second ClientHello. For example, imagine
+the client's original SNI value in the inner ClientHello is "example.com",
 and the attacker's hijacked SNI value in its inner ClientHello is "test.com".
-A server which checks these for equality and changes behavior based on the 
+A server which checks these for equality and changes behavior based on the
 result can be used as an oracle to learn the client's SNI.
 
 ### Resumption PSK Oracle Mitigation {#flow-resumption-oracle}
 
-In this attack, the attacker sits between the client and server. To begin,
-it first interacts with a server to obtain a resumption ticket for a given 
-test domain, such as "test.com". Later, upon receipt of a legitimate
-ClientHello without a PSK binder, it computes a PSK binder using its 
-own ticket and forwards the resulting ClientHello. Assume the server then
-validates the PSK binder on the outer ClientHello and chooses connection 
-parameters based on the inner ClientHello. A server which then validates 
-information in the outer ClientHello ticket against information in the 
-inner ClientHello, such as the SNI, introduces an oracle that can be used
-to test the encrypted SNI value of specific ClientHello messages.
+This attack uses resumption PSKs as an oracle for dictionary attacks against
+a given ClientHello's true SNI. To begin, the attacker first interacts
+with a server to obtain a resumption ticket for a given test domain, such
+as "test.com". Later, upon receipt of a legitimate ClientHello without a PSK
+binder, it computes a PSK binder using its own ticket and forwards the resulting
+ClientHello. Assume the server then validates the PSK binder on the outer
+ClientHello and chooses connection parameters based on the inner ClientHello.
+A server which then validates information in the outer ClientHello ticket against
+information in the inner ClientHello, such as the SNI, introduces an oracle that
+can be used to test the encrypted SNI value of specific ClientHello messages.
 
 ~~~
        Client                    Attacker                    Server
- 
+
                                         handshake and ticket
                                            for "test.com"
                                              <-------->
 
        ClientHello
-       + key_share  -------->  (intercept)
+       + key_share
+       + echo       -------->  (intercept)
                                   ClientHello
                                   + key_share
+                                  + echo
                                   + pre_shared_key
                                              -------->
                                                              Alert
-                                             <-------- 
+                                             <--------
 ~~~
 {: #tls-resumption-psk title="Message flow for resumption and PSK"}
 
@@ -1105,11 +1109,11 @@ existing registry for Alerts (defined in {{!RFC8446}}), with the
 # ECHOConfig Extension Guidance {#config-extensions}
 
 Any future information or hints that influence the outer ClientHello SHOULD be
-specified as ECHOConfig extensions, or in an entirely new version of ECHOConfig. 
-This is primarily because the outer ClientHello exists only in support of ECHO. 
-Namely, it is both an envelope for the encrypted inner ClientHello and enabler for 
-authenticated key mismatch signals (see {{server-behavior}}). In contrast, the inner 
-ClientHello is the true ClientHello used upon ECHO negotiation. 
+specified as ECHOConfig extensions, or in an entirely new version of ECHOConfig.
+This is primarily because the outer ClientHello exists only in support of ECHO.
+Namely, it is both an envelope for the encrypted inner ClientHello and enabler for
+authenticated key mismatch signals (see {{server-behavior}}). In contrast, the inner
+ClientHello is the true ClientHello used upon ECHO negotiation.
 
 --- back
 
