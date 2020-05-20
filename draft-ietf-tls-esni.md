@@ -463,7 +463,8 @@ indicated above. In particular,
 - suite contains the client's chosen HpkeCipherSuite;
 - record_digest contains the digest of the corresponding ECHOConfig structure;
 - enc contains the encapsulated key as output by SetupBaseS; and
-- encrypted_ch contains the HPKE encapsulated key (enc) and the ClientHelloInner ciphertext (encrypted_ch_inner).
+- encrypted_ch contains the HPKE encapsulated key (enc) and the ClientHelloInner
+ciphertext (encrypted_ch_inner).
 
 The client MUST place the value of ECHOConfig.public_name in the
 ClientHelloOuter "server_name" extension. The ClientHelloOuter MUST NOT
@@ -655,7 +656,9 @@ structure available for the server, it SHOULD send a GREASE
 - Set the "enc" field to a randomly-generated valid encapsulated public key
   output by the HPKE KEM.
 
-- Set the "encrypted_ch" field to a randomly-generated string of [TODO] bytes.
+- Set the "encrypted_ch" field to a randomly-generated string of L bytes, where
+L is the size of the ClientHelloInner message the client would use given an
+ECHOConfig structure, padded according to {{padding}}.
 
 If the server sends an "encrypted_client_hello" extension, the client
 MUST check the extension syntactically and abort the connection with a
