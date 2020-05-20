@@ -34,8 +34,8 @@ author:
  -
        ins: C. A. Wood
        name: Christopher A. Wood
-       organization: Apple, Inc.
-       email: cawood@apple.com
+       organization: Cloudflare
+       email: caw@heapingbits.net
 
 
 normative:
@@ -260,7 +260,7 @@ anonymity set during the lifetime of a particular resource record value.
 extensions
 : A list of extensions that the client can take into consideration when
 generating a ClientHello message. The purpose of the field is to provide room
-for additional functionality in the future. See {{config-extensions}} for 
+for additional functionality in the future. See {{config-extensions}} for
 guidance on what type of extensions are appropriate for this structure.
 
 The format is defined in {{RFC8446}}, Section 4.2. The same interpretation rules
@@ -981,11 +981,11 @@ existing registry for Alerts (defined in {{!RFC8446}}), with the
 # ECHOConfig Extension Guidance {#config-extensions}
 
 Any future information or hints that influence the outer ClientHello SHOULD be
-specified as ECHOConfig extensions, or in an entirely new version of ECHOConfig. 
-This is primarily because the outer ClientHello exists only in support of ECHO. 
-Namely, it is both an envelope for the encrypted inner ClientHello and enabler for 
-authenticated key mismatch signals (see {{server-behavior}}). In contrast, the inner 
-ClientHello is the true ClientHello used upon ECHO negotiation. 
+specified as ECHOConfig extensions, or in an entirely new version of ECHOConfig.
+This is primarily because the outer ClientHello exists only in support of ECHO.
+Namely, it is both an envelope for the encrypted inner ClientHello and enabler for
+authenticated key mismatch signals (see {{server-behavior}}). In contrast, the inner
+ClientHello is the true ClientHello used upon ECHO negotiation.
 
 --- back
 
