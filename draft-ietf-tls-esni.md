@@ -971,7 +971,7 @@ in the inner ClientHello, such as the true SNI value.
 
 ### Client Reaction Attack Mitigation {#flow-client-reaction}
 
-This attack relies on how clients react to SNI and certificate mismatch as an oracle.
+This attack uses the client's reaction to an incorrect certificate as an oracle.
 In particular, the attacker intercepts a legitimate ClientHello and replies with a
 ServerHello, Certificate, CertificateVerify, and Finished messages, wherein the Certificate
 message contains a "test" certificate for the domain name it wishes to query. If the client
