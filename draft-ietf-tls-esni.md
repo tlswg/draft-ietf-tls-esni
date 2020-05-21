@@ -964,15 +964,15 @@ mechanism for clients aimed at reducing potential information leakage.
 
 ## Active Attack Mitigations
 
-This section describes rationale for ECHO properties and mechanics as mitigations
-against active attacks. In all attacks below, the attacker is on-path between
+This section describes the rationale for ECHO properties and mechanics as defenses
+against active attacks. In all the attacks below, the attacker is on-path between
 the target client and server. The goal of the attacker is to learn private information
-in the inner ClientHello, such as the true SNI value.
+about the inner ClientHello, such as the true SNI value.
 
 ### Client Reaction Attack Mitigation {#flow-client-reaction}
 
-This attack relies on how clients react to SNI and certificate mismatch as an oracle.
-In particular, the attacker intercepts a legitimate ClientHello and replies with a
+This attack uses the client's reaction to an incorrect certificate as an oracle.
+The attacker intercepts a legitimate ClientHello and replies with a
 ServerHello, Certificate, CertificateVerify, and Finished messages, wherein the Certificate
 message contains a "test" certificate for the domain name it wishes to query. If the client
 decrypted the Certificate and failed verification (or leaked information about its verification
@@ -1006,17 +1006,18 @@ information.
 The "echo_nonce" extension in the inner ClientHello prevents this attack. In particular,
 since the attacker does not have access to this value, it cannot produce the right transcript
 and handshake keys needed for encrypting the Certificate message. Thus, the client will fail
-to decrypt before any verification check occurs.
+to decrypt the Certificate and abort the connection.
 
 ### HelloRetryRequest Hijack Mitigation {#flow-hrr-hijack}
 
 This attack aims to exploit server HRR state management to recover information about
-a legitimate ClientHello using its own adversarially-controlled ClientHello.
+a legitimate ClientHello using its own attacker-controlled ClientHello.
 To begin, the attacker intercepts and forwards a legitimate ClientHello with an
 "encrypted_client_hello" (echo) extension to the server, which triggers a
 legitimate HelloRetryRequest in return. Rather than forward the retry to the client,
 the attacker, attempts to generate its own ClientHello in response based on the
-contents of the first ClientHello and HelloRetryRequest exchange. If the server
+contents of the first ClientHello and HelloRetryRequest exchange with the result
+that the server encrypts the Certificate to the attacker. If the server
 used the SNI from the first ClientHello and the key share from the second
 (attacker-controlled) ClientHello, the Certificate produced would leak the
 client's chosen SNI to the attacker.
