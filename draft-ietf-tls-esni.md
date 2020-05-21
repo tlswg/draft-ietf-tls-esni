@@ -1003,7 +1003,7 @@ the Certificate signature validation, information about the name leaks.
 The "echo_nonce" extension in the inner ClientHello prevents this attack. In particular,
 since the attacker does not have access to this value, it cannot produce the right transcript
 and handshake keys needed for encrypting the Certificate message. Thus, the client will fail
-to decrypt before any verification check occurs.
+to decrypt the Certificate and abort the connection.
 
 ### HelloRetryRequest Hijack Mitigation {#flow-hrr-hijack}
 
