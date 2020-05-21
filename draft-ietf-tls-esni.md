@@ -980,7 +980,10 @@ process by a timing side channel), the attacker learns that its test certificate
 was incorrect. As an example, suppose the client's SNI value in its inner ClientHello is
 "example.com," and the attacker replied with a Certificate for "test.com". If the client
 produces a verification failure alert because of the mismatch faster than it would due to
-the Certificate signature validation, information about the name leaks.
+the Certificate signature validation, information about the name leaks. Note that the
+attacker can also withhold the CertificateVerify message. In that scenario, a client
+which first verifies the Certificate would then respond similarly and leak the same
+information.
 
 ~~~
  Client                         Attacker                      Server
@@ -1010,10 +1013,13 @@ to decrypt before any verification check occurs.
 This attack aims to exploit server HRR state management to recover information about
 a legitimate ClientHello using its own adversarially-controlled ClientHello.
 To begin, the attacker intercepts and forwards a legitimate ClientHello with an
-"encrypted_client_hello" (echo) extension to the server, which triggers a HelloRetryRequest
-in return. Rather than forward the retry to the client, the attacker, attempts to
-generates its own ClientHello in response based on the contents of the first ClientHello
-and HelloRetryRequest exchange.
+"encrypted_client_hello" (echo) extension to the server, which triggers a
+legitimate HelloRetryRequest in return. Rather than forward the retry to the client,
+the attacker, attempts to generate its own ClientHello in response based on the
+contents of the first ClientHello and HelloRetryRequest exchange. If the server
+used the SNI from the first ClientHello and the key share from the second
+(attacker-controlled) ClientHello, the Certificate produced would leak the
+client's chosen SNI to the attacker.
 
 ~~~
  Client                         Attacker                      Server
