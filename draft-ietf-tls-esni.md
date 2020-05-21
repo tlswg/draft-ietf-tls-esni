@@ -1,6 +1,6 @@
 ---
-title: Encrypted Server Name Indication for TLS 1.3
-abbrev: TLS 1.3 SNI Encryption
+title: Encrypted ClientHello for TLS 1.3
+abbrev: TLS 1.3 Encrypted ClientHello
 docname: draft-ietf-tls-esni-latest
 category: exp
 
@@ -44,8 +44,7 @@ normative:
 
 --- abstract
 
-This document defines a simple mechanism for encrypting the
-Server Name Indication for TLS 1.3.
+This document defines a mechanism for encrypting a TLS 1.3 ClientHello.
 
 --- middle
 
@@ -55,44 +54,44 @@ DISCLAIMER: This is very early a work-in-progress design and has not
 yet seen significant (or really any) security analysis. It should not
 be used as a basis for building production systems.
 
-Although TLS 1.3 {{!RFC8446}} encrypts most of the
-handshake, including the server certificate, there are several other
-channels that allow an on-path attacker to determine the domain name the
-client is trying to connect to, including:
+Although TLS 1.3 {{!RFC8446}} encrypts most of the handshake, including the
+server certificate, there are several ways in which an on-path attacker can
+learn private information about the connection. The cleartext Server Name Indication
+(SNI) extension in ClientHello messages, which leaks the target domain for a given
+connection, is perhaps the most sensitive information unencrypted in TLS 1.3.
 
-* Cleartext client DNS queries.
-* Visible server IP addresses, assuming the the server is not doing
-  domain-based virtual hosting.
-* Cleartext Server Name Indication (SNI) {{!RFC6066}} in ClientHello messages.
-
+The target domain may also be visible through other channels, such as cleartext
+client DNS queries, visible server IP addresses (assuming the server does not
+use domain-based virtual hosting), or other indirect mechanisms such as traffic analysis.
 DoH {{?I-D.ietf-doh-dns-over-https}} and DPRIVE {{?RFC7858}} {{?RFC8094}}
 provide mechanisms for clients to conceal DNS lookups from network inspection,
 and many TLS servers host multiple domains on the same IP address.
-In such environments, SNI is an explicit signal used to determine the server's
-identity. Indirect mechanisms such as traffic analysis also exist.
+In such environments, the SNI remains the primary explicit signal used to
+determine the server's identity.
 
-The TLS WG has extensively studied the problem of protecting SNI, but
-has been unable to develop a completely generic
-solution. {{?I-D.ietf-tls-sni-encryption}} provides a description
+The TLS WG has extensively studied the problem of protecting the SNI, but
+has been unable to develop a completely generic solution.
+{{?I-D.ietf-tls-sni-encryption}} provides a description
 of the problem space and some of the proposed techniques. One of the
 more difficult problems is "Do not stick out"
-({{?I-D.ietf-tls-sni-encryption}}, Section 3.4): if only sensitive/private
+({{?I-D.ietf-tls-sni-encryption}}, Section 3.4): if only sensitive or private
 services use SNI encryption, then SNI encryption is a signal that
-a client is going to such a service. For this reason,
-much recent work has focused on
-concealing the fact that SNI is being protected. Unfortunately,
+a client is going to such a service. For this reason, much recent work
+has focused on concealing the fact that the SNI is being protected. Unfortunately,
 the result often has undesirable performance consequences, incomplete
 coverage, or both.
 
 The design in this document takes a different approach: it assumes
-that private origins will co-locate with or hide behind a provider (CDN, app server,
-etc.) which is able to activate encrypted SNI, by encrypting the entire
-ClientHello (ECHO), for all of the domains it hosts.
-As a result, the use of ECHO to protect the SNI does not indicate that the
-client is attempting to reach a private origin, but only that it is
-going to a particular service provider, which the observer could
-already tell from the IP address.
+that private origins will co-locate with or hide behind a provider (CDN, application
+server, etc.) which can protect SNIs for all of the domains it hosts. As a result,
+SNI protection does not indicate that the client is attempting to reach a private
+origin, but only that it is going to a particular service provider, which the observer
+could already tell from the visible IP address.
 
+The design in this document introduces a new extension, called Encrypted Client
+Hello (ECH), which allows clients to encrypt the entirety of their ClientHello
+to a supporting server. This protects the SNI and other potentially sensitive fields,
+such as the ALPN list.
 
 # Conventions and Definitions
 
@@ -145,15 +144,15 @@ and the provider's server relays the connection back to the
 backend server, which is the true origin server. The provider does
 not have access to the plaintext of the connection.
 
-## ClientHello Encryption
+## Encrypted ClientHello (ECH)
 
-ECHO works by encrypting the entire ClientHello, including
+ECH works by encrypting the entire ClientHello, including
 the SNI and any additional extensions such as ALPN.
 This requires that each provider publish a public key and
 metadata which is used for ClientHello encryption for all the domains for
 which it serves directly or indirectly (via Split Mode). This document
 defines the format of the SNI encryption public key and metadata,
-referred to as an ECHO configuration, and delegates DNS publication
+referred to as an ECH configuration, and delegates DNS publication
 details to {{!HTTPSSVC=I-D.nygren-dnsop-svcb-httpssvc}}, though other
 delivery mechanisms are possible. In particular, if some of the
 clients of a private server are applications rather than Web browsers,
@@ -161,7 +160,7 @@ those applications might have the public key and metadata
 preconfigured.
 
 When a client wants to form a TLS connection to any of the domains
-served by an ECHO-supporting provider, it constructs a ClientHello in
+served by an ECH-supporting provider, it constructs a ClientHello in
 the regular fashion containing the true SNI value (ClientHelloInner)
 and then encrypts it using the public key for the provider.  It then
 constructs a new ClientHello (ClientHelloOuter) with an innocuous SNI
@@ -178,10 +177,10 @@ ClientHello messages. ClientHelloOuter carries an encrypted representation
 of ClientHelloInner in a "encrypted_client_hello" extension, defined
 in {{encrypted-client-hello}}.
 
-# Encrypted ClientHello Configuration {#echo-configuration}
+# Encrypted ClientHello Configuration {#ech-configuration}
 
 ClientHello encryption configuration information is conveyed with the
-following ECHOConfigs structure.
+following ECHConfigs structure.
 
 ~~~~
     opaque HpkePublicKey<1..2^16-1>;
@@ -203,35 +202,35 @@ following ECHOConfigs structure.
 
         uint16 maximum_name_length;
         Extension extensions<0..2^16-1>;
-    } ECHOConfigContents;
+    } ECHConfigContents;
 
     struct {
         uint16 version;
         uint16 length;
-        select (ECHOConfig.version) {
-          case 0xff03: ECHOConfigContents;
+        select (ECHConfig.version) {
+          case 0xff03: ECHConfigContents;
         }
-    } ECHOConfig;
+    } ECHConfig;
 
-    ECHOConfig ECHOConfigs<1..2^16-1>;
+    ECHConfig ECHConfigs<1..2^16-1>;
 ~~~~
 
-The ECHOConfigs structure contains one or more ECHOConfig structures in
+The ECHConfigs structure contains one or more ECHConfig structures in
 decreasing order of preference. This allows a server to support multiple
-versions of ECHO and multiple sets of ECHO parameters.
+versions of ECH and multiple sets of ECH parameters.
 
-The ECHOConfig structure contains the following fields:
+The ECHConfig structure contains the following fields:
 
 version
 : The version of the structure. For this specification, that value
-SHALL be 0xff03. Clients MUST ignore any ECHOConfig structure with a
+SHALL be 0xff03. Clients MUST ignore any ECHConfig structure with a
 version they do not understand.
 
 contents
 : An opaque byte string whose contents depend on the version of the structure.
-For this specification, the contents are an ECHOConfigContents structure.
+For this specification, the contents are an ECHConfigContents structure.
 
-The ECHOConfigContents structure contains the following fields:
+The ECHConfigContents structure contains the following fields:
 
 public_name
 : The non-empty name of the entity trusted to update these encryption keys.
@@ -244,7 +243,7 @@ encrypt the ClientHello.
 
 kem_id
 : The HPKE {{!I-D.irtf-cfrg-hpke}} KEM identifier corresponding to public_key.
-Clients MUST ignore any ECHOConfig structure with a key using a KEM they do not support.
+Clients MUST ignore any ECHConfig structure with a key using a KEM they do not support.
 
 cipher_suites
 : The list of HPKE {{!I-D.irtf-cfrg-hpke}} AEAD and KDF identifier pairs clients can
@@ -268,11 +267,11 @@ apply: extensions MAY appear in any order, but there MUST NOT be more than one
 extension of the same type in the extensions block. An extension can be tagged as
 mandatory by using an extension type codepoint with the high order bit set to 1.
 A client which receives a mandatory extension they do not understand MUST reject
-the ECHOConfig content.
+the ECHConfig content.
 
 Clients MUST parse the extension list and check for unsupported mandatory
 extensions. If an unsupported mandatory extension is present, clients MUST
-reject the ECHOConfig value.
+reject the ECHConfig value.
 
 # The "encrypted_client_hello" extension {#encrypted-client-hello}
 
@@ -299,10 +298,10 @@ ClientEncryptedCH structure:
 
 suite
 : The HpkeCipherSuite cipher suite used to encrypt ClientHelloInner. This MUST
-match a value provided in the corresponding ECHOConfig.cipher_suites list.
+match a value provided in the corresponding ECHConfig.cipher_suites list.
 
 record_digest
-: A cryptographic hash of the ECHOConfig structure from which the ECHO
+: A cryptographic hash of the ECHConfig structure from which the ECH
 key was obtained, i.e., from the first byte of "version" to the end
 of the structure.  This hash is computed using the hash function
 associated with `suite`, i.e., the corresponding HPKE KDF algorithm hash.
@@ -316,52 +315,52 @@ encrypted_ch
 HPKE with the selected KEM, KDF, and AEAD algorithm and key generated as described below.
 {:br}
 
-If the server accepts ECHO, it does not send this extension.
-If it rejects ECHO, then it sends the following structure in
+If the server accepts ECH, it does not send this extension.
+If it rejects ECH, then it sends the following structure in
 EncryptedExtensions:
 
 ~~~
    struct {
-       ECHOConfigs retry_configs;
+       ECHConfigs retry_configs;
    } ServerEncryptedCH;
 ~~~
 
 retry_configs
-: An ECHOConfigs structure containing one or more ECHOConfig structures in
+: An ECHConfigs structure containing one or more ECHConfig structures in
 decreasing order of preference that the client should use on subsequent
 connections to encrypt the ClientHelloInner structure.
 
-This protocol also defines the "echo_required" alert, which is sent by the
+This protocol also defines the "ech_required" alert, which is sent by the
 client when it offered an "encrypted_client_hello" extension which was not
 accepted by the server.
 
-# The "echo_nonce" extension {#echo-nonce}
+# The "ech_nonce" extension {#ech-nonce}
 
-When using ECHO, the client MUST also add an extension of type
-"echo_nonce" to the ClientHelloInner (but not to the outer
+When using ECH, the client MUST also add an extension of type
+"ech_nonce" to the ClientHelloInner (but not to the outer
 ClientHello). This nonce ensures that the server's encrypted
 Certificate can only be read by the entity which sent this
 ClientHello. This extension is defined as follows:
 
 ~~~
    enum {
-       echo_nonce(0xffce), (65535)
+       ech_nonce(0xffce), (65535)
    } ExtensionType;
 
    struct {
        uint8 nonce[16];
-   } ECHONonce;
+   } ECHNonce;
 ~~~~
 
 nonce
-: A 16-byte nonce exported from the HPKE encryption context. See {{send-echo}}
+: A 16-byte nonce exported from the HPKE encryption context. See {{send-ech}}
 for details about its computation.
 
 Finally, requirements in {{client-behavior}} and {{server-behavior}} require
 implementations to track, alongside each PSK established by a previous
 connection, whether the connection negotiated this extension with the
-"echo_accept" response type. If so, this is referred to as an "ECHO PSK".
-Otherwise, it is a "non-ECHO PSK". This may be implemented by adding a new field
+"ech_accept" response type. If so, this is referred to as an "ECH PSK".
+Otherwise, it is a "non-ECH PSK". This may be implemented by adding a new field
 to client and server session states.
 
 ## Incorporating Outer Extensions {#outer-extensions}
@@ -411,41 +410,41 @@ and ClientHelloOuter even if they have identical values.
 
 # Client Behavior {#client-behavior}
 
-## Sending an encrypted ClientHello {#send-echo}
+## Sending an encrypted ClientHello {#send-ech}
 
 In order to send an encrypted ClientHello, the client first determines if it
-supports the server's chosen KEM, as identified by ECHOConfig.kem_id. If one
+supports the server's chosen KEM, as identified by ECHConfig.kem_id. If one
 is supported, the client MUST select an appropriate HpkeCipherSuite from the list of
 suites offered by the server. If the client does not support the corresponding
 KEM or is unable to select an appropriate group or HpkeCipherSuite, it SHOULD ignore
-that ECHOConfig value and MAY attempt to use another value provided by
-the server. The client MUST NOT send ECHO using HPKE algorithms not advertised
+that ECHConfig value and MAY attempt to use another value provided by
+the server. The client MUST NOT send ECH using HPKE algorithms not advertised
 by the server.
 
-Given a compatible ECHOConfig with fields public_key and kem_id, carrying the HpkePublicKey
+Given a compatible ECHConfig with fields public_key and kem_id, carrying the HpkePublicKey
 and KEM identifier corresponding to the server, clients compute an HPKE encryption
 context as follows:
 
 ~~~
-pkR = HPKE.KEM.Unmarshal(ECHOConfig.public_key)
-enc, context = SetupBaseS(pkR, "tls13-echo")
-echo_nonce = context.Export("tls13-echo-nonce", 16)
-echo_hrr_key = context.Export("tls13-echo-hrr-key", 16)
+pkR = HPKE.KEM.Unmarshal(ECHConfig.public_key)
+enc, context = SetupBaseS(pkR, "tls13-ech")
+ech_nonce = context.Export("tls13-ech-nonce", 16)
+ech_hrr_key = context.Export("tls13-ech-hrr-key", 16)
 ~~~
 
 Note that the HPKE algorithm identifiers are those which match the client's
-chosen preference from ECHOConfig.cipher_suites. The client MAY replace any large,
+chosen preference from ECHConfig.cipher_suites. The client MAY replace any large,
 duplicated extensions in ClientHelloInner with the corresponding "outer_extensions"
 extension, as described in {{outer-extensions}}.
 
 The client then generates a ClientHelloInner value. In addition to the normal
 values, ClientHelloInner MUST also contain:
 
- - an "echo_nonce" extension
+ - an "ech_nonce" extension
  - TLS padding {{!RFC7685}} (see {{padding}})
 
 When offering an encrypted ClientHello, the client MUST NOT offer to resume any
-non-ECHO PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2
+non-ECH PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2
 or below.
 
 The encrypted ClientHello value is then computed as:
@@ -459,12 +458,12 @@ containing the "encrypted_client_hello" extension with the values as
 indicated above. In particular,
 
 - suite contains the client's chosen HpkeCipherSuite;
-- record_digest contains the digest of the corresponding ECHOConfig structure;
+- record_digest contains the digest of the corresponding ECHConfig structure;
 - enc contains the encapsulated key as output by SetupBaseS; and
 - encrypted_ch contains the HPKE encapsulated key (enc) and the ClientHelloInner
 ciphertext (encrypted_ch_inner).
 
-The client MUST place the value of ECHOConfig.public_name in the
+The client MUST place the value of ECHConfig.public_name in the
 ClientHelloOuter "server_name" extension. The ClientHelloOuter MUST NOT
 contain a "cached_info" extension {{!RFC7924}} with a CachedObject
 entry whose CachedInformationType is "cert", since this indication
@@ -489,11 +488,11 @@ in this way.
 
 In contrast, clients do not know the longest SNI value in the client-facing server's
 anonymity set without server input. For the "server_name" extension with length D,
-clients SHOULD use the server's length hint L (ECHOCOnfig.maximum_name_length) when
+clients SHOULD use the server's length hint L (ECHCOnfig.maximum_name_length) when
 computing the padding as follows:
 
 1. If L > D, add L - D bytes of padding. This rounds to the server's advertised
-hint, i.e., ECHOConfig.maximum_name_length.
+hint, i.e., ECHConfig.maximum_name_length.
 2. Otherwise, add 32 - (D % 32) bytes of padding. This rounds D up to the nearest
 multiple of 32 bytes.
 
@@ -505,33 +504,33 @@ handshake message also needs to be padded using TLS record layer padding.
 
 ## Handling the server response {#handle-server-response}
 
-As described in {{server-behavior}}, the server MAY either accept ECHO
+As described in {{server-behavior}}, the server MAY either accept ECH
 and use ClientHelloInner or reject it and use ClientHelloOuter. However,
 there is no indication in ServerHello of which one the server has done
 and the client must therefore use trial decryption in order to determine
 this.
 
-### Accepted ECHO
+### Accepted ECH
 
 If the server used ClientHelloInner, the client proceeds with the
 connection as usual, authenticating the connection for the origin
 server.
 
-### Rejected ECHO
+### Rejected ECH
 
 If the server used ClientHelloOuter, the client proceeds with the handshake,
-authenticating for ECHOConfig.public_name as described in
+authenticating for ECHConfig.public_name as described in
 {{auth-public-name}}. If authentication or the handshake fails, the client
 MUST return a failure to the calling application. It MUST NOT use the retry
 keys.
 
 Otherwise, when the handshake completes successfully with the public name
-authenticated, the client MUST abort the connection with an "echo_required"
+authenticated, the client MUST abort the connection with an "ech_required"
 alert. It then processes the "retry_keys" field from the server's
 "encrypted_client_hello" extension.
 
 If one of the values contains a version supported by the client, it can regard
-the ECHO keys as securely replaced by the server. It SHOULD retry the
+the ECH keys as securely replaced by the server. It SHOULD retry the
 handshake with a new transport connection, using that value to encrypt the
 ClientHello. The value may only be applied to the retry connection. The client
 MUST continue to use the previously-advertised keys for subsequent
@@ -540,8 +539,8 @@ should a malicious server present client-specific retry keys to identify
 clients.
 
 If none of the values provided in "retry_keys" contains a supported version,
-the client can regard ECHO as securely disabled by the server. As below, it
-SHOULD then retry the handshake with a new transport connection and ECHO
+the client can regard ECH as securely disabled by the server. As below, it
+SHOULD then retry the handshake with a new transport connection and ECH
 disabled.
 
 If the field contains any other value, the client MUST abort the connection
@@ -550,22 +549,22 @@ with an "illegal_parameter" alert.
 If the server negotiates an earlier version of TLS, or if it does not
 provide an "encrypted_client_hello" extension in EncryptedExtensions, the
 client proceeds with the handshake, authenticating for
-ECHOConfigContents.public_name as described in {{auth-public-name}}. If an earlier
+ECHConfigContents.public_name as described in {{auth-public-name}}. If an earlier
 version was negotiated, the client MUST NOT enable the False Start optimization
 {{RFC7918}} for this handshake. If authentication or the handshake fails, the
 client MUST return a failure to the calling application. It MUST NOT treat this
-as a secure signal to disable ECHO.
+as a secure signal to disable ECH.
 
 Otherwise, when the handshake completes successfully with the public name
-authenticated, the client MUST abort the connection with an "echo_required"
-alert. The client can then regard ECHO as securely disabled by the server. It
-SHOULD retry the handshake with a new transport connection and ECHO disabled.
+authenticated, the client MUST abort the connection with an "ech_required"
+alert. The client can then regard ECH as securely disabled by the server. It
+SHOULD retry the handshake with a new transport connection and ECH disabled.
 
-[[TODO: Key replacement is significantly less scary than saying that ECHO-naive
-  servers bounce ECHO off. Is it worth defining a strict mode toggle in the ECHO
+[[TODO: Key replacement is significantly less scary than saying that ECH-naive
+  servers bounce ECH off. Is it worth defining a strict mode toggle in the ECH
   keys, for a deployment to indicate it is ready for that? ]]
 
-Clients SHOULD implement a limit on retries caused by "echo_retry_request" or
+Clients SHOULD implement a limit on retries caused by "ech_retry_request" or
 servers which do not acknowledge the "encrypted_client_hello" extension. If the
 client does not retry in either scenario, it MUST report an error to the
 calling application.
@@ -574,17 +573,17 @@ calling application.
 
 When the server cannot decrypt or does not process the "encrypted_client_hello"
 extension, it continues with the handshake using the cleartext "server_name"
-extension instead (see {{server-behavior}}). Clients that offer ECHO then
+extension instead (see {{server-behavior}}). Clients that offer ECH then
 authenticate the connection with the public name, as follows:
 
 - If the server resumed a session or negotiated a session that did not use a
   certificate for authentication, the client MUST abort the connection with an
-  "illegal_parameter" alert. This case is invalid because {{send-echo}} requires
-  the client to only offer ECHO-established sessions, and {{server-behavior}}
-  requires the server to decline ECHO-established sessions if it did not accept
-  ECHO.
+  "illegal_parameter" alert. This case is invalid because {{send-ech}} requires
+  the client to only offer ECH-established sessions, and {{server-behavior}}
+  requires the server to decline ECH-established sessions if it did not accept
+  ECH.
 
-- The client MUST verify that the certificate is valid for ECHOConfigContents.public_name.
+- The client MUST verify that the certificate is valid for ECHConfigContents.public_name.
   If invalid, it MUST abort the connection with the appropriate alert.
 
 - If the server requests a client certificate, the client MUST respond with an
@@ -611,16 +610,16 @@ fresh ClientHello MUST be generated, ignoring the instructions in HelloRetryRequ
 Otherwise, the usual rules for HelloRetryRequest processing apply.
 
 Clients bind encryption of the second ClientHelloInner to encryption of the first
-ClientHelloInner via the derived echo_hrr_key by modifying HPKE setup as follows:
+ClientHelloInner via the derived ech_hrr_key by modifying HPKE setup as follows:
 
 ~~~
-pkR = HPKE.KEM.Unmarshal(ECHOConfig.public_key)
-enc, context = SetupPSKS(pkR, "tls13-echo-hrr", echo_hrr_key, "")
-echo_nonce = context.Export("tls13-echo-hrr-nonce", 16)
+pkR = HPKE.KEM.Unmarshal(ECHConfig.public_key)
+enc, context = SetupPSKS(pkR, "tls13-ech-hrr", ech_hrr_key, "")
+ech_nonce = context.Export("tls13-ech-hrr-nonce", 16)
 ~~~
 
 Clients then encrypt the second ClientHelloInner using this new HPKE context.
-In doing so, the encrypted value is also authenticated by echo_hrr_key. The rationale
+In doing so, the encrypted value is also authenticated by ech_hrr_key. The rationale
 for this is described in {{flow-hrr-hijack}}.
 
 Client-facing servers perform the corresponding process when decrypting second
@@ -629,9 +628,9 @@ message with a ClientEncryptedCH value, servers setup their HPKE context and
 decrypt ClientEncryptedCH as follows:
 
 ~~~
-context = SetupPSKR(ClientEncryptedCH.enc, skR, "tls13-echo-hrr", echo_hrr_key, "")
+context = SetupPSKR(ClientEncryptedCH.enc, skR, "tls13-ech-hrr", ech_hrr_key, "")
 ClientHelloInner = context.Open("", ClientEncryptedCH.encrypted_ch)
-echo_nonce = context.Export("tls13-echo-hrr-nonce", 16)
+ech_nonce = context.Export("tls13-ech-hrr-nonce", 16)
 ~~~
 
 [[OPEN ISSUE: Should we be using the PSK input or the info input?
@@ -640,7 +639,7 @@ actually this needs to be secret? Analysis needed.]]
 
 ## GREASE extensions {#grease-extensions}
 
-If the client attempts to connect to a server and does not have an ECHOConfig
+If the client attempts to connect to a server and does not have an ECHConfig
 structure available for the server, it SHOULD send a GREASE
 {{?RFC8701}} "encrypted_client_hello" extension as follows:
 
@@ -657,7 +656,7 @@ structure available for the server, it SHOULD send a GREASE
 
 - Set the "encrypted_ch" field to a randomly-generated string of L bytes, where
 L is the size of the ClientHelloInner message the client would use given an
-ECHOConfig structure, padded according to {{padding}}.
+ECHConfig structure, padded according to {{padding}}.
 
 If the server sends an "encrypted_client_hello" extension, the client
 MUST check the extension syntactically and abort the connection with a
@@ -665,7 +664,7 @@ MUST check the extension syntactically and abort the connection with a
 
 Offering a GREASE extension is not considered offering an encrypted ClientHello for
 purposes of requirements in {{client-behavior}}. In particular, the client MAY
-offer to resume sessions established without ECHO.
+offer to resume sessions established without ECH.
 
 # Client-Facing Server Behavior {#server-behavior}
 
@@ -673,58 +672,58 @@ Upon receiving an "encrypted_client_hello" extension, the client-facing
 server MUST check that it is able to negotiate TLS 1.3 or greater. If not,
 it MUST abort the connection with a "handshake_failure" alert.
 
-The ClientEncryptedCH value is said to match a known ECHOConfig if there exists
-an ECHOConfig that can be used to successfully decrypt ClientEncryptedCH.encrypted_ch.
+The ClientEncryptedCH value is said to match a known ECHConfig if there exists
+an ECHConfig that can be used to successfully decrypt ClientEncryptedCH.encrypted_ch.
 This matching procedure should be done using one of the following two checks:
 
-1. Compare ClientEncryptedCH.record_digest against cryptographic hashes of known ECHOConfig
+1. Compare ClientEncryptedCH.record_digest against cryptographic hashes of known ECHConfig
 and choose the one that matches.
-2. Use trial decryption of ClientEncryptedCH.encrypted_ch with known ECHOConfig and choose
+2. Use trial decryption of ClientEncryptedCH.encrypted_ch with known ECHConfig and choose
 the one that succeeds.
 
-Some uses of ECHO, such as local discovery mode, may omit the ClientEncryptedCH.record_digest
+Some uses of ECH, such as local discovery mode, may omit the ClientEncryptedCH.record_digest
 since it can be used as a tracking vector. In such cases, trial decryption should be
-used for matching ClientEncryptedCH to known ECHOConfig. Unless specified by the application
+used for matching ClientEncryptedCH to known ECHConfig. Unless specified by the application
 using (D)TLS or externally configured on both sides, implementations MUST use the first method.
 
-If the ClientEncryptedCH value does not match any known ECHOConfig
+If the ClientEncryptedCH value does not match any known ECHConfig
 structure, it MUST ignore the extension and proceed with the connection,
 with the following added behavior:
 
 - It MUST include the "encrypted_client_hello" extension with the
-  "retry_keys" field set to one or more ECHOConfig structures with
-  up-to-date keys. Servers MAY supply multiple ECHOConfig values of
+  "retry_keys" field set to one or more ECHConfig structures with
+  up-to-date keys. Servers MAY supply multiple ECHConfig values of
   different versions. This allows a server to support multiple
   versions at once.
 
 - The server MUST ignore all PSK identities in the ClientHello which correspond
-  to ECHO PSKs. ECHO PSKs offered by the client are associated with the ECHO
-  name. The server was unable to decrypt then ECHO name, so it should not resume
+  to ECH PSKs. ECH PSKs offered by the client are associated with the ECH
+  name. The server was unable to decrypt then ECH name, so it should not resume
   them when using the cleartext SNI name. This restriction allows a client to
   reject resumptions in {{auth-public-name}}.
 
 Note that an unrecognized ClientEncryptedCH.record_digest value may be
-a GREASE ECHO extension (see {{grease-extensions}}), so it is necessary
+a GREASE ECH extension (see {{grease-extensions}}), so it is necessary
 for servers to proceed with the connection and rely on the client to abort if
-ECHO was required. In particular, the unrecognized value alone does not
-indicate a misconfigured ECHO advertisement ({{misconfiguration}}). Instead,
-servers can measure occurrences of the "echo_required" alert to detect this
+ECH was required. In particular, the unrecognized value alone does not
+indicate a misconfigured ECH advertisement ({{misconfiguration}}). Instead,
+servers can measure occurrences of the "ech_required" alert to detect this
 case.
 
-If the ClientEncryptedCH value matches a known ECHOConfig, the server
+If the ClientEncryptedCH value matches a known ECHConfig, the server
 then decrypts ClientEncryptedCH.encrypted_ch, using the private key skR
-corresponding to ECHOConfig, as follows:
+corresponding to ECHConfig, as follows:
 
 ~~~
-context = SetupBaseR(ClientEncryptedCH.enc, skR, "tls13-echo")
+context = SetupBaseR(ClientEncryptedCH.enc, skR, "tls13-ech")
 ClientHelloInner = context.Open("", ClientEncryptedCH.encrypted_ch)
-echo_nonce = context.Export("tls13-echo-nonce", 16)
-echo_hrr_key = context.Export("tls13-echo-hrr-key", 16)
+ech_nonce = context.Export("tls13-ech-nonce", 16)
+ech_hrr_key = context.Export("tls13-ech-hrr-key", 16)
 ~~~
 
 If decryption fails, the server MUST abort the connection with
-a "decrypt_error" alert. Moreover, if there is no "echo_nonce"
-extension, or if its value does not match the derived echo_nonce,
+a "decrypt_error" alert. Moreover, if there is no "ech_nonce"
+extension, or if its value does not match the derived ech_nonce,
 the server MUST abort the connection with a "decrypt_error" alert.
 Next, the server MUST scan ClientHelloInner for any "outer_extension"
 extensions and substitute their values with the values in ClientHelloOuter.
@@ -739,48 +738,48 @@ the TLS connection to the backend server (if in Split Mode). In
 the latter case, it does not make any changes to the TLS
 messages, but just blindly forwards them.
 
-If the server sends a NewSessionTicket message, the corresponding ECHO PSK MUST
-be ignored by all other servers in the deployment when not negotiating ECHO,
+If the server sends a NewSessionTicket message, the corresponding ECH PSK MUST
+be ignored by all other servers in the deployment when not negotiating ECH,
 including servers which do not implement this specification.
 
 
 # Compatibility Issues
 
-Unlike most TLS extensions, placing the SNI value in an ECHO extension
+Unlike most TLS extensions, placing the SNI value in an ECH extension
 is not interoperable with existing servers, which expect the value in
 the existing cleartext extension. Thus server operators SHOULD ensure
-servers understand a given set of ECHO keys before advertising them.
+servers understand a given set of ECH keys before advertising them.
 Additionally, servers SHOULD retain support for any
 previously-advertised keys for the duration of their validity
 
 However, in more complex deployment scenarios, this may be difficult
 to fully guarantee. Thus this protocol was designed to be robust in case
-of inconsistencies between systems that advertise ECHO keys and servers, at the
+of inconsistencies between systems that advertise ECH keys and servers, at the
 cost of extra round-trips due to a retry. Two specific scenarios are detailed
 below.
 
 ## Misconfiguration and Deployment Concerns {#misconfiguration}
 
-It is possible for ECHO advertisements and servers to become inconsistent. This
+It is possible for ECH advertisements and servers to become inconsistent. This
 may occur, for instance, from DNS misconfiguration, caching issues, or an
 incomplete rollout in a multi-server deployment. This may also occur if a server
-loses its ECHO keys, or if a deployment of ECHO must be rolled back on the
+loses its ECH keys, or if a deployment of ECH must be rolled back on the
 server.
 
 The retry mechanism repairs inconsistencies, provided the server is
 authoritative for the public name. If server and advertised keys mismatch,
-the server will respond with echo_retry_requested. If the server does not understand the
+the server will respond with ech_retry_requested. If the server does not understand the
 "encrypted_client_hello" extension at all, it will ignore it as required by {{RFC8446}};
 Section 4.1.2. Provided the server can present a certificate valid for the public name,
 the client can safely retry with updated settings, as described in {{handle-server-response}}.
 
-Unless ECHO is disabled as a result of successfully establishing a connection to
+Unless ECH is disabled as a result of successfully establishing a connection to
 the public name, the client MUST NOT fall back to using unencrypted ClientHellos, as this allows
 a network attacker to disclose the contents of this ClientHello, including the SNI.
 It MAY attempt to use another server from the DNS results, if one is provided.
 
 Client-facing servers with non-uniform cryptographic configurations across backend
-origin servers segment the ECHO anonymity set based on these configurations. For example,
+origin servers segment the ECH anonymity set based on these configurations. For example,
 if a client-facing server hosts k backend origin servers, and exactly one of those
 backend origin servers supports a different set of cryptographic algorithms than the
 other (k - 1) servers, it may be possible to identify this single server based on
@@ -791,15 +790,15 @@ the contents of the ServerHello as this message is not encrypted.
 A more serious problem is MITM proxies which do not support this
 extension. {{RFC8446}}, Section 9.3 requires that
 such proxies remove any extensions they do not understand. The handshake will
-then present a certificate based on the public name, without echoing the
+then present a certificate based on the public name, without eching the
 "encrypted_client_hello" extension to the client.
 
 Depending on whether the client is configured to accept the proxy's certificate
 as authoritative for the public name, this may trigger the retry logic described
 in {{handle-server-response}} or result in a connection failure. A proxy which
-is not authoritative for the public name cannot forge a signal to disable ECHO.
+is not authoritative for the public name cannot forge a signal to disable ECH.
 
-A non-conformant MITM proxy which instead forwards the ECHO extension,
+A non-conformant MITM proxy which instead forwards the ECH extension,
 substituting its own KeyShare value, will result in
 the client-facing server recognizing the key, but failing to decrypt
 the SNI. This causes a hard failure. Clients SHOULD NOT attempt to repair the
@@ -810,16 +809,16 @@ connection in this case.
 ## Why is cleartext DNS OK? {#cleartext-dns}
 
 In comparison to {{?I-D.kazuho-protected-sni}}, wherein DNS Resource
-Records are signed via a server private key, ECHO records have no
+Records are signed via a server private key, ECH records have no
 authenticity or provenance information. This means that any attacker
 which can inject DNS responses or poison DNS caches, which is a common
 scenario in client access networks, can supply clients with fake
-ECHO records (so that the client encrypts data to them) or strip the
-ECHO record from the response. However, in the face of an attacker that
+ECH records (so that the client encrypts data to them) or strip the
+ECH record from the response. However, in the face of an attacker that
 controls DNS, no encryption scheme can work because the attacker
 can replace the IP address, thus blocking client connections, or
 substituting a unique IP address which is 1:1 with the DNS name that
-was looked up (modulo DNS wildcards). Thus, allowing the ECHO records in
+was looked up (modulo DNS wildcards). Thus, allowing the ECH records in
 the clear does not make the situation significantly worse.
 
 Clearly, DNSSEC (if the client validates and hard fails) is a defense against
@@ -830,16 +829,16 @@ less useful without encryption of DNS queries in transit via DoH or DPRIVE mecha
 
 ## Client Tracking
 
-A malicious client-facing server could distribute unique, per-client ECHOConfig
+A malicious client-facing server could distribute unique, per-client ECHConfig
 structures as a way of tracking clients across subsequent connections. On-path
 adversaries which know about these unique keys could also track clients in this
 way by observing TLS connection attempts.
 
 The cost of this type of attack scales linearly with the desired number of target
 clients. Moreover, DNS caching behavior makes targeting individual users for extended
-periods of time, e.g., using per-client ECHOConfig structures delivered via HTTPSSVC
+periods of time, e.g., using per-client ECHConfig structures delivered via HTTPSSVC
 RRs with high TTLs, challenging. Clients can help mitigate this problem by
-flushing any DNS or ECHOConfig state upon changing networks.
+flushing any DNS or ECHConfig state upon changing networks.
 
 ## Optional Record Digests and Trial Decryption
 
@@ -848,13 +847,13 @@ servers do not want to reveal information about the client-facing server in the
 "encrypted_client_hello" extension. In such settings, servers must perform trial
 decrypt upon receipt of an empty record digest, which may exacerbate DoS attacks.
 Specifically, an adversary may send malicious ClientHello messages, i.e., those
-which will not decrypt with any known ECHO key, in order to force wasteful decryption.
+which will not decrypt with any known ECH key, in order to force wasteful decryption.
 Servers that support this feature should, for example, implement some form of rate
 limiting mechanism to limit the damage caused by such attacks.
 
 ## Related Privacy Leaks
 
-ECHO requires encrypted DNS to be an effective privacy protection mechanism.
+ECH requires encrypted DNS to be an effective privacy protection mechanism.
 However, verifying the server's identity from the Certificate message, particularly
 when using the X509 CertificateType, may result in additional network traffic
 that may reveal the server identity. Examples of this traffic may include requests
@@ -875,13 +874,13 @@ certificate validation.
 
 {{?I-D.ietf-tls-sni-encryption}} lists several requirements for SNI
 encryption. In this section, we re-iterate these requirements and assess
-the ECHO design against them.
+the ECH design against them.
 
 ### Mitigate against replay attacks
 
 Since servers process either ClientHelloInner or ClientHelloOuter, and ClientHelloInner
 contains an HPKE-derived nonce, it is not possible for an attacker to "cut and paste"
-the ECHO value in a different Client Hello and learn information from ClientHelloInner.
+the ECH value in a different Client Hello and learn information from ClientHelloInner.
 This is because the attacker lacks access to the HPKE-derived nonce used to derive the
 handshake secrets.
 
@@ -890,9 +889,9 @@ handshake secrets.
 This design depends upon DNS as a vehicle for semi-static public key distribution.
 Server operators may partition their private keys however they see fit provided
 each server behind an IP address has the corresponding private key to decrypt
-a key. Thus, when one ECHO key is provided, sharing is optimally bound by the number
+a key. Thus, when one ECH key is provided, sharing is optimally bound by the number
 of hosts that share an IP address. Server operators may further limit sharing
-by publishing different DNS records containing ECHOConfig values with different
+by publishing different DNS records containing ECHConfig values with different
 keys using a short TTL.
 
 ### Prevent SNI-based DoS attacks
@@ -904,20 +903,20 @@ valid TCP connections an attacker can open.
 
 ### Do not stick out
 
-The only explicit signal indicating possible use of ECHO is the ClientHello
+The only explicit signal indicating possible use of ECH is the ClientHello
 "encrypted_client_hello" extension. Server handshake messages do not contain any
-signal indicating use or negotiation of ECHO. Clients MAY GREASE the
+signal indicating use or negotiation of ECH. Clients MAY GREASE the
 "encrypted_client_hello" extension, as described in {{grease-extensions}}, which
-helps ensure the ecosystem handles ECHO correctly. Moreover, as more clients
-enable ECHO support, e.g., as normal part of Web browser functionality, with keys
-supplied by shared hosting providers, the presence of ECHO extensions becomes less
+helps ensure the ecosystem handles ECH correctly. Moreover, as more clients
+enable ECH support, e.g., as normal part of Web browser functionality, with keys
+supplied by shared hosting providers, the presence of ECH extensions becomes less
 unusual and part of typical client behavior. In other words, if all Web browsers
-start using ECHO, the presence of this value will not signal unusual behavior
+start using ECH, the presence of this value will not signal unusual behavior
 to passive eavesdroppers.
 
 ### Forward secrecy
 
-This design is not forward secret because the server's ECHO key is static.
+This design is not forward secret because the server's ECH key is static.
 However, the window of exposure is bound by the key lifetime. It is
 RECOMMENDED that servers rotate keys frequently.
 
@@ -928,12 +927,12 @@ directly to backend origin servers, thereby avoiding unnecessary MiTM attacks.
 
 ### Split server spoofing
 
-Assuming ECHO records retrieved from DNS are authenticated, e.g., via DNSSEC or fetched
+Assuming ECH records retrieved from DNS are authenticated, e.g., via DNSSEC or fetched
 from a trusted Recursive Resolver, spoofing a server operating in Split Mode
 is not possible. See {{cleartext-dns}} for more details regarding cleartext
 DNS.
 
-Authenticating the ECHOConfigs structure naturally authenticates the
+Authenticating the ECHConfigs structure naturally authenticates the
 included public name. This also authenticates any retry signals
 from the server because the client validates the server
 certificate against the public name before retrying.
@@ -956,7 +955,7 @@ still complete).  However, the client is still responsible for
 verifying the server's identity in its certificate.
 
 [[TODO: Some more analysis needed in this case, as it is a little
-odd, and probably some precise rules about handling ECHO and no
+odd, and probably some precise rules about handling ECH and no
 SNI uniformly?]]
 
 ## Padding Policy
@@ -967,7 +966,7 @@ mechanism for clients aimed at reducing potential information leakage.
 
 ## Active Attack Mitigations
 
-This section describes the rationale for ECHO properties and mechanics as defenses
+This section describes the rationale for ECH properties and mechanics as defenses
 against active attacks. In all the attacks below, the attacker is on-path between
 the target client and server. The goal of the attacker is to learn private information
 about the inner ClientHello, such as the true SNI value.
@@ -992,7 +991,7 @@ information.
  Client                         Attacker                      Server
    ClientHello
    + key_share
-   + echo        ------>      (intercept)     -----> X (drop)
+   + ech         ------>      (intercept)     -----> X (drop)
 
                              ServerHello
                              + key_share
@@ -1006,7 +1005,7 @@ information.
 ~~~
 {: #flow-diagram-client-reaction title="Client reaction attack"}
 
-The "echo_nonce" extension in the inner ClientHello prevents this attack. In particular,
+The "ech_nonce" extension in the inner ClientHello prevents this attack. In particular,
 since the attacker does not have access to this value, it cannot produce the right transcript
 and handshake keys needed for encrypting the Certificate message. Thus, the client will fail
 to decrypt the Certificate and abort the connection.
@@ -1016,7 +1015,7 @@ to decrypt the Certificate and abort the connection.
 This attack aims to exploit server HRR state management to recover information about
 a legitimate ClientHello using its own attacker-controlled ClientHello.
 To begin, the attacker intercepts and forwards a legitimate ClientHello with an
-"encrypted_client_hello" (echo) extension to the server, which triggers a
+"encrypted_client_hello" (ech) extension to the server, which triggers a
 legitimate HelloRetryRequest in return. Rather than forward the retry to the client,
 the attacker, attempts to generate its own ClientHello in response based on the
 contents of the first ClientHello and HelloRetryRequest exchange with the result
@@ -1029,14 +1028,14 @@ client's chosen SNI to the attacker.
  Client                         Attacker                      Server
    ClientHello
    + key_share
-   + echo        ------>       (forward)        ------->
+   + ech         ------>       (forward)        ------->
                                                    HelloRetryRequest
                                                          + key_share
                               (intercept)       <-------
 
                               ClientHello
                               + key_share'
-                              + echo'           ------->
+                              + ech'           ------->
                                                          ServerHello
                                                          + key_share
                                                {EncryptedExtensions}
@@ -1050,9 +1049,9 @@ client's chosen SNI to the attacker.
 {: #flow-diagram-hrr-hijack title="HelloRetryRequest hijack attack"}
 
 This attack is mitigated by binding the first and second ClientHello messages together.
-In particular, since the attacker does not possess the echo_hrr_key, it cannot
+In particular, since the attacker does not possess the ech_hrr_key, it cannot
 generate a valid encryption of the second inner ClientHello. The server will
-attempt decryption using echo_hrr_key, detect failure, and fail the connection.
+attempt decryption using ech_hrr_key, detect failure, and fail the connection.
 
 If the second ClientHello were not bound to the first, it might be possible
 for the server to act as an oracle if it required parameters from the first
@@ -1084,10 +1083,10 @@ can be used to test the encrypted SNI value of specific ClientHello messages.
 
        ClientHello
        + key_share
-       + echo       -------->  (intercept)
+       + ech        -------->  (intercept)
                                   ClientHello
                                   + key_share
-                                  + echo
+                                  + ech
                                   + pre_shared_key
                                              -------->
                                                              Alert
@@ -1095,10 +1094,10 @@ can be used to test the encrypted SNI value of specific ClientHello messages.
 ~~~
 {: #tls-resumption-psk title="Message flow for resumption and PSK"}
 
-ECHO mitigates against this attack by requiring servers not mix-and-match
+ECH mitigates against this attack by requiring servers not mix-and-match
 information from the inner and outer ClientHello. For example, if the server
 accepts the inner ClientHello, it does not validate binders in the outer
-ClientHello. This means that ECHO PSKs are used within the HPKE encryption
+ClientHello. This means that ECH PSKs are used within the HPKE encryption
 envelope.
 
 # IANA Considerations
@@ -1112,18 +1111,18 @@ in the existing registry for ExtensionType (defined in
 
 ## Update of the TLS Alert Registry
 
-IANA is requested to create an entry, echo_required(121) in the
+IANA is requested to create an entry, ech_required(121) in the
 existing registry for Alerts (defined in {{!RFC8446}}), with the
 "DTLS-OK" column being set to "Y".
 
-# ECHOConfig Extension Guidance {#config-extensions}
+# ECHConfig Extension Guidance {#config-extensions}
 
 Any future information or hints that influence the outer ClientHello SHOULD be
-specified as ECHOConfig extensions, or in an entirely new version of ECHOConfig.
-This is primarily because the outer ClientHello exists only in support of ECHO.
+specified as ECHConfig extensions, or in an entirely new version of ECHConfig.
+This is primarily because the outer ClientHello exists only in support of ECH.
 Namely, it is both an envelope for the encrypted inner ClientHello and enabler for
 authenticated key mismatch signals (see {{server-behavior}}). In contrast, the inner
-ClientHello is the true ClientHello used upon ECHO negotiation.
+ClientHello is the true ClientHello used upon ECH negotiation.
 
 --- back
 
@@ -1183,7 +1182,7 @@ SNI induces no additional round trip and operates below the application layer.
 The design described here only provides encryption for the SNI, but
 not for other extensions, such as ALPN. Another potential design
 would be to encrypt all of the extensions using the same basic
-structure as we use here for ECHO. That design has the following
+structure as we use here for ECH. That design has the following
 advantages:
 
 - It protects all the extensions from ordinary eavesdroppers
@@ -1209,6 +1208,6 @@ It also has the following disadvantages:
 
 This document draws extensively from ideas in {{?I-D.kazuho-protected-sni}}, but
 is a much more limited mechanism because it depends on the DNS for the
-protection of the ECHO key. Richard Barnes, Christian Huitema, Patrick McManus,
+protection of the ECH key. Richard Barnes, Christian Huitema, Patrick McManus,
 Matthew Prince, Nick Sullivan, Martin Thomson, and David Benjamin also provided
 important ideas and contributions.
