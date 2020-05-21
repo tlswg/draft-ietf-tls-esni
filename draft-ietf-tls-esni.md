@@ -1013,7 +1013,7 @@ To begin, the attacker intercepts and forwards a legitimate ClientHello with an
 "encrypted_client_hello" (echo) extension to the server, which triggers a HelloRetryRequest
 in return. Rather than forward the retry to the client, the attacker, attempts to
 generates its own ClientHello in response based on the contents of the first ClientHello
-and HelloRetryRequest exchange.
+and HelloRetryRequest exchange with the result that the server encrypts the certificate to the attacker.
 
 ~~~
  Client                         Attacker                      Server
