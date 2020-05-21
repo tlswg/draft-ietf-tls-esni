@@ -967,7 +967,7 @@ mechanism for clients aimed at reducing potential information leakage.
 This section describes the rationale for ECHO properties and mechanics as defenses
 against active attacks. In all the attacks below, the attacker is on-path between
 the target client and server. The goal of the attacker is to learn private information
-in the inner ClientHello, such as the true SNI value.
+about the inner ClientHello, such as the true SNI value.
 
 ### Client Reaction Attack Mitigation {#flow-client-reaction}
 
