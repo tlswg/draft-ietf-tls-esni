@@ -1,8 +1,8 @@
 ---
-title: Encrypted ClientHello for TLS 1.3
-abbrev: TLS 1.3 Encrypted ClientHello
+title: TLS Encrypted Client Hello
+abbrev: TLS Encrypted Client Hello
 docname: draft-ietf-tls-esni-latest
-category: exp
+category: std
 
 ipr: trust200902
 area: General
@@ -44,7 +44,8 @@ normative:
 
 --- abstract
 
-This document defines a mechanism for encrypting a TLS 1.3 ClientHello.
+This document describes a mechanism in Transport Layer Security (TLS)
+for encrypting a ClientHello message under a server public key.
 
 --- middle
 
@@ -91,7 +92,8 @@ could already tell from the visible IP address.
 The design in this document introduces a new extension, called Encrypted Client
 Hello (ECH), which allows clients to encrypt the entirety of their ClientHello
 to a supporting server. This protects the SNI and other potentially sensitive fields,
-such as the ALPN list.
+such as the ALPN list. This extension is only supported with (D)TLS 1.3 {{!RFC8446}}
+and newer versions of the protocol.
 
 # Conventions and Definitions
 
