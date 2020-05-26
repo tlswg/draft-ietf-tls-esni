@@ -1,6 +1,6 @@
 ---
-title: Encrypted ClientHello for TLS
-abbrev: TLS Encrypted ClientHello
+title: TLS Encrypted Client Hello
+abbrev: TLS Encrypted Client Hello
 docname: draft-ietf-tls-esni-latest
 category: std
 
