@@ -282,7 +282,7 @@ extension, defined as follows:
 
 ~~~
    enum {
-       encrypted_client_hello(0xffce), (65535)
+       encrypted_client_hello(57), (65535)
    } ExtensionType;
 ~~~
 
@@ -346,7 +346,7 @@ ClientHello. This extension is defined as follows:
 
 ~~~
    enum {
-       ech_nonce(0xffce), (65535)
+       ech_nonce(57), (65535)
    } ExtensionType;
 
    struct {
@@ -376,7 +376,7 @@ the impact of duplicated extensions, the client may use the
 
 ~~~
    enum {
-       outer_extension(0xffcd), (65535)
+       outer_extension(58), (65535)
    } ExtensionType;
 
    struct {
@@ -1109,9 +1109,9 @@ envelope.
 IANA is requested to create the following two entries in the existing registry
 for ExtensionType (defined in {{!RFC8446}}):
 
-1. encrypted_client_hello(0xffce), with "TLS 1.3" column values being set to
+1. encrypted_client_hello(57), with "TLS 1.3" column values being set to
 "CH, EE", and "Recommended" column being set to "Yes".
-2. outer_extension(0xffcd), with the "TLS 1.3" column values being set to
+2. outer_extension(58), with the "TLS 1.3" column values being set to
 "CH", and "Recommended" column being set to "Yes".
 
 ## Update of the TLS Alert Registry
