@@ -1,6 +1,6 @@
-# Encrypted Server Name Indication for TLS 1.3
+# TLS Encrypted Client Hello
 
-This is the working area for the IETF [TLS Working Group](https://datatracker.ietf.org/wg/tls/documents/) Internet-Draft, "Encrypted Server Name Indication for TLS 1.3".
+This is the working area for the IETF [TLS Working Group](https://datatracker.ietf.org/wg/tls/documents/) Internet-Draft, "TLS Encrypted Client Hello".
 
 * [Editor's Copy](https://tlswg.github.io/draft-ietf-tls-esni/#go.draft-ietf-tls-esni.html)
 * [Working Group Draft](https://tools.ietf.org/html/draft-ietf-tls-esni)
