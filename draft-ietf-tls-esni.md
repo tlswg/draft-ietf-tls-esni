@@ -562,10 +562,6 @@ authenticated, the client MUST abort the connection with an "ech_required"
 alert. The client can then regard ECH as securely disabled by the server. It
 SHOULD retry the handshake with a new transport connection and ECH disabled.
 
-[[TODO: Key replacement is significantly less scary than saying that ECH-naive
-  servers bounce ECH off. Is it worth defining a strict mode toggle in the ECH
-  keys, for a deployment to indicate it is ready for that? ]]
-
 Clients SHOULD implement a limit on retries caused by "ech_retry_request" or
 servers which do not acknowledge the "encrypted_client_hello" extension. If the
 client does not retry in either scenario, it MUST report an error to the
@@ -944,21 +940,6 @@ certificate against the public name before retrying.
 This design has no impact on application layer protocol negotiation. It may affect
 connection routing, server certificate selection, and client certificate verification.
 Thus, it is compatible with multiple protocols.
-
-## Misrouting
-
-Note that the backend server has no way of knowing what the SNI was,
-but that does not lead to additional privacy exposure because the
-backend server also only has one identity. This does, however, change
-the situation slightly in that the backend server might previously have
-checked SNI and now cannot (and an attacker can route a connection
-with an encrypted SNI to any backend server and the TLS connection will
-still complete).  However, the client is still responsible for
-verifying the server's identity in its certificate.
-
-[[TODO: Some more analysis needed in this case, as it is a little
-odd, and probably some precise rules about handling ECH and no
-SNI uniformly?]]
 
 ## Padding Policy
 
