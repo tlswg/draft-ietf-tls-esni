@@ -282,7 +282,7 @@ extension, defined as follows:
 
 ~~~
    enum {
-       encrypted_client_hello(57), (65535)
+       encrypted_client_hello(0xff02), (65535)
    } ExtensionType;
 ~~~
 
@@ -346,7 +346,7 @@ ClientHello. This extension is defined as follows:
 
 ~~~
    enum {
-       ech_nonce(57), (65535)
+       ech_nonce(0xff03), (65535)
    } ExtensionType;
 
    struct {
@@ -376,7 +376,7 @@ the impact of duplicated extensions, the client may use the
 
 ~~~
    enum {
-       outer_extension(58), (65535)
+       outer_extension(0xff04), (65535)
    } ExtensionType;
 
    struct {
@@ -430,7 +430,7 @@ context as follows:
 ~~~
 pkR = HPKE.KEM.Unmarshal(ECHConfig.public_key)
 enc, context = SetupBaseS(pkR, "tls13-ech")
-ech_nonce = context.Export("tls13-ech-nonce", 16)
+ech_nonce_value = context.Export("tls13-ech-nonce", 16)
 ech_hrr_key = context.Export("tls13-ech-hrr-key", 16)
 ~~~
 
@@ -442,7 +442,7 @@ extension, as described in {{outer-extensions}}.
 The client then generates a ClientHelloInner value. In addition to the normal
 values, ClientHelloInner MUST also contain:
 
- - an "ech_nonce" extension
+ - an "ech_nonce" extension, containing `ech_nonce_value` derived above
  - TLS padding {{!RFC7685}} (see {{padding}})
 
 When offering an encrypted ClientHello, the client MUST NOT offer to resume any
@@ -613,7 +613,7 @@ ClientHelloInner via the derived ech_hrr_key by modifying HPKE setup as follows:
 ~~~
 pkR = HPKE.KEM.Unmarshal(ECHConfig.public_key)
 enc, context = SetupPSKS(pkR, "tls13-ech-hrr", ech_hrr_key, "")
-ech_nonce = context.Export("tls13-ech-hrr-nonce", 16)
+ech_nonce_value = context.Export("tls13-ech-hrr-nonce", 16)
 ~~~
 
 Clients then encrypt the second ClientHelloInner using this new HPKE context.
@@ -628,7 +628,7 @@ decrypt ClientEncryptedCH as follows:
 ~~~
 context = SetupPSKR(ClientEncryptedCH.enc, skR, "tls13-ech-hrr", ech_hrr_key, "")
 ClientHelloInner = context.Open("", ClientEncryptedCH.encrypted_ch)
-ech_nonce = context.Export("tls13-ech-hrr-nonce", 16)
+ech_nonce_value = context.Export("tls13-ech-hrr-nonce", 16)
 ~~~
 
 [[OPEN ISSUE: Should we be using the PSK input or the info input?
@@ -715,7 +715,7 @@ corresponding to ECHConfig, as follows:
 ~~~
 context = SetupBaseR(ClientEncryptedCH.enc, skR, "tls13-ech")
 ClientHelloInner = context.Open("", ClientEncryptedCH.encrypted_ch)
-ech_nonce = context.Export("tls13-ech-nonce", 16)
+ech_nonce_value = context.Export("tls13-ech-nonce", 16)
 ech_hrr_key = context.Export("tls13-ech-hrr-key", 16)
 ~~~
 
@@ -1090,9 +1090,11 @@ envelope.
 IANA is requested to create the following two entries in the existing registry
 for ExtensionType (defined in {{!RFC8446}}):
 
-1. encrypted_client_hello(57), with "TLS 1.3" column values being set to
+1. encrypted_client_hello(0xff02), with "TLS 1.3" column values being set to
 "CH, EE", and "Recommended" column being set to "Yes".
-2. outer_extension(58), with the "TLS 1.3" column values being set to
+2. ech_nonce(0xff03), with the "TLS 1.3" column values being set to
+"CH", and "Recommended" column being set to "Yes".
+3. outer_extension(0xff04), with the "TLS 1.3" column values being set to
 "CH", and "Recommended" column being set to "Yes".
 
 ## Update of the TLS Alert Registry
