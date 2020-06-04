@@ -842,8 +842,13 @@ flushing any DNS or ECHConfig state upon changing networks.
 
 Optional record digests may be useful in scenarios where clients and client-facing
 servers do not want to reveal information about the client-facing server in the
-"encrypted_client_hello" extension. In such settings, servers must perform trial
-decrypt upon receipt of an empty record digest, which may exacerbate DoS attacks.
+"encrypted_client_hello" extension. In such settings, clients send 
+either an empty record_digest or a randomly generated record_digest
+in the ClientEncryptedCH. (The precise implementation choice for this
+mechanism is out of scope for this document.) Servers in these settings 
+must perform trial decryption since they cannot identify the client's chosen 
+ECH key using the record_digest value. As a result, support for optional 
+record digests may exacerbate DoS attacks.
 Specifically, an adversary may send malicious ClientHello messages, i.e., those
 which will not decrypt with any known ECH key, in order to force wasteful decryption.
 Servers that support this feature should, for example, implement some form of rate
