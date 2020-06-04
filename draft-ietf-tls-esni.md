@@ -394,7 +394,7 @@ When sending ClientHello, the client first computes ClientHelloInner,
 including any PSK binders, and then MAY substitute extensions which
 it knows will be duplicated in ClientHelloOuter. To do so, the client
 computes a hash H of the entire ClientHelloInner message with the same
-hash as for the KDF used to encrypt ClienHelloInner. Then, the client
+hash as for the KDF used to encrypt ClientHelloInner. Then, the client
 removes and and replaces extensions from ClientHelloInner with a single
 "outer_extensions" extension. The list of outer_extensions include those
 which were removed from ClientHelloInner, in the order in which they were
