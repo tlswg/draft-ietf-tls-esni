@@ -803,22 +803,21 @@ Informally, the primary security and privacy goals of ECH against an active atta
 as follows:
 
 1. Use of ECH does not weaken the security properties of TLS without ECH.
-2. TLS connection establishment to a host with a specific ECHConfig is indistinguishable
-from a connection to any other host with the same ECHConfig. That is, given an anonymity
-set of servers of size k sharing the same ECHConfig, an attacker has negligible advantage
-in correctly identifying the host for a given connection with probability larger than 1/k.
+2. TLS connection establishment to a host with a specific ECHConfig and TLS configuration
+is indistinguishable from a connection to any other host with the same ECHConfig and TLS
+configuration.
 
 Client-facing server configuration determines the size of the anonymity set. For example,
 if a server uses distinct ECHConfig values for each domain, then each anonymity set
 has size k = 1. Servers SHOULD deploy ECH in such a way so as to maximize the size of the
 anonymity set where possible. This means client-facing servers should use the same
-ECHConfig for as many servers as possible.
-
+ECHConfig for as many servers as possible. An attacker can distinguish two servers that
+have different ECHConfig values based on the ClientEncryptedCH.record_digest value.
 This also means public information in a TLS handshake is also consistent across servers.
 For example, if a client-facing server hosts k backend origin servers, and exactly one of
-those backend origin servers supports a different set of cryptographic algorithms than the
-other (k - 1) servers, it may be possible to identify this single server based on the
-contents of the ServerHello as this message is not encrypted.
+those backend origin servers supports a different TLS configuration, such as a different
+set of cryptographic algorithms than the other (k - 1) servers, it may be possible to
+identify this single server based on the contents of unencrypted handshake messages.
 
 ## Unauthenticated and Cleartext DNS {#cleartext-dns}
 
