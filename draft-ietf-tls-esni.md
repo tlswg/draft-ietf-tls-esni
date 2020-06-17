@@ -815,10 +815,9 @@ of the anonymity set where possible. This means client-facing servers should use
 ECHConfig for as many hosts as possible. An attacker can distinguish two hosts that
 have different ECHConfig values based on the ClientEncryptedCH.record_digest value.
 This also means public information in a TLS handshake is also consistent across hosts.
-For example, if a client-facing server services k backend origin hosts, and exactly one of
-those backend origin hosts supports a different TLS configuration, such as a different
-set of cryptographic algorithms than the other (k - 1) hosts, it may be possible to
-identify this single host based on the contents of unencrypted handshake messages.
+For example, if a client-facing server services many backend origin hosts, only one of which
+supports some cipher suite, it may be possible to identify that host based on the contents
+of unencrypted handshake messages.
 
 ## Unauthenticated and Cleartext DNS {#cleartext-dns}
 
