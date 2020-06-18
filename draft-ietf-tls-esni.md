@@ -155,7 +155,7 @@ metadata which is used for ClientHello encryption for all the domains for
 which it serves directly or indirectly (via Split Mode). This document
 defines the format of the SNI encryption public key and metadata,
 referred to as an ECH configuration, and delegates DNS publication
-details to {{!HTTPSSVC=I-D.nygren-dnsop-svcb-httpssvc}}, though other
+details to {{!HTTPS-RR=I-D.ietf-dnsop-svcb-https}}, though other
 delivery mechanisms are possible. In particular, if some of the
 clients of a private server are applications rather than Web browsers,
 those applications might have the public key and metadata
@@ -834,7 +834,7 @@ way by observing TLS connection attempts.
 
 The cost of this type of attack scales linearly with the desired number of target
 clients. Moreover, DNS caching behavior makes targeting individual users for extended
-periods of time, e.g., using per-client ECHConfig structures delivered via HTTPSSVC
+periods of time, e.g., using per-client ECHConfig structures delivered via HTTPS
 RRs with high TTLs, challenging. Clients can help mitigate this problem by
 flushing any DNS or ECHConfig state upon changing networks.
 
