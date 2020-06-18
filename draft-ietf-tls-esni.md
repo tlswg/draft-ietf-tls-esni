@@ -776,13 +776,6 @@ the public name, the client MUST NOT fall back to using unencrypted ClientHellos
 a network attacker to disclose the contents of this ClientHello, including the SNI.
 It MAY attempt to use another server from the DNS results, if one is provided.
 
-Client-facing servers with non-uniform cryptographic configurations across backend
-origin servers segment the ECH anonymity set based on these configurations. For example,
-if a client-facing server hosts k backend origin servers, and exactly one of those
-backend origin servers supports a different set of cryptographic algorithms than the
-other (k - 1) servers, it may be possible to identify this single server based on
-the contents of the ServerHello as this message is not encrypted.
-
 ## Middleboxes
 
 A more serious problem is MITM proxies which do not support this
@@ -804,7 +797,29 @@ connection in this case.
 
 # Security Considerations
 
-## Why is cleartext DNS OK? {#cleartext-dns}
+## Security and Privacy Goals
+
+Informally, the primary security and privacy goals of ECH against an active attacker are
+as follows:
+
+1. Use of ECH does not weaken the security properties of TLS without ECH.
+2. TLS connection establishment to a host with a specific ECHConfig and TLS configuration
+is indistinguishable from a connection to any other host with the same ECHConfig and TLS
+configuration. (The set of hosts which share the same ECHConfig and TLS configuration
+is referred to as the anonymity set.)
+
+Client-facing server configuration determines the size of the anonymity set. For example,
+if a client-facing server uses distinct ECHConfig values for each host, then each anonymity set
+has size k = 1. Client-facing servers SHOULD deploy ECH in such a way so as to maximize the size
+of the anonymity set where possible. This means client-facing servers should use the same
+ECHConfig for as many hosts as possible. An attacker can distinguish two hosts that
+have different ECHConfig values based on the ClientEncryptedCH.record_digest value.
+This also means public information in a TLS handshake is also consistent across hosts.
+For example, if a client-facing server services many backend origin hosts, only one of which
+supports some cipher suite, it may be possible to identify that host based on the contents
+of unencrypted handshake messages.
+
+## Unauthenticated and Cleartext DNS {#cleartext-dns}
 
 In comparison to {{?I-D.kazuho-protected-sni}}, wherein DNS Resource
 Records are signed via a server private key, ECH records have no
@@ -842,12 +857,12 @@ flushing any DNS or ECHConfig state upon changing networks.
 
 Optional record digests may be useful in scenarios where clients and client-facing
 servers do not want to reveal information about the client-facing server in the
-"encrypted_client_hello" extension. In such settings, clients send 
+"encrypted_client_hello" extension. In such settings, clients send
 either an empty record_digest or a randomly generated record_digest
 in the ClientEncryptedCH. (The precise implementation choice for this
-mechanism is out of scope for this document.) Servers in these settings 
-must perform trial decryption since they cannot identify the client's chosen 
-ECH key using the record_digest value. As a result, support for optional 
+mechanism is out of scope for this document.) Servers in these settings
+must perform trial decryption since they cannot identify the client's chosen
+ECH key using the record_digest value. As a result, support for optional
 record digests may exacerbate DoS attacks.
 Specifically, an adversary may send malicious ClientHello messages, i.e., those
 which will not decrypt with any known ECH key, in order to force wasteful decryption.
