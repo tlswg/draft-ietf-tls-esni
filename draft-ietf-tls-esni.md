@@ -2,7 +2,7 @@
 title: TLS Encrypted Client Hello
 abbrev: TLS Encrypted Client Hello
 docname: draft-ietf-tls-esni-latest
-category: exp
+category: std
 
 ipr: trust200902
 area: General
