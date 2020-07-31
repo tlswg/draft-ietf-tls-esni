@@ -781,7 +781,7 @@ It MAY attempt to use another server from the DNS results, if one is provided.
 A more serious problem is MITM proxies which do not support this
 extension. {{RFC8446}}, Section 9.3 requires that
 such proxies remove any extensions they do not understand. The handshake will
-then present a certificate based on the public name, without eching the
+then present a certificate based on the public name, without echoing the
 "encrypted_client_hello" extension to the client.
 
 Depending on whether the client is configured to accept the proxy's certificate
