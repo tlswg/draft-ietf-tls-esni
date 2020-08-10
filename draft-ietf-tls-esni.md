@@ -65,7 +65,7 @@ unencrypted in TLS 1.3.
 The target domain may also be visible through other channels, such as plaintext
 client DNS queries, visible server IP addresses (assuming the server does not
 use domain-based virtual hosting), or other indirect mechanisms such as traffic
-analysis.  DoH {{?I-D.ietf-doh-dns-over-https}} and DPRIVE {{?RFC7858}}
+analysis. DoH {{?I-D.ietf-doh-dns-over-https}} and DPRIVE {{?RFC7858}}
 {{?RFC8094}} provide mechanisms for clients to conceal DNS lookups from network
 inspection, and many TLS servers host multiple domains on the same IP address.
 In such environments, the SNI remains the primary explicit signal used to
@@ -149,7 +149,7 @@ connection.
 ## Encrypted ClientHello (ECH)
 
 ECH works by encrypting the entire ClientHello, including the SNI and any
-additional extensions such as ALPN.  This requires that each provider publish a
+additional extensions such as ALPN. This requires that each provider publish a
 public key and metadata which is used for ClientHello encryption for all the
 domains for which it serves directly or indirectly (via Split Mode). This
 document defines the format of the SNI encryption public key and metadata,
@@ -162,7 +162,7 @@ key and metadata preconfigured.
 When a client wants to form a TLS connection to any of the domains served by an
 ECH-supporting provider, it constructs a ClientHello in the regular fashion
 containing the true SNI value (ClientHelloInner) and then encrypts it using the
-public key for the provider.  It then constructs a new ClientHello
+public key for the provider. It then constructs a new ClientHello
 (ClientHelloOuter) with an innocuous SNI (and potentially innocuous versions of
 other extensions such as ALPN {{?RFC7301}}) and containing the encrypted
 ClientHelloInner as an extension. It sends ClientHelloOuter to the server.
@@ -250,9 +250,9 @@ cipher_suites
 can use for encrypting the ClientHello.
 
 maximum_name_length
-: The largest name the server expects to support, if known.  If this value is
+: The largest name the server expects to support, if known. If this value is
 not known it can be set to zero, in which case clients SHOULD use the inner
-ClientHello padding scheme described below.  That could happen if wildcard names
+ClientHello padding scheme described below. That could happen if wildcard names
 are in use, or if names can be added or removed from the anonymity set during
 the lifetime of a particular resource record value.
 
@@ -266,7 +266,7 @@ The format is defined in {{RFC8446}}, Section 4.2. The same interpretation rules
 apply: extensions MAY appear in any order, but there MUST NOT be more than one
 extension of the same type in the extensions block. An extension can be tagged
 as mandatory by using an extension type codepoint with the high order bit set to
-1.  A client which receives a mandatory extension they do not understand MUST
+1. A client which receives a mandatory extension they do not understand MUST
 reject the ECHConfig content.
 
 Clients MUST parse the extension list and check for unsupported mandatory
@@ -313,9 +313,9 @@ encrypted_ch field.
 encrypted_ch
 : The serialized and encrypted ClientHelloInner structure, AEAD-encrypted using
 HPKE with the selected KEM, KDF, and AEAD algorithm and key generated as
-described below.  {:br}
+described below. {:br}
 
-If the server accepts ECH, it does not send this extension.  If it rejects ECH,
+If the server accepts ECH, it does not send this extension. If it rejects ECH,
 then it sends the following structure in EncryptedExtensions:
 
 ~~~
@@ -475,7 +475,7 @@ different amounts of padding. This padding may be fully determined by the
 client's configuration or may require server input.
 
 By way of example, clients typically support a small number of application
-profiles.  For instance, a browser might support HTTP with ALPN values
+profiles. For instance, a browser might support HTTP with ALPN values
 ["http/1.1, "h2"] and WebRTC media with ALPNs ["webrtc", "c-webrtc"]. Clients
 SHOULD pad this extension by rounding up to the total size of the longest ALPN
 extension across all application profiles. The target padding length of most
@@ -570,7 +570,7 @@ authenticate the connection with the public name, as follows:
   ECH.
 
 - The client MUST verify that the certificate is valid for
-  ECHConfigContents.public_name.  If invalid, it MUST abort the connection with
+  ECHConfigContents.public_name. If invalid, it MUST abort the connection with
   the appropriate alert.
 
 - If the server requests a client certificate, the client MUST respond with an
@@ -662,7 +662,7 @@ abort the connection with a "handshake_failure" alert.
 
 The ClientEncryptedCH value is said to match a known ECHConfig if there exists
 an ECHConfig that can be used to successfully decrypt
-ClientEncryptedCH.encrypted_ch.  This matching procedure should be done using
+ClientEncryptedCH.encrypted_ch. This matching procedure should be done using
 one of the following two checks:
 
 1. Compare ClientEncryptedCH.record_digest against cryptographic hashes of known
@@ -712,9 +712,9 @@ ech_hrr_key = context.Export("tls13-ech-hrr-key", 16)
 If decryption fails, the server MUST abort the connection with a "decrypt_error"
 alert. Moreover, if there is no "ech_nonce" extension, or if its value does not
 match the derived ech_nonce, the server MUST abort the connection with a
-"decrypt_error" alert.  Next, the server MUST scan ClientHelloInner for any
+"decrypt_error" alert. Next, the server MUST scan ClientHelloInner for any
 "outer_extension" extensions and substitute their values with the values in
-ClientHelloOuter.  It MUST first verify that the hash found in the extension
+ClientHelloOuter. It MUST first verify that the hash found in the extension
 matches the hash of the extension to be interpolated in and if it does not,
 abort the connections with a "decrypt_error" alert.
 
@@ -734,7 +734,7 @@ including servers which do not implement this specification.
 Unlike most TLS extensions, placing the SNI value in an ECH extension is not
 interoperable with existing servers, which expect the value in the existing
 plaintext extension. Thus server operators SHOULD ensure servers understand a
-given set of ECH keys before advertising them.  Additionally, servers SHOULD
+given set of ECH keys before advertising them. Additionally, servers SHOULD
 retain support for any previously-advertised keys for the duration of their
 validity
 
@@ -761,7 +761,7 @@ described in {{handle-server-response}}.
 Unless ECH is disabled as a result of successfully establishing a connection to
 the public name, the client MUST NOT fall back to using unencrypted
 ClientHellos, as this allows a network attacker to disclose the contents of this
-ClientHello, including the SNI.  It MAY attempt to use another server from the
+ClientHello, including the SNI. It MAY attempt to use another server from the
 DNS results, if one is provided.
 
 ## Middleboxes
@@ -801,8 +801,8 @@ then each anonymity set has size k = 1. Client-facing servers SHOULD deploy ECH
 in such a way so as to maximize the size of the anonymity set where possible.
 This means client-facing servers should use the same ECHConfig for as many hosts
 as possible. An attacker can distinguish two hosts that have different ECHConfig
-values based on the ClientEncryptedCH.record_digest value.  This also means
-public information in a TLS handshake is also consistent across hosts.  For
+values based on the ClientEncryptedCH.record_digest value. This also means
+public information in a TLS handshake is also consistent across hosts. For
 example, if a client-facing server services many backend origin hosts, only one
 of which supports some cipher suite, it may be possible to identify that host
 based on the contents of unencrypted handshake messages.
@@ -851,11 +851,11 @@ ClientEncryptedCH. (The precise implementation choice for this mechanism is out
 of scope for this document.) Servers in these settings must perform trial
 decryption since they cannot identify the client's chosen ECH key using the
 record_digest value. As a result, support for optional record digests may
-exacerbate DoS attacks.  Specifically, an adversary may send malicious
+exacerbate DoS attacks. Specifically, an adversary may send malicious
 ClientHello messages, i.e., those which will not decrypt with any known ECH key,
-in order to force wasteful decryption.  Servers that support this feature
-should, for example, implement some form of rate limiting mechanism to limit the
-damage caused by such attacks.
+in order to force wasteful decryption. Servers that support this feature should,
+for example, implement some form of rate limiting mechanism to limit the damage
+caused by such attacks.
 
 ## Related Privacy Leaks
 
@@ -887,13 +887,13 @@ against them.
 Since servers process either ClientHelloInner or ClientHelloOuter, and
 ClientHelloInner contains an HPKE-derived nonce, it is not possible for an
 attacker to "cut and paste" the ECH value in a different Client Hello and learn
-information from ClientHelloInner.  This is because the attacker lacks access to
+information from ClientHelloInner. This is because the attacker lacks access to
 the HPKE-derived nonce used to derive the handshake secrets.
 
 ### Avoid widely-deployed shared secrets
 
 This design depends upon DNS as a vehicle for semi-static public key
-distribution.  Server operators may partition their private keys however they
+distribution. Server operators may partition their private keys however they
 see fit provided each server behind an IP address has the corresponding private
 key to decrypt a key. Thus, when one ECH key is provided, sharing is optimally
 bound by the number of hosts that share an IP address. Server operators may
@@ -947,7 +947,7 @@ retrying.
 
 This design has no impact on application layer protocol negotiation. It may
 affect connection routing, server certificate selection, and client certificate
-verification.  Thus, it is compatible with multiple protocols.
+verification. Thus, it is compatible with multiple protocols.
 
 ## Padding Policy
 
@@ -1044,16 +1044,16 @@ client's chosen SNI to the attacker.
 {: #flow-diagram-hrr-hijack title="HelloRetryRequest hijack attack"}
 
 This attack is mitigated by binding the first and second ClientHello messages
-together.  In particular, since the attacker does not possess the ech_hrr_key,
-it cannot generate a valid encryption of the second inner ClientHello. The
-server will attempt decryption using ech_hrr_key, detect failure, and fail the
+together. In particular, since the attacker does not possess the ech_hrr_key, it
+cannot generate a valid encryption of the second inner ClientHello. The server
+will attempt decryption using ech_hrr_key, detect failure, and fail the
 connection.
 
 If the second ClientHello were not bound to the first, it might be possible for
 the server to act as an oracle if it required parameters from the first
 ClientHello to match that of the second ClientHello. For example, imagine the
 client's original SNI value in the inner ClientHello is "example.com", and the
-attacker's hijacked SNI value in its inner ClientHello is "test.com".  A server
+attacker's hijacked SNI value in its inner ClientHello is "test.com". A server
 which checks these for equality and changes behavior based on the result can be
 used as an oracle to learn the client's SNI.
 
@@ -1065,7 +1065,7 @@ server to obtain a resumption ticket for a given test domain, such as
 "test.com". Later, upon receipt of a legitimate ClientHello without a PSK
 binder, it computes a PSK binder using its own ticket and forwards the resulting
 ClientHello. Assume the server then validates the PSK binder on the outer
-ClientHello and chooses connection parameters based on the inner ClientHello.  A
+ClientHello and chooses connection parameters based on the inner ClientHello. A
 server which then validates information in the outer ClientHello ticket against
 information in the inner ClientHello, such as the SNI, introduces an oracle that
 can be used to test the encrypted SNI value of specific ClientHello messages.
@@ -1144,7 +1144,7 @@ This requires clients to have established a previous session -— and obtained
 PSKs —- with the server. The client-facing server decrypts early data payloads
 to uncover Client Hellos destined for the backend server, and forwards them
 onwards as necessary. Afterwards, all records to and from backend servers are
-forwarded by the client-facing server -- unmodified.  This avoids double
+forwarded by the client-facing server -- unmodified. This avoids double
 encryption of TLS records.
 
 Problems with this approach are: (1) servers may not always be able to
@@ -1160,8 +1160,8 @@ data nor requires a bootstrapping connection.
 
 In this variant, client-facing and backend servers coordinate to produce
 "combined tickets" that are consumable by both. Clients offer combined tickets
-to client-facing servers.  The latter parse them to determine the correct
-backend server to which the Client Hello should be forwarded. This approach is
+to client-facing servers. The latter parse them to determine the correct backend
+server to which the Client Hello should be forwarded. This approach is
 problematic due to non-trivial coordination between client-facing and backend
 servers for ticket construction and consumption. Moreover, it requires a
 bootstrapping step similar to that of the previous variant. In contrast,
@@ -1174,8 +1174,8 @@ encrypted SNI requires no such coordination.
 In this variant, clients request secondary certificates with CERTIFICATE_REQUEST
 HTTP/2 frames after TLS connection completion. In response, servers supply
 certificates via TLS exported authenticators
-{{!I-D.ietf-tls-exported-authenticator}} in CERTIFICATE frames.  Clients use a
-generic SNI for the underlying client-facing server TLS connection.  Problems
+{{!I-D.ietf-tls-exported-authenticator}} in CERTIFICATE frames. Clients use a
+generic SNI for the underlying client-facing server TLS connection. Problems
 with this approach include: (1) one additional round trip before peer
 authentication, (2) non-trivial application-layer dependencies and interaction,
 and (3) obtaining the generic SNI to bootstrap the connection. In contrast,
