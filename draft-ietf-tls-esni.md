@@ -176,9 +176,9 @@ ClientHelloInner in an "encrypted_client_hello" extension, which this document
 defines ({{encrypted-client-hello}}). Finally, it sends ClientHelloOuter to the
 server.
 
-Upon receiving ClientHelloOuter, the client-facing server decrypts the encrypted
-ClientHelloInner and either terminates the connection (in Shared Mode) or
-forwards it to the backend server (in Split Mode).
+Upon receiving ClientHelloOuter, the client-facing server processes the
+encrypted ClientHelloInner and either terminates the connection (in Shared Mode)
+or forwards it to the backend server (in Split Mode).
 
 # Encrypted ClientHello Configuration {#ech-configuration}
 
