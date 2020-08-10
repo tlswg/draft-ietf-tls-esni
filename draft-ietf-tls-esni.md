@@ -150,9 +150,7 @@ does not have access to the plaintext of the connection.
 In the remainder of this document, we will refer to the ECH-service provider as
 the "client-facing server" and to the TLS terminator as the "backend server".
 These are the same entity in Shared Mode, but in Split Mode, the client-facing
-and backend servers are physically separated. However, we will require them to
-communicate over a long-lived secure channel. (The manner in which this channel
-is established is out of the scope of this document.)
+and backend servers are physically separated.
 
 ## Encrypted ClientHello (ECH)
 
