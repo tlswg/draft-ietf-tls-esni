@@ -71,7 +71,7 @@ inspection, and many TLS servers host multiple domains on the same IP address.
 In such environments, the SNI remains the primary explicit signal used to
 determine the server's identity.
 
-The TLS WG has extensively studied the problem of protecting the SNI, but has
+The TLS working group has studied the problem of protecting the SNI, but has
 been unable to develop a completely generic solution.
 {{?I-D.ietf-tls-sni-encryption}} provides a description of the problem space and
 some of the proposed techniques. One of the more difficult problems is "Do not
@@ -82,18 +82,19 @@ on concealing the fact that the SNI is being protected. Unfortunately, the
 result often has undesirable performance consequences, incomplete coverage, or
 both.
 
-The design in this document takes a different approach: it assumes that private
-origins will co-locate with or hide behind a provider (CDN, application server,
-etc.) which can protect SNIs for all of the domains it hosts. As a result, SNI
-protection does not indicate that the client is attempting to reach a private
-origin, but only that it is going to a particular service provider, which the
-observer could already tell from the visible IP address.
+The protocol specified by this document takes a different approach. We assume
+that private origins will co-locate with or hide behind a provider (reverse
+proxy, application server, etc.) that protects SNIs for all of the domains it
+hosts. As a result, SNI protection does not indicate that the client is
+attempting to reach a private origin, but only that it is going to a particular
+service provider, which the observer could already tell from the visible IP
+address.
 
-The design in this document introduces a new extension, called Encrypted Client
-Hello (ECH), which allows clients to encrypt the entirety of their ClientHello
-to a supporting server. This protects the SNI and other potentially sensitive
-fields, such as the ALPN list. This extension is only supported with (D)TLS 1.3
-{{!RFC8446}} and newer versions of the protocol.
+This document specifies a new TLS extension, called Encrypted Client Hello
+(ECH), that allows clients to encrypt their ClientHello to a supporting server.
+This protects the SNI and other potentially sensitive fields, such as the ALPN
+list {{?RFC7301}}. This extension is only supported with (D)TLS 1.3 {{!RFC8446}}
+and newer versions of the protocol.
 
 # Conventions and Definitions
 
@@ -105,8 +106,8 @@ notation comes from {{RFC8446}}, Section 3.
 
 # Overview
 
-This document is designed to operate in one of two primary topologies shown
-below, which we call "Shared Mode" and "Split Mode"
+This extension is designed to operate in one of two topologies illustrated
+below, which we call "Shared Mode" and "Split Mode".
 
 ## Topologies
 
@@ -125,8 +126,8 @@ Client <----->  | private.example.org |
 {: #shared-mode title="Shared Mode Topology"}
 
 In Shared Mode, the provider is the origin server for all the domains whose DNS
-records point to it and clients form a TLS connection directly to that provider,
-which has access to the plaintext of the connection.
+records point to it. In this mode, the TLS connection is terminated by the
+provider.
 
 ~~~~
                 +--------------------+       +---------------------+
@@ -140,41 +141,43 @@ Client <------------------------------------>|                     |
 ~~~~
 {: #split-mode title="Split Mode Topology"}
 
-In Split Mode, the provider is *not* the origin server for private domains.
-Rather the DNS records for private domains point to the provider, and the
-provider's server relays the connection back to the backend server, which is the
-true origin server. The provider does not have access to the plaintext of the
-connection.
+In Split Mode, the provider is not the origin server for private domains.
+Rather, the DNS records for private domains point to the provider, and the
+provider's server relays the connection back to the origin server, who
+terminates the TLS connection with the client.
+
+In the remainder of this document, we will refer to the ECH-service provider as
+the "client-facing server" and to the TLS terminator as the "backend server".
+These are the same entity in Shared Mode, but in Split Mode, the client-facing
+and backend servers are physically separated. However, we will require them to
+communicate over a long-lived secure channel. (The manner in which this channel
+is established is out of the scope of this document.)
 
 ## Encrypted ClientHello (ECH)
 
-ECH works by encrypting the entire ClientHello, including the SNI and any
-additional extensions such as ALPN. This requires that each provider publish a
-public key and metadata which is used for ClientHello encryption for all the
-domains for which it serves directly or indirectly (via Split Mode). This
-document defines the format of the SNI encryption public key and metadata,
+ECH allows the client to encrypt sensitive ClientHello extensions, e.g., SNI,
+ALPN, etc., under the public key of the client-facing server. This requires the
+client-facing server to publish the public key and metadata it uses for ECH for
+all the domains for which it serves directly or indirectly (via Split Mode).
+This document defines the format of the ECH encryption public key and metadata,
 referred to as an ECH configuration, and delegates DNS publication details to
 {{!HTTPS-RR=I-D.ietf-dnsop-svcb-https}}, though other delivery mechanisms are
 possible. In particular, if some of the clients of a private server are
 applications rather than Web browsers, those applications might have the public
 key and metadata preconfigured.
 
-When a client wants to form a TLS connection to any of the domains served by an
-ECH-supporting provider, it constructs a ClientHello in the regular fashion
-containing the true SNI value (ClientHelloInner) and then encrypts it using the
-public key for the provider. It then constructs a new ClientHello
-(ClientHelloOuter) with an innocuous SNI (and potentially innocuous versions of
-other extensions such as ALPN {{?RFC7301}}) and containing the encrypted
-ClientHelloInner as an extension. It sends ClientHelloOuter to the server.
+When a client wants to establish a TLS session with the backend server, it
+constructs its ClientHello as usual (we will refer to this as the
+ClientHelloInner message) then encrypts it using the ECH public key. It then
+constructs a new ClientHello (ClientHelloOuter) with innocuous values for
+sensitive extensions, e.g., SNI, ALPN, etc., and with the encrypted
+ClientHelloInner in an "encrypted_client_hello" extension, which this document
+defines ({{encrypted-client-hello}}). Finally, it sends ClientHelloOuter to the
+server.
 
-Upon receiving ClientHelloOuter, the server can then decrypt ClientHelloInner
-and either terminate the connection (in Shared Mode) or forward it to the
-backend server (in Split Mode).
-
-Note that both ClientHelloInner and ClientHelloOuter are both valid, complete
-ClientHello messages. ClientHelloOuter carries an encrypted representation of
-ClientHelloInner in a "encrypted_client_hello" extension, defined in
-{{encrypted-client-hello}}.
+Upon receiving ClientHelloOuter, the client-facing server decrypts the encrypted
+ClientHelloInner and either terminates the connection (in Shared Mode) or
+forwards it to the backend server (in Split Mode).
 
 # Encrypted ClientHello Configuration {#ech-configuration}
 
