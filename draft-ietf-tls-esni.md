@@ -71,7 +71,7 @@ inspection, and many TLS servers host multiple domains on the same IP address.
 In such environments, the SNI remains the primary explicit signal used to
 determine the server's identity.
 
-The TLS working group has studied the problem of protecting the SNI, but has
+The TLS Working Group has studied the problem of protecting the SNI, but has
 been unable to develop a completely generic solution.
 {{?I-D.ietf-tls-sni-encryption}} provides a description of the problem space and
 some of the proposed techniques. One of the more difficult problems is "Do not
@@ -82,7 +82,7 @@ on concealing the fact that the SNI is being protected. Unfortunately, the
 result often has undesirable performance consequences, incomplete coverage, or
 both.
 
-The protocol specified by this document takes a different approach. We assume
+The protocol specified by this document takes a different approach. It assumes
 that private origins will co-locate with or hide behind a provider (reverse
 proxy, application server, etc.) that protects SNIs for all of the domains it
 hosts. As a result, SNI protection does not indicate that the client is
@@ -106,8 +106,8 @@ notation comes from {{RFC8446}}, Section 3.
 
 # Overview
 
-This extension is designed to operate in one of two topologies illustrated
-below, which we call "Shared Mode" and "Split Mode".
+This protocol is designed to operate in one of two topologies illustrated below,
+which we call "Shared Mode" and "Split Mode".
 
 ## Topologies
 
@@ -144,7 +144,8 @@ Client <------------------------------------>|                     |
 In Split Mode, the provider is not the origin server for private domains.
 Rather, the DNS records for private domains point to the provider, and the
 provider's server relays the connection back to the origin server, who
-terminates the TLS connection with the client.
+terminates the TLS connection with the client. Importantly, service provider
+does not have access to the plaintext of the connection.
 
 In the remainder of this document, we will refer to the ECH-service provider as
 the "client-facing server" and to the TLS terminator as the "backend server".
@@ -168,9 +169,9 @@ key and metadata preconfigured.
 
 When a client wants to establish a TLS session with the backend server, it
 constructs its ClientHello as usual (we will refer to this as the
-ClientHelloInner message) then encrypts it using the ECH public key. It then
-constructs a new ClientHello (ClientHelloOuter) with innocuous values for
-sensitive extensions, e.g., SNI, ALPN, etc., and with the encrypted
+ClientHelloInner message) and then encrypts this message using the ECH public
+key. It then constructs a new ClientHello (ClientHelloOuter) with innocuous
+values for sensitive extensions, e.g., SNI, ALPN, etc., and with the encrypted
 ClientHelloInner in an "encrypted_client_hello" extension, which this document
 defines ({{encrypted-client-hello}}). Finally, it sends ClientHelloOuter to the
 server.
