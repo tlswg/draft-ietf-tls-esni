@@ -57,12 +57,12 @@ for building production systems.
 
 Although TLS 1.3 {{!RFC8446}} encrypts most of the handshake, including the
 server certificate, there are several ways in which an on-path attacker can
-learn private information about the connection. The cleartext Server Name
+learn private information about the connection. The plaintext Server Name
 Indication (SNI) extension in ClientHello messages, which leaks the target
 domain for a given connection, is perhaps the most sensitive information
 unencrypted in TLS 1.3.
 
-The target domain may also be visible through other channels, such as cleartext
+The target domain may also be visible through other channels, such as plaintext
 client DNS queries, visible server IP addresses (assuming the server does not
 use domain-based virtual hosting), or other indirect mechanisms such as traffic
 analysis.  DoH {{?I-D.ietf-doh-dns-over-https}} and DPRIVE {{?RFC7858}}
@@ -558,7 +558,7 @@ application.
 #### Authenticating for the public name {#auth-public-name}
 
 When the server cannot decrypt or does not process the "encrypted_client_hello"
-extension, it continues with the handshake using the cleartext "server_name"
+extension, it continues with the handshake using the plaintext "server_name"
 extension instead (see {{server-behavior}}). Clients that offer ECH then
 authenticate the connection with the public name, as follows:
 
@@ -688,7 +688,7 @@ added behavior:
 - The server MUST ignore all PSK identities in the ClientHello which correspond
   to ECH PSKs. ECH PSKs offered by the client are associated with the ECH
   name. The server was unable to decrypt then ECH name, so it should not resume
-  them when using the cleartext SNI name. This restriction allows a client to
+  them when using the plaintext SNI name. This restriction allows a client to
   reject resumptions in {{auth-public-name}}.
 
 Note that an unrecognized ClientEncryptedCH.record_digest value may be a GREASE
@@ -733,7 +733,7 @@ including servers which do not implement this specification.
 
 Unlike most TLS extensions, placing the SNI value in an ECH extension is not
 interoperable with existing servers, which expect the value in the existing
-cleartext extension. Thus server operators SHOULD ensure servers understand a
+plaintext extension. Thus server operators SHOULD ensure servers understand a
 given set of ECH keys before advertising them.  Additionally, servers SHOULD
 retain support for any previously-advertised keys for the duration of their
 validity
@@ -807,7 +807,7 @@ example, if a client-facing server services many backend origin hosts, only one
 of which supports some cipher suite, it may be possible to identify that host
 based on the contents of unencrypted handshake messages.
 
-## Unauthenticated and Cleartext DNS {#cleartext-dns}
+## Unauthenticated and Plaintext DNS {#plaintext-dns}
 
 In comparison to {{?I-D.kazuho-protected-sni}}, wherein DNS Resource Records are
 signed via a server private key, ECH records have no authenticity or provenance
@@ -935,7 +935,7 @@ directly to backend origin servers, thereby avoiding unnecessary MiTM attacks.
 
 Assuming ECH records retrieved from DNS are authenticated, e.g., via DNSSEC or
 fetched from a trusted Recursive Resolver, spoofing a server operating in Split
-Mode is not possible. See {{cleartext-dns}} for more details regarding cleartext
+Mode is not possible. See {{plaintext-dns}} for more details regarding plaintext
 DNS.
 
 Authenticating the ECHConfigs structure naturally authenticates the included
