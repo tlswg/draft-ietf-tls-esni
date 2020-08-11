@@ -9,3 +9,16 @@ else
 	git clone -q --depth 10 $(CLONE_ARGS) \
 	    -b master https://github.com/martinthomson/i-d-template $(LIBDIR)
 endif
+
+latest:: lint
+.PHONY: lint
+
+PYTHON := $(shell which python3)
+ifeq ($(PYTHON),)
+PYTHON := $(shell which python)
+endif
+
+ifneq ($(PYTHON),)
+lint::
+	@$(PYTHON) ./.lint.py $(addsuffix .md,$(drafts))
+endif
