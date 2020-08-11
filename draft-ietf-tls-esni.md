@@ -488,9 +488,9 @@ server's anonymity set without server input. For the "server_name" extension
 with length D, clients SHOULD use the server's length hint L
 (ECHCOnfig.maximum_name_length) when computing the padding as follows:
 
-1. If L > D, add L - D bytes of padding. This rounds to the server's advertised
-   hint, i.e., ECHConfig.maximum_name_length.
-2. Otherwise, add 32 - (D % 32) bytes of padding. This rounds D up to the
+1. If L >= D, add L - D bytes of padding. This rounds to the server's
+   advertised hint, i.e., ECHConfig.maximum_name_length.
+2. Otherwise, add 31 - ((D - 1) % 32) bytes of padding. This rounds D up to the
    nearest multiple of 32 bytes.
 
 In addition to padding ClientHelloInner, clients and servers will also need to
