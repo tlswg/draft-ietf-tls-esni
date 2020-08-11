@@ -130,14 +130,14 @@ records point to it. In this mode, the TLS connection is terminated by the
 provider.
 
 ~~~~
-                +--------------------+       +---------------------+
-                |                    |       |                     |
-                |   2001:DB8::1111   |       |   2001:DB8::EEEE    |
-Client <------------------------------------>|                     |
-                | public.example.com |       | private.example.com |
-                |                    |       |                     |
-                +--------------------+       +---------------------+
-                  Client-Facing Server            Backend Server
+           +--------------------+     +---------------------+
+           |                    |     |                     |
+           |   2001:DB8::1111   |     |   2001:DB8::EEEE    |
+Client <----------------------------->|                     |
+           | public.example.com |     | private.example.com |
+           |                    |     |                     |
+           +--------------------+     +---------------------+
+            Client-Facing Server            Backend Server
 ~~~~
 {: #split-mode title="Split Mode Topology"}
 
@@ -618,8 +618,12 @@ message with a ClientEncryptedCH value, servers setup their HPKE context and
 decrypt ClientEncryptedCH as follows:
 
 ~~~
-context = SetupPSKR(ClientEncryptedCH.enc, skR, "tls13-ech-hrr", ech_hrr_key, "")
-ClientHelloInner = context.Open("", ClientEncryptedCH.encrypted_ch)
+context = SetupPSKR(ClientEncryptedCH.enc,
+  skR, "tls13-ech-hrr", ech_hrr_key, "")
+
+ClientHelloInner =
+  context.Open("", ClientEncryptedCH.encrypted_ch)
+
 ech_nonce_value = context.Export("tls13-ech-hrr-nonce", 16)
 ~~~
 
@@ -706,7 +710,10 @@ to ECHConfig, as follows:
 
 ~~~
 context = SetupBaseR(ClientEncryptedCH.enc, skR, "tls13-ech")
-ClientHelloInner = context.Open("", ClientEncryptedCH.encrypted_ch)
+
+ClientHelloInner =
+  context.Open("", ClientEncryptedCH.encrypted_ch)
+
 ech_nonce_value = context.Export("tls13-ech-nonce", 16)
 ech_hrr_key = context.Export("tls13-ech-hrr-key", 16)
 ~~~
@@ -984,7 +991,7 @@ scenario, a client which first verifies the Certificate would then respond
 similarly and leak the same information.
 
 ~~~
- Client                         Attacker                      Server
+ Client                         Attacker               Server
    ClientHello
    + key_share
    + ech         ------>      (intercept)     -----> X (drop)
@@ -1022,24 +1029,24 @@ used the SNI from the first ClientHello and the key share from the second
 client's chosen SNI to the attacker.
 
 ~~~
- Client                         Attacker                      Server
+ Client                         Attacker                   Server
    ClientHello
    + key_share
    + ech         ------>       (forward)        ------->
-                                                   HelloRetryRequest
-                                                         + key_share
+                                              HelloRetryRequest
+                                                    + key_share
                               (intercept)       <-------
 
                               ClientHello
                               + key_share'
                               + ech'           ------->
-                                                         ServerHello
-                                                         + key_share
-                                               {EncryptedExtensions}
-                                               {CertificateRequest*}
-                                                      {Certificate*}
-                                                {CertificateVerify*}
-                                                          {Finished}
+                                                    ServerHello
+                                                    + key_share
+                                          {EncryptedExtensions}
+                                          {CertificateRequest*}
+                                                 {Certificate*}
+                                           {CertificateVerify*}
+                                                     {Finished}
                                                 <-------
                          (process server flight)
 ~~~
@@ -1073,7 +1080,7 @@ information in the inner ClientHello, such as the SNI, introduces an oracle that
 can be used to test the encrypted SNI value of specific ClientHello messages.
 
 ~~~
-       Client                    Attacker                    Server
+       Client                    Attacker                 Server
 
                                         handshake and ticket
                                            for "test.com"
@@ -1087,7 +1094,7 @@ can be used to test the encrypted SNI value of specific ClientHello messages.
                                   + ech
                                   + pre_shared_key
                                              -------->
-                                                             Alert
+                                                           Alert
                                              <--------
 ~~~
 {: #tls-resumption-psk title="Message flow for resumption and PSK"}
