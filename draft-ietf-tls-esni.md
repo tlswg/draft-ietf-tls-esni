@@ -189,7 +189,7 @@ following actions:
 
 Upon receiving the server's response, the client determines whether ECH was
 accepted or rejected and proceeds with the handshake accordingly. (See
-{{client-behavior}}.)
+{{client-behavior}} for details.)
 
 # Encrypted ClientHello Configuration {#ech-configuration}
 
