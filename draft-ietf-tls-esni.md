@@ -174,14 +174,27 @@ ClientHelloInner in an "encrypted_client_hello" extension, which this document
 defines ({{encrypted-client-hello}}). Finally, it sends ClientHelloOuter to the
 server.
 
-Upon receiving ClientHelloOuter, the client-facing server processes the
-encrypted ClientHelloInner and either terminates the connection (in Shared Mode)
-or forwards it to the backend server (in Split Mode).
+Upon receiving the ClientHelloOuter, the client-facing server takes one of the
+following actions:
+
+1. If it does not support ECH, it ignores the "encrypted_client_hello" extension
+   and proceeds with the handshake as usual, per {{RFC8446}}, Section 4.1.2.
+1. If it supports ECH but cannot decrypt it, then it ignores the extension and
+   proceeds with the handshake as usual. This is referred to as "ECH rejection".
+   When ECH is rejected, the server sends an acceptable ECH configuration in its
+   EncryptedExtensions message.
+1. If it supports ECH and can decrypt it, then it forwards the CllientHelloInner
+   to the backend, who terminates the connection. This is referred to as "ECH
+   acceptance".
+
+Upon receiving the server's response, the client determines whether ECH was
+accepted or rejected and proceeds with the handshake accordingly. (See
+{{client-behavior}} for details.)
 
 # Encrypted ClientHello Configuration {#ech-configuration}
 
-ClientHello encryption configuration information is conveyed with the following
-ECHConfigs structure.
+ECH uses HPKE for public key encryption {{!I-D.irtf-cfrg-hpke}}. The ECH
+configuration is defined by the following `ECHConfigs` structure.
 
 ~~~~
     opaque HpkePublicKey<1..2^16-1>;
@@ -216,40 +229,42 @@ ECHConfigs structure.
     ECHConfig ECHConfigs<1..2^16-1>;
 ~~~~
 
-The ECHConfigs structure contains one or more ECHConfig structures in decreasing
-order of preference. This allows a server to support multiple versions of ECH
-and multiple sets of ECH parameters.
+The `ECHConfigs` structure contains one or more `ECHConfig` structures in
+decreasing order of preference. This allows a server to support multiple
+versions of ECH and multiple sets of ECH parameters.
 
-The ECHConfig structure contains the following fields:
+The `ECHConfig` structure contains the following fields:
 
 version
-: The version of the structure. For this specification, that value SHALL be
-0xff07. Clients MUST ignore any ECHConfig structure with a version they do not
-understand.
+: The version of ECH for which this configuration is used. The version of this
+document SHALL be `0xff07`. (Future drafts and the final version MUST define a
+version that has not already been assigned.) Clients MUST ignore any `ECHConfig`
+structure with a version they do not support.
+
+length
+: The length, in bytes, of the next field.
 
 contents
 : An opaque byte string whose contents depend on the version of the structure.
-For this specification, the contents are an ECHConfigContents structure.
+For this specification, the contents are an `ECHConfigContents` structure.
 
-The ECHConfigContents structure contains the following fields:
+The `ECHConfigContents` structure contains the following fields:
 
 public_name
-: The non-empty name of the entity trusted to update these encryption keys.
-This is used to repair misconfigurations, as described in
+: The non-empty name of client-facing server, i.e., the entity trusted to update
+these encryption keys. This is used to repair misconfigurations, as described in
 {{handle-server-response}}.
 
 public_key
-: The HPKE {{!I-D.irtf-cfrg-hpke}} public key which can be used by the client to
-encrypt the ClientHello.
+: The HPKE public key used by the client to encrypt ClientHelloInner.
 
 kem_id
-: The HPKE {{!I-D.irtf-cfrg-hpke}} KEM identifier corresponding to public_key.
-Clients MUST ignore any ECHConfig structure with a key using a KEM they do not
-support.
+: The HPKE KEM identifier corresponding to `public_key`. Clients MUST ignore any
+`ECHConfig` structure with a key using a KEM they do not support.
 
 cipher_suites
-: The list of HPKE {{!I-D.irtf-cfrg-hpke}} AEAD and KDF identifier pairs clients
-can use for encrypting the ClientHello.
+: The list of HPKE AEAD and KDF identifier pairs clients can use for encrypting
+ClientHelloInner.
 
 maximum_name_length
 : The largest name the server expects to support, if known. If this value is
@@ -259,21 +274,26 @@ are in use, or if names can be added or removed from the anonymity set during
 the lifetime of a particular resource record value.
 
 extensions
-: A list of extensions that the client can take into consideration when
-generating a ClientHello message. The purpose of the field is to provide room
-for additional functionality in the future. See {{config-extensions}} for
-guidance on what type of extensions are appropriate for this structure.
+: A list of extensions that the client must take into consideration when
+generating a ClientHello message. These are described below
+({{config-extensions}}).
 
-The format is defined in {{RFC8446}}, Section 4.2. The same interpretation rules
-apply: extensions MAY appear in any order, but there MUST NOT be more than one
-extension of the same type in the extensions block. An extension can be tagged
-as mandatory by using an extension type codepoint with the high order bit set to
-1. A client which receives a mandatory extension they do not understand MUST
-reject the ECHConfig content.
+## Configuration Extensions {#config-extensions}
+
+ECH configuration extensions are used to to provide room for additional
+functionality as needed. See {{config-extensions-guidance}} for guidance on
+which types of extensions are appropriate for this structure.
+
+The format is as defined in {{RFC8446}}, Section 4.2.
+The same interpretation rules apply: extensions MAY appear in any order, but
+there MUST NOT be more than one extension of the same type in the extensions
+block. An extension can be tagged as mandatory by using an extension type
+codepoint with the high order bit set to 1. A client that receives a mandatory
+extension they do not understand MUST reject the `ECHConfig` content.
 
 Clients MUST parse the extension list and check for unsupported mandatory
 extensions. If an unsupported mandatory extension is present, clients MUST
-reject the ECHConfig value.
+ignore the `ECHConfig`.
 
 # The "encrypted_client_hello" extension {#encrypted-client-hello}
 
@@ -281,87 +301,87 @@ The encrypted ClientHelloInner is carried in an "encrypted_client_hello"
 extension, defined as follows:
 
 ~~~
-   enum {
+    enum {
        encrypted_client_hello(0xff02), (65535)
-   } ExtensionType;
+    } ExtensionType;
 ~~~
 
-For clients (in ClientHello), this extension contains the following
-ClientEncryptedCH structure:
+The extension request is carried by the ClientHelloOuter, i.e., the ClientHello
+transmitted to the client-facing server. The payload contains the following
+`ClientEncryptedCH` structure:
 
 ~~~~
-   struct {
-       HpkeCipherSuite suite;
-       opaque record_digest<0..2^16-1>;
+    struct {
+       HpkeCipherSuite cipher_suite;
+       opaque config_digest<0..2^16-1>;
        opaque enc<1..2^16-1>;
        opaque encrypted_ch<1..2^16-1>;
-   } ClientEncryptedCH;
+    } ClientEncryptedCH;
 ~~~~
 
-suite
-: The HpkeCipherSuite cipher suite used to encrypt ClientHelloInner. This MUST
-match a value provided in the corresponding ECHConfig.cipher_suites list.
+cipher_suite
+: The cipher suite used to encrypt ClientHelloInner. This MUST match a value
+provided in the corresponding `ECHConfig.cipher_suites` list.
 
-record_digest
-: A cryptographic hash of the ECHConfig structure from which the ECH key was
+config_digest
+: A cryptographic hash of the `ECHConfig` structure from which the ECH key was
 obtained, i.e., from the first byte of "version" to the end of the structure.
-This hash is computed using the hash function associated with `suite`, i.e., the
-corresponding HPKE KDF algorithm hash.
+This hash is computed using the hash function associated with `cipher_suite`,
+i.e., the corresponding HPKE KDF algorithm hash.
 
 enc
 : The HPKE encapsulated key, used by servers to decrypt the corresponding
-encrypted_ch field.
+`encrypted_ch` field.
 
 encrypted_ch
-: The serialized and encrypted ClientHelloInner structure, AEAD-encrypted using
-HPKE with the selected KEM, KDF, and AEAD algorithm and key generated as
-described below. {:br}
+: The serialized and encrypted ClientHelloInner structure, encrypted using HPKE
+as described in {{send-ech}}.
 
-If the server accepts ECH, it does not send this extension. If it rejects ECH,
-then it sends the following structure in EncryptedExtensions:
+When the client-facing server accepts ECH, it does not send this extension. When
+it rejects, it adds an "encrypted_client_hello" extension to EncryptedExtensions
+with the following structure as the payload:
 
 ~~~
-   struct {
+    struct {
        ECHConfigs retry_configs;
-   } ServerEncryptedCH;
+    } ServerEncryptedCH;
 ~~~
 
 retry_configs
-: An ECHConfigs structure containing one or more ECHConfig structures in
-decreasing order of preference that the client should use on subsequent
-connections to encrypt the ClientHelloInner structure.
+: An ECHConfigs structure containing one or more ECHConfig structures, in
+decreasing order of preference, to be used by the client in subsequent
+connection attempts.
 
-This protocol also defines the "ech_required" alert, which is sent by the client
-when it offered an "encrypted_client_hello" extension which was not accepted by
-the server.
+This document also defines the "ech_required" alert, which clients MUST send
+when it offered an "encrypted_client_hello" extension that was not accepted by
+the server. (See {{alerts}}.)
 
 # The "ech_nonce" extension {#ech-nonce}
 
-When using ECH, the client MUST also add an extension of type "ech_nonce" to the
-ClientHelloInner (but not to the outer ClientHello). This nonce ensures that the
-server's encrypted Certificate can only be read by the entity which sent this
-ClientHello. This extension is defined as follows:
+When using ECH, the client MUST include an extension of type "ech_nonce" to the
+ClientHelloInner (but not to the ClientHelloOuter). This nonce is used to ensure
+that the server's encrypted Certificate can only be read by the entity which
+sent this ClientHello. This extension is defined as follows:
 
 ~~~
-   enum {
+    enum {
        ech_nonce(0xff03), (65535)
-   } ExtensionType;
+    } ExtensionType;
 
-   struct {
+    struct {
        uint8 nonce[16];
-   } ECHNonce;
+    } ECHNonce;
 ~~~~
 
 nonce
-: A 16-byte nonce exported from the HPKE encryption context. See {{send-ech}}
-for details about its computation.
+: A 16-byte nonce exported from the HPKE encryption context, as described in
+{{send-ech}}.
 
-Finally, requirements in {{client-behavior}} and {{server-behavior}} require
-implementations to track, alongside each PSK established by a previous
-connection, whether the connection negotiated this extension with the
-"ech_accept" response type. If so, this is referred to as an "ECH PSK".
-Otherwise, it is a "non-ECH PSK". This may be implemented by adding a new field
-to client and server session states.
+Per {{client-behavior}} and {{server-behavior}}, implementations are required to
+track, alongside each PSK established by a previous connection, whether the
+connection negotiated this extension with the "ech_accept" response type. If so,
+this is referred to as an "ECH PSK". Otherwise, it is a "non-ECH PSK". This may
+be implemented by adding a new field to client and server session states.
 
 ## Incorporating Outer Extensions {#outer-extensions}
 
@@ -372,14 +392,14 @@ reduce the impact of duplicated extensions, the client may use the
 "outer_extensions" extension.
 
 ~~~
-   enum {
+    enum {
        outer_extension(0xff04), (65535)
-   } ExtensionType;
+    } ExtensionType;
 
-   struct {
+    struct {
        ExtensionType outer_extensions<2..254>;
        uint8 hash<32..255>;
-   } OuterExtensions;
+    } OuterExtensions;
 ~~~~
 
 OuterExtensions MUST only be used in ClientHelloInner. It consists of one or
@@ -388,19 +408,19 @@ ClientHelloOuter, and a digest of the complete ClientHelloInner.
 
 When sending ClientHello, the client first computes ClientHelloInner, including
 any PSK binders, and then MAY substitute extensions which it knows will be
-duplicated in ClientHelloOuter. To do so, the client computes a hash H of the
+duplicated in ClientHelloOuter. To do so, the client computes a hash of the
 entire ClientHelloInner message with the same hash as for the KDF used to
-encrypt ClientHelloInner. Then, the client removes and and replaces extensions
-from ClientHelloInner with a single "outer_extensions" extension. The list of
-outer_extensions include those which were removed from ClientHelloInner, in the
-order in which they were removed. The hash contains the full ClientHelloInner
-hash H computed above.
+encrypt ClientHelloInner. Then, the client removes and replaces extensions from
+ClientHelloInner with a single "outer_extensions" extension. The list of
+`outer_extensions` include those which were removed from ClientHelloInner, in
+the order in which they were removed. The hash contains the full
+ClientHelloInner hash computed above.
 
-This process is reversed by client-facing servers upon receipt. Specifically,
-the server replaces the "outer_extensions" with extensions contained in
-ClientHelloOuter. The server then computes a hash H' of the reconstructed
-ClientHelloInner. If H' does not equal OuterExtensions.hash, the server aborts
-the connection with an "illegal_parameter" alert.
+This process is reversed by client-facing server. Specifically,
+the server replaces the `outer_extensions` with extensions contained in
+ClientHelloOuter. The server then computes a hash of the reconstructed
+ClientHelloInner. If the hash does not equal OuterExtensions.hash, the server
+aborts the connection with an "illegal_parameter" alert.
 
 Clients SHOULD only use this mechanism for extensions which are large. All other
 extensions SHOULD appear in both ClientHelloInner and ClientHelloOuter even if
@@ -411,29 +431,27 @@ they have identical values.
 ## Sending an encrypted ClientHello {#send-ech}
 
 In order to send an encrypted ClientHello, the client first determines if it
-supports the server's chosen KEM, as identified by ECHConfig.kem_id. If one is
-supported, the client MUST select an appropriate HpkeCipherSuite from the list
+supports the server's chosen KEM, as identified by `ECHConfig.kem_id`. If one is
+supported, the client MUST select an appropriate `HpkeCipherSuite` from the list
 of suites offered by the server. If the client does not support the
-corresponding KEM or is unable to select an appropriate group or
-HpkeCipherSuite, it SHOULD ignore that ECHConfig value and MAY attempt to use
-another value provided by the server. The client MUST NOT send ECH using HPKE
-algorithms not advertised by the server.
+corresponding KEM or is unable to select a suitable `HpkeCipherSuite`, it SHOULD
+ignore that `ECHConfig` value and MAY attempt to use another value provided by
+the server. The client MUST NOT send ECH using HPKE algorithms not advertised by
+the server.
 
-Given a compatible ECHConfig with fields public_key and kem_id, carrying the
-HpkePublicKey and KEM identifier corresponding to the server, clients compute an
-HPKE encryption context as follows:
+Given a compatible `ECHConfig` with fields `public_key` and `kem_id`, carrying
+the `HpkePublicKey` and KEM identifier corresponding to the server, clients
+compute an HPKE encryption context as follows:
 
 ~~~
-pkR = HPKE.KEM.Unmarshal(ECHConfig.public_key)
-enc, context = SetupBaseS(pkR, "tls13-ech")
-ech_nonce_value = context.Export("tls13-ech-nonce", 16)
-ech_hrr_key = context.Export("tls13-ech-hrr-key", 16)
+    pkR = HPKE.KEM.Unmarshal(ECHConfig.public_key)
+    enc, context = SetupBaseS(pkR, "tls13-ech")
+    ech_nonce_value = context.Export("tls13-ech-nonce", 16)
+    ech_hrr_key = context.Export("tls13-ech-hrr-key", 16)
 ~~~
 
 Note that the HPKE algorithm identifiers are those which match the client's
-chosen preference from ECHConfig.cipher_suites. The client MAY replace any
-large, duplicated extensions in ClientHelloInner with the corresponding
-"outer_extensions" extension, as described in {{outer-extensions}}.
+chosen preference from `ECHConfig.cipher_suites`.
 
 The client then generates a ClientHelloInner value. In addition to the normal
 values, ClientHelloInner MUST also contain:
@@ -455,18 +473,18 @@ Finally, the client MUST generate a ClientHelloOuter message containing the
 "encrypted_client_hello" extension with the values as indicated above. In
 particular,
 
-- suite contains the client's chosen HpkeCipherSuite;
-- record_digest contains the digest of the corresponding ECHConfig structure;
+- cipher_suite contains the client's chosen HpkeCipherSuite;
+- config_digest contains the digest of the corresponding ECHConfig structure;
 - enc contains the encapsulated key as output by SetupBaseS; and
 - encrypted_ch contains the HPKE encapsulated key (enc) and the ClientHelloInner
   ciphertext (encrypted_ch_inner).
 
-The client MUST place the value of ECHConfig.public_name in the ClientHelloOuter
-"server_name" extension. The ClientHelloOuter MUST NOT contain a "cached_info"
-extension {{!RFC7924}} with a CachedObject entry whose CachedInformationType is
-"cert", since this indication would divulge the true server name. The remaining
-contents of the ClientHelloOuter MAY be identical to those in ClientHelloInner
-but MAY also differ.
+The client MUST place the value of `ECHConfig.public_name` in the
+ClientHelloOuter "server_name" extension. The ClientHelloOuter MUST NOT contain
+a "cached_info" extension {{!RFC7924}} with a CachedObject entry whose
+CachedInformationType is "cert", since this indication would divulge the true
+server name.  The remaining contents of the ClientHelloOuter MAY be identical to
+those in ClientHelloInner but MAY also differ.
 
 ## Recommended Padding Scheme {#padding}
 
@@ -641,7 +659,7 @@ structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
   vary to exercise all supported configurations, but MAY be held constant for
   successive connections to the same server in the same session.
 
-- Set the "record_digest" field to a randomly-generated string of hash_length
+- Set the "config_digest" field to a randomly-generated string of hash_length
   bytes, where hash_length is the length of the hash function associated with
   the chosen HpkeCipherSuite.
 
@@ -671,13 +689,13 @@ an ECHConfig that can be used to successfully decrypt
 ClientEncryptedCH.encrypted_ch. This matching procedure should be done using
 one of the following two checks:
 
-1. Compare ClientEncryptedCH.record_digest against cryptographic hashes of known
+1. Compare ClientEncryptedCH.config_digest against cryptographic hashes of known
    ECHConfig and choose the one that matches.
 2. Use trial decryption of ClientEncryptedCH.encrypted_ch with known ECHConfig
    and choose the one that succeeds.
 
 Some uses of ECH, such as local discovery mode, may omit the
-ClientEncryptedCH.record_digest since it can be used as a tracking vector. In
+ClientEncryptedCH.config_digest since it can be used as a tracking vector. In
 such cases, trial decryption should be used for matching ClientEncryptedCH to
 known ECHConfig. Unless specified by the application using (D)TLS or externally
 configured on both sides, implementations MUST use the first method.
@@ -697,7 +715,7 @@ added behavior:
   them when using the plaintext SNI name. This restriction allows a client to
   reject resumptions in {{auth-public-name}}.
 
-Note that an unrecognized ClientEncryptedCH.record_digest value may be a GREASE
+Note that an unrecognized ClientEncryptedCH.config_digest value may be a GREASE
 ECH extension (see {{grease-extensions}}), so it is necessary for servers to
 proceed with the connection and rely on the client to abort if ECH was required.
 In particular, the unrecognized value alone does not indicate a misconfigured
@@ -810,7 +828,7 @@ then each anonymity set has size k = 1. Client-facing servers SHOULD deploy ECH
 in such a way so as to maximize the size of the anonymity set where possible.
 This means client-facing servers should use the same ECHConfig for as many hosts
 as possible. An attacker can distinguish two hosts that have different ECHConfig
-values based on the ClientEncryptedCH.record_digest value. This also means
+values based on the ClientEncryptedCH.config_digest value. This also means
 public information in a TLS handshake is also consistent across hosts. For
 example, if a client-facing server services many backend origin hosts, only one
 of which supports some cipher suite, it may be possible to identify that host
@@ -855,11 +873,11 @@ this problem by flushing any DNS or ECHConfig state upon changing networks.
 Optional record digests may be useful in scenarios where clients and
 client-facing servers do not want to reveal information about the client-facing
 server in the "encrypted_client_hello" extension. In such settings, clients send
-either an empty record_digest or a randomly generated record_digest in the
+either an empty config_digest or a randomly generated config_digest in the
 ClientEncryptedCH. (The precise implementation choice for this mechanism is out
 of scope for this document.) Servers in these settings must perform trial
 decryption since they cannot identify the client's chosen ECH key using the
-record_digest value. As a result, support for optional record digests may
+config_digest value. As a result, support for optional record digests may
 exacerbate DoS attacks. Specifically, an adversary may send malicious
 ClientHello messages, i.e., those which will not decrypt with any known ECH key,
 in order to force wasteful decryption. Servers that support this feature should,
@@ -1107,7 +1125,7 @@ envelope.
 
 # IANA Considerations
 
-## Update of the TLS ExtensionType Registry
+## Update of the TLS ExtensionType Registry {#alerts}
 
 IANA is requested to create the following two entries in the existing registry
 for ExtensionType (defined in {{!RFC8446}}):
@@ -1125,7 +1143,7 @@ IANA is requested to create an entry, ech_required(121) in the existing registry
 for Alerts (defined in {{!RFC8446}}), with the "DTLS-OK" column being set to
 "Y".
 
-# ECHConfig Extension Guidance {#config-extensions}
+# ECHConfig Extension Guidance {#config-extensions-guidance}
 
 Any future information or hints that influence the outer ClientHello SHOULD be
 specified as ECHConfig extensions, or in an entirely new version of ECHConfig.
