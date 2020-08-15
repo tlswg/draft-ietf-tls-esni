@@ -492,7 +492,7 @@ with length D, clients SHOULD use the server's length hint L
    advertised hint, i.e., ECHConfig.maximum_name_length.
 2. Otherwise, let P = 31 - ((D - 1) % 32), and add P bytes of padding, plus an
    additional 32 bytes if D + P < L + 32. This rounds D up to the nearest
-   multiple of 32 bytes.
+   multiple of 32 bytes that permits at least 32 bytes of length ambiguity.
 
 In addition to padding ClientHelloInner, clients and servers will also need to
 pad all other handshake messages that have sensitive-length fields. For example,
