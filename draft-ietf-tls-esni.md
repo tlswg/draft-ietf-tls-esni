@@ -885,7 +885,9 @@ caused by such attacks.
 
 Any information that the client includes in the ClientHelloOuter is visible to
 passive observers. The client SHOULD NOT send values in the ClientHelloOuter
-which would reveal a sensitive ClientHelloInner property.
+which would reveal a sensitive ClientHelloInner property, such as the true
+server name. It MAY send values associated with the public name in the 
+ClientHelloOuter.
 
 In particular, some extensions require the client send a server-name-specific
 value in the ClientHello. These values may reveal information about the
