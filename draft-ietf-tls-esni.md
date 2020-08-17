@@ -65,7 +65,7 @@ unencrypted in TLS 1.3.
 The target domain may also be visible through other channels, such as plaintext
 client DNS queries, visible server IP addresses (assuming the server does not
 use domain-based virtual hosting), or other indirect mechanisms such as traffic
-analysis. DoH {{?I-D.ietf-doh-dns-over-https}} and DPRIVE {{?RFC7858}}
+analysis. DoH {{?RFC8484}} and DPRIVE {{?RFC7858}}
 {{?RFC8094}} provide mechanisms for clients to conceal DNS lookups from network
 inspection, and many TLS servers host multiple domains on the same IP address.
 In such environments, the SNI remains the primary explicit signal used to
@@ -73,9 +73,9 @@ determine the server's identity.
 
 The TLS Working Group has studied the problem of protecting the SNI, but has
 been unable to develop a completely generic solution.
-{{?I-D.ietf-tls-sni-encryption}} provides a description of the problem space and
+{{?RFC8744}} provides a description of the problem space and
 some of the proposed techniques. One of the more difficult problems is "Do not
-stick out" ({{?I-D.ietf-tls-sni-encryption}}, Section 3.4): if only sensitive or
+stick out" ({{?RFC8744}}, Section 3.4): if only sensitive or
 private services use SNI encryption, then SNI encryption is a signal that a
 client is going to such a service. For this reason, much recent work has focused
 on concealing the fact that the SNI is being protected. Unfortunately, the
@@ -905,7 +905,7 @@ validation.
 
 ## Comparison Against Criteria
 
-{{?I-D.ietf-tls-sni-encryption}} lists several requirements for SNI encryption.
+{{?RFC8744}} lists several requirements for SNI encryption.
 In this section, we re-iterate these requirements and assess the ECH design
 against them.
 
