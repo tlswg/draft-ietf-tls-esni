@@ -479,6 +479,9 @@ particular,
 - encrypted_ch contains the HPKE encapsulated key (enc) and the ClientHelloInner
   ciphertext (encrypted_ch_inner).
 
+If `ECHConfig.public_key` is empty, the client SHOULD instead compute
+`config_digest`, `enc`, and `encrypted_ch` randomly, as in {{grease-extensions}}.
+
 The client MUST place the value of `ECHConfig.public_name` in the
 ClientHelloOuter "server_name" extension. The ClientHelloOuter MUST NOT contain
 a "cached_info" extension {{!RFC7924}} with a CachedObject entry whose
