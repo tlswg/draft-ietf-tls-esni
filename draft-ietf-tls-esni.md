@@ -324,10 +324,10 @@ cipher_suite
 provided in the corresponding `ECHConfig.cipher_suites` list.
 
 config_digest
-: A cryptographic hash of the `ECHConfig` structure from which the ECH key was
-obtained, i.e., from the first byte of "version" to the end of the structure.
-This hash is computed using the hash function associated with `cipher_suite`,
-i.e., the corresponding HPKE KDF algorithm hash.
+: Equal to `Expand(Extract("", config), "ech_config_digest", Nh)`, where
+`config` is the `ECHConfig` structure and `Extract`, `Expand`, and `Nh` are as
+specified by the cipher suite KDF. (Passing the literal `""` as the salt is
+interpreted by `Extract` as no salt being provided.)
 
 enc
 : The HPKE encapsulated key, used by servers to decrypt the corresponding
@@ -400,7 +400,7 @@ reduce the impact of duplicated extensions, the client may use the
        ExtensionType outer_extensions<2..254>;
        uint8 hash<32..255>;
     } OuterExtensions;
-~~~~
+~~~
 
 OuterExtensions MUST only be used in ClientHelloInner. It consists of one or
 more ExtensionType values, each of which reference an extension in
@@ -409,12 +409,18 @@ ClientHelloOuter, and a digest of the complete ClientHelloInner.
 When sending ClientHello, the client first computes ClientHelloInner, including
 any PSK binders, and then MAY substitute extensions which it knows will be
 duplicated in ClientHelloOuter. To do so, the client computes a hash of the
-entire ClientHelloInner message with the same hash as for the KDF used to
-encrypt ClientHelloInner. Then, the client removes and replaces extensions from
-ClientHelloInner with a single "outer_extensions" extension. The list of
-`outer_extensions` include those which were removed from ClientHelloInner, in
-the order in which they were removed. The hash contains the full
-ClientHelloInner hash computed above.
+entire ClientHelloInner message as:
+
+~~~
+  hash = Expand(Extract("", inner), "ech_inner_digest", Nh)
+~~~
+
+where `inner` is the ClientHelloInner structure and `Extract`, `Expand`, and
+`Nh` are as defined by the KDF API in {{!I-D.irtf-cfrg-hpke}}. Then, the client
+removes and replaces extensions from ClientHelloInner with a single
+"outer_extensions" extension. The list of `outer_extensions` include those which
+were removed from ClientHelloInner, in the order in which they were removed. The
+hash contains the full ClientHelloInner hash computed above.
 
 This process is reversed by client-facing server. Specifically,
 the server replaces the `outer_extensions` with extensions contained in
@@ -653,9 +659,10 @@ structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
   vary to exercise all supported configurations, but MAY be held constant for
   successive connections to the same server in the same session.
 
-- Set the "config_digest" field to a randomly-generated string of hash_length
-  bytes, where hash_length is the length of the hash function associated with
-  the chosen HpkeCipherSuite.
+- Set the "config_digest" field to a randomly-generated string of `Nh` bytes,
+  where `Nh` is the output length of the `Extract` function of the KDF
+  associated with the chosen cipher suite. (The KDF API is specified in
+  {{!I-D.irtf-cfrg-hpke}}.)
 
 - Set the "enc" field to a randomly-generated valid encapsulated public key
   output by the HPKE KEM.
@@ -683,8 +690,8 @@ an ECHConfig that can be used to successfully decrypt
 ClientEncryptedCH.encrypted_ch. This matching procedure should be done using
 one of the following two checks:
 
-1. Compare ClientEncryptedCH.config_digest against cryptographic hashes of known
-   ECHConfig and choose the one that matches.
+1. Compare ClientEncryptedCH.config_digest against digests of known ECHConfig
+   and choose the one that matches.
 2. Use trial decryption of ClientEncryptedCH.encrypted_ch with known ECHConfig
    and choose the one that succeeds.
 
