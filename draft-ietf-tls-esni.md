@@ -480,11 +480,8 @@ particular,
   ciphertext (encrypted_ch_inner).
 
 The client MUST place the value of `ECHConfig.public_name` in the
-ClientHelloOuter "server_name" extension. The ClientHelloOuter MUST NOT contain
-a "cached_info" extension {{!RFC7924}} with a CachedObject entry whose
-CachedInformationType is "cert", since this indication would divulge the true
-server name.  The remaining contents of the ClientHelloOuter MAY be identical to
-those in ClientHelloInner but MAY also differ.
+ClientHelloOuter "server_name" extension. See {{outer-clienthello}} for
+additional discussion of ClientHelloOuter values.
 
 ## Recommended Padding Scheme {#padding}
 
@@ -883,6 +880,25 @@ ClientHello messages, i.e., those which will not decrypt with any known ECH key,
 in order to force wasteful decryption. Servers that support this feature should,
 for example, implement some form of rate limiting mechanism to limit the damage
 caused by such attacks.
+
+## Outer ClientHello
+
+Any information that the client includes in the ClientHelloOuter is visible to
+passive observers. The client SHOULD NOT send values in the ClientHelloOuter
+which would reveal a sensitive ClientHelloInner property, such as the true
+server name. It MAY send values associated with the public name in the 
+ClientHelloOuter.
+
+In particular, some extensions require the client send a server-name-specific
+value in the ClientHello. These values may reveal information about the
+true server name. For example, the "cached_info" ClientHello extension
+{{?RFC7924}} can contain the hash of a previously observed server certificate.
+The client SHOULD NOT send values associated with the true server name in the
+ClientHelloOuter. It MAY send such values in the ClientHelloInner.
+
+Values which are independent of the true server name, or other information the
+client wishes to protect, MAY be included in ClientHelloOuter and compressed as
+described in {{outer-extensions}}.
 
 ## Related Privacy Leaks
 
