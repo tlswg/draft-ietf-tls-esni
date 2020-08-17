@@ -889,7 +889,7 @@ which would reveal a sensitive ClientHelloInner property.
 
 In particular, some extensions require the client send a server-name-specific
 value in the ClientHello. These values may reveal information about the
-encrypted server name. For example, the "cached_info" ClientHello extension
+true server name. For example, the "cached_info" ClientHello extension
 {{?RFC7924}} can contain the hash of a previously observed server certificate.
 The client SHOULD NOT send values associated with the true server name in the
 ClientHelloOuter. It MAY send such values in the ClientHelloInner. It also MAY
