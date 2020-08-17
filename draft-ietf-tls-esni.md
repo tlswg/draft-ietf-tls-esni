@@ -263,8 +263,10 @@ kem_id
 `ECHConfig` structure with a key using a KEM they do not support.
 
 cipher_suites
-: The list of HPKE AEAD and KDF identifier pairs clients can use for encrypting
-ClientHelloInner.
+: The list of HPKE AEAD and key derivation function identifier pairs clients can
+use for encrypting ClientHelloInner. Each cipher suite MUST specify an
+HKDF-based key derivation function, e.g.: HKDF-SHA256, HKDF-SHA384, or
+HKDF-SHA512.
 
 maximum_name_length
 : The largest name the server expects to support, if known. If this value is
@@ -327,7 +329,7 @@ config_digest
 : A cryptographic hash of the `ECHConfig` structure from which the ECH key was
 obtained, i.e., from the first byte of "version" to the end of the structure.
 This hash is computed using the hash function associated with `cipher_suite`,
-i.e., the corresponding HPKE KDF algorithm hash.
+i.e., the hash function underlying the HPKE HKDF variant.
 
 enc
 : The HPKE encapsulated key, used by servers to decrypt the corresponding
@@ -409,12 +411,12 @@ ClientHelloOuter, and a digest of the complete ClientHelloInner.
 When sending ClientHello, the client first computes ClientHelloInner, including
 any PSK binders, and then MAY substitute extensions which it knows will be
 duplicated in ClientHelloOuter. To do so, the client computes a hash of the
-entire ClientHelloInner message with the same hash as for the KDF used to
-encrypt ClientHelloInner. Then, the client removes and replaces extensions from
-ClientHelloInner with a single "outer_extensions" extension. The list of
-`outer_extensions` include those which were removed from ClientHelloInner, in
-the order in which they were removed. The hash contains the full
-ClientHelloInner hash computed above.
+entire ClientHelloInner message with the hash associated with the HPKE cipher
+suite. Then, the client removes and replaces extensions from ClientHelloInner
+with a single "outer_extensions" extension. The list of `outer_extensions`
+include those which were removed from ClientHelloInner, in the order in which
+they were removed. The hash contains the full ClientHelloInner hash computed
+above.
 
 This process is reversed by client-facing server. Specifically,
 the server replaces the `outer_extensions` with extensions contained in
@@ -660,8 +662,8 @@ structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
   successive connections to the same server in the same session.
 
 - Set the "config_digest" field to a randomly-generated string of hash_length
-  bytes, where hash_length is the length of the hash function associated with
-  the chosen HpkeCipherSuite.
+  bytes, where hash_length is the output length of the hash function associated
+  with the HPKE KDF.
 
 - Set the "enc" field to a randomly-generated valid encapsulated public key
   output by the HPKE KEM.
