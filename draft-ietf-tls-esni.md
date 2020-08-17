@@ -198,20 +198,20 @@ configuration is defined by the following `ECHConfigs` structure.
 
 ~~~~
     opaque HpkePublicKey<1..2^16-1>;
-    uint16 HkpeKemId;  // Defined in I-D.irtf-cfrg-hpke
-    uint16 HkpeKdfId;  // Defined in I-D.irtf-cfrg-hpke
-    uint16 HkpeAeadId; // Defined in I-D.irtf-cfrg-hpke
+    uint16 HpkeKemId;  // Defined in I-D.irtf-cfrg-hpke
+    uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
+    uint16 HpkeAeadId; // Defined in I-D.irtf-cfrg-hpke
 
     struct {
-        HkpeKdfId kdf_id;
-        HkpeAeadId aead_id;
+        HpkeKdfId kdf_id;
+        HpkeAeadId aead_id;
     } HpkeCipherSuite;
 
     struct {
         opaque public_name<1..2^16-1>;
 
         HpkePublicKey public_key;
-        HkpeKemId kem_id;
+        HpkeKemId kem_id;
         HpkeCipherSuite cipher_suites<4..2^16-2>;
 
         uint16 maximum_name_length;
@@ -886,7 +886,7 @@ caused by such attacks.
 Any information that the client includes in the ClientHelloOuter is visible to
 passive observers. The client SHOULD NOT send values in the ClientHelloOuter
 which would reveal a sensitive ClientHelloInner property, such as the true
-server name. It MAY send values associated with the public name in the 
+server name. It MAY send values associated with the public name in the
 ClientHelloOuter.
 
 In particular, some extensions require the client send a server-name-specific
