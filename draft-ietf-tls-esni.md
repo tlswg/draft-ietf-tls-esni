@@ -892,8 +892,7 @@ value in the ClientHello. These values may reveal information about the
 true server name. For example, the "cached_info" ClientHello extension
 {{?RFC7924}} can contain the hash of a previously observed server certificate.
 The client SHOULD NOT send values associated with the true server name in the
-ClientHelloOuter. It MAY send such values in the ClientHelloInner. It also MAY
-send values associated with the public name in the ClientHelloOuter.
+ClientHelloOuter. It MAY send such values in the ClientHelloInner.
 
 Values which are independent of the true server name, or other information the
 client wishes to protect, MAY be included in ClientHelloOuter and compressed as
