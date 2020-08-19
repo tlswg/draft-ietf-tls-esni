@@ -183,7 +183,7 @@ following actions:
    proceeds with the handshake as usual. This is referred to as "ECH rejection".
    When ECH is rejected, the server sends an acceptable ECH configuration in its
    EncryptedExtensions message.
-1. If it supports ECH and can decrypt it, then it forwards the CllientHelloInner
+1. If it supports ECH and can decrypt it, then it forwards the ClientHelloInner
    to the backend, who terminates the connection. This is referred to as "ECH
    acceptance".
 
