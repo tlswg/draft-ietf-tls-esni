@@ -535,7 +535,7 @@ the calling application. It MUST NOT use the retry keys.
 
 Otherwise, when the handshake completes successfully with the public name
 authenticated, the client MUST abort the connection with an "ech_required"
-alert. It then processes the "retry_keys" field from the server's
+alert. It then processes the "retry_configs" field from the server's
 "encrypted_client_hello" extension.
 
 If one of the values contains a version supported by the client, it can regard
@@ -546,9 +546,10 @@ to use the previously-advertised keys for subsequent connections. This avoids
 introducing pinning concerns or a tracking vector, should a malicious server
 present client-specific retry keys to identify clients.
 
-If none of the values provided in "retry_keys" contains a supported version, the
-client can regard ECH as securely disabled by the server. As below, it SHOULD
-then retry the handshake with a new transport connection and ECH disabled.
+If none of the values provided in "retry_configs" contains a supported version,
+the client can regard ECH as securely disabled by the server. As below, it
+SHOULD then retry the handshake with a new transport connection and ECH
+disabled.
 
 If the field contains any other value, the client MUST abort the connection with
 an "illegal_parameter" alert.
@@ -701,10 +702,10 @@ If the ClientEncryptedCH value does not match any known ECHConfig structure, it
 MUST ignore the extension and proceed with the connection, with the following
 added behavior:
 
-- It MUST include the "encrypted_client_hello" extension with the "retry_keys"
-  field set to one or more ECHConfig structures with up-to-date keys. Servers
-  MAY supply multiple ECHConfig values of different versions. This allows a
-  server to support multiple versions at once.
+- It MUST include the "encrypted_client_hello" extension with the
+  "retry_configs" field set to one or more ECHConfig structures with up-to-date
+  keys. Servers MAY supply multiple ECHConfig values of different versions. This
+  allows a server to support multiple versions at once.
 
 - The server MUST ignore all PSK identities in the ClientHello which correspond
   to ECH PSKs. ECH PSKs offered by the client are associated with the ECH
