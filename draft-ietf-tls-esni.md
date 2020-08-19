@@ -170,14 +170,14 @@ constructs its ClientHello as usual (we will refer to this as the
 ClientHelloInner message) and then encrypts this message using the ECH public
 key. It then constructs a new ClientHello (ClientHelloOuter) with innocuous
 values for sensitive extensions, e.g., SNI, ALPN, etc., and with the encrypted
-ClientHelloInner in an "encrypted_client_hello" extension, which this document
+ClientHelloInner in an "ech" extension, which this document
 defines ({{encrypted-client-hello}}). Finally, it sends ClientHelloOuter to the
 server.
 
 Upon receiving the ClientHelloOuter, the client-facing server takes one of the
 following actions:
 
-1. If it does not support ECH, it ignores the "encrypted_client_hello" extension
+1. If it does not support ECH, it ignores the "ech" extension
    and proceeds with the handshake as usual, per {{RFC8446}}, Section 4.1.2.
 1. If it supports ECH but cannot decrypt it, then it ignores the extension and
    proceeds with the handshake as usual. This is referred to as "ECH rejection".
@@ -295,14 +295,14 @@ Clients MUST parse the extension list and check for unsupported mandatory
 extensions. If an unsupported mandatory extension is present, clients MUST
 ignore the `ECHConfig`.
 
-# The "encrypted_client_hello" extension {#encrypted-client-hello}
+# The "ech" extension {#encrypted-client-hello}
 
-The encrypted ClientHelloInner is carried in an "encrypted_client_hello"
+The encrypted ClientHelloInner is carried in an "ech"
 extension, defined as follows:
 
 ~~~
     enum {
-       encrypted_client_hello(0xff02), (65535)
+       ech(0xff02), (65535)
     } ExtensionType;
 ~~~
 
@@ -338,7 +338,7 @@ encrypted_ch
 as described in {{send-ech}}.
 
 When the client-facing server accepts ECH, it does not send this extension. When
-it rejects, it adds an "encrypted_client_hello" extension to EncryptedExtensions
+it rejects, it adds an "ech" extension to EncryptedExtensions
 with the following structure as the payload:
 
 ~~~
@@ -353,7 +353,7 @@ decreasing order of preference, to be used by the client in subsequent
 connection attempts.
 
 This document also defines the "ech_required" alert, which clients MUST send
-when it offered an "encrypted_client_hello" extension that was not accepted by
+when it offered an "ech" extension that was not accepted by
 the server. (See {{alerts}}.)
 
 # The "ech_nonce" extension {#ech-nonce}
@@ -389,7 +389,7 @@ Some TLS 1.3 extensions can be quite large and having them both in the inner and
 outer ClientHello will lead to a very large overall size. One particularly
 pathological example is "key_share" with post-quantum algorithms. In order to
 reduce the impact of duplicated extensions, the client may use the
-"outer_extensions" extension.
+"ech_outer_extensions" extension.
 
 ~~~
     enum {
@@ -397,7 +397,7 @@ reduce the impact of duplicated extensions, the client may use the
     } ExtensionType;
 
     struct {
-       ExtensionType outer_extensions<2..254>;
+       ExtensionType ech_outer_extensions<2..254>;
        uint8 hash<32..255>;
     } OuterExtensions;
 ~~~
@@ -418,12 +418,12 @@ entire ClientHelloInner message as:
 where `inner` is the ClientHelloInner structure and `Extract`, `Expand`, and
 `Nh` are as defined by the KDF API in {{!I-D.irtf-cfrg-hpke}}. Then, the client
 removes and replaces extensions from ClientHelloInner with a single
-"outer_extensions" extension. The list of `outer_extensions` include those which
-were removed from ClientHelloInner, in the order in which they were removed. The
-hash contains the full ClientHelloInner hash computed above.
+"ech_outer_extensions" extension. The list of `ech_outer_extensions` include
+those which were removed from ClientHelloInner, in the order in which they were
+removed. The hash contains the full ClientHelloInner hash computed above.
 
 This process is reversed by client-facing server. Specifically,
-the server replaces the `outer_extensions` with extensions contained in
+the server replaces the `ech_outer_extensions` with extensions contained in
 ClientHelloOuter. The server then computes a hash of the reconstructed
 ClientHelloInner. If the hash does not equal OuterExtensions.hash, the server
 aborts the connection with an "illegal_parameter" alert.
@@ -472,7 +472,7 @@ The encrypted ClientHello value is then computed as:
 ~~~~
 
 Finally, the client MUST generate a ClientHelloOuter message containing the
-"encrypted_client_hello" extension with the values as indicated above. In
+"ech" extension with the values as indicated above. In
 particular,
 
 - cipher_suite contains the client's chosen HpkeCipherSuite;
@@ -539,7 +539,7 @@ the calling application. It MUST NOT use the retry keys.
 Otherwise, when the handshake completes successfully with the public name
 authenticated, the client MUST abort the connection with an "ech_required"
 alert. It then processes the "retry_configs" field from the server's
-"encrypted_client_hello" extension.
+"ech" extension.
 
 If one of the values contains a version supported by the client, it can regard
 the ECH keys as securely replaced by the server. It SHOULD retry the handshake
@@ -558,7 +558,7 @@ If the field contains any other value, the client MUST abort the connection with
 an "illegal_parameter" alert.
 
 If the server negotiates an earlier version of TLS, or if it does not provide an
-"encrypted_client_hello" extension in EncryptedExtensions, the client proceeds
+"ech" extension in EncryptedExtensions, the client proceeds
 with the handshake, authenticating for ECHConfigContents.public_name as
 described in {{auth-public-name}}. If an earlier version was negotiated, the
 client MUST NOT enable the False Start optimization {{RFC7918}} for this
@@ -572,13 +572,13 @@ alert. The client can then regard ECH as securely disabled by the server. It
 SHOULD retry the handshake with a new transport connection and ECH disabled.
 
 Clients SHOULD implement a limit on retries caused by "ech_retry_request" or
-servers which do not acknowledge the "encrypted_client_hello" extension. If the
+servers which do not acknowledge the "ech" extension. If the
 client does not retry in either scenario, it MUST report an error to the calling
 application.
 
 #### Authenticating for the public name {#auth-public-name}
 
-When the server cannot decrypt or does not process the "encrypted_client_hello"
+When the server cannot decrypt or does not process the "ech"
 extension, it continues with the handshake using the plaintext "server_name"
 extension instead (see {{server-behavior}}). Clients that offer ECH then
 authenticate the connection with the public name, as follows:
@@ -654,7 +654,7 @@ secret? Analysis needed.]]
 
 If the client attempts to connect to a server and does not have an ECHConfig
 structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
-"encrypted_client_hello" extension as follows:
+"ech" extension as follows:
 
 - Set the "suite" field  to a supported HpkeCipherSuite. The selection SHOULD
   vary to exercise all supported configurations, but MAY be held constant for
@@ -672,7 +672,7 @@ structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
   L is the size of the ClientHelloInner message the client would use given an
   ECHConfig structure, padded according to {{padding}}.
 
-If the server sends an "encrypted_client_hello" extension, the client MUST check
+If the server sends an "ech" extension, the client MUST check
 the extension syntactically and abort the connection with a "decode_error" alert
 if it is invalid.
 
@@ -682,7 +682,7 @@ MAY offer to resume sessions established without ECH.
 
 # Client-Facing Server Behavior {#server-behavior}
 
-Upon receiving an "encrypted_client_hello" extension, the client-facing server
+Upon receiving an "ech" extension, the client-facing server
 MUST check that it is able to negotiate TLS 1.3 or greater. If not, it MUST
 abort the connection with a "handshake_failure" alert.
 
@@ -706,7 +706,7 @@ If the ClientEncryptedCH value does not match any known ECHConfig structure, it
 MUST ignore the extension and proceed with the connection, with the following
 added behavior:
 
-- It MUST include the "encrypted_client_hello" extension with the
+- It MUST include the "ech" extension with the
   "retry_configs" field set to one or more ECHConfig structures with up-to-date
   keys. Servers MAY supply multiple ECHConfig values of different versions. This
   allows a server to support multiple versions at once.
@@ -782,7 +782,7 @@ loses its ECH keys, or if a deployment of ECH must be rolled back on the server.
 The retry mechanism repairs inconsistencies, provided the server is
 authoritative for the public name. If server and advertised keys mismatch, the
 server will respond with ech_retry_requested. If the server does not understand
-the "encrypted_client_hello" extension at all, it will ignore it as required by
+the "ech" extension at all, it will ignore it as required by
 {{RFC8446}}; Section 4.1.2. Provided the server can present a certificate valid
 for the public name, the client can safely retry with updated settings, as
 described in {{handle-server-response}}.
@@ -798,7 +798,7 @@ DNS results, if one is provided.
 A more serious problem is MITM proxies which do not support this extension.
 {{RFC8446}}, Section 9.3 requires that such proxies remove any extensions they
 do not understand. The handshake will then present a certificate based on the
-public name, without echoing the "encrypted_client_hello" extension to the
+public name, without echoing the "ech" extension to the
 client.
 
 Depending on whether the client is configured to accept the proxy's certificate
@@ -874,7 +874,7 @@ this problem by flushing any DNS or ECHConfig state upon changing networks.
 
 Optional record digests may be useful in scenarios where clients and
 client-facing servers do not want to reveal information about the client-facing
-server in the "encrypted_client_hello" extension. In such settings, clients send
+server in the "ech" extension. In such settings, clients send
 either an empty config_digest or a randomly generated config_digest in the
 ClientEncryptedCH. (The precise implementation choice for this mechanism is out
 of scope for this document.) Servers in these settings must perform trial
@@ -958,9 +958,9 @@ the number of valid TCP connections an attacker can open.
 ### Do not stick out
 
 The only explicit signal indicating possible use of ECH is the ClientHello
-"encrypted_client_hello" extension. Server handshake messages do not contain any
+"ech" extension. Server handshake messages do not contain any
 signal indicating use or negotiation of ECH. Clients MAY GREASE the
-"encrypted_client_hello" extension, as described in {{grease-extensions}}, which
+"ech" extension, as described in {{grease-extensions}}, which
 helps ensure the ecosystem handles ECH correctly. Moreover, as more clients
 enable ECH support, e.g., as normal part of Web browser functionality, with keys
 supplied by shared hosting providers, the presence of ECH extensions becomes
@@ -1058,7 +1058,7 @@ abort the connection.
 This attack aims to exploit server HRR state management to recover information
 about a legitimate ClientHello using its own attacker-controlled ClientHello.
 To begin, the attacker intercepts and forwards a legitimate ClientHello with an
-"encrypted_client_hello" (ech) extension to the server, which triggers a
+"ech" (ech) extension to the server, which triggers a
 legitimate HelloRetryRequest in return. Rather than forward the retry to the
 client, the attacker, attempts to generate its own ClientHello in response based
 on the contents of the first ClientHello and HelloRetryRequest exchange with the
@@ -1151,12 +1151,12 @@ envelope.
 IANA is requested to create the following two entries in the existing registry
 for ExtensionType (defined in {{!RFC8446}}):
 
-1. encrypted_client_hello(0xff02), with "TLS 1.3" column values being set to
+1. ech(0xff02), with "TLS 1.3" column values being set to
    "CH, EE", and "Recommended" column being set to "Yes".
 2. ech_nonce(0xff03), with the "TLS 1.3" column values being set to "CH", and
    "Recommended" column being set to "Yes".
-3. outer_extension(0xff04), with the "TLS 1.3" column values being set to "CH",
-   and "Recommended" column being set to "Yes".
+3. ech_outer_extensions(0xff04), with the "TLS 1.3" column values being set to
+   "CH", and "Recommended" column being set to "Yes".
 
 ## Update of the TLS Alert Registry
 
