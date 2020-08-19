@@ -422,10 +422,6 @@ ClientHelloOuter. The server then computes a hash of the reconstructed
 ClientHelloInner. If the hash does not equal OuterExtensions.hash, the server
 aborts the connection with an "illegal_parameter" alert.
 
-Clients SHOULD only use this mechanism for extensions which are large. All other
-extensions SHOULD appear in both ClientHelloInner and ClientHelloOuter even if
-they have identical values.
-
 # Client Behavior {#client-behavior}
 
 ## Sending an encrypted ClientHello {#send-ech}
