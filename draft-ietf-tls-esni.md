@@ -207,6 +207,10 @@ configuration is defined by the following `ECHConfigs` structure.
         HpkeAeadId aead_id;
     } HpkeCipherSuite;
 
+    enum { accept_and_reject(0),
+           reject_only(1)
+    } ECHConfirmType;
+
     struct {
         opaque public_name<1..2^16-1>;
 
@@ -215,6 +219,8 @@ configuration is defined by the following `ECHConfigs` structure.
         HpkeCipherSuite cipher_suites<4..2^16-2>;
 
         uint16 maximum_name_length;
+        ECHConfirmType confirm_type;
+        [[TODO: What type?]] valid_until;
         Extension extensions<0..2^16-1>;
     } ECHConfigContents;
 
@@ -222,7 +228,7 @@ configuration is defined by the following `ECHConfigs` structure.
         uint16 version;
         uint16 length;
         select (ECHConfig.version) {
-          case 0xff07: ECHConfigContents;
+          case 0xff08: ECHConfigContents;
         }
     } ECHConfig;
 
@@ -272,6 +278,17 @@ not known it can be set to zero, in which case clients SHOULD use the inner
 ClientHello padding scheme described below. That could happen if wildcard names
 are in use, or if names can be added or removed from the anonymity set during
 the lifetime of a particular resource record value.
+
+confirm_type
+: An indication of whether the server with this configuration indicates
+acceptance or rejection. If the value is "accept_and_reject", then the server
+explicitly confirms both acceptance and rejection; if the value is
+"reject_only", then the server only explicitly confirms rejection. The behavior
+of the client and server depends on what the server confirms.
+
+valid_until
+: The expiration date for this configuration. The behavior of the client-facing
+server is not guaranteed once the expiration date elapses.
 
 extensions
 : A list of extensions that the client must take into consideration when
@@ -337,19 +354,25 @@ encrypted_ch
 : The serialized and encrypted ClientHelloInner structure, encrypted using HPKE
 as described in {{send-ech}}.
 
-When offering the "ech" extension in its ClientHelloOuter, the client MUST also
-offer an "ech" extension in its ClientHelloInner. The payload of the latter is a
-value of type `ECHNonce` (defined in {{ech-nonce}}) with `nonce` set to a
-random byte string.
+When offering the "ech" extension in its ClientHelloOuter, if the server
+confirms acceptance and rejection, i.e., `ECHConfig.confirm_type` is
+"accept_and_reject", then client MUST also offer an "ech" extension in its
+ClientHelloInner. The payload is a value of type `ECHNonce` (defined in
+{{ech-nonce}}) with `nonce` set to a random byte string.
 
-The client-facing server SHOULD include an "ech" extension in its ServerHello in
-order to confirm ECH usage. (The client interprets the absence of this extension
-as an indication of rejection.) The payload is a value of type `ECHNonce`: to
-indicate rejection, the server sets `nonce` to a random byte string; to indicate
-acceptance, the server sets `nonce` to be the payload of the "ech" extension of
-the ClientHelloInner.
+If the server confirms acceptance and rejection, it SHOULD include an "ech"
+extension in its ServerHello. (The client interprets the absence of this
+extension as an indication of rejection.) The payload is a value of type
+`ECHNonce`: to indicate rejection, the server sets `nonce` to a random byte
+string; to indicate acceptance, the server sets `nonce` to be the payload of the
+"ech" extension of the ClientHelloInner.
 
-when the client offers the "ech" extension, the server MAY include an "ech"
+If the server confirms rejection only and intends to rejects, it MUST include an
+"ech" extension in its ServerHello. (The client interprets the absence of this
+extension as acceptance.) The payload is a value of type `ECHNonce` with `nonce`
+set to a random byte string.
+
+When the client offers the "ech" extension, the server MAY include an "ech"
 extension in its EncryptedExtensions message with the following payload:
 
 ~~~
@@ -469,7 +492,8 @@ chosen preference from `ECHConfig.cipher_suites`.
 The client then generates a ClientHelloInner value. In addition to the normal
 values, ClientHelloInner MUST also contain:
 
- - an "ech" extension, as described in {{encrypted-client-hello}};
+ - an "ech" extension as described in {{encrypted-client-hello}}, if the server
+   confirms both acceptance and rejection;
  - an "ech_nonce" extension, containing `ech_nonce_value` derived above; and
  - TLS padding {{!RFC7685}} (see {{padding}}).
 
@@ -536,6 +560,7 @@ ClientHelloInner or reject it and use ClientHelloOuter. In handling the server's
 response, the client's first step is to determine which was used. It proceeds as
 follows.
 
+When the server confirms both acceptance and rejection:
 * If the ServerHello does not contain an "ech" extension, then the client
   presumes rejection, since the server may not support ECH.
 * The client checks that the "ech" extension of the ServerHello contains a
@@ -544,6 +569,15 @@ follows.
 * The client checks that the `nonce` field of the payload is equal to the
   `nonce` it sent in the extension of its ClientHelloInner: if not, then it
   presumes rejection; otherwise it presumes acceptance.
+
+When the server confirms only confirms rejection:
+* If the ServerHello does not contain an "ech" extension, then the client
+  presumes acceptance.
+* The client checks that the "ech" extension of the ServerHello contains a
+  well-formed `ECHNonce` as its payload: if not, it MUST abort with an
+  "illegal_parameter" alert.
+* Finally, if the "ech" extension is well-formed, then the client presumes
+  rejection.
 
 ### Accepted ECH
 
@@ -820,6 +854,19 @@ the public name, the client MUST NOT fall back to using unencrypted
 ClientHellos, as this allows a network attacker to disclose the contents of this
 ClientHello, including the SNI. It MAY attempt to use another server from the
 DNS results, if one is provided.
+
+### Server rollback
+
+This protocol is designed to fallback gracefully to ECH rejection in case it
+becomes necessary to rollback a server to a point prior to ECH implementation.
+If the server confirms both acceptance and rejection (as indicated by the
+`ECHConfig` defined in {{ech-configuration}}), then the client interprets the
+absence of the "ech" extension in the server's response as confirmation of
+rejection. On the other hand, if the server confirms rejection only, then the
+client interprets the absence of this extension as an indication of acceptance.
+Therefore, it is incumbent upon the client-facing server to support ECH for as
+long as the ECH configuration is valid (as determined by the ECHConfig). In
+particular, it must delay rollback until the ECHConfig expires.
 
 ## Middleboxes
 
