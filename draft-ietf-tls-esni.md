@@ -505,10 +505,11 @@ server's anonymity set without server input. For the "server_name" extension
 with length D, clients SHOULD use the server's length hint L
 (ECHCOnfig.maximum_name_length) when computing the padding as follows:
 
-1. If L > D, add L - D bytes of padding. This rounds to the server's advertised
-   hint, i.e., ECHConfig.maximum_name_length.
-2. Otherwise, add 32 - (D % 32) bytes of padding. This rounds D up to the
-   nearest multiple of 32 bytes.
+1. If L >= D, add L - D bytes of padding. This rounds to the server's
+   advertised hint, i.e., ECHConfig.maximum_name_length.
+2. Otherwise, let P = 31 - ((D - 1) % 32), and add P bytes of padding, plus an
+   additional 32 bytes if D + P < L + 32. This rounds D up to the nearest
+   multiple of 32 bytes that permits at least 32 bytes of length ambiguity.
 
 In addition to padding ClientHelloInner, clients and servers will also need to
 pad all other handshake messages that have sensitive-length fields. For example,
