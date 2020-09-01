@@ -167,25 +167,28 @@ key and metadata preconfigured.
 
 When a client wants to establish a TLS session with the backend server, it
 constructs its ClientHello as usual (we will refer to this as the
-ClientHelloInner message) and then encrypts this message using the ECH public
-key. It then constructs a new ClientHello (ClientHelloOuter) with innocuous
-values for sensitive extensions, e.g., SNI, ALPN, etc., and with the encrypted
-ClientHelloInner in an "encrypted_client_hello" extension, which this document
-defines ({{encrypted-client-hello}}). Finally, it sends ClientHelloOuter to the
-server.
+ClientHelloInner message) and then encrypts this message using the public key of
+the ECH configuration. It then constructs a new ClientHello (ClientHelloOuter)
+with innocuous values for sensitive extensions, e.g., SNI, ALPN, etc., and with
+an "encrypted_client_hello" extension, which this document defines
+({{encrypted-client-hello}}). The extension's payload carries the encrypted
+ClientHelloInner and specifies the ECH configuration used for encryption.
+Finally, it sends ClientHelloOuter to the server.
 
 Upon receiving the ClientHelloOuter, the client-facing server takes one of the
 following actions:
 
 1. If it does not support ECH, it ignores the "encrypted_client_hello" extension
    and proceeds with the handshake as usual, per {{RFC8446}}, Section 4.1.2.
-1. If it supports ECH but cannot decrypt it, then it ignores the extension and
-   proceeds with the handshake as usual. This is referred to as "ECH rejection".
-   When ECH is rejected, the server sends an acceptable ECH configuration in its
+1. If it supports ECH but does not recognize the configuration specified by the
+   client, then it ignores the extension and terminates the handshake using the
+   ClientHelloOuter. This is referred to as "ECH rejection". When ECH is
+   rejected, the server sends an acceptable ECH configuration in its
    EncryptedExtensions message.
-1. If it supports ECH and can decrypt it, then it forwards the ClientHelloInner
-   to the backend, who terminates the connection. This is referred to as "ECH
-   acceptance".
+1. If it supports ECH and recognizes the configuration, then it attempts to
+   decrypt the ClientHelloInner. It aborts the handshake if decryption fails;
+   otherwise it forwards the ClientHelloInner to the backend, who terminates the
+   connection. This is referred to as "ECH acceptance".
 
 Upon receiving the server's response, the client determines whether ECH was
 accepted or rejected and proceeds with the handshake accordingly. (See
@@ -582,7 +585,7 @@ application.
 
 #### Authenticating for the public name {#auth-public-name}
 
-When the server cannot decrypt or does not process the "encrypted_client_hello"
+When the server rejects ECH or otherwise ignores "encrypted_client_hello"
 extension, it continues with the handshake using the plaintext "server_name"
 extension instead (see {{server-behavior}}). Clients that offer ECH then
 authenticate the connection with the public name, as follows:
