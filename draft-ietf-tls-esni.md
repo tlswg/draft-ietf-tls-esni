@@ -367,26 +367,8 @@ This document also defines the "ech_required" alert, which clients MUST send
 when it offered an "encrypted_client_hello" extension that was not accepted by
 the server. (See {{alerts}}.)
 
-# The "ech_nonce" extension {#ech-nonce}
-
-When using ECH, the client MUST include an extension of type "ech_nonce" to the
-ClientHelloInner (but not to the ClientHelloOuter). This nonce is used to ensure
-that the server's encrypted Certificate can only be read by the entity which
-sent this ClientHello. This extension is defined as follows:
-
-~~~
-    enum {
-       ech_nonce(0xff03), (65535)
-    } ExtensionType;
-
-    struct {
-       uint8 nonce[16];
-    } ECHNonce;
-~~~~
-
-nonce
-: A 16-byte nonce exported from the HPKE encryption context, as described in
-{{send-ech}}.
+[[OPEN ISSUE: The following text is a remnant of the section on "ech_nonce". It
+specifies client/server behavior that is unrelated to "ech_nonce".]]
 
 Per {{client-behavior}} and {{server-behavior}}, implementations are required to
 track, alongside each PSK established by a previous connection, whether ECH was
@@ -443,60 +425,70 @@ aborts the connection with an "illegal_parameter" alert.
 
 ## Sending an encrypted ClientHello {#send-ech}
 
-In order to send an encrypted ClientHello, the client first determines if it
-supports the server's chosen KEM, as identified by `ECHConfig.kem_id`. If one is
-supported, the client MUST select an appropriate `HpkeCipherSuite` from the list
-of suites offered by the server. If the client does not support the
-corresponding KEM or is unable to select a suitable `HpkeCipherSuite`, it SHOULD
-ignore that `ECHConfig` value and MAY attempt to use another value provided by
-the server. The client MUST NOT send ECH using HPKE algorithms not advertised by
-the server.
+To offer ECH, the client first chooses a suitable ECH configuration. To
+determine if a given `ECHConfig` is suitable, it checks that it supports the KEM
+algorithm identified by `ECHConfig.kem_id` and at least one KDF/AEAD algorithm
+identified by `ECHConfig.cipher_suites`. Once a suitable configuration is found,
+the client selects the cipher suite it will use for encryption. It MUST NOT
+choose a cipher suite not advertised by the configuration.
 
-Given a compatible `ECHConfig` with fields `public_key` and `kem_id`, carrying
-the `HpkePublicKey` and KEM identifier corresponding to the server, clients
-compute an HPKE encryption context as follows:
+Next, the client constructs the ClientHelloOuter message just as it does a
+standard ClientHello, with the exception of the following rules:
+
+1. It MUST offer to negotiate TLS 1.3 or above.
+1. It MUST include an "encrypted_client_hello" extension with a payload
+   constructed as described below.
+1. The value of `ECHConfig.public_name` MUST be placed in the "server_name"
+   extension.
+1. It MUST NOT include the "pre_shared_key" extension. [[OPEN ISSUE: The text
+   needs to be updated to reflect this rule.]]
+
+The client then constructs the ClientHelloInner message just as it does a
+standard ClientHello, with the exception of the following rules:
+
+1. It MUST NOT offer to negotiate TLS 1.2 or below.
+1. It MUST NOT offer to resume any non-ECH PSK or any session for TLS 1.2 and
+   below.
+1. It MAY offer any other extension in the ClientHelloOuter except those that
+   have been incorporated into the ClientHelloInner as described in
+   {{outer-extensions}}.
+1. It MAY copy any other field from the ClientHelloOuter except
+   ClientHelloOuter.random. Instead, It MUST generate a fresh
+   ClientHelloInner.random using a secure random number generator. (See
+   {{flow-client-reaction}}.)
+1. It SHOULD contain TLS padding {{!RFC7685}} as described in {{padding}}.
+
+The client might duplicate non-sensitive extensions in both messages. However,
+implementations need to take care to ensure that sensitive extensions are not
+offered in the ClientHelloOuter. [[OPEN ISSUE: We should provide guidance on
+what extensions are sensitive and suggest suitable substitutes.]]
+
+To encrypt ClientHelloInner, the client first needs to generate the HPKE
+encryption context. It computes the encapsulated key, context, and HRR key (see
+{{hrr}}) as:
 
 ~~~
     pkR = Deserialize(ECHConfig.public_key)
     enc, context = SetupBaseS(pkR, "tls13-ech")
-    ech_nonce_value = context.Export("tls13-ech-nonce", 16)
     ech_hrr_key = context.Export("tls13-ech-hrr-key", 16)
 ~~~
 
 Note that the HPKE functions Deserialize and SetupBaseS are those which match
-`ECHConfig.kem_id` and the client's chosen preference from
-`ECHConfig.cipher_suites`.
-
-The client then generates a ClientHelloInner value. In addition to the normal
-values, ClientHelloInner MUST also contain:
-
- - an "encrypted_client_hello" extension, as described in
-   {{encrypted-client-hello}};
- - an "ech_nonce" extension, containing `ech_nonce_value` derived above; and
- - TLS padding {{!RFC7685}} (see {{padding}}).
-
-When offering an encrypted ClientHello, the client MUST NOT offer to resume any
-non-ECH PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2
-or below.
-
-The encrypted ClientHello value is then computed as:
+`ECHConfig.kem_id` and the AEAD/KDF used with `context` are those which match
+client's chosen preference from `ECHConfig.cipher_suites`. The encrypted
+ClientHelloInner is computed as:
 
 ~~~~
     encrypted_ch = context.Seal("", ClientHelloInner)
 ~~~~
 
-Finally, the client MUST generate a ClientHelloOuter message containing the
-"encrypted_client_hello" extension with the values as indicated above. In
-particular,
+The payload of the "encrypted_client_hello" extension in the ClientHelloOuter is
+a `ClientECH` with the following values:
 
-- cipher_suite contains the client's chosen HpkeCipherSuite;
-- config_id contains the identifier of the corresponding ECHConfig structure;
-- enc contains the encapsulated key as output by SetupBaseS; and
-- encrypted_ch contains the AEAD-encrypted ClientHelloInner.
-
-The client MUST place the value of `ECHConfig.public_name` in the
-ClientHelloOuter "server_name" extension. See {{outer-clienthello}} for
-additional discussion of ClientHelloOuter values.
+- `cipher_suite`, the client's chosen cipher suite;
+- `config_id`, the identifier of the chosen ECHConfig structure;
+- `enc`, as computed above; and
+- `encrypted_ch`, as computed above.
 
 ## Recommended Padding Scheme {#padding}
 
@@ -620,7 +612,7 @@ trigger retries, as described in {{handle-server-response}}. This may be
 implemented, for instance, by reporting a failed connection with a dedicated
 error code.
 
-### HelloRetryRequest
+### HelloRetryRequest {#hrr}
 
 If the server sends a HelloRetryRequest in response to the ClientHello, the
 client sends a second updated ClientHello per the rules in {{RFC8446}}.
@@ -639,7 +631,6 @@ follows:
 ~~~
 pkR = Deserialize(ECHConfig.public_key)
 enc, context = SetupPSKS(pkR, "tls13-ech-hrr", ech_hrr_key, "")
-ech_nonce_value = context.Export("tls13-ech-hrr-nonce", 16)
 ~~~
 
 Clients then encrypt the second ClientHelloInner using this new HPKE context.
@@ -657,8 +648,6 @@ context = SetupPSKR(ClientECH.enc,
 
 ClientHelloInner =
   context.Open("", ClientECH.encrypted_ch)
-
-ech_nonce_value = context.Export("tls13-ech-hrr-nonce", 16)
 ~~~
 
 [[OPEN ISSUE: Should we be using the PSK input or the info input?  On the one
@@ -752,18 +741,15 @@ context = SetupBaseR(ClientECH.enc, skR, "tls13-ech")
 ClientHelloInner =
   context.Open("", ClientECH.encrypted_ch)
 
-ech_nonce_value = context.Export("tls13-ech-nonce", 16)
 ech_hrr_key = context.Export("tls13-ech-hrr-key", 16)
 ~~~
 
 If decryption fails, the server MUST abort the connection with a "decrypt_error"
-alert. Moreover, if there is no "ech_nonce" extension, or if its value does not
-match the derived ech_nonce, the server MUST abort the connection with a
-"decrypt_error" alert. Next, the server MUST scan ClientHelloInner for any
-"outer_extension" extensions and substitute their values with the values in
-ClientHelloOuter. It MUST first verify that the hash found in the extension
-matches the hash of the extension to be interpolated in and if it does not,
-abort the connections with a "decrypt_error" alert.
+alert. Next, the server MUST scan ClientHelloInner for any "outer_extension"
+extensions and substitute their values with the values in ClientHelloOuter. It
+MUST first verify that the hash found in the extension matches the hash of the
+extension to be interpolated in and if it does not, abort the connections with a
+"decrypt_error" alert.
 
 Upon determining the true SNI, the client-facing server then either serves the
 connection directly (if in Shared Mode), in which case it executes the steps in
@@ -990,11 +976,10 @@ against them.
 
 ### Mitigate against replay attacks
 
-Since servers process either ClientHelloInner or ClientHelloOuter, and
-ClientHelloInner contains an HPKE-derived nonce, it is not possible for an
-attacker to "cut and paste" the ECH value in a different Client Hello and learn
-information from ClientHelloInner. This is because the attacker lacks access to
-the HPKE-derived nonce used to derive the handshake secrets.
+Since servers process either ClientHelloInner or ClientHelloOuter, and because
+ClientHelloInner.random is encrypted, it is not possible for an attacker to "cut
+and paste" the ECH value in a different Client Hello and learn information from
+ClientHelloInner.
 
 ### Avoid widely-deployed shared secrets
 
@@ -1105,11 +1090,10 @@ similarly and leak the same information.
 ~~~
 {: #flow-diagram-client-reaction title="Client reaction attack"}
 
-The "ech_nonce" extension in the inner ClientHello prevents this attack. In
-particular, since the attacker does not have access to this value, it cannot
-produce the right transcript and handshake keys needed for encrypting the
-Certificate message. Thus, the client will fail to decrypt the Certificate and
-abort the connection.
+ClientHelloInner.random prevents this attack. In particular, since the attacker
+does not have access to this value, it cannot produce the right transcript and
+handshake keys needed for encrypting the Certificate message. Thus, the client
+will fail to decrypt the Certificate and abort the connection.
 
 ### HelloRetryRequest Hijack Mitigation {#flow-hrr-hijack}
 
@@ -1211,8 +1195,6 @@ for ExtensionType (defined in {{!RFC8446}}):
 
 1. encrypted_client_hello(0xff08), with "TLS 1.3" column values being set to
    "CH, EE", and "Recommended" column being set to "Yes".
-2. ech_nonce(0xff03), with the "TLS 1.3" column values being set to "CH", and
-   "Recommended" column being set to "Yes".
 3. outer_extension(0xff04), with the "TLS 1.3" column values being set to "CH",
    and "Recommended" column being set to "Yes".
 
