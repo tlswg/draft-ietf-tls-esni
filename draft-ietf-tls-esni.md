@@ -1150,7 +1150,7 @@ envelope.
 
 # IANA Considerations
 
-## Update of the TLS ExtensionType Registry {#alerts}
+## Update of the TLS ExtensionType Registry
 
 IANA is requested to create the following two entries in the existing registry
 for ExtensionType (defined in {{!RFC8446}}):
@@ -1162,7 +1162,7 @@ for ExtensionType (defined in {{!RFC8446}}):
 3. outer_extension(0xff04), with the "TLS 1.3" column values being set to "CH",
    and "Recommended" column being set to "Yes".
 
-## Update of the TLS Alert Registry
+## Update of the TLS Alert Registry {#alerts}
 
 IANA is requested to create an entry, ech_required(121) in the existing registry
 for Alerts (defined in {{!RFC8446}}), with the "DTLS-OK" column being set to
