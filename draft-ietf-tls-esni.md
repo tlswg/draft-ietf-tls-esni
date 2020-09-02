@@ -313,7 +313,7 @@ transmitted to the client-facing server. The payload contains the following
 ~~~~
     struct {
        HpkeCipherSuite cipher_suite;
-       opaque config_digest<0..2^16-1>;
+       opaque config_id<0..255>;
        opaque enc<1..2^16-1>;
        opaque encrypted_ch<1..2^16-1>;
     } ClientEncryptedCH;
@@ -323,11 +323,14 @@ cipher_suite
 : The cipher suite used to encrypt ClientHelloInner. This MUST match a value
 provided in the corresponding `ECHConfig.cipher_suites` list.
 
-config_digest
-: Equal to `Expand(Extract("", config), "ech_config_digest", Nh)`, where
-`config` is the `ECHConfig` structure and `Extract`, `Expand`, and `Nh` are as
-specified by the cipher suite KDF. (Passing the literal `""` as the salt is
-interpreted by `Extract` as no salt being provided.)
+config_id
+: The configuration identifier, equal to
+`Expand(Extract("", config), "ech_config_id", Nh)`, where `config` is the
+`ECHConfig` structure and `Extract`, `Expand`, and `Nh` are as specified by
+the cipher suite KDF. (Passing the literal `""` as the salt is interpreted
+by `Extract` as no salt being provided.) The length of this value SHOULD NOT
+be less than 16 bytes unless it is optional for an application; see
+{{optional-configs}}.
 
 enc
 : The HPKE encapsulated key, used by servers to decrypt the corresponding
@@ -477,7 +480,7 @@ Finally, the client MUST generate a ClientHelloOuter message containing the
 particular,
 
 - cipher_suite contains the client's chosen HpkeCipherSuite;
-- config_digest contains the digest of the corresponding ECHConfig structure;
+- config_id contains the identifier of the corresponding ECHConfig structure;
 - enc contains the encapsulated key as output by SetupBaseS; and
 - encrypted_ch contains the HPKE encapsulated key (enc) and the ClientHelloInner
   ciphertext (encrypted_ch_inner).
@@ -661,7 +664,7 @@ structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
   vary to exercise all supported configurations, but MAY be held constant for
   successive connections to the same server in the same session.
 
-- Set the "config_digest" field to a randomly-generated string of `Nh` bytes,
+- Set the "config_id" field to a randomly-generated string of `Nh` bytes,
   where `Nh` is the output length of the `Extract` function of the KDF
   associated with the chosen cipher suite. (The KDF API is specified in
   {{!I-D.irtf-cfrg-hpke}}.)
@@ -692,13 +695,13 @@ an ECHConfig that can be used to successfully decrypt
 ClientEncryptedCH.encrypted_ch. This matching procedure should be done using
 one of the following two checks:
 
-1. Compare ClientEncryptedCH.config_digest against digests of known ECHConfig
+1. Compare ClientEncryptedCH.config_id against identifiers of known ECHConfig
    and choose the one that matches.
 2. Use trial decryption of ClientEncryptedCH.encrypted_ch with known ECHConfig
    and choose the one that succeeds.
 
 Some uses of ECH, such as local discovery mode, may omit the
-ClientEncryptedCH.config_digest since it can be used as a tracking vector. In
+ClientEncryptedCH.config_id since it can be used as a tracking vector. In
 such cases, trial decryption should be used for matching ClientEncryptedCH to
 known ECHConfig. Unless specified by the application using (D)TLS or externally
 configured on both sides, implementations MUST use the first method.
@@ -718,7 +721,7 @@ added behavior:
   them when using the plaintext SNI name. This restriction allows a client to
   reject resumptions in {{auth-public-name}}.
 
-Note that an unrecognized ClientEncryptedCH.config_digest value may be a GREASE
+Note that an unrecognized ClientEncryptedCH.config_id value may be a GREASE
 ECH extension (see {{grease-extensions}}), so it is necessary for servers to
 proceed with the connection and rely on the client to abort if ECH was required.
 In particular, the unrecognized value alone does not indicate a misconfigured
@@ -831,7 +834,7 @@ then each anonymity set has size k = 1. Client-facing servers SHOULD deploy ECH
 in such a way so as to maximize the size of the anonymity set where possible.
 This means client-facing servers should use the same ECHConfig for as many hosts
 as possible. An attacker can distinguish two hosts that have different ECHConfig
-values based on the ClientEncryptedCH.config_digest value. This also means
+values based on the ClientEncryptedCH.config_id value. This also means
 public information in a TLS handshake is also consistent across hosts. For
 example, if a client-facing server services many backend origin hosts, only one
 of which supports some cipher suite, it may be possible to identify that host
@@ -871,16 +874,16 @@ for extended periods of time, e.g., using per-client ECHConfig structures
 delivered via HTTPS RRs with high TTLs, challenging. Clients can help mitigate
 this problem by flushing any DNS or ECHConfig state upon changing networks.
 
-## Optional Record Digests and Trial Decryption
+## Optional Configuration Identifiers and Trial Decryption {#optional-configs}
 
-Optional record digests may be useful in scenarios where clients and
+Optional configuration identifiers may be useful in scenarios where clients and
 client-facing servers do not want to reveal information about the client-facing
 server in the "encrypted_client_hello" extension. In such settings, clients send
-either an empty config_digest or a randomly generated config_digest in the
+either an empty config_id or a randomly generated config_id in the
 ClientEncryptedCH. (The precise implementation choice for this mechanism is out
 of scope for this document.) Servers in these settings must perform trial
 decryption since they cannot identify the client's chosen ECH key using the
-config_digest value. As a result, support for optional record digests may
+config_id value. As a result, support for optional configuration identifiers may
 exacerbate DoS attacks. Specifically, an adversary may send malicious
 ClientHello messages, i.e., those which will not decrypt with any known ECH key,
 in order to force wasteful decryption. Servers that support this feature should,
