@@ -446,14 +446,15 @@ the `HpkePublicKey` and KEM identifier corresponding to the server, clients
 compute an HPKE encryption context as follows:
 
 ~~~
-    pkR = HPKE.KEM.Deserialize(ECHConfig.public_key)
+    pkR = Deserialize(ECHConfig.public_key)
     enc, context = SetupBaseS(pkR, "tls13-ech")
     ech_nonce_value = context.Export("tls13-ech-nonce", 16)
     ech_hrr_key = context.Export("tls13-ech-hrr-key", 16)
 ~~~
 
-Note that the HPKE algorithm identifiers are those which match the client's
-chosen preference from `ECHConfig.cipher_suites`.
+Note that the HPKE functions Deserialize and SetupBaseS are those which match
+`ECHConfig.kem_id` and the client's chosen preference from
+`ECHConfig.cipher_suites`.
 
 The client then generates a ClientHelloInner value. In addition to the normal
 values, ClientHelloInner MUST also contain:
@@ -622,7 +623,7 @@ first ClientHelloInner via the derived ech_hrr_key by modifying HPKE setup as
 follows:
 
 ~~~
-pkR = HPKE.KEM.Deserialize(ECHConfig.public_key)
+pkR = Deserialize(ECHConfig.public_key)
 enc, context = SetupPSKS(pkR, "tls13-ech-hrr", ech_hrr_key, "")
 ech_nonce_value = context.Export("tls13-ech-hrr-nonce", 16)
 ~~~
