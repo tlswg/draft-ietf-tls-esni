@@ -388,48 +388,78 @@ be implemented by adding a new field to client and server session states.
 
 ## Incorporating Outer Extensions {#outer-extensions}
 
-Some TLS 1.3 extensions can be quite large and having them both in the inner and
-outer ClientHello will lead to a very large overall size. One particularly
-pathological example is "key_share" with post-quantum algorithms. In order to
-reduce the impact of duplicated extensions, the client may use the
-"outer_extensions" extension.
+When constructing the ClientHelloInner, it is often desirable for the client to
+copy extensions from the ClientHelloOuter. (An example is the "key_share"
+extension ({{RFC8446}}, 4.2.8), which the client would offer regardless of
+whether the client-facing server or the backend server terminates the
+connection.) This behavior is permissible, subject to specific restrictions
+described in {{client-behavior}}.
+
+This section specifies a mechanism for incorporating extensions from the
+ClientHelloOuter into the ClientHelloInner without needing to a transmit a copy
+of them. It defines two extension code points for this purpose:
 
 ~~~
     enum {
-       outer_extension(0xff04), (65535)
+       outer_extension(0xff04),
+       outer_extension_binder(0xff05), (65535)
     } ExtensionType;
+~~~
 
+These extensions differ from traditional ones in two important respects. First,
+the client and server MUST NOT offer these extensions in any handshake message;
+they will only ever appear in the ClientHelloInner. Second, there may be
+multiple extensions of type "outer_extensions" in the ClientHelloInner.
+
+The payload of an "outer_extension" is an ExtensionType. The payload of an
+"outer_extension_binder" extension has the following structure:
+
+~~~
     struct {
-       ExtensionType outer_extensions<2..254>;
-       uint8 hash<32..255>;
-    } OuterExtensions;
+       opaque inner_digest<0..2^16-1>;
+    } InnerDigest;
 ~~~
 
-OuterExtensions MUST only be used in ClientHelloInner. It consists of one or
-more ExtensionType values, each of which reference an extension in
-ClientHelloOuter, and a digest of the complete ClientHelloInner.
+### Client Behavior {#outer-extensions-client-behavior}
 
-When sending ClientHello, the client first computes ClientHelloInner, including
-any PSK binders, and then MAY substitute extensions which it knows will be
-duplicated in ClientHelloOuter. To do so, the client computes a hash of the
-entire ClientHelloInner message as:
+Let `Extract`, `Expand`, and `Nh` be as defined by the API in
+{{!I-D.irtf-cfrg-hpke}} for the KDF selected by the client as described in
+{{client-behavior}}. After computing the ClientHelloInner, including any PSK
+binders, The client MAY compress its ClientHelloInner with the following
+procedure:
 
-~~~
-  hash = Expand(Extract("", inner), "ech_inner_digest", Nh)
-~~~
+1. For each inner extension `ext`, if `ext.extension_type` is the type of some
+   outer extension, then the client MAY replace `ext` with an extension of type
+   "outer_extension" and with payload `ext.extension_type`.
+1. If an extension was replaced in the previous step, then the client MUST
+   append an extension of type "outer_extension_binder" to the inner extensions.
+   The payload is set to `inner_digest = Expand(Extract("", inner),
+   "ech_inner_digest", Nh)`, where `inner` is the uncompressed ClientHelloInner.
 
-where `inner` is the ClientHelloInner structure and `Extract`, `Expand`, and
-`Nh` are as defined by the KDF API in {{!I-D.irtf-cfrg-hpke}}. Then, the client
-removes and replaces extensions from ClientHelloInner with a single
-"outer_extensions" extension. The list of `outer_extensions` include those which
-were removed from ClientHelloInner, in the order in which they were removed. The
-hash contains the full ClientHelloInner hash computed above.
+Compression only yields benefits for larger extensions. Therefore, it is
+RECOMMENDED that clients only compress extensions whose payloads are larger than
+2 bytes.
 
-This process is reversed by client-facing server. Specifically,
-the server replaces the `outer_extensions` with extensions contained in
-ClientHelloOuter. The server then computes a hash of the reconstructed
-ClientHelloInner. If the hash does not equal OuterExtensions.hash, the server
-aborts the connection with an "illegal_parameter" alert.
+### Client-Facing Server Behavior {#outer-extensions-server-behavior}
+
+Upon successful decryption of the ClientHelloInner, the client-facing server
+MUST decompresses the structure with the following procedure:
+
+1. For each inner extension `ext` of type "outer_extension", if there is an
+   outer extension of type `ext.extension_data`, then replace `ext` with the
+   outer extension. If no such extension exists, then the server MUST abort the
+   handshake with an "illegal_parameter" alert.
+1. If an extension was replaced in the previous step, then the server pops the
+   last extension from the inner extensions. If the extension is not of type
+   "outer_extension_binder" or its payload does not equal `Expand(Extract("",
+   inner), "ech_inner_digest", Nh)`, then the server MUST abort with an
+   "illegal_parameter" alert.
+
+Validation of the `inner_digest` ensures that the decompressed ClientHelloInner
+matches the value intended by the client. [[OPEN ISSUE: Is this not redundant?
+The binding of the transcript hash to key derivation seems to provide the same
+guarantee.]] Finally, the client-facing server forwards the decompressed
+ClientHelloInner to the backend server.
 
 # Client Behavior {#client-behavior}
 
@@ -1159,8 +1189,9 @@ for ExtensionType (defined in {{!RFC8446}}):
    "CH, EE", and "Recommended" column being set to "Yes".
 2. ech_nonce(0xff03), with the "TLS 1.3" column values being set to "CH", and
    "Recommended" column being set to "Yes".
-3. outer_extension(0xff04), with the "TLS 1.3" column values being set to "CH",
-   and "Recommended" column being set to "Yes".
+3. outer_extension(0xff04), with the "Recommended" column being set to "Yes".
+3. outer_extension_binder(0xff05), with the "Recommended" column being set to
+   "Yes".
 
 ## Update of the TLS Alert Registry
 
