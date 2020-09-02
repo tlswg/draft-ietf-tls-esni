@@ -313,7 +313,7 @@ transmitted to the client-facing server. The payload contains the following
 ~~~~
     struct {
        HpkeCipherSuite cipher_suite;
-       opaque config_id<0..2^8-1>;
+       opaque config_id<0..255>;
        opaque enc<1..2^16-1>;
        opaque encrypted_ch<1..2^16-1>;
     } ClientEncryptedCH;
@@ -330,7 +330,7 @@ config_id
 the cipher suite KDF. (Passing the literal `""` as the salt is interpreted
 by `Extract` as no salt being provided.) The length of this value SHOULD NOT
 be less than 16 bytes unless it is optional for an application; see
-{{optional-config-ids}}.
+{{optional-configs}}.
 
 enc
 : The HPKE encapsulated key, used by servers to decrypt the corresponding
@@ -874,7 +874,7 @@ for extended periods of time, e.g., using per-client ECHConfig structures
 delivered via HTTPS RRs with high TTLs, challenging. Clients can help mitigate
 this problem by flushing any DNS or ECHConfig state upon changing networks.
 
-## Optional Configuration Identifiers and Trial Decryption {#optional-config-ids}
+## Optional Configuration Identifiers and Trial Decryption {#optional-configs}
 
 Optional configuration identifiers may be useful in scenarios where clients and
 client-facing servers do not want to reveal information about the client-facing
