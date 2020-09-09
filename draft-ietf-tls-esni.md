@@ -190,8 +190,8 @@ following actions:
    otherwise it forwards the ClientHelloInner to the backend, who terminates the
    connection. This is referred to as "ECH acceptance".
 
-Upon receiving the server's response, the client determines whether ECH was
-accepted or rejected and proceeds with the handshake accordingly. (See
+Upon receiving the server's response, the client determines whether or not ECH
+was accepted and proceeds with the handshake accordingly. (See
 {{client-behavior}} for details.)
 
 # Encrypted ClientHello Configuration {#ech-configuration}
@@ -311,7 +311,7 @@ extension, defined as follows:
 
 The extension request is carried by the ClientHelloOuter, i.e., the ClientHello
 transmitted to the client-facing server. The payload contains the following
-`ClientEncryptedCH` structure:
+`ClientECH` structure:
 
 ~~~~
     struct {
@@ -319,7 +319,7 @@ transmitted to the client-facing server. The payload contains the following
        opaque config_id<0..255>;
        opaque enc<1..2^16-1>;
        opaque encrypted_ch<1..2^16-1>;
-    } ClientEncryptedCH;
+    } ClientECH;
 ~~~~
 
 cipher_suite
@@ -343,14 +343,19 @@ encrypted_ch
 : The serialized and encrypted ClientHelloInner structure, encrypted using HPKE
 as described in {{send-ech}}.
 
-When the client-facing server accepts ECH, it does not send this extension. When
-it rejects, it adds an "encrypted_client_hello" extension to EncryptedExtensions
-with the following structure as the payload:
+When offering the "encrypted_client_hello" extension in its ClientHelloOuter,
+the client MUST also offer an empty "encrypted_client_hello" extension in its
+ClientHelloInner, wherever applicable. (This requirement is not applicable when
+the extension is generated as described in {{grease-extensions}}.)
+
+When the client offers the "encrypted_client_hello" extension, the server MAY
+include an "encrypted_client_hello" extension in its EncryptedExtensions message
+with the following payload:
 
 ~~~
     struct {
        ECHConfigs retry_configs;
-    } ServerEncryptedCH;
+    } ServerECH;
 ~~~
 
 retry_configs
@@ -465,8 +470,10 @@ Note that the HPKE functions Deserialize and SetupBaseS are those which match
 The client then generates a ClientHelloInner value. In addition to the normal
 values, ClientHelloInner MUST also contain:
 
- - an "ech_nonce" extension, containing `ech_nonce_value` derived above
- - TLS padding {{!RFC7685}} (see {{padding}})
+ - an "encrypted_client_hello" extension, as described in
+   {{encrypted-client-hello}};
+ - an "ech_nonce" extension, containing `ech_nonce_value` derived above; and
+ - TLS padding {{!RFC7685}} (see {{padding}}).
 
 When offering an encrypted ClientHello, the client MUST NOT offer to resume any
 non-ECH PSKs. It additionally MUST NOT offer to resume any sessions for TLS 1.2
@@ -526,9 +533,11 @@ to be padded using TLS record layer padding.
 ## Handling the server response {#handle-server-response}
 
 As described in {{server-behavior}}, the server MAY either accept ECH and use
-ClientHelloInner or reject it and use ClientHelloOuter. However, there is no
-indication in ServerHello of which one the server has done and the client must
-therefore use trial decryption in order to determine this.
+ClientHelloInner or reject it and use ClientHelloOuter. In handling the server's
+response, the client's first step is to determine which value was used. The
+client presumes acceptance if the last 8 bytes of ServerHello.random are equal
+to `accept_confirmation` as defined in {{backend-server-behavior}}. Otherwise,
+it presumes rejection.
 
 ### Accepted ECH
 
@@ -639,15 +648,15 @@ rationale for this is described in {{flow-hrr-hijack}}.
 
 Client-facing servers perform the corresponding process when decrypting second
 ClientHelloInner messages. In particular, upon receipt of a second ClientHello
-message with a ClientEncryptedCH value, servers setup their HPKE context and
-decrypt ClientEncryptedCH as follows:
+message with a ClientECH value, servers set up their HPKE context and
+decrypt ClientECH as follows:
 
 ~~~
-context = SetupPSKR(ClientEncryptedCH.enc,
+context = SetupPSKR(ClientECH.enc,
   skR, "tls13-ech-hrr", ech_hrr_key, "")
 
 ClientHelloInner =
-  context.Open("", ClientEncryptedCH.encrypted_ch)
+  context.Open("", ClientECH.encrypted_ch)
 
 ech_nonce_value = context.Export("tls13-ech-hrr-nonce", 16)
 ~~~
@@ -686,36 +695,39 @@ Offering a GREASE extension is not considered offering an encrypted ClientHello
 for purposes of requirements in {{client-behavior}}. In particular, the client
 MAY offer to resume sessions established without ECH.
 
-# Client-Facing Server Behavior {#server-behavior}
+# Server Behavior {#server-behavior}
+
+## Client-Facing Server
 
 Upon receiving an "encrypted_client_hello" extension, the client-facing server
 MUST check that it is able to negotiate TLS 1.3 or greater. If not, it MUST
 abort the connection with a "handshake_failure" alert.
 
-The ClientEncryptedCH value is said to match a known ECHConfig if there exists
+The ClientECH value is said to match a known ECHConfig if there exists
 an ECHConfig that can be used to successfully decrypt
-ClientEncryptedCH.encrypted_ch. This matching procedure should be done using
+ClientECH.encrypted_ch. This matching procedure should be done using
 one of the following two checks:
 
-1. Compare ClientEncryptedCH.config_id against identifiers of known ECHConfig
+1. Compare ClientECH.config_id against identifiers of known ECHConfig
    and choose the one that matches.
-2. Use trial decryption of ClientEncryptedCH.encrypted_ch with known ECHConfig
+2. Use trial decryption of ClientECH.encrypted_ch with known ECHConfig
    and choose the one that succeeds.
 
-Some uses of ECH, such as local discovery mode, may omit the
-ClientEncryptedCH.config_id since it can be used as a tracking vector. In
-such cases, trial decryption should be used for matching ClientEncryptedCH to
-known ECHConfig. Unless specified by the application using (D)TLS or externally
-configured on both sides, implementations MUST use the first method.
+Some uses of ECH, such as local discovery mode, may omit the ClientECH.config_id
+since it can be used as a tracking vector. In such cases, trial decryption
+should be used for matching ClientECH to known ECHConfig. Unless specified by
+the application using (D)TLS or externally configured on both sides,
+implementations MUST use the first method.
 
-If the ClientEncryptedCH value does not match any known ECHConfig structure, it
+If the ClientECH value does not match any known ECHConfig structure, it
 MUST ignore the extension and proceed with the connection, with the following
 added behavior:
 
-- It MUST include the "encrypted_client_hello" extension with the
-  "retry_configs" field set to one or more ECHConfig structures with up-to-date
-  keys. Servers MAY supply multiple ECHConfig values of different versions. This
-  allows a server to support multiple versions at once.
+- It MUST include the "encrypted_client_hello" extension in its
+  EncryptedExtensions with the "retry_configs" field set to one or more
+  ECHConfig structures with up-to-date keys. Servers MAY supply multiple
+  ECHConfig values of different versions. This allows a server to support
+  multiple versions at once.
 
 - The server MUST ignore all PSK identities in the ClientHello which correspond
   to ECH PSKs. ECH PSKs offered by the client are associated with the ECH
@@ -723,22 +735,22 @@ added behavior:
   them when using the plaintext SNI name. This restriction allows a client to
   reject resumptions in {{auth-public-name}}.
 
-Note that an unrecognized ClientEncryptedCH.config_id value may be a GREASE
-ECH extension (see {{grease-extensions}}), so it is necessary for servers to
-proceed with the connection and rely on the client to abort if ECH was required.
-In particular, the unrecognized value alone does not indicate a misconfigured
-ECH advertisement ({{misconfiguration}}). Instead, servers can measure
-occurrences of the "ech_required" alert to detect this case.
+Note that an unrecognized ClientECH.config_id value may be a GREASE ECH
+extension (see {{grease-extensions}}), so it is necessary for servers to proceed
+with the connection and rely on the client to abort if ECH was required. In
+particular, the unrecognized value alone does not indicate a misconfigured ECH
+advertisement ({{misconfiguration}}). Instead, servers can measure occurrences
+of the "ech_required" alert to detect this case.
 
-If the ClientEncryptedCH value matches a known ECHConfig, the server then
-decrypts ClientEncryptedCH.encrypted_ch, using the private key skR corresponding
+If the ClientECH value matches a known ECHConfig, the server then
+decrypts ClientECH.encrypted_ch, using the private key skR corresponding
 to ECHConfig, as follows:
 
 ~~~
-context = SetupBaseR(ClientEncryptedCH.enc, skR, "tls13-ech")
+context = SetupBaseR(ClientECH.enc, skR, "tls13-ech")
 
 ClientHelloInner =
-  context.Open("", ClientEncryptedCH.encrypted_ch)
+  context.Open("", ClientECH.encrypted_ch)
 
 ech_nonce_value = context.Export("tls13-ech-nonce", 16)
 ech_hrr_key = context.Export("tls13-ech-hrr-key", 16)
@@ -763,6 +775,23 @@ If the server sends a NewSessionTicket message, the corresponding ECH PSK MUST
 be ignored by all other servers in the deployment when not negotiating ECH,
 including servers which do not implement this specification.
 
+## Backend Server Behavior {#backend-server-behavior}
+
+When the client-facing server accepts ECH, it forwards the ClientHelloInner to
+the backend server, who terminates the connection. If the ClientHelloInner
+contains an empty "encrypted_client_hello" extension, then the backend server
+MUST confirm ECH acceptance by setting ServerHello.random[24:32] to
+
+~~~~
+    accept_confirmation = HKDF-Expand-Label(
+        HKDF-Extract(0, ClientHelloInner.random),
+        "ech-eccept-confirmation",
+        ServerHello.random[0:24], 8)
+~~~~
+
+where HKDF-Expand-Label and HKDF-Extract are as defined in {{RFC8446}}. The
+value of ServerHello.random[0:24] is generated as usual by invoking a secure
+random number generator (see {{RFC8446}}, Section 4.1.2).
 
 # Compatibility Issues
 
@@ -836,11 +865,11 @@ then each anonymity set has size k = 1. Client-facing servers SHOULD deploy ECH
 in such a way so as to maximize the size of the anonymity set where possible.
 This means client-facing servers should use the same ECHConfig for as many hosts
 as possible. An attacker can distinguish two hosts that have different ECHConfig
-values based on the ClientEncryptedCH.config_id value. This also means
-public information in a TLS handshake is also consistent across hosts. For
-example, if a client-facing server services many backend origin hosts, only one
-of which supports some cipher suite, it may be possible to identify that host
-based on the contents of unencrypted handshake messages.
+values based on the ClientECH.config_id value. This also means public
+information in a TLS handshake is also consistent across hosts. For example, if
+a client-facing server services many backend origin hosts, only one of which
+supports some cipher suite, it may be possible to identify that host based on
+the contents of unencrypted handshake messages.
 
 ## Unauthenticated and Plaintext DNS {#plaintext-dns}
 
@@ -881,16 +910,16 @@ this problem by flushing any DNS or ECHConfig state upon changing networks.
 Optional configuration identifiers may be useful in scenarios where clients and
 client-facing servers do not want to reveal information about the client-facing
 server in the "encrypted_client_hello" extension. In such settings, clients send
-either an empty config_id or a randomly generated config_id in the
-ClientEncryptedCH. (The precise implementation choice for this mechanism is out
-of scope for this document.) Servers in these settings must perform trial
-decryption since they cannot identify the client's chosen ECH key using the
-config_id value. As a result, support for optional configuration identifiers may
-exacerbate DoS attacks. Specifically, an adversary may send malicious
-ClientHello messages, i.e., those which will not decrypt with any known ECH key,
-in order to force wasteful decryption. Servers that support this feature should,
-for example, implement some form of rate limiting mechanism to limit the damage
-caused by such attacks.
+either an empty config_id or a randomly generated config_id in the ClientECH.
+(The precise implementation choice for this mechanism is out of scope for this
+document.) Servers in these settings must perform trial decryption since they
+cannot identify the client's chosen ECH key using the config_id value. As a
+result, support for optional configuration identifiers may exacerbate DoS
+attacks. Specifically, an adversary may send malicious ClientHello messages,
+i.e., those which will not decrypt with any known ECH key, in order to force
+wasteful decryption. Servers that support this feature should, for example,
+implement some form of rate limiting mechanism to limit the damage caused by
+such attacks.
 
 ## Outer ClientHello
 
@@ -930,6 +959,29 @@ in-band when possible, such as through the use of OCSP stapling, and clients
 SHOULD take steps to minimize or protect such requests during certificate
 validation.
 
+## Abuse of ECH Acceptance Signal
+
+To signal acceptance, the backend server overwrites 8 bytes of its
+ServerHello.random with a value derived from the ClientHelloInner.random. (See
+{{backend-server-behavior}} for details.) This behavior increases the likelihood
+of the ServerHello.random colliding with the ServerHello.random of a previous
+session, potentially reducing the overall security of the protocol. However, the
+remaining 24 bytes provide enough entropy to ensure this is not a practical
+avenue of attack.
+
+On the other hand, the probability that two 8-byte strings are the same is
+non-negligible. This poses a modest operational risk. Suppose the client-facing
+server terminates the connection (i.e., ECH is rejected or bypassed): if the
+last 8 bytes of its ServerHello.random coincide with the confirmation signal,
+then the client will incorrectly presume acceptance and proceed as if the
+backend server terminated the connection. However, the probability of a false
+positive occurring for a given connection is only 1 in 2^64.
+
+Note that the same bytes of the ServerHello.random are used to implement
+downgrade protection for TLS 1.3 (see {{RFC8446}}, Section 4.1.3). The backend
+server's signal of acceptance does not interfere with this mechanism because ECH
+is only supported in TLS 1.3 or higher.
+
 ## Comparison Against Criteria
 
 {{?RFC8744}} lists several requirements for SNI encryption.
@@ -956,10 +1008,10 @@ values with different keys using a short TTL.
 
 ### Prevent SNI-based DoS attacks
 
-This design requires servers to decrypt ClientHello messages with
-ClientEncryptedCH extensions carrying valid digests. Thus, it is possible for an
-attacker to force decryption operations on the server. This attack is bound by
-the number of valid TCP connections an attacker can open.
+This design requires servers to decrypt ClientHello messages with ClientECH
+extensions carrying valid digests. Thus, it is possible for an attacker to force
+decryption operations on the server. This attack is bound by the number of valid
+TCP connections an attacker can open.
 
 ### Do not stick out
 
