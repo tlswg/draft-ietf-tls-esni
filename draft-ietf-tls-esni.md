@@ -482,8 +482,7 @@ particular,
 - cipher_suite contains the client's chosen HpkeCipherSuite;
 - config_id contains the identifier of the corresponding ECHConfig structure;
 - enc contains the encapsulated key as output by SetupBaseS; and
-- encrypted_ch contains the HPKE encapsulated key (enc) and the ClientHelloInner
-  ciphertext (encrypted_ch_inner).
+- encrypted_ch contains the AEAD-encrypted ClientHelloInner.
 
 The client MUST place the value of `ECHConfig.public_name` in the
 ClientHelloOuter "server_name" extension. See {{outer-clienthello}} for
