@@ -381,10 +381,10 @@ nonce
 {{send-ech}}.
 
 Per {{client-behavior}} and {{server-behavior}}, implementations are required to
-track, alongside each PSK established by a previous connection, whether the
-connection negotiated this extension with the "ech_accept" response type. If so,
-this is referred to as an "ECH PSK". Otherwise, it is a "non-ECH PSK". This may
-be implemented by adding a new field to client and server session states.
+track, alongside each PSK established by a previous connection, whether ECH was
+accepted for this connection. If so, this is referred to as an "ECH PSK".
+Otherwise, it is a "non-ECH PSK". This may be implemented by adding a new field
+to client and server session states.
 
 ## Incorporating Outer Extensions {#outer-extensions}
 
