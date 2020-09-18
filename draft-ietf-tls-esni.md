@@ -225,7 +225,7 @@ configuration is defined by the following `ECHConfigs` structure.
         uint16 version;
         uint16 length;
         select (ECHConfig.version) {
-          case 0xff07: ECHConfigContents;
+          case 0xff08: ECHConfigContents contents;
         }
     } ECHConfig;
 
@@ -239,17 +239,17 @@ versions of ECH and multiple sets of ECH parameters.
 The `ECHConfig` structure contains the following fields:
 
 version
-: The version of ECH for which this configuration is used. The version of this
-document SHALL be `0xff07`. (Future drafts and the final version MUST define a
-version that has not already been assigned.) Clients MUST ignore any `ECHConfig`
+: The version of ECH for which this configuration is used. Beginning with
+draft-08, the version is the same as the code point for the
+"encrypted_client_hello" extension. Clients MUST ignore any `ECHConfig`
 structure with a version they do not support.
 
 length
 : The length, in bytes, of the next field.
 
 contents
-: An opaque byte string whose contents depend on the version of the structure.
-For this specification, the contents are an `ECHConfigContents` structure.
+: An opaque byte string whose contents depend on the version. For this
+specification, the contents are an `ECHConfigContents` structure.
 
 The `ECHConfigContents` structure contains the following fields:
 
@@ -305,7 +305,7 @@ extension, defined as follows:
 
 ~~~
     enum {
-       encrypted_client_hello(0xff02), (65535)
+       encrypted_client_hello(0xff08), (65535)
     } ExtensionType;
 ~~~
 
@@ -1157,7 +1157,7 @@ envelope.
 IANA is requested to create the following two entries in the existing registry
 for ExtensionType (defined in {{!RFC8446}}):
 
-1. encrypted_client_hello(0xff02), with "TLS 1.3" column values being set to
+1. encrypted_client_hello(0xff08), with "TLS 1.3" column values being set to
    "CH, EE", and "Recommended" column being set to "Yes".
 2. ech_nonce(0xff03), with the "TLS 1.3" column values being set to "CH", and
    "Recommended" column being set to "Yes".
@@ -1173,11 +1173,11 @@ for Alerts (defined in {{!RFC8446}}), with the "DTLS-OK" column being set to
 # ECHConfig Extension Guidance {#config-extensions-guidance}
 
 Any future information or hints that influence the outer ClientHello SHOULD be
-specified as ECHConfig extensions, or in an entirely new version of ECHConfig.
-This is primarily because the outer ClientHello exists only in support of ECH.
-Namely, it is both an envelope for the encrypted inner ClientHello and enabler
-for authenticated key mismatch signals (see {{server-behavior}}). In contrast,
-the inner ClientHello is the true ClientHello used upon ECH negotiation.
+specified as ECHConfig extensions. This is primarily because the outer
+ClientHello exists only in support of ECH. Namely, it is both an envelope for
+the encrypted inner ClientHello and enabler for authenticated key mismatch
+signals (see {{server-behavior}}). In contrast, the inner ClientHello is the
+true ClientHello used upon ECH negotiation.
 
 --- back
 
