@@ -832,6 +832,15 @@ substituting its own KeyShare value, will result in the client-facing server
 recognizing the key, but failing to decrypt the SNI. This causes a hard failure.
 Clients SHOULD NOT attempt to repair the connection in this case.
 
+# Compliance Requirements {#compliance}
+
+In the absence of an application profile standard specifying otherwise,
+a compliant ECH application MUST implement the following HPKE cipher suite:
+
+- KEM: DHKEM(X25519, HKDF-SHA256) (see {{!I-D.irtf-cfrg-hpke}}, Section 7.1)
+- KDF: HKDF-SHA256 (see {{!I-D.irtf-cfrg-hpke}}, Section 7.2)
+- AEAD: AES-128-GCM (see {{!I-D.irtf-cfrg-hpke}}, Section 7.3)
+
 # Security Considerations
 
 ## Security and Privacy Goals
