@@ -867,7 +867,7 @@ properties for active attackers. More specifically:
 
 - Passive attackers with a known ECH configuration can distinguish between a
 connection that negotiates ECH with that configuration and one which does not,
-i.e., because the latter used a GREASE "encrypted_client_hello" extension (as
+because the latter used a GREASE "encrypted_client_hello" extension (as
 specified in {{grease-extensions}}) or a different ECH configuration.
 - Passive attackers without the ECH configuration cannot distinguish between a
 connection that negotiates ECH and one which uses a GREASE
