@@ -87,7 +87,7 @@ that private origins will co-locate with or hide behind a provider (reverse
 proxy, application server, etc.) that protects sensitive ClientHello parameters,
 including the SNI, for all of the domains it hosts. These co-located servers
 form an anonymity set wherein all elements have a consistent configuration,
-e.g., set of supported application protocols, ciphersuites, TLS versions, and
+e.g., the set of supported application protocols, ciphersuites, TLS versions, and
 so on. Usage of this mechanism reveals that a client is connecting to a
 particular service provider, but does not reveal which server from the anonymity
 set terminates the connection. Thus, it leaks no more than what is already
