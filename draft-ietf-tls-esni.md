@@ -87,7 +87,7 @@ that private origins will co-locate with or hide behind a provider (reverse
 proxy, application server, etc.) that protects sensitive ClientHello parameters,
 including the SNI, for all of the domains it hosts. These co-located servers
 form an anonymity set wherein all elements have a consistent configuration,
-e.g., set of supported application protocols, ciphersuites, TLS versions, and
+e.g., the set of supported application protocols, ciphersuites, TLS versions, and
 so on. Usage of this mechanism reveals that a client is connecting to a
 particular service provider, but does not reveal which server from the anonymity
 set terminates the connection. Thus, it leaks no more than what is already
@@ -198,8 +198,7 @@ accepted or rejected and proceeds with the handshake accordingly. (See
 {{client-behavior}} for details.)
 
 Informally, a primary goal of ECH is ensuring that connections to servers in the
-same anonymity set are indistinguishable from one another for passive and active
-attackers without affecting any existing security properties of TLS 1.3. See
+same anonymity set are indistinguishable from one another without affecting any existing security properties of TLS 1.3. See
 {{goals}} for more details about the ECH security and privacy goals.
 
 # Encrypted ClientHello Configuration {#ech-configuration}
@@ -867,7 +866,7 @@ properties for active attackers. More specifically:
 
 - Passive attackers with a known ECH configuration can distinguish between a
 connection that negotiates ECH with that configuration and one which does not,
-i.e., because the latter used a GREASE "encrypted_client_hello" extension (as
+because the latter used a GREASE "encrypted_client_hello" extension (as
 specified in {{grease-extensions}}) or a different ECH configuration.
 - Passive attackers without the ECH configuration cannot distinguish between a
 connection that negotiates ECH and one which uses a GREASE
