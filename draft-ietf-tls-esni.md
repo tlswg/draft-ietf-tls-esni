@@ -198,8 +198,7 @@ accepted or rejected and proceeds with the handshake accordingly. (See
 {{client-behavior}} for details.)
 
 Informally, a primary goal of ECH is ensuring that connections to servers in the
-same anonymity set are indistinguishable from one another for passive and active
-attackers without affecting any existing security properties of TLS 1.3. See
+same anonymity set are indistinguishable from one another without affecting any existing security properties of TLS 1.3. See
 {{goals}} for more details about the ECH security and privacy goals.
 
 # Encrypted ClientHello Configuration {#ech-configuration}
