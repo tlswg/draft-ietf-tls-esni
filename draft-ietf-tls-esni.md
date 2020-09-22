@@ -49,7 +49,7 @@ encrypting a ClientHello message under a server public key.
 
 --- middle
 
-# Introduction
+# Introduction {#intro}
 
 DISCLAIMER: This is very early a work-in-progress design and has not yet seen
 significant (or really any) security analysis. It should not be used as a basis
@@ -85,10 +85,12 @@ both.
 The protocol specified by this document takes a different approach. It assumes
 that private origins will co-locate with or hide behind a provider (reverse
 proxy, application server, etc.) that protects SNIs for all of the domains it
-hosts. As a result, SNI protection does not indicate that the client is
-attempting to reach a private origin, but only that it is going to a particular
-service provider, which the observer could already tell from the visible IP
-address.
+hosts. These co-located servers form an anonymity set wherein all elements
+have a consistent configuration, e.g., set of supported application protocols,
+ciphersuites, TLS versions, and so on. SNI protection reveals that a client is
+connecting to a particular service provider without revealing the specific
+private server from the anonymity set. Thus, it leaks no more than what is
+already visible from the server IP address.
 
 This document specifies a new TLS extension, called Encrypted Client Hello
 (ECH), that allows clients to encrypt their ClientHello to a supporting server.
@@ -193,6 +195,12 @@ following actions:
 Upon receiving the server's response, the client determines whether ECH was
 accepted or rejected and proceeds with the handshake accordingly. (See
 {{client-behavior}} for details.)
+
+Informally, a primary goal of ECH is ensuring that connections to servers in the
+same anonymity set are indistinguishable from one another for passive and active
+attackers, modulo traffic analysis, without any existing security properties of
+TLS 1.3. See {{goals}} for more details about the ECH security and privacy
+goals.
 
 # Encrypted ClientHello Configuration {#ech-configuration}
 
@@ -819,13 +827,20 @@ Clients SHOULD NOT attempt to repair the connection in this case.
 
 # Security Considerations
 
-## Security and Privacy Goals
+## Security and Privacy Goals {#goals}
 
-Informally, the primary security and privacy goals of ECH against an active
-attacker are as follows:
+ECH considers two types of attackers: passive and active. Passive attackers can
+read packets from the network. They cannot perform any sort of active behavior
+such as probing servers or querying DNS. A middlebox that filters based on
+plaintext packet contents is one example of a passive attacker. In contrast,
+active attackers can write packets into the network for malicious purposes, such
+as interfering with existing connections, probing servers, and querying DNS. A
+censor is one example of an active attacker.
+
+Given these types of attackers, the primary goals of ECH are as follows.
 
 1. Use of ECH does not weaken the security properties of TLS without ECH.
-2. TLS connection establishment to a host with a specific ECHConfig and TLS
+1. TLS connection establishment to a host with a specific ECHConfig and TLS
    configuration is indistinguishable from a connection to any other host with
    the same ECHConfig and TLS configuration. (The set of hosts which share the
    same ECHConfig and TLS configuration is referred to as the anonymity set.)
@@ -841,6 +856,28 @@ public information in a TLS handshake is also consistent across hosts. For
 example, if a client-facing server services many backend origin hosts, only one
 of which supports some cipher suite, it may be possible to identify that host
 based on the contents of unencrypted handshake messages.
+
+Beyond these primary security and privacy goals, ECH also aims to hide, to some
+extent, (a) whether or not a specific server supports ECH and (b) whether or
+not a specific connection uses or negotiates ECH. In particular:
+
+1. ECH support is secret from passive attackers who do not know the ECH
+configuration, but not active attackers.
+1. ECH usage is secret from passive attackers who do not know the ECH
+configuration, but not active attackers. More specifically:
+
+- Passive attackers with a known ECH configuration can distinguish between a
+connection that negotiates ECH with that configuration and one which does not,
+i.e., because the latter used a GREASE "encrypted_client_hello" extension or a
+different ECH configuration.
+- Passive attackers without the ECH configuration cannot distinguish between a
+connection that negotiates ECH and one which uses a GREASE
+"encrypted_client_hello" extension.
+- Active attackers can distinguish between a connection that negotiates ECH and
+one which uses a GREASE "encrypted_client_hello" extension.
+
+As a result, ECH is not suitable for bypassing active adversaries such as
+censors.
 
 ## Unauthenticated and Plaintext DNS {#plaintext-dns}
 
