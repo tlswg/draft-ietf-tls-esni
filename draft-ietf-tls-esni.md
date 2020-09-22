@@ -836,7 +836,7 @@ plaintext packet contents is one example of a passive attacker. In contrast,
 active attackers can write packets into the network for malicious purposes, such
 as interfering with existing connections, probing servers, and querying DNS. In
 short, an active attacker corresponds to the conventional threat model for
-TLS 1.3 {{RFC8446}}. A censor is one example of an active attacker.
+TLS 1.3 {{RFC8446}}.
 
 Given these types of attackers, the primary goals of ECH are as follows.
 
@@ -874,9 +874,6 @@ connection that negotiates ECH and one which uses a GREASE
 "encrypted_client_hello" extension.
 - Active attackers can distinguish between a connection that negotiates ECH and
 one which uses a GREASE "encrypted_client_hello" extension.
-
-As a result, ECH is not suitable for bypassing active adversaries such as
-censors.
 
 See {{do-not-stick-out}} for more discussion about the "do not stick out"
 criteria from {{?RFC8744}}.
