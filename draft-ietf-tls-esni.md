@@ -959,7 +959,7 @@ in-band when possible, such as through the use of OCSP stapling, and clients
 SHOULD take steps to minimize or protect such requests during certificate
 validation.
 
-## Abuse of ECH Acceptance Signal
+## Attacks Exploiting Acceptance Confirmation
 
 To signal acceptance, the backend server overwrites 8 bytes of its
 ServerHello.random with a value derived from the ClientHelloInner.random. (See
