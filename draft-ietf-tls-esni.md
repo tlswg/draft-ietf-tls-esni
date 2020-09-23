@@ -216,14 +216,14 @@ configuration is defined by the following `ECHConfigs` structure.
     struct {
         HpkeKdfId kdf_id;
         HpkeAeadId aead_id;
-    } HpkeCipherSuite;
+    } ECHCipherSuite;
 
     struct {
         opaque public_name<1..2^16-1>;
 
         HpkePublicKey public_key;
         HpkeKemId kem_id;
-        HpkeCipherSuite cipher_suites<4..2^16-2>;
+        ECHCipherSuite cipher_suites<4..2^16-4>;
 
         uint16 maximum_name_length;
         Extension extensions<0..2^16-1>;
@@ -323,10 +323,10 @@ transmitted to the client-facing server. The payload contains the following
 
 ~~~~
     struct {
-       HpkeCipherSuite cipher_suite;
+       ECHCipherSuite cipher_suite;
        opaque config_id<0..255>;
        opaque enc<1..2^16-1>;
-       opaque encrypted_ch<1..2^16-1>;
+       opaque payload<1..2^16-1>;
     } ClientECH;
 ~~~~
 
@@ -336,18 +336,18 @@ provided in the corresponding `ECHConfig.cipher_suites` list.
 
 config_id
 : The configuration identifier, equal to
-`Expand(Extract("", config), "ech_config_id", Nh)`, where `config` is the
-`ECHConfig` structure and `Extract`, `Expand`, and `Nh` are as specified by
-the cipher suite KDF. (Passing the literal `""` as the salt is interpreted
-by `Extract` as no salt being provided.) The length of this value SHOULD NOT
-be less than 16 bytes unless it is optional for an application; see
+`Expand(Extract("", config), "tls13 ech config id", Nh)`, where `config` is the
+`ECHConfig` structure and `Extract`, `Expand`, and `Nh` are as specified by the
+cipher suite KDF. (Passing the literal `""` as the salt is interpreted by
+`Extract` as no salt being provided.) The length of this value SHOULD NOT be
+less than 16 bytes unless it is optional for an application; see
 {{optional-configs}}.
 
 enc
 : The HPKE encapsulated key, used by servers to decrypt the corresponding
-`encrypted_ch` field.
+`payload` field.
 
-encrypted_ch
+payload
 : The serialized and encrypted ClientHelloInner structure, encrypted using HPKE
 as described in {{send-ech}}.
 
@@ -390,7 +390,7 @@ Some TLS 1.3 extensions can be quite large and having them both in the inner and
 outer ClientHello will lead to a very large overall size. One particularly
 pathological example is "key_share" with post-quantum algorithms. In order to
 reduce the impact of duplicated extensions, the client may use the
-"outer_extensions" extension.
+"outer_extension" extension.
 
 ~~~
     enum {
@@ -399,7 +399,7 @@ reduce the impact of duplicated extensions, the client may use the
 
     struct {
        ExtensionType outer_extensions<2..254>;
-       uint8 hash<32..255>;
+       uint8 inner_digest<32..255>;
     } OuterExtensions;
 ~~~
 
@@ -409,25 +409,26 @@ ClientHelloOuter, and a digest of the complete ClientHelloInner.
 
 When sending ClientHello, the client first computes ClientHelloInner, including
 any PSK binders, and then MAY substitute extensions which it knows will be
-duplicated in ClientHelloOuter. To do so, the client computes a hash of the
+duplicated in ClientHelloOuter. To do so, the client computes the digest of the
 entire ClientHelloInner message as:
 
 ~~~
-  hash = Expand(Extract("", inner), "ech_inner_digest", Nh)
+  inner_digest = Expand(Extract("", inner),
+                        "tls13 ech inner digest", Nh)
 ~~~
 
 where `inner` is the ClientHelloInner structure and `Extract`, `Expand`, and
 `Nh` are as defined by the KDF API in {{!I-D.irtf-cfrg-hpke}}. Then, the client
 removes and replaces extensions from ClientHelloInner with a single
-"outer_extensions" extension. The list of `outer_extensions` include those which
-were removed from ClientHelloInner, in the order in which they were removed. The
-hash contains the full ClientHelloInner hash computed above.
+"outer_extension" extension. The list of outer extensions,
+OuterExtensions.outer_extensions, includes those which were removed from
+ClientHelloInner, in the order in which they were removed.
 
-This process is reversed by client-facing server. Specifically,
-the server replaces the `outer_extensions` with extensions contained in
-ClientHelloOuter. The server then computes a hash of the reconstructed
-ClientHelloInner. If the hash does not equal OuterExtensions.hash, the server
-aborts the connection with an "illegal_parameter" alert.
+This process is reversed by client-facing server. Specifically, the server
+replaces the "outer_extension" with the corresponding sequence of extensions in
+the ClientHelloOuter. The server then computes the digest of the reconstructed
+ClientHelloInner. If the digest does not equal OuterExtensions.inner_digest,
+then the server MUST abort the connection with a "decrypt_error" alert.
 
 # Client Behavior {#client-behavior}
 
@@ -477,8 +478,8 @@ encryption context. It computes the encapsulated key, context, and HRR key (see
 
 ~~~
     pkR = Deserialize(ECHConfig.public_key)
-    enc, context = SetupBaseS(pkR, "tls13-ech")
-    ech_hrr_key = context.Export("tls13-ech-hrr-key", 16)
+    enc, context = SetupBaseS(pkR, "tls13 ech")
+    ech_hrr_key = context.Export("tls13 ech hrr key", 16)
 ~~~
 
 Note that the HPKE functions Deserialize and SetupBaseS are those which match
@@ -487,7 +488,7 @@ client's chosen preference from `ECHConfig.cipher_suites`. The encrypted
 ClientHelloInner is computed as:
 
 ~~~~
-    encrypted_ch = context.Seal("", ClientHelloInner)
+    payload = context.Seal("", ClientHelloInner)
 ~~~~
 
 The payload of the "encrypted_client_hello" extension in the ClientHelloOuter is
@@ -496,7 +497,7 @@ a `ClientECH` with the following values:
 - `cipher_suite`, the client's chosen cipher suite;
 - `config_id`, the identifier of the chosen ECHConfig structure;
 - `enc`, as computed above; and
-- `encrypted_ch`, as computed above.
+- `payload`, as computed above.
 
 ## Recommended Padding Scheme {#padding}
 
@@ -598,13 +599,6 @@ extension, it continues with the handshake using the plaintext "server_name"
 extension instead (see {{server-behavior}}). Clients that offer ECH then
 authenticate the connection with the public name, as follows:
 
-- If the server resumed a session or negotiated a session that did not use a
-  certificate for authentication, the client MUST abort the connection with an
-  "illegal_parameter" alert. This case is invalid because {{send-ech}} requires
-  the client to only offer ECH-established sessions, and {{server-behavior}}
-  requires the server to decline ECH-established sessions if it did not accept
-  ECH.
-
 - The client MUST verify that the certificate is valid for
   ECHConfigContents.public_name. If invalid, it MUST abort the connection with
   the appropriate alert.
@@ -637,8 +631,9 @@ first ClientHelloInner via the derived ech_hrr_key by modifying HPKE setup as
 follows:
 
 ~~~
-pkR = Deserialize(ECHConfig.public_key)
-enc, context = SetupPSKS(pkR, "tls13-ech-hrr", ech_hrr_key, "")
+    pkR = Deserialize(ECHConfig.public_key)
+    enc, context = SetupPSKS(
+        pkR, "tls13 ech hrr", ech_hrr_key, "hrr key")
 ~~~
 
 Clients then encrypt the second ClientHelloInner using this new HPKE context.
@@ -651,12 +646,17 @@ message with a ClientECH value, servers set up their HPKE context and
 decrypt ClientECH as follows:
 
 ~~~
-context = SetupPSKR(ClientECH.enc,
-  skR, "tls13-ech-hrr", ech_hrr_key, "")
-
-ClientHelloInner =
-  context.Open("", ClientECH.encrypted_ch)
+    context = SetupPSKR(ClientECH.enc,
+        skR, "tls13 ech hrr", ech_hrr_key, "hrr key")
+    ClientHelloInner = context.Open("", ClientECH.payload)
 ~~~
+
+It is an error for the client to offer ECH before the HelloRetryRequest but not
+after. Likewise, it is an error for the client to offer ECH after the
+HelloRetryRequest but not before. If the client-facing server accepts ECH for
+the first ClientHello but not the second, or it accepts ECH for the second
+ClientHello but not the first, then the client MUST abort the handshake with an
+"illegal_parameter" alert.
 
 [[OPEN ISSUE: Should we be using the PSK input or the info input?  On the one
 hand, the requirements on info seem weaker, but maybe actually this needs to be
@@ -668,7 +668,7 @@ If the client attempts to connect to a server and does not have an ECHConfig
 structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
 "encrypted_client_hello" extension as follows:
 
-- Set the "suite" field  to a supported HpkeCipherSuite. The selection SHOULD
+- Set the "suite" field  to a supported ECHCipherSuite. The selection SHOULD
   vary to exercise all supported configurations, but MAY be held constant for
   successive connections to the same server in the same session.
 
@@ -680,9 +680,10 @@ structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
 - Set the "enc" field to a randomly-generated valid encapsulated public key
   output by the HPKE KEM.
 
-- Set the "encrypted_ch" field to a randomly-generated string of L bytes, where
-  L is the size of the ClientHelloInner message the client would use given an
-  ECHConfig structure, padded according to {{padding}}.
+- Set the "payload" field to a randomly-generated string of L+C bytes, where C
+  is the ciphertext expansion of selected AEAD scheme and L is the size of the
+  ClientHelloInner message the client would use given an ECHConfig structure,
+  padded according to {{padding}}.
 
 If the server sends an "encrypted_client_hello" extension, the client MUST check
 the extension syntactically and abort the connection with a "decode_error" alert
@@ -702,12 +703,12 @@ abort the connection with a "handshake_failure" alert.
 
 The ClientECH value is said to match a known ECHConfig if there exists
 an ECHConfig that can be used to successfully decrypt
-ClientECH.encrypted_ch. This matching procedure should be done using
+ClientECH.payload. This matching procedure should be done using
 one of the following two checks:
 
 1. Compare ClientECH.config_id against identifiers of known ECHConfig
    and choose the one that matches.
-2. Use trial decryption of ClientECH.encrypted_ch with known ECHConfig
+2. Use trial decryption of ClientECH.payload with known ECHConfig
    and choose the one that succeeds.
 
 Some uses of ECH, such as local discovery mode, may omit the ClientECH.config_id
@@ -726,11 +727,8 @@ added behavior:
   ECHConfig values of different versions. This allows a server to support
   multiple versions at once.
 
-- The server MUST ignore all PSK identities in the ClientHello which correspond
-  to ECH PSKs. ECH PSKs offered by the client are associated with the ECH
-  name. The server was unable to decrypt then ECH name, so it should not resume
-  them when using the plaintext SNI name. This restriction allows a client to
-  reject resumptions in {{auth-public-name}}.
+- If offered, the server MUST ignore the "pre_shared_key" extension in the
+  ClientHello.
 
 Note that an unrecognized ClientECH.config_id value may be a GREASE ECH
 extension (see {{grease-extensions}}), so it is necessary for servers to proceed
@@ -739,25 +737,23 @@ particular, the unrecognized value alone does not indicate a misconfigured ECH
 advertisement ({{misconfiguration}}). Instead, servers can measure occurrences
 of the "ech_required" alert to detect this case.
 
-If the ClientECH value matches a known ECHConfig, the server then
-decrypts ClientECH.encrypted_ch, using the private key skR corresponding
-to ECHConfig, as follows:
+Once a suitable ECHConfig is found, the server verifies that the ECHConfig
+supports the cipher suite indicated by ClientECH.cipher_suite and that the
+version of ECH indicated by the client matches the ECHConfig.version. If not,
+then the server MUST abort with an "illegal_parameter" alert. Otherwise, the
+server decrypts ClientECH.payload, using the private key skR corresponding to
+ECHConfig, as follows:
 
 ~~~
-context = SetupBaseR(ClientECH.enc, skR, "tls13-ech")
-
-ClientHelloInner =
-  context.Open("", ClientECH.encrypted_ch)
-
-ech_hrr_key = context.Export("tls13-ech-hrr-key", 16)
+    context = SetupBaseR(ClientECH.enc, skR, "tls13 ech")
+    ClientHelloInner = context.Open("", ClientECH.payload)
+    ech_hrr_key = context.Export("tls13 ech hrr key", 16)
 ~~~
 
 If decryption fails, the server MUST abort the connection with a "decrypt_error"
-alert. Next, the server MUST scan ClientHelloInner for any "outer_extension"
-extensions and substitute their values with the values in ClientHelloOuter. It
-MUST first verify that the hash found in the extension matches the hash of the
-extension to be interpolated in and if it does not, abort the connections with a
-"decrypt_error" alert.
+alert. Otherwise, the server scans ClientHelloInner for an "outer_extension"
+extension and substitutes its value with the values in ClientHelloOuter and
+validates the ClientHelloInner digest, as described in {{outer-extensions}}.
 
 Upon determining the true SNI, the client-facing server then either serves the
 connection directly (if in Shared Mode), in which case it executes the steps in
@@ -779,7 +775,7 @@ MUST confirm ECH acceptance by setting ServerHello.random[24:32] to
 ~~~~
     accept_confirmation = HKDF-Expand-Label(
         HKDF-Extract(0, ClientHelloInner.random),
-        "ech-eccept-confirmation",
+        "ech accept confirmation",
         ServerHello.random[0:24], 8)
 ~~~~
 
