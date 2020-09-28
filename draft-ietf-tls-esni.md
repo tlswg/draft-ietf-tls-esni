@@ -651,7 +651,7 @@ decrypt ClientECH as follows:
     ClientHelloInner = context.Open("", ClientECH.payload)
 ~~~
 
-The client offered ECH in the first ClientHello, then it MUST offer ECH in the
+If the client offered ECH in the first ClientHello, then it MUST offer ECH in the
 second. Likewise, if the client did not offer ECH in the first ClientHello, then
 it MUST NOT not offer ECH in the second.
 
