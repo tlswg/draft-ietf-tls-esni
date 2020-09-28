@@ -466,6 +466,10 @@ standard ClientHello, with the exception of the following rules:
    ClientHelloInner.random using a secure random number generator. (See
    {{flow-client-reaction}}.)
 1. It SHOULD contain TLS padding {{!RFC7685}} as described in {{padding}}.
+1. If implementing TLS 1.3's compatibility mode (see Appendix D.4 of
+   {{RFC8446}}), it MUST copy the legacy\_session\_id field from
+   ClientHelloOuter. This allows the server to echo the correct session ID
+   when ECH is negotiated.
 
 The client might duplicate non-sensitive extensions in both messages. However,
 implementations need to take care to ensure that sensitive extensions are not
