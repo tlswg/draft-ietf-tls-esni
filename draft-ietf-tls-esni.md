@@ -375,15 +375,6 @@ This document also defines the "ech_required" alert, which clients MUST send
 when it offered an "encrypted_client_hello" extension that was not accepted by
 the server. (See {{alerts}}.)
 
-[[OPEN ISSUE: The following text is a remnant of the section on "ech_nonce". It
-specifies client/server behavior that is unrelated to "ech_nonce".]]
-
-Per {{client-behavior}} and {{server-behavior}}, implementations are required to
-track, alongside each PSK established by a previous connection, whether ECH was
-accepted for this connection. If so, this is referred to as an "ECH PSK".
-Otherwise, it is a "non-ECH PSK". This may be implemented by adding a new field
-to client and server session states.
-
 ## Incorporating Outer Extensions {#outer-extensions}
 
 Some TLS 1.3 extensions can be quite large and having them both in the inner and
@@ -449,8 +440,8 @@ standard ClientHello, with the exception of the following rules:
    constructed as described below.
 1. The value of `ECHConfig.public_name` MUST be placed in the "server_name"
    extension.
-1. It MUST NOT include the "pre_shared_key" extension. [[OPEN ISSUE: The text
-   needs to be updated to reflect this rule.]]
+1. It MUST NOT include the "pre_shared_key" extension. (See 
+   {{flow-resumption-oracle}}.)
 
 The client then constructs the ClientHelloInner message just as it does a
 standard ClientHello, with the exception of the following rules:
@@ -669,7 +660,7 @@ If the client attempts to connect to a server and does not have an ECHConfig
 structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
 "encrypted_client_hello" extension as follows:
 
-- Set the "suite" field  to a supported ECHCipherSuite. The selection SHOULD
+- Set the "suite" field to a supported ECHCipherSuite. The selection SHOULD
   vary to exercise all supported configurations, but MAY be held constant for
   successive connections to the same server in the same session.
 
@@ -689,6 +680,10 @@ structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
 If the server sends an "encrypted_client_hello" extension, the client MUST check
 the extension syntactically and abort the connection with a "decode_error" alert
 if it is invalid.
+
+[[OPEN ISSUE: if the client sends a GREASE "encrypted_client_hello" extension, 
+should it also send a GREASE "pre_shared_key" extension? If not, GREASE+ticket
+is a trivial distinguisher.]]
 
 Offering a GREASE extension is not considered offering an encrypted ClientHello
 for purposes of requirements in {{client-behavior}}. In particular, the client
@@ -727,7 +722,6 @@ added behavior:
   ECHConfig structures with up-to-date keys. Servers MAY supply multiple
   ECHConfig values of different versions. This allows a server to support
   multiple versions at once.
-
 - If offered, the server MUST ignore the "pre_shared_key" extension in the
   ClientHello.
 
@@ -1229,11 +1223,11 @@ can be used to test the encrypted SNI value of specific ClientHello messages.
 ~~~
 {: #tls-resumption-psk title="Message flow for resumption and PSK"}
 
-ECH mitigates against this attack by requiring servers not mix-and-match
-information from the inner and outer ClientHello. For example, if the server
-accepts the inner ClientHello, it does not validate binders in the outer
-ClientHello. This means that ECH PSKs are used within the HPKE encryption
-envelope.
+ECH mitigates against this attack by (1) prohibiting the "pre_shared_key" 
+extension in outer ClientHello and (2) requiring servers ignore this extension 
+when processing the outer ClientHello. Thus, if the server accepts the inner 
+ClientHello, it only validates binders in the inner ClientHello. This means 
+that ECH PSKs are used within the HPKE encryption envelope.
 
 # IANA Considerations
 
