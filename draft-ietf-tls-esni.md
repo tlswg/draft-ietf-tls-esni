@@ -483,7 +483,7 @@ encryption context. It computes the encapsulated key, context, and HRR key (see
 ~~~
     pkR = Deserialize(ECHConfig.public_key)
     enc, context = SetupBaseS(pkR, "tls13 ech")
-    ech_hrr_key = context.Export("tls13 ech hrr key", 16)
+    ech_hrr_key = context.Export("tls13 ech hrr key", 32)
 ~~~
 
 Note that the HPKE functions Deserialize and SetupBaseS are those which match
@@ -748,7 +748,7 @@ ECHConfig, as follows:
 ~~~
     context = SetupBaseR(ClientECH.enc, skR, "tls13 ech")
     ClientHelloInner = context.Open("", ClientECH.payload)
-    ech_hrr_key = context.Export("tls13 ech hrr key", 16)
+    ech_hrr_key = context.Export("tls13 ech hrr key", 32)
 ~~~
 
 If decryption fails, the server MUST abort the connection with a "decrypt_error"
