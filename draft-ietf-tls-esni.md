@@ -655,9 +655,9 @@ decrypt ClientECH as follows:
     ClientHelloInner = context.Open("", ClientECH.payload)
 ~~~
 
-If the client offered ECH in the first ClientHello, then it MUST offer ECH in the
-second. Likewise, if the client did not offer ECH in the first ClientHello, then
-it MUST NOT not offer ECH in the second.
+If the client offered ECH in the first ClientHello, then it MUST offer ECH in
+the second. Likewise, if the client did not offer ECH in the first ClientHello,
+then it MUST NOT not offer ECH in the second.
 
 [[OPEN ISSUE: Should we be using the PSK input or the info input?  On the one
 hand, the requirements on info seem weaker, but maybe actually this needs to be
