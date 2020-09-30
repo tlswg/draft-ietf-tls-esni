@@ -1319,30 +1319,6 @@ and (3) obtaining the generic SNI to bootstrap the connection. In contrast,
 encrypted SNI induces no additional round trip and operates below the
 application layer.
 
-
-# Total Client Hello Encryption
-
-The design described here only provides encryption for the SNI, but not for
-other extensions, such as ALPN. Another potential design would be to encrypt all
-of the extensions using the same basic structure as we use here for ECH. That
-design has the following advantages:
-
-- It protects all the extensions from ordinary eavesdroppers
-- If the encrypted block has its own KeyShare, it does not necessarily require
-  the client to use a single KeyShare, because the client's share is bound to
-  the SNI by the AEAD (analysis needed).
-
-It also has the following disadvantages:
-
-- The client-facing server can still see the other extensions. By contrast we
-  could introduce another EncryptedExtensions block that was encrypted to the
-  backend server and not the client-facing server.
-- It requires a mechanism for the client-facing server to provide the
-  extension-encryption key to the backend server and thus cannot be used with an
-  unmodified backend server.
-- A conforming middlebox will strip every extension, which might result in a
-  ClientHello which is just unacceptable to the server (more analysis needed).
-
 # Acknowledgements
 
 This document draws extensively from ideas in {{?I-D.kazuho-protected-sni}}, but
