@@ -478,6 +478,14 @@ it does a standard ClientHello, with the exception of the following rules:
 1. It MUST offer to negotiate TLS 1.3 or above.
 1. If it compressed any extensions in EncodedClientHelloInner, it MUST copy the
    corresponding extensions from ClientHelloInner.
+1. It MUST ensure that all HelloRetryRequest-sensitive parameters applicable
+   to TLS 1.3 and higher versions in ClientHelloInner match that in
+   ClientHelloOuter. This includes ciphersuites for TLS 1.3 in
+   ClientHello.cipher_suites list, as well as the "key_shares" and
+   "supported_groups" extensions. (These extensions may be copied from the
+   ClientHelloOuter as described below.) Future extensions that influence the
+   conditions in which servers send HelloRetryRequest MUST also match across
+   ClientHelloOuter and ClientHelloInner.
 1. It MAY copy any other field from the ClientHelloInner except
    ClientHelloInner.random. Instead, It MUST generate a fresh
    ClientHelloOuter.random using a secure random number generator. (See
