@@ -655,12 +655,9 @@ decrypt ClientECH as follows:
     ClientHelloInner = context.Open("", ClientECH.payload)
 ~~~
 
-It is an error for the client to offer ECH before the HelloRetryRequest but not
-after. Likewise, it is an error for the client to offer ECH after the
-HelloRetryRequest but not before. If the client-facing server accepts ECH for
-the first ClientHello but not the second, or it accepts ECH for the second
-ClientHello but not the first, then the client MUST abort the handshake with an
-"illegal_parameter" alert.
+If the client offered ECH in the first ClientHello, then it MUST offer ECH in the
+second. Likewise, if the client did not offer ECH in the first ClientHello, then
+it MUST NOT not offer ECH in the second.
 
 [[OPEN ISSUE: Should we be using the PSK input or the info input?  On the one
 hand, the requirements on info seem weaker, but maybe actually this needs to be
@@ -768,6 +765,13 @@ messages, but just blindly forwards them.
 If the server sends a NewSessionTicket message, the corresponding ECH PSK MUST
 be ignored by all other servers in the deployment when not negotiating ECH,
 including servers which do not implement this specification.
+
+### HelloRetryRequest
+
+It is an error for the client to offer ECH before the HelloRetryRequest but not
+after. Likewise, it is an error for the client to offer ECH after the
+HelloRetryRequest but not before. If either of these conditions occurs, then the
+client-facing server MUST abort the handshake with an "illegal_parameter" alert.
 
 ## Backend Server Behavior {#backend-server-behavior}
 
