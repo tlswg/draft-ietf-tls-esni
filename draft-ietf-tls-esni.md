@@ -480,12 +480,7 @@ it does a standard ClientHello, with the exception of the following rules:
    corresponding extensions from ClientHelloInner.
 1. It MUST ensure that all HelloRetryRequest-sensitive parameters applicable
    to TLS 1.3 and higher versions in ClientHelloInner match that in
-   ClientHelloOuter. This includes ciphersuites for TLS 1.3 in
-   ClientHello.cipher_suites list, as well as the "key_shares" and
-   "supported_groups" extensions. (These extensions may be copied from the
-   ClientHelloOuter as described below.) Future extensions that influence the
-   conditions in which servers send HelloRetryRequest MUST also match across
-   ClientHelloOuter and ClientHelloInner.
+   ClientHelloOuter. See {{hrr}} for the list of these parameters.   
 1. It MAY copy any other field from the ClientHelloInner except
    ClientHelloInner.random. Instead, It MUST generate a fresh
    ClientHelloOuter.random using a secure random number generator. (See
@@ -659,6 +654,19 @@ implemented, for instance, by reporting a failed connection with a dedicated
 error code.
 
 ### Handling HelloRetryRequest {#client-hrr}
+
+As required in {{send-ech}}, clients offering ECH MUST ensure that
+HelloRetryRequest-sensitive parameters applicable to TLS 1.3 and higher
+versions in ClientHelloInner match that in ClientHelloOuter. These parameters
+include:
+
+1. TLS 1.3 {{!RFC8446}} ciphersuites in the ClientHello.cipher_suites list; and
+1. The "key_share" and "supported_groups" extensions {{RFC8446}}. (These
+extensions may be copied from ClientHelloOuter into ClientHelloInner as
+described in {{send-ech}}.)
+
+Future extensions that influence the conditions in which servers send a
+HelloRetryRequest MUST also match across ClientHelloOuter and ClientHelloInner.
 
 If the server sends a HelloRetryRequest in response to the ClientHello, the
 client sends a second updated ClientHello per the rules in {{RFC8446}}.
