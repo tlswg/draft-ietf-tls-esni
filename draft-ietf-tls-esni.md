@@ -699,8 +699,10 @@ MAY offer to resume sessions established without ECH.
 ## Client-Facing Server
 
 Upon receiving an "encrypted_client_hello" extension, the client-facing server
-MUST check that it is able to negotiate TLS 1.3 or greater. If not, it MUST
-abort the connection with a "handshake_failure" alert.
+determines if it can decrypt it, prior to negotiating any other TLS parameters.
+Note that successfully decrypting the extension will result in a new
+ClientHello to process, so even the client's TLS version preferences may have
+changed.
 
 The ClientECH value is said to match a known ECHConfig if there exists
 an ECHConfig that can be used to successfully decrypt
@@ -790,6 +792,13 @@ MUST confirm ECH acceptance by setting ServerHello.random[24:32] to
 where HKDF-Expand-Label and HKDF-Extract are as defined in {{RFC8446}}. The
 value of ServerHello.random[0:24] is generated as usual by invoking a secure
 random number generator (see {{RFC8446}}, Section 4.1.2).
+
+\[\[TODO: If the ClientHello offers TLS 1.2 or below, it's possible the backend
+server will negotiate it and leak the server name via an unencrypted server
+certificate. This shouldn't happen because clients are forbidden from offering
+earlier versions, but perhaps either the backend server should check (easy in
+Shared Mode, hard in Split Mode), or maybe the client-facing server should
+check for the presence of old TLS versions in supported_versions.\]\]
 
 # Compatibility Issues
 
