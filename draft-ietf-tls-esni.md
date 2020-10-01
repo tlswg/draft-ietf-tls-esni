@@ -377,11 +377,11 @@ the server. (See {{alerts}}.)
 
 ## Incorporating Outer Extensions {#outer-extensions}
 
-Some TLS 1.3 extensions can be quite large and having them both in the inner and
-outer ClientHello will lead to a very large overall size. One particularly
-pathological example is "key_share" with post-quantum algorithms. In order to
-reduce the impact of duplicated extensions, the client may use the
-"outer_extension" extension.
+Some TLS 1.3 extensions can be quite large and having them both in
+ClientHelloInner and ClientHelloOuter will lead to a very large overall size.
+One particularly pathological example is "key_share" with post-quantum
+algorithms. In order to reduce the impact of duplicated extensions, the client
+may use the "outer_extension" extension.
 
 ~~~
     enum {
@@ -440,7 +440,7 @@ standard ClientHello, with the exception of the following rules:
    constructed as described below.
 1. The value of `ECHConfig.public_name` MUST be placed in the "server_name"
    extension.
-1. It MUST NOT include the "pre_shared_key" extension. (See 
+1. It MUST NOT include the "pre_shared_key" extension. (See
    {{flow-resumption-oracle}}.)
 
 The client then constructs the ClientHelloInner message just as it does a
@@ -615,9 +615,9 @@ If the server sends a HelloRetryRequest in response to the ClientHello, the
 client sends a second updated ClientHello per the rules in {{RFC8446}}.
 However, at this point, the client does not know whether the server processed
 ClientHelloOuter or ClientHelloInner, and MUST regenerate both values to be
-acceptable. Note: if the inner and outer ClientHellos use different groups for
-their key shares or differ in some other way, then the HelloRetryRequest may
-actually be invalid for one or the other ClientHello, in which case a fresh
+acceptable. Note: if ClientHelloOuter and ClientHelloInner use different groups
+for their key shares or differ in some other way, then the HelloRetryRequest
+may actually be invalid for one or the other ClientHello, in which case a fresh
 ClientHello MUST be generated, ignoring the instructions in HelloRetryRequest.
 Otherwise, the usual rules for HelloRetryRequest processing apply.
 
@@ -681,7 +681,7 @@ If the server sends an "encrypted_client_hello" extension, the client MUST check
 the extension syntactically and abort the connection with a "decode_error" alert
 if it is invalid.
 
-[[OPEN ISSUE: if the client sends a GREASE "encrypted_client_hello" extension, 
+[[OPEN ISSUE: if the client sends a GREASE "encrypted_client_hello" extension,
 should it also send a GREASE "pre_shared_key" extension? If not, GREASE+ticket
 is a trivial distinguisher.]]
 
@@ -1199,8 +1199,8 @@ server to obtain a resumption ticket for a given test domain, such as
 binder, it computes a PSK binder using its own ticket and forwards the resulting
 ClientHello. Assume the server then validates the PSK binder on the outer
 ClientHello and chooses connection parameters based on the inner ClientHello. A
-server which then validates information in the outer ClientHello ticket against
-information in the inner ClientHello, such as the SNI, introduces an oracle that
+server which then validates information in ClientHelloOuter ticket against
+information in ClientHelloInner, such as the SNI, introduces an oracle that
 can be used to test the encrypted SNI value of specific ClientHello messages.
 
 ~~~
@@ -1223,10 +1223,10 @@ can be used to test the encrypted SNI value of specific ClientHello messages.
 ~~~
 {: #tls-resumption-psk title="Message flow for resumption and PSK"}
 
-ECH mitigates against this attack by (1) prohibiting the "pre_shared_key" 
-extension in outer ClientHello and (2) requiring servers ignore this extension 
-when processing the outer ClientHello. Thus, if the server accepts the inner 
-ClientHello, it only validates binders in the inner ClientHello. This means 
+ECH mitigates against this attack by (1) prohibiting the "pre_shared_key"
+extension in ClientHelloOuter and (2) requiring servers ignore this extension
+when processing ClientHelloOuter. Thus, if the server accepts the inner
+ClientHello, it only validates binders in the inner ClientHello. This means
 that ECH PSKs are used within the HPKE encryption envelope.
 
 # IANA Considerations
@@ -1249,7 +1249,7 @@ for Alerts (defined in {{!RFC8446}}), with the "DTLS-OK" column being set to
 
 # ECHConfig Extension Guidance {#config-extensions-guidance}
 
-Any future information or hints that influence the outer ClientHello SHOULD be
+Any future information or hints that influence ClientHelloOuter SHOULD be
 specified as ECHConfig extensions. This is primarily because the outer
 ClientHello exists only in support of ECH. Namely, it is both an envelope for
 the encrypted inner ClientHello and enabler for authenticated key mismatch
