@@ -656,14 +656,14 @@ error code.
 ### Handling HelloRetryRequest {#client-hrr}
 
 As required in {{send-ech}}, clients offering ECH MUST ensure that
-HelloRetryRequest-sensitive parameters applicable to TLS 1.3 and higher
+HelloRetryRequest-sensitive parameters applicable to TLS 1.3 or higher
 versions in ClientHelloInner match that in ClientHelloOuter. These parameters
 include:
 
 1. TLS 1.3 {{!RFC8446}} ciphersuites in the ClientHello.cipher_suites list; and
-1. The "key_share" and "supported_groups" extensions {{RFC8446}}. (These
-extensions may be copied from ClientHelloOuter into ClientHelloInner as
-described in {{send-ech}}.)
+1. The "key_share", "supported_groups", and "supported_versions" extensions
+{{RFC8446}}. (These extensions may be copied from ClientHelloOuter into
+ClientHelloInner as described in {{send-ech}}.)
 
 Future extensions that influence the conditions in which servers send a
 HelloRetryRequest MUST also match across ClientHelloOuter and ClientHelloInner.
