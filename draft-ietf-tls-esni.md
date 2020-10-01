@@ -699,24 +699,30 @@ MAY offer to resume sessions established without ECH.
 ## Client-Facing Server
 
 Upon receiving an "encrypted_client_hello" extension, the client-facing server
-MUST check that it is able to negotiate TLS 1.3 or greater. If not, it MUST
-abort the connection with a "handshake_failure" alert.
+first checks that it is able to negotiate TLS 1.3 or higher. If not, then it
+MUST ignore the extension and proceed with the handshake as usual. Next, the
+server checks that the ClientHello contains a "server_name" extension and that
+the indicated name is the public name of at least one of its ECH configurations.
+If not, then the server MUST ignore the "encrypted_client_hello" extension and
+proceed as usual. (Presumably the extension was generated as specified in
+{{grease-extensions}} and not intended as a real ECH offer.) Otherwise, the
+extension is handled by the client-facing server as follows.
 
 The ClientECH value is said to match a known ECHConfig if there exists
 an ECHConfig that can be used to successfully decrypt
 ClientECH.payload. This matching procedure should be done using
 one of the following two checks:
 
-1. Compare ClientECH.config_id against identifiers of known ECHConfig
-   and choose the one that matches.
-2. Use trial decryption of ClientECH.payload with known ECHConfig
-   and choose the one that succeeds.
+1. Compare ClientECH.config_id against identifiers of known ECH configurations
+   and choose the first one that matches.
+1. Use trial decryption of ClientECH.payload with known ECH configurations and
+   choose the first one that succeeds.
 
 Some uses of ECH, such as local discovery mode, may omit the ClientECH.config_id
 since it can be used as a tracking vector. In such cases, trial decryption
-should be used for matching ClientECH to known ECHConfig. Unless specified by
-the application using (D)TLS or externally configured on both sides,
-implementations MUST use the first method.
+should be used to select the ECH configuration. Unless specified by the
+application using (D)TLS or externally configured on both sides, implementations
+MUST use the first method.
 
 If the ClientECH value does not match any known ECHConfig structure, it
 MUST ignore the extension and proceed with the connection, with the following
