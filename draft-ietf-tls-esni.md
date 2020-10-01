@@ -447,8 +447,7 @@ The client then constructs the ClientHelloInner message just as it does a
 standard ClientHello, with the exception of the following rules:
 
 1. It MUST NOT offer to negotiate TLS 1.2 or below.
-1. It MUST NOT offer to resume any non-ECH PSK or any session for TLS 1.2 and
-   below.
+1. It MUST NOT offer to resume any session for TLS 1.2 and below.
 1. It MAY offer any other extension in the ClientHelloOuter except those that
    have been incorporated into the ClientHelloInner as described in
    {{outer-extensions}}.
@@ -756,7 +755,7 @@ the following section, or forwards the TLS connection to the backend server (if
 in Split Mode). In the latter case, it does not make any changes to the TLS
 messages, but just blindly forwards them.
 
-If the server sends a NewSessionTicket message, the corresponding ECH PSK MUST
+If the server sends a NewSessionTicket message, the corresponding PSK MUST
 be ignored by all other servers in the deployment when not negotiating ECH,
 including servers which do not implement this specification.
 
@@ -1227,7 +1226,7 @@ ECH mitigates against this attack by (1) prohibiting the "pre_shared_key"
 extension in ClientHelloOuter and (2) requiring servers ignore this extension
 when processing ClientHelloOuter. Thus, if the server accepts the inner
 ClientHello, it only validates binders in the inner ClientHello. This means
-that ECH PSKs are used within the HPKE encryption envelope.
+that PSKs are used within the HPKE encryption envelope.
 
 # IANA Considerations
 
