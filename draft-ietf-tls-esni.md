@@ -688,7 +688,8 @@ structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
 
 If the server sends an "encrypted_client_hello" extension, the client MUST check
 the extension syntactically and abort the connection with a "decode_error" alert
-if it is invalid.
+if it is invalid. It otherwise ignores the extension and MUST NOT use the retry
+keys.
 
 Offering a GREASE extension is not considered offering an encrypted ClientHello
 for purposes of requirements in {{client-behavior}}. In particular, the client
