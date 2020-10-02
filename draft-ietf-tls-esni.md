@@ -455,7 +455,9 @@ standard ClientHello, with the exception of the following rules:
 The client then constructs the ClientHelloInner message just as it does a
 standard ClientHello, with the exception of the following rules:
 
-1. It MUST NOT offer to negotiate TLS 1.2 or below.
+1. It MUST NOT offer to negotiate TLS 1.2 or below. Note this is necessary to
+   ensure the backend server does not negotiate a TLS version that is
+   incompatible with ECH.
 1. It MUST NOT offer to resume any non-ECH PSK or any session for TLS 1.2 and
    below.
 1. It MAY offer any other extension in the ClientHelloOuter except those that
@@ -792,13 +794,6 @@ MUST confirm ECH acceptance by setting ServerHello.random[24:32] to
 where HKDF-Expand-Label and HKDF-Extract are as defined in {{RFC8446}}. The
 value of ServerHello.random[0:24] is generated as usual by invoking a secure
 random number generator (see {{RFC8446}}, Section 4.1.2).
-
-\[\[TODO: If the ClientHello offers TLS 1.2 or below, it's possible the backend
-server will negotiate it and leak the server name via an unencrypted server
-certificate. This shouldn't happen because clients are forbidden from offering
-earlier versions, but perhaps either the backend server should check (easy in
-Shared Mode, hard in Split Mode), or maybe the client-facing server should
-check for the presence of old TLS versions in supported_versions.\]\]
 
 # Compatibility Issues
 
