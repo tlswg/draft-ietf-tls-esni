@@ -699,7 +699,7 @@ MAY offer to resume sessions established without ECH.
 ## Client-Facing Server
 
 Upon receiving an "encrypted_client_hello" extension, the client-facing server
-determines if it can decrypt it, prior to negotiating any other TLS parameters.
+determines if it will accept ECH, prior to negotiating any other TLS parameters.
 Note that successfully decrypting the extension will result in a new
 ClientHello to process, so even the client's TLS version preferences may have
 changed.
