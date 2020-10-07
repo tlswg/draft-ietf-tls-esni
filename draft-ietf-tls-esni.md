@@ -446,7 +446,9 @@ standard ClientHello, with the exception of the following rules:
 The client then constructs the ClientHelloInner message just as it does a
 standard ClientHello, with the exception of the following rules:
 
-1. It MUST NOT offer to negotiate TLS 1.2 or below.
+1. It MUST NOT offer to negotiate TLS 1.2 or below. Note this is necessary to
+   ensure the backend server does not negotiate a TLS version that is
+   incompatible with ECH.
 1. It MUST NOT offer to resume any session for TLS 1.2 and below.
 1. It MAY offer any other extension in the ClientHelloOuter except those that
    have been incorporated into the ClientHelloInner as described in
@@ -678,7 +680,8 @@ structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
 
 If the server sends an "encrypted_client_hello" extension, the client MUST check
 the extension syntactically and abort the connection with a "decode_error" alert
-if it is invalid.
+if it is invalid. It otherwise ignores the extension and MUST NOT use the retry
+keys.
 
 [[OPEN ISSUE: if the client sends a GREASE "encrypted_client_hello" extension,
 should it also send a GREASE "pre_shared_key" extension? If not, GREASE+ticket
@@ -693,8 +696,10 @@ MAY offer to resume sessions established without ECH.
 ## Client-Facing Server
 
 Upon receiving an "encrypted_client_hello" extension, the client-facing server
-MUST check that it is able to negotiate TLS 1.3 or greater. If not, it MUST
-abort the connection with a "handshake_failure" alert.
+determines if it will accept ECH, prior to negotiating any other TLS parameters.
+Note that successfully decrypting the extension will result in a new
+ClientHello to process, so even the client's TLS version preferences may have
+changed.
 
 The ClientECH value is said to match a known ECHConfig if there exists
 an ECHConfig that can be used to successfully decrypt
@@ -1003,7 +1008,8 @@ server terminates the connection (i.e., ECH is rejected or bypassed): if the
 last 8 bytes of its ServerHello.random coincide with the confirmation signal,
 then the client will incorrectly presume acceptance and proceed as if the
 backend server terminated the connection. However, the probability of a false
-positive occurring for a given connection is only 1 in 2^64.
+positive occurring for a given connection is only 1 in 2^64. This value is
+smaller than the probability of network connection failures in practice.
 
 Note that the same bytes of the ServerHello.random are used to implement
 downgrade protection for TLS 1.3 (see {{RFC8446}}, Section 4.1.3). The backend
