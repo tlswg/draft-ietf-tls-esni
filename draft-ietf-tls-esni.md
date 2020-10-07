@@ -1213,12 +1213,12 @@ incorrectly apply parameters from ClientHelloOuter to the handshake.
 
 To begin, the attacker first interacts with a server to obtain a resumption
 ticket for a given test domain, such as "example.com". Later, upon receipt of a
-ClientHelloOuter, it modifies it such that the resumption ticket is sent in
-ClientHelloInner's "pre_shared_key" extension. If the server only accepts
-resumption PSKs that match the server name, it will fail the PSK binder check
-with an alert when ClientHelloInner is for "example.com" but silently ignore
-the PSK and continue when ClientHelloInner is for any other name. This
-introduces an oracle for testing encrypted SNI values.
+ClientHelloOuter, it modifies it such that the server will process the
+resumption ticket with ClientHelloInner. If the server only accepts resumption
+PSKs that match the server name, it will fail the PSK binder check with an
+alert when ClientHelloInner is for "example.com" but silently ignore the PSK
+and continue when ClientHelloInner is for any other name. This introduces an
+oracle for testing encrypted SNI values.
 
 ~~~
        Client              Attacker                       Server
