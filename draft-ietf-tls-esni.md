@@ -1015,7 +1015,8 @@ server terminates the connection (i.e., ECH is rejected or bypassed): if the
 last 8 bytes of its ServerHello.random coincide with the confirmation signal,
 then the client will incorrectly presume acceptance and proceed as if the
 backend server terminated the connection. However, the probability of a false
-positive occurring for a given connection is only 1 in 2^64.
+positive occurring for a given connection is only 1 in 2^64. This value is
+smaller than the probability of network connection failures in practice.
 
 Note that the same bytes of the ServerHello.random are used to implement
 downgrade protection for TLS 1.3 (see {{RFC8446}}, Section 4.1.3). The backend
