@@ -1202,44 +1202,64 @@ attacker's hijacked SNI value in its inner ClientHello is "test.com". A server
 which checks these for equality and changes behavior based on the result can be
 used as an oracle to learn the client's SNI.
 
-### Resumption PSK Oracle Mitigation {#flow-resumption-oracle}
+### ClientHello Malleability Mitigation {#flow-clienthello-malleability}
 
-This attack uses resumption PSKs as an oracle for dictionary attacks against a
-given ClientHello's true SNI. To begin, the attacker first interacts with a
-server to obtain a resumption ticket for a given test domain, such as
-"test.com". Later, upon receipt of a legitimate ClientHello without a PSK
-binder, it computes a PSK binder using its own ticket and forwards the resulting
-ClientHello. Assume the server then validates the PSK binder on the outer
-ClientHello and chooses connection parameters based on the inner ClientHello. A
-server which then validates information in the outer ClientHello ticket against
-information in the inner ClientHello, such as the SNI, introduces an oracle that
-can be used to test the encrypted SNI value of specific ClientHello messages.
+This attack aims to leak information about secret parts of the encrypted
+ClientHello by adding attacker-controlled parameters and observing the server's
+response. In particular, the compression mechanism described in
+{{outer-extensions}} references parts of a potentially attacker-controlled
+ClientHelloOuter to construct ClientHelloInner, or a buggy server may
+incorrectly apply parameters from ClientHelloOuter to the handshake.
+
+To begin, the attacker first interacts with a server to obtain a resumption
+ticket for a given test domain, such as "example.com". Later, upon receipt of a
+ClientHelloOuter, it modifies it such that the resumption ticket is sent in
+ClientHelloInner's "pre_shared_key" extension. If the server only accepts
+resumption PSKs that match the server name, it will fail the PSK binder check
+with an alert when ClientHelloInner is for "example.com" but silently ignore
+the PSK and continue when ClientHelloInner is for any other name. This
+introduces an oracle for testing encrypted SNI values.
 
 ~~~
-       Client                    Attacker                 Server
+       Client              Attacker                       Server
 
-                                        handshake and ticket
-                                           for "test.com"
-                                             <-------->
+                                     handshake and ticket
+                                        for "example.com"
+                                          <-------->
 
        ClientHello
        + key_share
-       + ech        -------->  (intercept)
-                                  ClientHello
-                                  + key_share
-                                  + ech
-                                  + pre_shared_key
+       + ech
+         + outer_extensions(pre_shared_key)
+       + pre_shared_key
+                    -------->
+                           (intercept)
+                           ClientHello
+                           + key_share
+                           + ech
+                             + outer_extensions(pre_shared_key)
+                           + pre_shared_key'
                                              -------->
                                                            Alert
+                                                            -or-
+                                                     ServerHello
+                                                             ...
+                                                        Finished
                                              <--------
 ~~~
-{: #tls-resumption-psk title="Message flow for resumption and PSK"}
+{: #tls-clienthello-malleability title="Message flow for malleable ClientHello"}
 
-ECH mitigates against this attack by requiring servers not mix-and-match
-information from the inner and outer ClientHello. For example, if the server
-accepts the inner ClientHello, it does not validate binders in the outer
-ClientHello. This means that ECH PSKs are used within the HPKE encryption
-envelope.
+This attack may be generalized to any parameter which the server varies by
+server name, such as ALPN preferences.
+
+ECH mitigates this attack by only using ClientHelloOuter to compute
+ClientHelloInner and authenticating all of ClientHelloInner with the HPKE AEAD.
+If any extensions are compressed as in {{outer-extensions}}, the
+OuterExtensions.inner_digest field authenticates the decompressed result. If
+none are compressed, the entire ClientHello is encrypted and authenticated
+directly. An earlier iteration of this specification only encrypted and
+authenticated the "server_name" extension, which left the overall ClientHello
+vulnerable to an analogue of this attack.
 
 # IANA Considerations
 
