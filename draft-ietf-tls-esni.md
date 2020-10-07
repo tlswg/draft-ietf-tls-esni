@@ -455,7 +455,9 @@ standard ClientHello, with the exception of the following rules:
 The client then constructs the ClientHelloInner message just as it does a
 standard ClientHello, with the exception of the following rules:
 
-1. It MUST NOT offer to negotiate TLS 1.2 or below.
+1. It MUST NOT offer to negotiate TLS 1.2 or below. Note this is necessary to
+   ensure the backend server does not negotiate a TLS version that is
+   incompatible with ECH.
 1. It MUST NOT offer to resume any non-ECH PSK or any session for TLS 1.2 and
    below.
 1. It MAY offer any other extension in the ClientHelloOuter except those that
@@ -700,8 +702,10 @@ MAY offer to resume sessions established without ECH.
 ## Client-Facing Server
 
 Upon receiving an "encrypted_client_hello" extension, the client-facing server
-MUST check that it is able to negotiate TLS 1.3 or greater. If not, it MUST
-abort the connection with a "handshake_failure" alert.
+determines if it will accept ECH, prior to negotiating any other TLS parameters.
+Note that successfully decrypting the extension will result in a new
+ClientHello to process, so even the client's TLS version preferences may have
+changed.
 
 The ClientECH value is said to match a known ECHConfig if there exists
 an ECHConfig that can be used to successfully decrypt
