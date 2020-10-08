@@ -441,7 +441,7 @@ standard ClientHello, with the exception of the following rules:
 1. The value of `ECHConfig.public_name` MUST be placed in the "server_name"
    extension.
 1. It MUST NOT include the "pre_shared_key" extension. (See
-   {{flow-resumption-oracle}}.)
+   {{flow-clienthello-malleability}}.)
 
 The client then constructs the ClientHelloInner message just as it does a
 standard ClientHello, with the exception of the following rules:
