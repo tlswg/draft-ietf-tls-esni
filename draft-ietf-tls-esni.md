@@ -417,7 +417,9 @@ ClientHelloInner, in the order in which they were removed.
 
 This process is reversed by client-facing server. Specifically, the server
 replaces the "outer_extension" with the corresponding sequence of extensions in
-the ClientHelloOuter. The server then computes the digest of the reconstructed
+the ClientHelloOuter. If any referenced extensions are missing, the server
+MUST abort the connection with an "illegal_parameter" alert.
+The server then computes the digest of the reconstructed
 ClientHelloInner. If the digest does not equal OuterExtensions.inner_digest,
 then the server MUST abort the connection with a "decrypt_error" alert.
 
