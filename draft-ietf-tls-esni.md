@@ -446,7 +446,8 @@ standard ClientHello, with the exception of the following rules:
 
 1. It MUST offer to negotiate TLS 1.3 or above.
 1. Any extensions compressed as described in {{outer-extensions}} must match
-   the ClientHelloInner.
+   the ClientHelloInner. \[\[OPEN ISSUE: When #331 and compression ordering is
+   resolved, be a bit more precise here.\]\]
 1. It MAY copy any other field from the ClientHelloInner except
    ClientHelloInner.random. Instead, It MUST generate a fresh
    ClientHelloOuter.random using a secure random number generator. (See
