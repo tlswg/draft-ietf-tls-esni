@@ -417,6 +417,10 @@ in ClientHelloInner. The list of outer extensions,
 OuterExtensions.outer_extensions, includes those which were removed from
 EncodedClientHelloInner, in the order in which they were removed.
 
+Finally, EncodedClientHelloInner is serialized as a ClientHello structure,
+defined in Section 4.1.2 of {{RFC8446}}. Note this does not include the
+four-byte header included in the Handshake structure.
+
 The client-facing server computes ClientHelloInner by reversing this process.
 It scans EncodedClientHelloInner for an "outer_extensions" extension. If there
 is none, the ClientHelloInner is the EncodedClientHelloInner. Otherwise, it
