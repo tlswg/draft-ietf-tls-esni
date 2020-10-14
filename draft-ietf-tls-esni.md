@@ -204,8 +204,8 @@ the ECH security and privacy goals.
 
 # Encrypted ClientHello Configuration {#ech-configuration}
 
-ECH uses HPKE for public key encryption {{!I-D.irtf-cfrg-hpke}}. The ECH
-configuration is defined by the following `ECHConfigs` structure.
+ECH uses draft-05 of HPKE for public key encryption {{!I-D.irtf-cfrg-hpke}}.
+The ECH configuration is defined by the following `ECHConfigs` structure.
 
 ~~~~
     opaque HpkePublicKey<1..2^16-1>;
@@ -417,7 +417,9 @@ ClientHelloInner, in the order in which they were removed.
 
 This process is reversed by client-facing server. Specifically, the server
 replaces the "outer_extension" with the corresponding sequence of extensions in
-the ClientHelloOuter. The server then computes the digest of the reconstructed
+the ClientHelloOuter. If any referenced extensions are missing, the server
+MUST abort the connection with an "illegal_parameter" alert.
+The server then computes the digest of the reconstructed
 ClientHelloInner. If the digest does not equal OuterExtensions.inner_digest,
 then the server MUST abort the connection with a "decrypt_error" alert.
 
@@ -432,36 +434,36 @@ identified by `ECHConfig.cipher_suites`. Once a suitable configuration is found,
 the client selects the cipher suite it will use for encryption. It MUST NOT
 choose a cipher suite not advertised by the configuration.
 
-Next, the client constructs the ClientHelloOuter message just as it does a
-standard ClientHello, with the exception of the following rules:
-
-1. It MUST offer to negotiate TLS 1.3 or above.
-1. It MUST include an "encrypted_client_hello" extension with a payload
-   constructed as described below.
-1. The value of `ECHConfig.public_name` MUST be placed in the "server_name"
-   extension.
-1. It MUST NOT include the "pre_shared_key" extension. (See
-   {{flow-clienthello-malleability}}.)
-
-The client then constructs the ClientHelloInner message just as it does a
+Next, the client constructs the ClientHelloInner message just as it does a
 standard ClientHello, with the exception of the following rules:
 
 1. It MUST NOT offer to negotiate TLS 1.2 or below. Note this is necessary to
    ensure the backend server does not negotiate a TLS version that is
    incompatible with ECH.
 1. It MUST NOT offer to resume any session for TLS 1.2 and below.
-1. It MAY offer any other extension in the ClientHelloOuter except those that
-   have been incorporated into the ClientHelloInner as described in
-   {{outer-extensions}}.
-1. It MAY copy any other field from the ClientHelloOuter except
-   ClientHelloOuter.random. Instead, It MUST generate a fresh
-   ClientHelloInner.random using a secure random number generator. (See
-   {{flow-client-reaction}}.)
 1. It SHOULD contain TLS padding {{!RFC7685}} as described in {{padding}}.
+
+The client then constructs the ClientHelloOuter message just as it does a
+standard ClientHello, with the exception of the following rules:
+
+1. It MUST offer to negotiate TLS 1.3 or above.
+1. Any extensions compressed as described in {{outer-extensions}} must match
+   the ClientHelloInner. \[\[OPEN ISSUE: When #331 and compression ordering is
+   resolved, be a bit more precise here.\]\]
+1. It MAY copy any other field from the ClientHelloInner except
+   ClientHelloInner.random. Instead, It MUST generate a fresh
+   ClientHelloOuter.random using a secure random number generator. (See
+   {{flow-client-reaction}}.)
 1. If implementing TLS 1.3's compatibility mode (see Appendix D.4 of
    {{RFC8446}}), it MUST copy the legacy\_session\_id field from
-   ClientHelloOuter. This allows the server to echo the correct session ID
+   ClientHelloInner. This allows the server to echo the correct session ID
    when ECH is negotiated.
+1. It MUST include an "encrypted_client_hello" extension with a payload
+   constructed as described below.
+1. The value of `ECHConfig.public_name` MUST be placed in the "server_name"
+   extension.
+1. It MUST NOT include the "pre_shared_key" extension. (See
+   {{flow-clienthello-malleability}}.)
 
 The client might duplicate non-sensitive extensions in both messages. However,
 implementations need to take care to ensure that sensitive extensions are not
@@ -654,6 +656,11 @@ then it MUST NOT not offer ECH in the second.
 [[OPEN ISSUE: Should we be using the PSK input or the info input?  On the one
 hand, the requirements on info seem weaker, but maybe actually this needs to be
 secret? Analysis needed.]]
+
+[[OPEN ISSUE: If the client-facing server implements stateless HRR, it has no
+way to send a cookie, short of as-yet-unspecified integration with the
+backend server. Stateless HRR on the client-facing server works fine, however.
+See issue #333.]]
 
 ## GREASE Extensions {#grease-extensions}
 
