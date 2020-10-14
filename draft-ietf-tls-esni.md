@@ -657,6 +657,11 @@ then it MUST NOT not offer ECH in the second.
 hand, the requirements on info seem weaker, but maybe actually this needs to be
 secret? Analysis needed.]]
 
+[[OPEN ISSUE: If the client-facing server implements stateless HRR, it has no
+way to send a cookie, short of as-yet-unspecified integration with the
+backend server. Stateless HRR on the client-facing server works fine, however.
+See issue #333.]]
+
 ## GREASE extensions {#grease-extensions}
 
 If the client attempts to connect to a server and does not have an ECHConfig
