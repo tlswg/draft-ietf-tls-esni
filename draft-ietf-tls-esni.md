@@ -381,11 +381,11 @@ Some TLS 1.3 extensions can be quite large and having them both in
 ClientHelloInner and ClientHelloOuter will lead to a very large overall size.
 One particularly pathological example is "key_share" with post-quantum
 algorithms. In order to reduce the impact of duplicated extensions, the client
-may use the "outer_extension" extension.
+may use the "outer_extensions" extension.
 
 ~~~
     enum {
-       outer_extension(0xff04), (65535)
+       outer_extensions(0xff04), (65535)
     } ExtensionType;
 
     struct {
@@ -394,14 +394,15 @@ may use the "outer_extension" extension.
     } OuterExtensions;
 ~~~
 
-OuterExtensions MUST only be used in ClientHelloInner. It consists of one or
-more ExtensionType values, each of which reference an extension in
-ClientHelloOuter, and a digest of the complete ClientHelloInner.
+OuterExtensions consists of one or more ExtensionType values, each of which
+reference an extension in ClientHelloOuter, and a digest of the complete
+ClientHelloInner.
 
 When sending ClientHello, the client first computes ClientHelloInner, including
-any PSK binders, and then MAY substitute extensions which it knows will be
-duplicated in ClientHelloOuter. To do so, the client computes the digest of the
-entire ClientHelloInner message as:
+any PSK binders. It then computes a new value, the EncodedClientHelloInner, by
+first making a copy of ClientHelloInner. It then MAY substitute extensions
+which it knows will be duplicated in ClientHelloOuter. To do so, the client
+computes the digest of the entire ClientHelloInner message as:
 
 ~~~
   inner_digest = Expand(Extract("", inner),
@@ -410,18 +411,29 @@ entire ClientHelloInner message as:
 
 where `inner` is the ClientHelloInner structure and `Extract`, `Expand`, and
 `Nh` are as defined by the KDF API in {{!I-D.irtf-cfrg-hpke}}. Then, the client
-removes and replaces extensions from ClientHelloInner with a single
-"outer_extension" extension. The list of outer extensions,
+removes and replaces extensions from EncodedClientHelloInner with a single
+"outer_extensions" extension. Removed extensions MUST be ordered consecutively
+in ClientHelloInner. The list of outer extensions,
 OuterExtensions.outer_extensions, includes those which were removed from
-ClientHelloInner, in the order in which they were removed.
+EncodedClientHelloInner, in the order in which they were removed.
 
-This process is reversed by client-facing server. Specifically, the server
-replaces the "outer_extension" with the corresponding sequence of extensions in
+Finally, EncodedClientHelloInner is serialized as a ClientHello structure,
+defined in Section 4.1.2 of {{RFC8446}}. Note this does not include the
+four-byte header included in the Handshake structure.
+
+The client-facing server computes ClientHelloInner by reversing this process.
+It scans EncodedClientHelloInner for an "outer_extensions" extension. If there
+is none, the ClientHelloInner is the EncodedClientHelloInner. Otherwise, it
+replaces the extension with the corresponding sequence of extensions in
 the ClientHelloOuter. If any referenced extensions are missing, the server
 MUST abort the connection with an "illegal_parameter" alert.
 The server then computes the digest of the reconstructed
 ClientHelloInner. If the digest does not equal OuterExtensions.inner_digest,
 then the server MUST abort the connection with a "decrypt_error" alert.
+
+The "outer_extensions" extension is only used for compressing the
+ClientHelloInner. It MUST NOT be sent in either ClientHelloOuter or
+ClientHelloInner.
 
 # Client Behavior {#client-behavior}
 
@@ -442,14 +454,16 @@ standard ClientHello, with the exception of the following rules:
    incompatible with ECH.
 1. It MUST NOT offer to resume any session for TLS 1.2 and below.
 1. It SHOULD contain TLS padding {{!RFC7685}} as described in {{padding}}.
+1. If it intends to compress any extensions (see {{outer-extensions}}), it
+   MUST order those extensions consecutively.
 
-The client then constructs the ClientHelloOuter message just as it does a
-standard ClientHello, with the exception of the following rules:
+The client then constructs EncodedClientHelloInner as described in
+{{outer-extensions}}. Finally, it constructs the ClientHelloOuter message just
+as it does a standard ClientHello, with the exception of the following rules:
 
 1. It MUST offer to negotiate TLS 1.3 or above.
-1. Any extensions compressed as described in {{outer-extensions}} must match
-   the ClientHelloInner. \[\[OPEN ISSUE: When #331 and compression ordering is
-   resolved, be a bit more precise here.\]\]
+1. If it compressed any extensions in EncodedClientHelloInner, it MUST copy the
+   corresponding extensions from ClientHelloInner.
 1. It MAY copy any other field from the ClientHelloInner except
    ClientHelloInner.random. Instead, It MUST generate a fresh
    ClientHelloOuter.random using a secure random number generator. (See
@@ -470,26 +484,22 @@ implementations need to take care to ensure that sensitive extensions are not
 offered in the ClientHelloOuter. [[OPEN ISSUE: We should provide guidance on
 what extensions are sensitive and suggest suitable substitutes.]]
 
-To encrypt ClientHelloInner, the client first needs to generate the HPKE
-encryption context. It computes the encapsulated key, context, and HRR key (see
-{{hrr}}) as:
+To encrypt EncodedClientHelloInner, the client first needs to generate the HPKE
+encryption context. It computes the encapsulated key, context, HRR key (see
+{{hrr}}), and payload as:
 
 ~~~
     pkR = Deserialize(ECHConfig.public_key)
     enc, context = SetupBaseS(pkR, "tls13 ech")
     ech_hrr_key = context.Export("tls13 ech hrr key", 32)
+    payload = context.Seal("", EncodedClientHelloInner)
 ~~~
 
 Note that the HPKE functions Deserialize and SetupBaseS are those which match
 `ECHConfig.kem_id` and the AEAD/KDF used with `context` are those which match
-client's chosen preference from `ECHConfig.cipher_suites`. The encrypted
-ClientHelloInner is computed as:
+the client's chosen preference from `ECHConfig.cipher_suites`.
 
-~~~~
-    payload = context.Seal("", ClientHelloInner)
-~~~~
-
-The payload of the "encrypted_client_hello" extension in the ClientHelloOuter is
+The value of the "encrypted_client_hello" extension in the ClientHelloOuter is
 a `ClientECH` with the following values:
 
 - `cipher_suite`, the client's chosen cipher suite;
@@ -646,7 +656,7 @@ decrypt ClientECH as follows:
 ~~~
     context = SetupPSKR(ClientECH.enc,
         skR, "tls13 ech hrr", ech_hrr_key, "hrr key")
-    ClientHelloInner = context.Open("", ClientECH.payload)
+    EncodedClientHelloInner = context.Open("", ClientECH.payload)
 ~~~
 
 If the client offered ECH in the first ClientHello, then it MUST offer ECH in
@@ -752,14 +762,13 @@ ECHConfig, as follows:
 
 ~~~
     context = SetupBaseR(ClientECH.enc, skR, "tls13 ech")
-    ClientHelloInner = context.Open("", ClientECH.payload)
+    EncodedClientHelloInner = context.Open("", ClientECH.payload)
     ech_hrr_key = context.Export("tls13 ech hrr key", 32)
 ~~~
 
-If decryption fails, the server MUST abort the connection with a "decrypt_error"
-alert. Otherwise, the server scans ClientHelloInner for an "outer_extension"
-extension and substitutes its value with the values in ClientHelloOuter and
-validates the ClientHelloInner digest, as described in {{outer-extensions}}.
+If decryption fails, the server MUST abort the connection with a
+"decrypt_error" alert. Otherwise, the server reconstructs ClientHelloInner from
+EncodedClientHelloInner, as described in {{outer-extensions}}.
 
 Upon determining the true SNI, the client-facing server then either serves the
 connection directly (if in Shared Mode), in which case it executes the steps in
@@ -1271,7 +1280,7 @@ for ExtensionType (defined in {{!RFC8446}}):
 
 1. encrypted_client_hello(0xff08), with "TLS 1.3" column values being set to
    "CH, EE", and "Recommended" column being set to "Yes".
-3. outer_extension(0xff04), with the "TLS 1.3" column values being set to "CH",
+3. outer_extensions(0xff04), with the "TLS 1.3" column values being set to "",
    and "Recommended" column being set to "Yes".
 
 ## Update of the TLS Alert Registry {#alerts}
