@@ -481,8 +481,8 @@ as it does a standard ClientHello, with the exception of the following rules:
 
 The client might duplicate non-sensitive extensions in both messages. However,
 implementations need to take care to ensure that sensitive extensions are not
-offered in the ClientHelloOuter. [[OPEN ISSUE: We should provide guidance on
-what extensions are sensitive and suggest suitable substitutes.]]
+offered in the ClientHelloOuter. See {{outer-clienthello}} for additional
+guidance.
 
 To encrypt EncodedClientHelloInner, the client first needs to generate the HPKE
 encryption context. It computes the encapsulated key, context, HRR key (see
@@ -970,7 +970,7 @@ wasteful decryption. Servers that support this feature should, for example,
 implement some form of rate limiting mechanism to limit the damage caused by
 such attacks.
 
-## Outer ClientHello
+## Outer ClientHello {#outer-clienthello}
 
 Any information that the client includes in the ClientHelloOuter is visible to
 passive observers. The client SHOULD NOT send values in the ClientHelloOuter
@@ -985,9 +985,25 @@ true server name. For example, the "cached_info" ClientHello extension
 The client SHOULD NOT send values associated with the true server name in the
 ClientHelloOuter. It MAY send such values in the ClientHelloInner.
 
+A client may also use different preferences in different contexts. For example,
+it may send a different ALPN lists to different servers or in different
+application contexts. A client that treats this context as sensitive SHOULD NOT
+send context-specific values in ClientHelloOuter.
+
 Values which are independent of the true server name, or other information the
-client wishes to protect, MAY be included in ClientHelloOuter and compressed as
-described in {{outer-extensions}}.
+client wishes to protect, MAY be included in ClientHelloOuter. If they match
+the corresponding ClientHelloInner, they MAY be compressed as described in
+{{outer-extensions}}. However, note the payload length reveals information
+about which extensions are compressed, so inner extensions which only sometimes
+match the corresponding outer extension SHOULD NOT be compressed.
+
+[[OPEN ISSUE: In addition to the fuzzy leak from the length, there is an
+active attack to probe compressed extensions. See issue #323. We should either
+document this attack, or bind ClientHelloOuter.]]
+
+Clients MAY include additional extensions in ClientHelloOuter to avoid
+signaling unusual behavior to passive observers, provided the choice of value
+and value itself are not sensitive. See {{do-not-stick-out}}.
 
 ## Related Privacy Leaks
 
