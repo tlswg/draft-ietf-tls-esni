@@ -306,7 +306,7 @@ Clients MUST parse the extension list and check for unsupported mandatory
 extensions. If an unsupported mandatory extension is present, clients MUST
 ignore the `ECHConfig`.
 
-# The "encrypted_client_hello" extension {#encrypted-client-hello}
+# The "encrypted_client_hello" Extension {#encrypted-client-hello}
 
 The encrypted ClientHelloInner is carried in an "encrypted_client_hello"
 extension, defined as follows:
@@ -425,7 +425,7 @@ then the server MUST abort the connection with a "decrypt_error" alert.
 
 # Client Behavior {#client-behavior}
 
-## Sending an encrypted ClientHello {#send-ech}
+## Sending an Encrypted ClientHello {#send-ech}
 
 To offer ECH, the client first chooses a suitable ECH configuration. To
 determine if a given `ECHConfig` is suitable, it checks that it supports the KEM
@@ -529,7 +529,7 @@ if a client proposes ALPN values in ClientHelloInner, the server-selected value
 will be returned in an EncryptedExtension, so that handshake message also needs
 to be padded using TLS record layer padding.
 
-## Handling the server response {#handle-server-response}
+## Handling the Server Response {#handle-server-response}
 
 As described in {{server-behavior}}, the server MAY either accept ECH and use
 ClientHelloInner or reject it and use ClientHelloOuter. In handling the server's
@@ -590,7 +590,7 @@ servers which do not acknowledge the "encrypted_client_hello" extension. If the
 client does not retry in either scenario, it MUST report an error to the calling
 application.
 
-#### Authenticating for the public name {#auth-public-name}
+#### Authenticating for the Public Name {#auth-public-name}
 
 When the server rejects ECH or otherwise ignores "encrypted_client_hello"
 extension, it continues with the handshake using the plaintext "server_name"
@@ -662,7 +662,7 @@ way to send a cookie, short of as-yet-unspecified integration with the
 backend server. Stateless HRR on the client-facing server works fine, however.
 See issue #333.]]
 
-## GREASE extensions {#grease-extensions}
+## GREASE Extensions {#grease-extensions}
 
 If the client attempts to connect to a server and does not have an ECHConfig
 structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
@@ -1029,14 +1029,14 @@ is only supported in TLS 1.3 or higher.
 In this section, we re-iterate these requirements and assess the ECH design
 against them.
 
-### Mitigate against replay attacks
+### Mitigate Cut-and-Paste Attacks
 
 Since servers process either ClientHelloInner or ClientHelloOuter, and because
 ClientHelloInner.random is encrypted, it is not possible for an attacker to "cut
 and paste" the ECH value in a different Client Hello and learn information from
 ClientHelloInner.
 
-### Avoid widely-deployed shared secrets
+### Avoid Widely Shared Secrets
 
 This design depends upon DNS as a vehicle for semi-static public key
 distribution. Server operators may partition their private keys however they
@@ -1046,14 +1046,14 @@ bound by the number of hosts that share an IP address. Server operators may
 further limit sharing by publishing different DNS records containing ECHConfig
 values with different keys using a short TTL.
 
-### Prevent SNI-based DoS attacks
+### Prevent SNI-Based Denial-of-Service Attacks
 
 This design requires servers to decrypt ClientHello messages with ClientECH
 extensions carrying valid digests. Thus, it is possible for an attacker to force
 decryption operations on the server. This attack is bound by the number of valid
 TCP connections an attacker can open.
 
-### Do not stick out {#do-not-stick-out}
+### Do Not Stick Out {#do-not-stick-out}
 
 The only explicit signal indicating possible use of ECH is the ClientHello
 "encrypted_client_hello" extension. Server handshake messages do not contain any
@@ -1066,34 +1066,35 @@ less unusual and part of typical client behavior. In other words, if all Web
 browsers start using ECH, the presence of this value will not signal unusual
 behavior to passive eavesdroppers.
 
-### Forward secrecy
+### Maintain Forward Secrecy
 
 This design is not forward secret because the server's ECH key is static.
 However, the window of exposure is bound by the key lifetime. It is RECOMMENDED
 that servers rotate keys frequently.
 
-### Proper security context
+### Enable Multi-party Security Contexts
 
 This design permits servers operating in Split Mode to forward connections
-directly to backend origin servers, thereby avoiding unnecessary MiTM attacks.
+directly to backend origin servers. The client authenticates the identity of
+the backend origin server, thereby avoiding unnecessary MiTM attacks.
 
-### Split server spoofing
-
-Assuming ECH records retrieved from DNS are authenticated, e.g., via DNSSEC or
-fetched from a trusted Recursive Resolver, spoofing a server operating in Split
-Mode is not possible. See {{plaintext-dns}} for more details regarding plaintext
-DNS.
+Conversely, assuming ECH records retrieved from DNS are authenticated, e.g.,
+via DNSSEC or fetched from a trusted Recursive Resolver, spoofing a
+client-facing server operating in Split Mode is not possible. See
+{{plaintext-dns}} for more details regarding plaintext DNS.
 
 Authenticating the ECHConfigs structure naturally authenticates the included
-public name. This also authenticates any retry signals from the server because
-the client validates the server certificate against the public name before
-retrying.
+public name. This also authenticates any retry signals from the client-facing
+server because the client validates the server certificate against the public
+name before retrying.
 
-### Supporting multiple protocols
+### Support Multiple Protocols
 
 This design has no impact on application layer protocol negotiation. It may
 affect connection routing, server certificate selection, and client certificate
-verification. Thus, it is compatible with multiple protocols.
+verification. Thus, it is compatible with multiple application and transport
+protocols. By encrypting the entire ClientHello, this design additionally
+supports encrypting the ALPN extension.
 
 ## Padding Policy
 
