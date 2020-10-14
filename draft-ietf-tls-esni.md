@@ -667,11 +667,6 @@ then it MUST NOT not offer ECH in the second.
 hand, the requirements on info seem weaker, but maybe actually this needs to be
 secret? Analysis needed.]]
 
-[[OPEN ISSUE: If the client-facing server implements stateless HRR, it has no
-way to send a cookie, short of as-yet-unspecified integration with the
-backend server. Stateless HRR on the client-facing server works fine, however.
-See issue #333.]]
-
 ## GREASE Extensions {#grease-extensions}
 
 If the client attempts to connect to a server and does not have an ECHConfig
@@ -782,10 +777,30 @@ including servers which do not implement this specification.
 
 ### HelloRetryRequest
 
-It is an error for the client to offer ECH before the HelloRetryRequest but not
-after. Likewise, it is an error for the client to offer ECH after the
-HelloRetryRequest but not before. If either of these conditions occurs, then the
-client-facing server MUST abort the handshake with an "illegal_parameter" alert.
+In case a HelloRetryRequest (HRR) is sent, the client-facing server enforces the
+following invariant. Let CH1' denote the first ClientHello processed by the
+server and let CH2' denote the second: either CH1' == CH2' == ClientHelloOuter
+or CH1' == CH2' == ClientHelloInner. In particular, it is an error to process
+ClientHelloInner followed by ClientHelloOuter or vice versa, as this could
+trigger undefined protocol behavior.
+
+Let CH1 and CH2 denote, respectively, the first and second ClientHello
+transmitted on the wire by the client. (Note that these are not necessarily the
+same as the messages processed by the server.) To enforce this invariant, the
+client-facing server behaves as follows.
+
+1. If CH1 contains the "encrypted_client_hello" extension but CH2 does not, or
+   if CH2 contains the "encrypted_client_hello" extension but CH1 does not, then
+   the server MUST abort the handshake with an "illegal_parameter" alert.
+1. Suppose the "encrypted_client_hello" extension is sent in both CH1 and CH2,
+   each extension having a well-formed ClientECH structure as its payload. If
+   the configuration identifier (see {{ech-configuration}}) differs between CH1
+   and CH2, then the server MUST abort with an "illegal_parameter" alert.
+
+[[OPEN ISSUE: If the client-facing server implements stateless HRR, it has no
+way to send a cookie, short of as-yet-unspecified integration with the
+backend server. Stateful HRR on the client-facing server works fine, however.
+See issue #333.]]
 
 ## Backend Server Behavior {#backend-server-behavior}
 
