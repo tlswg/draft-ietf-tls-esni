@@ -780,12 +780,8 @@ including servers which do not implement this specification.
 In case a HelloRetryRequest (HRR) is sent, the client-facing server MUST
 consistently accept or decline ECH between the two ClientHellos, using the same
 ECHConfig, and abort the handshake if this is not possible. This is achieved as
-follows.
-
-Let CH1 and CH2 denote, respectively, the first and second ClientHello
-transmitted on the wire by the client. (Note that these are not necessarily the
-same as the messages processed by the server.) To enforce this invariant, the
-client-facing server behaves as follows.
+follows. Let CH1 and CH2 denote, respectively, the first and second ClientHello
+transmitted on the wire by the client:
 
 1. If CH1 contains the "encrypted_client_hello" extension but CH2 does not, or
    if CH2 contains the "encrypted_client_hello" extension but CH1 does not, then
