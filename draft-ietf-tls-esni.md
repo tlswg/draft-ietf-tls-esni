@@ -486,7 +486,7 @@ guidance.
 
 To encrypt EncodedClientHelloInner, the client first needs to generate the HPKE
 encryption context. It computes the encapsulated key, context, HRR key (see
-{{hrr}}), and payload as:
+{{client-hrr}}), and payload as:
 
 ~~~
     pkR = Deserialize(ECHConfig.public_key)
@@ -622,7 +622,7 @@ trigger retries, as described in {{handle-server-response}}. This may be
 implemented, for instance, by reporting a failed connection with a dedicated
 error code.
 
-### HelloRetryRequest {#hrr}
+### HelloRetryRequest {#client-hrr}
 
 If the server sends a HelloRetryRequest in response to the ClientHello, the
 client sends a second updated ClientHello per the rules in {{RFC8446}}.
@@ -770,13 +770,16 @@ If decryption fails, the server MUST abort the connection with a
 "decrypt_error" alert. Otherwise, the server reconstructs ClientHelloInner from
 EncodedClientHelloInner, as described in {{outer-extensions}}.
 
-Upon determining the true SNI, the client-facing server then either serves the
-connection directly (if in Shared Mode), in which case it executes the steps in
-the following section, or forwards the TLS connection to the backend server (if
-in Split Mode). In the latter case, it does not make any changes to the TLS
-messages, but just blindly forwards them.
+Upon determining the ClientHelloInner, the client-facing server then forwards
+the ClientHelloInner to the appropriate backend server, which proceeds as in
+{{backend-server-behavior}}. If the backend server responds with a
+HelloRetryRequest, the client-facing server forwards it, decrypts the client's
+second ClientHelloOuter using the modified procedure in {{server-hrr}}, and
+forwards the resulting second ClientHelloInner. The client-facing server
+forwards all other TLS messages between the client and backend server
+unmodified.
 
-### HelloRetryRequest
+### HelloRetryRequest {#server-hrr}
 
 It is an error for the client to offer ECH before the HelloRetryRequest but not
 after. Likewise, it is an error for the client to offer ECH after the
