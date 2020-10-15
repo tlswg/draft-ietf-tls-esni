@@ -777,12 +777,10 @@ including servers which do not implement this specification.
 
 ### HelloRetryRequest
 
-In case a HelloRetryRequest (HRR) is sent, the client-facing server enforces the
-following invariant. Let CH1' denote the first ClientHello processed by the
-server and let CH2' denote the second: either CH1' == CH2' == ClientHelloOuter
-or CH1' == CH2' == ClientHelloInner. In particular, it is an error to process
-ClientHelloInner followed by ClientHelloOuter or vice versa, as this could
-trigger undefined protocol behavior.
+In case a HelloRetryRequest (HRR) is sent, the client-facing server MUST
+consistently accept or decline ECH between the two ClientHellos, using the same
+ECHConfig, and abort the handshake if this is not possible. This is achieved as
+follows.
 
 Let CH1 and CH2 denote, respectively, the first and second ClientHello
 transmitted on the wire by the client. (Note that these are not necessarily the
@@ -793,9 +791,8 @@ client-facing server behaves as follows.
    if CH2 contains the "encrypted_client_hello" extension but CH1 does not, then
    the server MUST abort the handshake with an "illegal_parameter" alert.
 1. Suppose the "encrypted_client_hello" extension is sent in both CH1 and CH2,
-   each extension having a well-formed ClientECH structure as its payload. If
-   the configuration identifier (see {{ech-configuration}}) differs between CH1
-   and CH2, then the server MUST abort with an "illegal_parameter" alert.
+   If the configuration identifier (see {{ech-configuration}}) differs between
+   CH1 and CH2, then the server MUST abort with an "illegal_parameter" alert.
 
 [[OPEN ISSUE: If the client-facing server implements stateless HRR, it has no
 way to send a cookie, short of as-yet-unspecified integration with the
