@@ -776,10 +776,6 @@ the following section, or forwards the TLS connection to the backend server (if
 in Split Mode). In the latter case, it does not make any changes to the TLS
 messages, but just blindly forwards them.
 
-If the server sends a NewSessionTicket message, the corresponding PSK MUST
-be ignored by all other servers in the deployment when not negotiating ECH,
-including servers which do not implement this specification.
-
 ### HelloRetryRequest
 
 It is an error for the client to offer ECH before the HelloRetryRequest but not
