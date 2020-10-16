@@ -487,7 +487,7 @@ To encrypt EncodedClientHelloInner, the client first computes
 ClientHelloOuterAAD as described in {{authenticating-outer}}. Note this
 requires the "encrypted_client_hello" be computed after all other extensions.
 In particular, this is possible because the "pre_shared_key" extension is
-forbidden.
+forbidden in ClientHelloOuter.
 
 The client then generates the HPKE encryption context. Finally, it computes the
 encapsulated key, context, HRR key (see {{client-hrr}}), and payload as:
