@@ -515,7 +515,8 @@ a `ClientECH` with the following values:
 If optional configuration identifiers (see {{optional-configs}})) are used, the
 `config_id` field MAY be empty or randomly generated. Unless specified by the
 application using (D)TLS or externally configured on both sides,
-implementations MUST NOT use this mode.
+implementations MUST compute the field as specified in
+{{encrypted-client-hello}}.
 
 ## Recommended Padding Scheme {#padding}
 
@@ -731,7 +732,7 @@ ClientHello to process, so even the client's TLS version preferences may have
 changed.
 
 First, the server collects a set of candidate ECHConfigs. This set is
-determined in one of the two following methods:
+determined by one of the two following methods:
 
 1. Compare ClientECH.config_id against identifiers of known ECHConfigs and
    select the one that matches, if any, as a candidate.
