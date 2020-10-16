@@ -492,7 +492,8 @@ encapsulated key, context, HRR key (see {{client-hrr}}), and payload as:
 
 ~~~
     pkR = Deserialize(ECHConfig.public_key)
-    enc, context = SetupBaseS(pkR, "tls ech" || 0x00 || ECHConfig)
+    enc, context = SetupBaseS(pkR,
+                              "tls ech" || 0x00 || ECHConfig)
     ech_hrr_key = context.Export("tls ech hrr key", 32)
     payload = context.Seal(ClientHelloOuterAAD,
                            EncodedClientHelloInner)
@@ -807,12 +808,11 @@ transmitted on the wire by the client:
 1. If CH1 contains the "encrypted_client_hello" extension but CH2 does not, or
    if CH2 contains the "encrypted_client_hello" extension but CH1 does not, then
    the server MUST abort the handshake with an "illegal_parameter" alert.
-1. If the "encrypted_client_hello" extension is sent in both CH1 and CH2,
-   the server follows the procedure in {{client-facing-server}} to decrypt the
-   second ClientHelloOuter, but it uses the previously-selected ECHConfig as
-   the set of candidate ECHConfigs. If decryption fails, the server aborts the
-   connection with a "decrypt_error" alert rather than continuing the handshake
-   with the second ClientHelloOuter.
+1. If the "encrypted_client_hello" extension is sent in CH2, the server follows
+   the procedure in {{client-facing-server}} to decrypt the extension, but it
+   uses the previously-selected ECHConfig as the set of candidate ECHConfigs.
+   If decryption fails, the server aborts the connection with a "decrypt_error"
+   alert rather than continuing the handshake with the second ClientHelloOuter.
 
 [[OPEN ISSUE: If the client-facing server implements stateless HRR, it has no
 way to send a cookie, short of as-yet-unspecified integration with the
