@@ -183,15 +183,13 @@ following actions:
 
 1. If it does not support ECH, it ignores the "encrypted_client_hello" extension
    and proceeds with the handshake as usual, per {{RFC8446}}, Section 4.1.2.
-1. If it supports ECH but does not recognize the configuration specified by the
-   client, then it ignores the extension and terminates the handshake using the
-   ClientHelloOuter. This is referred to as "ECH rejection". When ECH is
-   rejected, the server sends an acceptable ECH configuration in its
-   EncryptedExtensions message.
-1. If it supports ECH and recognizes the configuration, then it attempts to
-   decrypt the ClientHelloInner. It aborts the handshake if decryption fails;
-   otherwise it forwards the ClientHelloInner to the backend, who terminates the
-   connection. This is referred to as "ECH acceptance".
+1. If it supports ECH but cannot decrypt the extension, then it terminates the
+   handshake using the ClientHelloOuter. This is referred to as "ECH
+   rejection". When ECH is rejected, the server sends an acceptable ECH
+   configuration in its EncryptedExtensions message.
+1. If it supports ECH and decrypts the extension, it forwards the
+   ClientHelloInner to the backend, who terminates the connection. This is
+   referred to as "ECH acceptance".
 
 Upon receiving the server's response, the client determines whether or not ECH
 was accepted and proceeds with the handshake accordingly. (See
@@ -336,7 +334,7 @@ provided in the corresponding `ECHConfig.cipher_suites` list.
 
 config_id
 : The configuration identifier, equal to
-`Expand(Extract("", config), "tls13 ech config id", Nh)`, where `config` is the
+`Expand(Extract("", config), "tls ech config id", Nh)`, where `config` is the
 `ECHConfig` structure and `Extract`, `Expand`, and `Nh` are as specified by the
 cipher suite KDF. (Passing the literal `""` as the salt is interpreted by
 `Extract` as no salt being provided.) The length of this value SHOULD NOT be
@@ -494,15 +492,18 @@ encapsulated key, context, HRR key (see {{client-hrr}}), and payload as:
 
 ~~~
     pkR = Deserialize(ECHConfig.public_key)
-    enc, context = SetupBaseS(pkR, "tls13 ech")
-    ech_hrr_key = context.Export("tls13 ech hrr key", 32)
+    enc, context = SetupBaseS(pkR,
+                              "tls ech" || 0x00 || ECHConfig)
+    ech_hrr_key = context.Export("tls ech hrr key", 32)
     payload = context.Seal(ClientHelloOuterAAD,
                            EncodedClientHelloInner)
 ~~~
 
 Note that the HPKE functions Deserialize and SetupBaseS are those which match
 `ECHConfig.kem_id` and the AEAD/KDF used with `context` are those which match
-the client's chosen preference from `ECHConfig.cipher_suites`.
+the client's chosen preference from `ECHConfig.cipher_suites`. The `info`
+parameter to SetupBaseS is the concatenation of "tls ech", a zero byte, and
+the serialized ECHConfig.
 
 The value of the "encrypted_client_hello" extension in the ClientHelloOuter is
 a `ClientECH` with the following values:
@@ -511,6 +512,12 @@ a `ClientECH` with the following values:
 - `config_id`, the identifier of the chosen ECHConfig structure;
 - `enc`, as computed above; and
 - `payload`, as computed above.
+
+If optional configuration identifiers (see {{optional-configs}})) are used, the
+`config_id` field MAY be empty or randomly generated. Unless specified by the
+application using (D)TLS or externally configured on both sides,
+implementations MUST compute the field as specified in
+{{encrypted-client-hello}}.
 
 ## Recommended Padding Scheme {#padding}
 
@@ -645,13 +652,15 @@ follows:
 
 ~~~
     pkR = Deserialize(ECHConfig.public_key)
-    enc, context = SetupPSKS(
-        pkR, "tls13 ech hrr", ech_hrr_key, "hrr key")
+    enc, context = SetupPSKS(pkR, "tls ech" || 0x00 || ECHConfig,
+                             ech_hrr_key, "hrr key")
 ~~~
 
-Clients then encrypt the second ClientHelloInner using this new HPKE context.
-In doing so, the encrypted value is also authenticated by ech_hrr_key. The
-rationale for this is described in {{flow-hrr-hijack}}.
+The `info` parameter to SetupPSKS is the concatenation of "tls ech", a
+zero byte, and the serialized ECHConfig. Clients then encrypt the second
+ClientHelloInner using this new HPKE context. In doing so, the encrypted value
+is also authenticated by ech_hrr_key. The rationale for this is described in
+{{flow-hrr-hijack}}.
 
 Client-facing servers perform the corresponding process when decrypting second
 ClientHelloInner messages. In particular, upon receipt of a second ClientHello
@@ -659,14 +668,15 @@ message with a ClientECH value, servers set up their HPKE context and
 decrypt ClientECH as follows:
 
 ~~~
-    context = SetupPSKR(ClientECH.enc,
-        skR, "tls13 ech hrr", ech_hrr_key, "hrr key")
+    context = SetupPSKR(ClientECH.enc, skR,
+        "tls ech" || 0x00 || ECHConfig, ech_hrr_key, "hrr key")
     EncodedClientHelloInner = context.Open(ClientHelloOuterAAD,
                                            ClientECH.payload)
 ~~~
 
 ClientHelloOuterAAD is computed from the second ClientHelloOuter as described
-in {{authenticating-outer}}.
+in {{authenticating-outer}}. The `info` parameter to SetupPSKR is computed as
+above.
 
 If the client offered ECH in the first ClientHello, then it MUST offer ECH in
 the second. Likewise, if the client did not offer ECH in the first ClientHello,
@@ -714,7 +724,7 @@ MAY offer to resume sessions established without ECH.
 
 # Server Behavior {#server-behavior}
 
-## Client-Facing Server
+## Client-Facing Server {#client-facing-server}
 
 Upon receiving an "encrypted_client_hello" extension, the client-facing server
 determines if it will accept ECH, prior to negotiating any other TLS parameters.
@@ -722,60 +732,46 @@ Note that successfully decrypting the extension will result in a new
 ClientHello to process, so even the client's TLS version preferences may have
 changed.
 
-The ClientECH value is said to match a known ECHConfig if there exists
-an ECHConfig that can be used to successfully decrypt
-ClientECH.payload. This matching procedure should be done using
-one of the following two checks:
+First, the server collects a set of candidate ECHConfigs. This set is
+determined by one of the two following methods:
 
-1. Compare ClientECH.config_id against identifiers of known ECHConfig
-   and choose the one that matches.
-2. Use trial decryption of ClientECH.payload with known ECHConfig
-   and choose the one that succeeds.
+1. Compare ClientECH.config_id against identifiers of known ECHConfigs and
+   select the one that matches, if any, as a candidate.
+2. Collect all known ECHConfigs as candidates, with trial decryption below
+   determining the final selection.
 
-Some uses of ECH, such as local discovery mode, may omit the ClientECH.config_id
-since it can be used as a tracking vector. In such cases, trial decryption
-should be used for matching ClientECH to known ECHConfig. Unless specified by
-the application using (D)TLS or externally configured on both sides,
-implementations MUST use the first method.
+Some uses of ECH, such as local discovery mode, may omit the
+ClientECH.config_id since it can be used as a tracking vector. In such cases,
+the second method should be used for matching ClientECH to known ECHConfig. See
+{{optional-configs}}. Unless specified by the application using (D)TLS or
+externally configured on both sides, implementations MUST use the first method.
 
-If the ClientECH value does not match any known ECHConfig structure, it
-MUST ignore the extension and proceed with the connection, with the following
-added behavior:
+The server then iterates over all candidate ECHConfigs, attempting to decrypt
+the "encrypted_client_hello" extension:
 
-- It MUST include the "encrypted_client_hello" extension in its
-  EncryptedExtensions with the "retry_configs" field set to one or more
-  ECHConfig structures with up-to-date keys. Servers MAY supply multiple
-  ECHConfig values of different versions. This allows a server to support
-  multiple versions at once.
-- If offered, the server MUST ignore the "pre_shared_key" extension in the
-  ClientHello.
+The server verifies that the ECHConfig supports the cipher suite indicated by
+the ClientECH.cipher_suite and that the version of ECH indicated by the client
+matches the ECHConfig.version. If not, the server continues to the next
+candidate ECHConfig.
 
-Note that an unrecognized ClientECH.config_id value may be a GREASE ECH
-extension (see {{grease-extensions}}), so it is necessary for servers to proceed
-with the connection and rely on the client to abort if ECH was required. In
-particular, the unrecognized value alone does not indicate a misconfigured ECH
-advertisement ({{misconfiguration}}). Instead, servers can measure occurrences
-of the "ech_required" alert to detect this case.
-
-Once a suitable ECHConfig is found, the server verifies that the ECHConfig
-supports the cipher suite indicated by ClientECH.cipher_suite and that the
-version of ECH indicated by the client matches the ECHConfig.version. If not,
-then the server MUST abort with an "illegal_parameter" alert. Otherwise, the
-server decrypts ClientECH.payload, using the private key skR corresponding to
-ECHConfig, as follows:
+Next, the server decrypts ClientECH.payload, using the private key skR
+corresponding to ECHConfig, as follows:
 
 ~~~
-    context = SetupBaseR(ClientECH.enc, skR, "tls13 ech")
+    context = SetupBaseR(ClientECH.enc, skR,
+                         "tls ech" || 0x00 || ECHConfig)
     EncodedClientHelloInner = context.Open(ClientHelloOuterAAD,
                                            ClientECH.payload)
-    ech_hrr_key = context.Export("tls13 ech hrr key", 32)
+    ech_hrr_key = context.Export("tls ech hrr key", 32)
 ~~~
 
 ClientHelloOuterAAD is computed from ClientHelloOuter as described in
-{{authenticating-outer}}. If decryption fails, the server MUST abort the
-connection with a "decrypt_error" alert. Otherwise, the server reconstructs
-ClientHelloInner from EncodedClientHelloInner, as described in
-{{encoding-inner}}.
+{{authenticating-outer}}. The `info` parameter to SetupBaseS is the
+concatenation "tls ech", a zero byte, and the serialized ECHConfig. If
+decryption fails, the server continues to the next candidate ECHConfig.
+Otherwise, the server reconstructs ClientHelloInner from
+EncodedClientHelloInner, as described in {{encoding-inner}}. It then stops
+consider candidate ECHConfigs.
 
 Upon determining the ClientHelloInner, the client-facing server then forwards
 the ClientHelloInner to the appropriate backend server, which proceeds as in
@@ -785,6 +781,21 @@ second ClientHelloOuter using the modified procedure in {{server-hrr}}, and
 forwards the resulting second ClientHelloInner. The client-facing server
 forwards all other TLS messages between the client and backend server
 unmodified.
+
+Otherwise, if all candidate ECHConfigs fail to decrypt the extension, the
+client-facing server MUST ignore the extension and proceed with the connection
+using ClientHelloOuter. This connection proceeds as usual, except the server
+MUST include the "encrypted_client_hello" extension in its EncryptedExtensions
+with the "retry_configs" field set to one or more ECHConfig structures with
+up-to-date keys. Servers MAY supply multiple ECHConfig values of different
+versions. This allows a server to support multiple versions at once.
+
+Note that decryption failure could indicate a GREASE ECH extension (see
+{{grease-extensions}}), so it is necessary for servers to proceed with the
+connection and rely on the client to abort if ECH was required. In particular,
+the unrecognized value alone does not indicate a misconfigured ECH
+advertisement ({{misconfiguration}}). Instead, servers can measure occurrences
+of the "ech_required" alert to detect this case.
 
 ### HelloRetryRequest {#server-hrr}
 
@@ -797,9 +808,11 @@ transmitted on the wire by the client:
 1. If CH1 contains the "encrypted_client_hello" extension but CH2 does not, or
    if CH2 contains the "encrypted_client_hello" extension but CH1 does not, then
    the server MUST abort the handshake with an "illegal_parameter" alert.
-1. Suppose the "encrypted_client_hello" extension is sent in both CH1 and CH2,
-   If the configuration identifier (see {{ech-configuration}}) differs between
-   CH1 and CH2, then the server MUST abort with an "illegal_parameter" alert.
+1. If the "encrypted_client_hello" extension is sent in CH2, the server follows
+   the procedure in {{client-facing-server}} to decrypt the extension, but it
+   uses the previously-selected ECHConfig as the set of candidate ECHConfigs.
+   If decryption fails, the server aborts the connection with a "decrypt_error"
+   alert rather than continuing the handshake with the second ClientHelloOuter.
 
 [[OPEN ISSUE: If the client-facing server implements stateless HRR, it has no
 way to send a cookie, short of as-yet-unspecified integration with the
