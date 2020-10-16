@@ -334,7 +334,7 @@ provided in the corresponding `ECHConfig.cipher_suites` list.
 
 config_id
 : The configuration identifier, equal to
-`Expand(Extract("", config), "tls13 ech config id", Nh)`, where `config` is the
+`Expand(Extract("", config), "tls ech config id", Nh)`, where `config` is the
 `ECHConfig` structure and `Extract`, `Expand`, and `Nh` are as specified by the
 cipher suite KDF. (Passing the literal `""` as the salt is interpreted by
 `Extract` as no salt being provided.) The length of this value SHOULD NOT be
@@ -492,8 +492,8 @@ encapsulated key, context, HRR key (see {{client-hrr}}), and payload as:
 
 ~~~
     pkR = Deserialize(ECHConfig.public_key)
-    enc, context = SetupBaseS(pkR, "tls13 ech\0" + ECHConfig)
-    ech_hrr_key = context.Export("tls13 ech hrr key", 32)
+    enc, context = SetupBaseS(pkR, "tls ech" || 0x00 || ECHConfig)
+    ech_hrr_key = context.Export("tls ech hrr key", 32)
     payload = context.Seal(ClientHelloOuterAAD,
                            EncodedClientHelloInner)
 ~~~
@@ -501,7 +501,7 @@ encapsulated key, context, HRR key (see {{client-hrr}}), and payload as:
 Note that the HPKE functions Deserialize and SetupBaseS are those which match
 `ECHConfig.kem_id` and the AEAD/KDF used with `context` are those which match
 the client's chosen preference from `ECHConfig.cipher_suites`. The `info`
-parameter to SetupBaseS is the concatenation of "tls13 ech", a zero byte, and
+parameter to SetupBaseS is the concatenation of "tls ech", a zero byte, and
 the serialized ECHConfig.
 
 The value of the "encrypted_client_hello" extension in the ClientHelloOuter is
@@ -650,11 +650,11 @@ follows:
 
 ~~~
     pkR = Deserialize(ECHConfig.public_key)
-    enc, context = SetupPSKS(pkR, "tls13 ech hrr\0" + ECHConfig,
+    enc, context = SetupPSKS(pkR, "tls ech" || 0x00 || ECHConfig,
                              ech_hrr_key, "hrr key")
 ~~~
 
-The `info` parameter to SetupPSKS is the concatenation of "tls13 ech hrr", a
+The `info` parameter to SetupPSKS is the concatenation of "tls ech", a
 zero byte, and the serialized ECHConfig. Clients then encrypt the second
 ClientHelloInner using this new HPKE context. In doing so, the encrypted value
 is also authenticated by ech_hrr_key. The rationale for this is described in
@@ -667,7 +667,7 @@ decrypt ClientECH as follows:
 
 ~~~
     context = SetupPSKR(ClientECH.enc, skR,
-        "tls13 ech hrr\0" + ECHConfig, ech_hrr_key, "hrr key")
+        "tls ech" || 0x00 || ECHConfig, ech_hrr_key, "hrr key")
     EncodedClientHelloInner = context.Open(ClientHelloOuterAAD,
                                            ClientECH.payload)
 ~~~
@@ -757,15 +757,15 @@ corresponding to ECHConfig, as follows:
 
 ~~~
     context = SetupBaseR(ClientECH.enc, skR,
-                         "tls13 ech\0" + ECHConfig)
+                         "tls ech" || 0x00 || ECHConfig)
     EncodedClientHelloInner = context.Open(ClientHelloOuterAAD,
                                            ClientECH.payload)
-    ech_hrr_key = context.Export("tls13 ech hrr key", 32)
+    ech_hrr_key = context.Export("tls ech hrr key", 32)
 ~~~
 
 ClientHelloOuterAAD is computed from ClientHelloOuter as described in
 {{authenticating-outer}}. The `info` parameter to SetupBaseS is the
-concatenation "tls13 ech", a zero byte, and the serialized ECHConfig. If
+concatenation "tls ech", a zero byte, and the serialized ECHConfig. If
 decryption fails, the server continues to the next candidate ECHConfig.
 Otherwise, the server reconstructs ClientHelloInner from
 EncodedClientHelloInner, as described in {{encoding-inner}}. It then stops
