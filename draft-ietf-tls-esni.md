@@ -375,7 +375,7 @@ This document also defines the "ech_required" alert, which clients MUST send
 when it offered an "encrypted_client_hello" extension that was not accepted by
 the server. (See {{alerts}}.)
 
-## Incorporating Outer Extensions {#outer-extensions}
+## Encoding the ClientHelloInner {#encoding-inner}
 
 Some TLS 1.3 extensions can be quite large and having them both in
 ClientHelloInner and ClientHelloOuter will lead to a very large overall size.
@@ -388,33 +388,22 @@ may use the "outer_extensions" extension.
        outer_extensions(0xfd00), (65535)
     } ExtensionType;
 
-    struct {
-       ExtensionType outer_extensions<2..254>;
-       uint8 inner_digest<32..255>;
-    } OuterExtensions;
+    ExtensionType OuterExtensions<2..254>;
 ~~~
 
 OuterExtensions consists of one or more ExtensionType values, each of which
-reference an extension in ClientHelloOuter, and a digest of the complete
-ClientHelloInner.
+reference an extension in ClientHelloOuter.
 
 When sending ClientHello, the client first computes ClientHelloInner, including
 any PSK binders. It then computes a new value, the EncodedClientHelloInner, by
-first making a copy of ClientHelloInner. It then MAY substitute extensions
-which it knows will be duplicated in ClientHelloOuter. To do so, the client
-computes the digest of the entire ClientHelloInner message as:
+first making a copy of ClientHelloInner. It then replaces the legacy\_session\_id
+field with an empty string.
 
-~~~
-  inner_digest = Expand(Extract("", inner),
-                        "tls13 ech inner digest", Nh)
-~~~
-
-where `inner` is the ClientHelloInner structure and `Extract`, `Expand`, and
-`Nh` are as defined by the KDF API in {{!I-D.irtf-cfrg-hpke}}. Then, the client
-removes and replaces extensions from EncodedClientHelloInner with a single
-"outer_extensions" extension. Removed extensions MUST be ordered consecutively
-in ClientHelloInner. The list of outer extensions,
-OuterExtensions.outer_extensions, includes those which were removed from
+The client then MAY substitute extensions which it knows will be duplicated in
+ClientHelloOuter. To do so, the client removes and replaces extensions from
+EncodedClientHelloInner with a single "outer_extensions" extension. Removed
+extensions MUST be ordered consecutively in ClientHelloInner. The list of outer
+extensions, OuterExtensions, includes those which were removed from
 EncodedClientHelloInner, in the order in which they were removed.
 
 Finally, EncodedClientHelloInner is serialized as a ClientHello structure,
@@ -422,18 +411,29 @@ defined in Section 4.1.2 of {{RFC8446}}. Note this does not include the
 four-byte header included in the Handshake structure.
 
 The client-facing server computes ClientHelloInner by reversing this process.
-It scans EncodedClientHelloInner for an "outer_extensions" extension. If there
-is none, the ClientHelloInner is the EncodedClientHelloInner. Otherwise, it
-replaces the extension with the corresponding sequence of extensions in
-the ClientHelloOuter. If any referenced extensions are missing, the server
-MUST abort the connection with an "illegal_parameter" alert.
-The server then computes the digest of the reconstructed
-ClientHelloInner. If the digest does not equal OuterExtensions.inner_digest,
-then the server MUST abort the connection with a "decrypt_error" alert.
+First it makes a copy of EncodedClientHelloInner and copies the
+legacy_session_id field from ClientHelloOuter. It then looks for an
+"outer_extensions" extension. If found, it replaces the extension with the
+corresponding sequence of extensions in the ClientHelloOuter. If any referenced
+extensions are missing or if "encrypted_client_hello" appears in the list, the
+server MUST abort the connection with an "illegal_parameter" alert.
 
 The "outer_extensions" extension is only used for compressing the
 ClientHelloInner. It MUST NOT be sent in either ClientHelloOuter or
 ClientHelloInner.
+
+## Authenticating the ClientHelloOuter {#authenticating-outer}
+
+To prevent a network attacker from modifying the reconstructed ClientHelloInner
+(see {{flow-clienthello-malleability}}), ECH authenticates ClientHelloOuter by
+deriving a ClientHelloOuterAAD value. This is computed by serializing
+ClientHelloOuter with the "encrypted_client_hello" extension removed.
+ClientHelloOuterAAD is then passed as the associated data parameter to the HPKE
+encryption.
+
+Note the decompression process in {{encoding-inner}} forbids
+"encrypted_client_hello" in OuterExtensions. This ensures the unauthenticated
+portion of ClientHelloOuter is not incorporated into ClientHelloInner.
 
 # Client Behavior {#client-behavior}
 
@@ -454,12 +454,12 @@ standard ClientHello, with the exception of the following rules:
    incompatible with ECH.
 1. It MUST NOT offer to resume any session for TLS 1.2 and below.
 1. It SHOULD contain TLS padding {{!RFC7685}} as described in {{padding}}.
-1. If it intends to compress any extensions (see {{outer-extensions}}), it
-   MUST order those extensions consecutively.
+1. If it intends to compress any extensions (see {{encoding-inner}}), it MUST
+   order those extensions consecutively.
 
 The client then constructs EncodedClientHelloInner as described in
-{{outer-extensions}}. Finally, it constructs the ClientHelloOuter message just
-as it does a standard ClientHello, with the exception of the following rules:
+{{encoding-inner}}. Finally, it constructs the ClientHelloOuter message just as
+it does a standard ClientHello, with the exception of the following rules:
 
 1. It MUST offer to negotiate TLS 1.3 or above.
 1. If it compressed any extensions in EncodedClientHelloInner, it MUST copy the
@@ -468,10 +468,9 @@ as it does a standard ClientHello, with the exception of the following rules:
    ClientHelloInner.random. Instead, It MUST generate a fresh
    ClientHelloOuter.random using a secure random number generator. (See
    {{flow-client-reaction}}.)
-1. If implementing TLS 1.3's compatibility mode (see Appendix D.4 of
-   {{RFC8446}}), it MUST copy the legacy\_session\_id field from
-   ClientHelloInner. This allows the server to echo the correct session ID
-   when ECH is negotiated.
+1. It MUST copy the legacy\_session\_id field from ClientHelloInner. This
+   allows the server to echo the correct session ID for TLS 1.3's compatibility
+   mode (see Appendix D.4 of {{RFC8446}}) when ECH is negotiated.
 1. It MUST include an "encrypted_client_hello" extension with a payload
    constructed as described below.
 1. The value of `ECHConfig.public_name` MUST be placed in the "server_name"
@@ -484,15 +483,21 @@ implementations need to take care to ensure that sensitive extensions are not
 offered in the ClientHelloOuter. See {{outer-clienthello}} for additional
 guidance.
 
-To encrypt EncodedClientHelloInner, the client first needs to generate the HPKE
-encryption context. It computes the encapsulated key, context, HRR key (see
-{{client-hrr}}), and payload as:
+To encrypt EncodedClientHelloInner, the client first computes
+ClientHelloOuterAAD as described in {{authenticating-outer}}. Note this
+requires the "encrypted_client_hello" be computed after all other extensions.
+In particular, this is possible because the "pre_shared_key" extension is
+forbidden in ClientHelloOuter.
+
+The client then generates the HPKE encryption context. Finally, it computes the
+encapsulated key, context, HRR key (see {{client-hrr}}), and payload as:
 
 ~~~
     pkR = Deserialize(ECHConfig.public_key)
     enc, context = SetupBaseS(pkR, "tls13 ech")
     ech_hrr_key = context.Export("tls13 ech hrr key", 32)
-    payload = context.Seal("", EncodedClientHelloInner)
+    payload = context.Seal(ClientHelloOuterAAD,
+                           EncodedClientHelloInner)
 ~~~
 
 Note that the HPKE functions Deserialize and SetupBaseS are those which match
@@ -656,8 +661,12 @@ decrypt ClientECH as follows:
 ~~~
     context = SetupPSKR(ClientECH.enc,
         skR, "tls13 ech hrr", ech_hrr_key, "hrr key")
-    EncodedClientHelloInner = context.Open("", ClientECH.payload)
+    EncodedClientHelloInner = context.Open(ClientHelloOuterAAD,
+                                           ClientECH.payload)
 ~~~
+
+ClientHelloOuterAAD is computed from the second ClientHelloOuter as described
+in {{authenticating-outer}}.
 
 If the client offered ECH in the first ClientHello, then it MUST offer ECH in
 the second. Likewise, if the client did not offer ECH in the first ClientHello,
@@ -757,13 +766,16 @@ ECHConfig, as follows:
 
 ~~~
     context = SetupBaseR(ClientECH.enc, skR, "tls13 ech")
-    EncodedClientHelloInner = context.Open("", ClientECH.payload)
+    EncodedClientHelloInner = context.Open(ClientHelloOuterAAD,
+                                           ClientECH.payload)
     ech_hrr_key = context.Export("tls13 ech hrr key", 32)
 ~~~
 
-If decryption fails, the server MUST abort the connection with a
-"decrypt_error" alert. Otherwise, the server reconstructs ClientHelloInner from
-EncodedClientHelloInner, as described in {{outer-extensions}}.
+ClientHelloOuterAAD is computed from ClientHelloOuter as described in
+{{authenticating-outer}}. If decryption fails, the server MUST abort the
+connection with a "decrypt_error" alert. Otherwise, the server reconstructs
+ClientHelloInner from EncodedClientHelloInner, as described in
+{{encoding-inner}}.
 
 Upon determining the ClientHelloInner, the client-facing server then forwards
 the ClientHelloInner to the appropriate backend server, which proceeds as in
@@ -1000,13 +1012,9 @@ send context-specific values in ClientHelloOuter.
 Values which are independent of the true server name, or other information the
 client wishes to protect, MAY be included in ClientHelloOuter. If they match
 the corresponding ClientHelloInner, they MAY be compressed as described in
-{{outer-extensions}}. However, note the payload length reveals information
-about which extensions are compressed, so inner extensions which only sometimes
-match the corresponding outer extension SHOULD NOT be compressed.
-
-[[OPEN ISSUE: In addition to the fuzzy leak from the length, there is an
-active attack to probe compressed extensions. See issue #323. We should either
-document this attack, or bind ClientHelloOuter.]]
+{{encoding-inner}}. However, note the payload length reveals information about
+which extensions are compressed, so inner extensions which only sometimes match
+the corresponding outer extension SHOULD NOT be compressed.
 
 Clients MAY include additional extensions in ClientHelloOuter to avoid
 signaling unusual behavior to passive observers, provided the choice of value
@@ -1240,7 +1248,7 @@ used as an oracle to learn the client's SNI.
 This attack aims to leak information about secret parts of the encrypted
 ClientHello by adding attacker-controlled parameters and observing the server's
 response. In particular, the compression mechanism described in
-{{outer-extensions}} references parts of a potentially attacker-controlled
+{{encoding-inner}} references parts of a potentially attacker-controlled
 ClientHelloOuter to construct ClientHelloInner, or a buggy server may
 incorrectly apply parameters from ClientHelloOuter to the handshake.
 
@@ -1285,14 +1293,12 @@ oracle for testing encrypted SNI values.
 This attack may be generalized to any parameter which the server varies by
 server name, such as ALPN preferences.
 
-ECH mitigates this attack by only using ClientHelloOuter to compute
-ClientHelloInner and authenticating all of ClientHelloInner with the HPKE AEAD.
-If any extensions are compressed as in {{outer-extensions}}, the
-OuterExtensions.inner_digest field authenticates the decompressed result. If
-none are compressed, the entire ClientHello is encrypted and authenticated
-directly. An earlier iteration of this specification only encrypted and
-authenticated the "server_name" extension, which left the overall ClientHello
-vulnerable to an analogue of this attack.
+ECH mitigates this attack by only negotiating TLS parameters from
+ClientHelloInner and authenticating all inputs to the ClientHelloInner
+(EncodedClientHelloInner and ClientHelloOuter) with the HPKE AEAD. See
+{{authenticating-outer}}. An earlier iteration of this specification only
+encrypted and authenticated the "server_name" extension, which left the overall
+ClientHello vulnerable to an analogue of this attack.
 
 # IANA Considerations
 
