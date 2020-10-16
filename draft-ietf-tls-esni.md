@@ -385,7 +385,7 @@ may use the "outer_extensions" extension.
 
 ~~~
     enum {
-       outer_extensions(0xfe00), (65535)
+       outer_extensions(0xfd00), (65535)
     } ExtensionType;
 
     struct {
@@ -1303,7 +1303,7 @@ for ExtensionType (defined in {{!RFC8446}}):
 
 1. encrypted_client_hello(0xfe08), with "TLS 1.3" column values being set to
    "CH, EE", and "Recommended" column being set to "Yes".
-3. outer_extensions(0xfe00), with the "TLS 1.3" column values being set to "",
+3. outer_extensions(0xfd00), with the "TLS 1.3" column values being set to "",
    and "Recommended" column being set to "Yes".
 
 ## Update of the TLS Alert Registry {#alerts}
