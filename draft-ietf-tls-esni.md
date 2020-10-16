@@ -397,7 +397,7 @@ reference an extension in ClientHelloOuter.
 When sending ClientHello, the client first computes ClientHelloInner, including
 any PSK binders. It then computes a new value, the EncodedClientHelloInner, by
 first making a copy of ClientHelloInner. It then replaces the legacy\_session\_id
-field with an empty value.
+field with an empty string.
 
 The client then MAY substitute extensions which it knows will be duplicated in
 ClientHelloOuter. To do so, the client removes and replaces extensions from
@@ -426,10 +426,10 @@ ClientHelloInner.
 
 To prevent a network attacker from modifying the reconstructed ClientHelloInner
 (see {{flow-clienthello-malleability}}), ECH authenticates ClientHelloOuter by
-deriving a ClientHelloOuterAAD value. This is computed by serializing ClientHelloOuter
-with the "encrypted_client_hello" extension removed.
-ClientHelloOuterAAD is then passed as the associated data parameter to the
-HPKE encryption.
+deriving a ClientHelloOuterAAD value. This is computed by serializing
+ClientHelloOuter with the "encrypted_client_hello" extension removed.
+ClientHelloOuterAAD is then passed as the associated data parameter to the HPKE
+encryption.
 
 Note the decompression process in {{encoding-inner}} forbids
 "encrypted_client_hello" in OuterExtensions. This ensures the unauthenticated
