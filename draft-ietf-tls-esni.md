@@ -722,7 +722,7 @@ MAY offer to resume sessions established without ECH.
 
 # Server Behavior {#server-behavior}
 
-## Client-Facing Server
+## Client-Facing Server {#client-facing-server}
 
 Upon receiving an "encrypted_client_hello" extension, the client-facing server
 determines if it will accept ECH, prior to negotiating any other TLS parameters.
@@ -806,9 +806,12 @@ transmitted on the wire by the client:
 1. If CH1 contains the "encrypted_client_hello" extension but CH2 does not, or
    if CH2 contains the "encrypted_client_hello" extension but CH1 does not, then
    the server MUST abort the handshake with an "illegal_parameter" alert.
-1. Suppose the "encrypted_client_hello" extension is sent in both CH1 and CH2,
-   If the configuration identifier (see {{ech-configuration}}) differs between
-   CH1 and CH2, then the server MUST abort with an "illegal_parameter" alert.
+1. If the "encrypted_client_hello" extension is sent in both CH1 and CH2,
+   the server follows the procedure in {{client-facing-server}} to decrypt the
+   second ClientHelloOuter, but it uses the previously-selected ECHConfig as
+   the set of candidate ECHConfigs. If decryption fails, the server aborts the
+   connection with a "decrypt_error" alert rather than continuing the handshake
+   with the second ClientHelloOuter.
 
 [[OPEN ISSUE: If the client-facing server implements stateless HRR, it has no
 way to send a cookie, short of as-yet-unspecified integration with the
