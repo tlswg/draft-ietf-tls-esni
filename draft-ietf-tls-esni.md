@@ -782,15 +782,11 @@ unmodified.
 
 Otherwise, if all candidate ECHConfigs fail to decrypt the extension, the
 client-facing server MUST ignore the extension and proceed with the connection
-using ClientHelloOuter, with the following added behavior:
-
-- It MUST include the "encrypted_client_hello" extension in its
-  EncryptedExtensions with the "retry_configs" field set to one or more
-  ECHConfig structures with up-to-date keys. Servers MAY supply multiple
-  ECHConfig values of different versions. This allows a server to support
-  multiple versions at once.
-- If offered, the server MUST ignore the "pre_shared_key" extension in the
-  ClientHello.
+using ClientHelloOuter. This connection proceeds as usual, except the server
+MUST include the "encrypted_client_hello" extension in its EncryptedExtensions
+with the "retry_configs" field set to one or more ECHConfig structures with
+up-to-date keys. Servers MAY supply multiple ECHConfig values of different
+versions. This allows a server to support multiple versions at once.
 
 Note that decryption failure could indicate a GREASE ECH extension (see
 {{grease-extensions}}), so it is necessary for servers to proceed with the
