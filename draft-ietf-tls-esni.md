@@ -396,8 +396,8 @@ reference an extension in ClientHelloOuter.
 
 When sending ClientHello, the client first computes ClientHelloInner, including
 any PSK binders. It then computes a new value, the EncodedClientHelloInner, by
-first making a copy of ClientHelloInner. It then replaces the legacy\_session\_id
-field with an empty string.
+first making a copy of ClientHelloInner. It then replaces the
+legacy\_session\_id field with an empty string.
 
 The client then MAY substitute extensions which it knows will be duplicated in
 ClientHelloOuter. To do so, the client removes and replaces extensions from
