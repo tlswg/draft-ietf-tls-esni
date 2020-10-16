@@ -667,11 +667,6 @@ then it MUST NOT not offer ECH in the second.
 hand, the requirements on info seem weaker, but maybe actually this needs to be
 secret? Analysis needed.]]
 
-[[OPEN ISSUE: If the client-facing server implements stateless HRR, it has no
-way to send a cookie, short of as-yet-unspecified integration with the
-backend server. Stateless HRR on the client-facing server works fine, however.
-See issue #333.]]
-
 ## GREASE Extensions {#grease-extensions}
 
 If the client attempts to connect to a server and does not have an ECHConfig
@@ -781,10 +776,23 @@ unmodified.
 
 ### HelloRetryRequest {#server-hrr}
 
-It is an error for the client to offer ECH before the HelloRetryRequest but not
-after. Likewise, it is an error for the client to offer ECH after the
-HelloRetryRequest but not before. If either of these conditions occurs, then the
-client-facing server MUST abort the handshake with an "illegal_parameter" alert.
+In case a HelloRetryRequest (HRR) is sent, the client-facing server MUST
+consistently accept or decline ECH between the two ClientHellos, using the same
+ECHConfig, and abort the handshake if this is not possible. This is achieved as
+follows. Let CH1 and CH2 denote, respectively, the first and second ClientHello
+transmitted on the wire by the client:
+
+1. If CH1 contains the "encrypted_client_hello" extension but CH2 does not, or
+   if CH2 contains the "encrypted_client_hello" extension but CH1 does not, then
+   the server MUST abort the handshake with an "illegal_parameter" alert.
+1. Suppose the "encrypted_client_hello" extension is sent in both CH1 and CH2,
+   If the configuration identifier (see {{ech-configuration}}) differs between
+   CH1 and CH2, then the server MUST abort with an "illegal_parameter" alert.
+
+[[OPEN ISSUE: If the client-facing server implements stateless HRR, it has no
+way to send a cookie, short of as-yet-unspecified integration with the
+backend server. Stateful HRR on the client-facing server works fine, however.
+See issue #333.]]
 
 ## Backend Server Behavior {#backend-server-behavior}
 
