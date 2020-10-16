@@ -426,8 +426,8 @@ ClientHelloInner.
 
 To prevent a network attacker from modifying the reconstructed ClientHelloInner
 (see {{flow-clienthello-malleability}}), ECH authenticates ClientHelloOuter by
-deriving a ClientHelloOuterAAD value. This is computed by removing the
-"encrypted_client_hello" extension from ClientHelloOuter and serializing it.
+deriving a ClientHelloOuterAAD value. This is computed by serializing ClientHelloOuter
+with the "encrypted_client_hello" extension removed.
 ClientHelloOuterAAD is then passed as the associated data parameter to the
 HPKE encryption.
 
