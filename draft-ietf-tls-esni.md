@@ -233,7 +233,7 @@ The ECH configuration is defined by the following `ECHConfigs` structure.
         uint16 version;
         uint16 length;
         select (ECHConfig.version) {
-          case 0xff08: ECHConfigContents contents;
+          case 0xfe08: ECHConfigContents contents;
         }
     } ECHConfig;
 
@@ -313,7 +313,7 @@ extension, defined as follows:
 
 ~~~
     enum {
-       encrypted_client_hello(0xff08), (65535)
+       encrypted_client_hello(0xfe08), (65535)
     } ExtensionType;
 ~~~
 
@@ -385,7 +385,7 @@ may use the "outer_extensions" extension.
 
 ~~~
     enum {
-       outer_extensions(0xff04), (65535)
+       outer_extensions(0xfe00), (65535)
     } ExtensionType;
 
     struct {
@@ -1301,9 +1301,9 @@ vulnerable to an analogue of this attack.
 IANA is requested to create the following two entries in the existing registry
 for ExtensionType (defined in {{!RFC8446}}):
 
-1. encrypted_client_hello(0xff08), with "TLS 1.3" column values being set to
+1. encrypted_client_hello(0xfe08), with "TLS 1.3" column values being set to
    "CH, EE", and "Recommended" column being set to "Yes".
-3. outer_extensions(0xff04), with the "TLS 1.3" column values being set to "",
+3. outer_extensions(0xfe00), with the "TLS 1.3" column values being set to "",
    and "Recommended" column being set to "Yes".
 
 ## Update of the TLS Alert Registry {#alerts}
