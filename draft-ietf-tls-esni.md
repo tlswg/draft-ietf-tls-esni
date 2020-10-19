@@ -439,10 +439,11 @@ portion of ClientHelloOuter is not incorporated into ClientHelloInner.
 
 To offer ECH, the client first chooses a suitable ECH configuration. To
 determine if a given `ECHConfig` is suitable, it checks that it supports the KEM
-algorithm identified by `ECHConfig.kem_id` and at least one KDF/AEAD algorithm
-identified by `ECHConfig.cipher_suites`. Once a suitable configuration is found,
-the client selects the cipher suite it will use for encryption. It MUST NOT
-choose a cipher suite not advertised by the configuration.
+algorithm identified by `ECHConfig.kem_id`, at least one KDF/AEAD algorithm
+identified by `ECHConfig.cipher_suites`, and the version of ECH indicated by
+`ECHConfig.version`. Once a suitable configuration is found, the client selects
+the cipher suite it will use for encryption. It MUST NOT choose a cipher suite
+not advertised by the configuration.
 
 Next, the client constructs the ClientHelloInner message just as it does a
 standard ClientHello, with the exception of the following rules:
@@ -455,8 +456,9 @@ standard ClientHello, with the exception of the following rules:
 1. If it intends to compress any extensions (see {{encoding-inner}}), it MUST
    order those extensions consecutively.
 
-Next, the client constructs the ClientHelloOuter message just as it does a
-standard ClientHello, with the exception of the following rules:
+The client then constructs EncodedClientHelloInner as described in
+{{encoding-inner}}. Finally, it constructs the ClientHelloOuter message just as
+it does a standard ClientHello, with the exception of the following rules:
 
 1. It MUST offer to negotiate TLS 1.3 or above.
 1. If it compressed any extensions in EncodedClientHelloInner, it MUST copy the
@@ -475,10 +477,9 @@ standard ClientHello, with the exception of the following rules:
 1. It MUST NOT include the "pre_shared_key" extension. (See
    {{flow-clienthello-malleability}}.)
 
-Next, the client constructs EncodedClientHelloInner as described in
-{{encoding-inner}}. It may duplicate non-sensitive extensions in both messages,
-but implementations need to take care to ensure that sensitive extensions are
-not offered in the ClientHelloOuter. See {{outer-clienthello}} for additional
+The client might duplicate non-sensitive extensions in both messages. However,
+implementations need to take care to ensure that sensitive extensions are not
+offered in the ClientHelloOuter. See {{outer-clienthello}} for additional
 guidance.
 
 To encrypt EncodedClientHelloInner, the client first computes
@@ -579,11 +580,12 @@ alert. It then processes the "retry_configs" field from the server's
 
 If at least one of the values contains a version supported by the client, it can
 regard the ECH keys as securely replaced by the server. It SHOULD retry the
-handshake with a new transport connection, using that value to encrypt the
-ClientHello. The value may only be applied to the retry connection. The client
-MUST continue to use the previously-advertised keys for subsequent connections.
-This avoids introducing pinning concerns or a tracking vector, should a
-malicious server present client-specific retry keys to identify clients.
+handshake with a new transport connection, using the retry configurations
+supplied by the server. The retry configurations may only be applied to the
+retry connection. The client MUST continue to use the previously-advertised
+configurations for subsequent connections. This avoids introducing pinning
+concerns or a tracking vector, should a malicious server present client-specific
+retry keys to identify clients.
 
 If none of the values provided in "retry_configs" contains a supported version,
 the client can regard ECH as securely disabled by the server. As below, it
