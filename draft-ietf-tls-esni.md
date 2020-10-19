@@ -822,9 +822,10 @@ See issue #333.]]
 ## Backend Server Behavior {#backend-server-behavior}
 
 When the client-facing server accepts ECH, it forwards the ClientHelloInner to
-the backend server, who terminates the connection. If the ClientHelloInner
-contains an empty "encrypted_client_hello" extension, then the backend server
-MUST confirm ECH acceptance by setting ServerHello.random[24:32] to
+the backend server, who terminates the connection. If the backend server
+negotiates TLS 1.3 or higher and the ClientHelloInner contains an empty
+"encrypted_client_hello" extension, then the backend server MUST confirm ECH
+acceptance by setting ServerHello.random[24:32] to
 
 ~~~~
     accept_confirmation = HKDF-Expand-Label(
@@ -836,6 +837,10 @@ MUST confirm ECH acceptance by setting ServerHello.random[24:32] to
 where HKDF-Expand-Label and HKDF-Extract are as defined in {{RFC8446}}. The
 value of ServerHello.random[0:24] is generated as usual by invoking a secure
 random number generator (see {{RFC8446}}, Section 4.1.2).
+
+The backend server MUST NOT perform this operation if it negotiated TLS 1.2 or
+below. Note that doing so would overwrite the downgrade signal for TLS 1.3 (see
+{{RFC8446}}, Section 4.1.3).
 
 # Compatibility Issues
 
@@ -1072,9 +1077,9 @@ positive occurring for a given connection is only 1 in 2^64. This value is
 smaller than the probability of network connection failures in practice.
 
 Note that the same bytes of the ServerHello.random are used to implement
-downgrade protection for TLS 1.3 (see {{RFC8446}}, Section 4.1.3). The backend
-server's signal of acceptance does not interfere with this mechanism because ECH
-is only supported in TLS 1.3 or higher.
+downgrade protection for TLS 1.3 (see {{RFC8446}}, Section 4.1.3). These
+mechanisms do not interfere because the backend server only signals ECH
+acceptance in TLS 1.3 or higher.
 
 ## Comparison Against Criteria
 
