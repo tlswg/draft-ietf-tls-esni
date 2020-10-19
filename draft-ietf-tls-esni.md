@@ -289,7 +289,7 @@ generating a ClientHello message. These are described below
 
 ## Configuration Extensions {#config-extensions}
 
-ECH configuration extensions are used to to provide room for additional
+ECH configuration extensions are used to provide room for additional
 functionality as needed. See {{config-extensions-guidance}} for guidance on
 which types of extensions are appropriate for this structure.
 
@@ -455,9 +455,8 @@ standard ClientHello, with the exception of the following rules:
 1. If it intends to compress any extensions (see {{encoding-inner}}), it MUST
    order those extensions consecutively.
 
-The client then constructs EncodedClientHelloInner as described in
-{{encoding-inner}}. Finally, it constructs the ClientHelloOuter message just as
-it does a standard ClientHello, with the exception of the following rules:
+Next, the client constructs the ClientHelloOuter message just as it does a
+standard ClientHello, with the exception of the following rules:
 
 1. It MUST offer to negotiate TLS 1.3 or above.
 1. If it compressed any extensions in EncodedClientHelloInner, it MUST copy the
@@ -476,9 +475,10 @@ it does a standard ClientHello, with the exception of the following rules:
 1. It MUST NOT include the "pre_shared_key" extension. (See
    {{flow-clienthello-malleability}}.)
 
-The client might duplicate non-sensitive extensions in both messages. However,
-implementations need to take care to ensure that sensitive extensions are not
-offered in the ClientHelloOuter. See {{outer-clienthello}} for additional
+Next, the client constructs EncodedClientHelloInner as described in
+{{encoding-inner}}. It may duplicate non-sensitive extensions in both messages,
+but implementations need to take care to ensure that sensitive extensions are
+not offered in the ClientHelloOuter. See {{outer-clienthello}} for additional
 guidance.
 
 To encrypt EncodedClientHelloInner, the client first computes
@@ -577,13 +577,13 @@ authenticated, the client MUST abort the connection with an "ech_required"
 alert. It then processes the "retry_configs" field from the server's
 "encrypted_client_hello" extension.
 
-If one of the values contains a version supported by the client, it can regard
-the ECH keys as securely replaced by the server. It SHOULD retry the handshake
-with a new transport connection, using that value to encrypt the ClientHello.
-The value may only be applied to the retry connection. The client MUST continue
-to use the previously-advertised keys for subsequent connections. This avoids
-introducing pinning concerns or a tracking vector, should a malicious server
-present client-specific retry keys to identify clients.
+If at least one of the values contains a version supported by the client, it can
+regard the ECH keys as securely replaced by the server. It SHOULD retry the
+handshake with a new transport connection, using that value to encrypt the
+ClientHello. The value may only be applied to the retry connection. The client
+MUST continue to use the previously-advertised keys for subsequent connections.
+This avoids introducing pinning concerns or a tracking vector, should a
+malicious server present client-specific retry keys to identify clients.
 
 If none of the values provided in "retry_configs" contains a supported version,
 the client can regard ECH as securely disabled by the server. As below, it
@@ -692,9 +692,9 @@ If the client attempts to connect to a server and does not have an ECHConfig
 structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
 "encrypted_client_hello" extension as follows:
 
-- Set the "suite" field to a supported ECHCipherSuite. The selection SHOULD
-  vary to exercise all supported configurations, but MAY be held constant for
-  successive connections to the same server in the same session.
+- Set the "cipher_suite" field to a supported ECHCipherSuite. The selection
+  SHOULD vary to exercise all supported configurations, but MAY be held constant
+  for successive connections to the same server in the same session.
 
 - Set the "config_id" field to a randomly-generated string of `Nh` bytes,
   where `Nh` is the output length of the `Extract` function of the KDF
@@ -705,9 +705,9 @@ structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
   output by the HPKE KEM.
 
 - Set the "payload" field to a randomly-generated string of L+C bytes, where C
-  is the ciphertext expansion of selected AEAD scheme and L is the size of the
-  ClientHelloInner message the client would use given an ECHConfig structure,
-  padded according to {{padding}}.
+  is the ciphertext expansion of the selected AEAD scheme and L is the size of
+  the EncodedClientHelloInner the client would compute when offering ECH, padded
+  according to {{padding}}.
 
 If the server sends an "encrypted_client_hello" extension, the client MUST check
 the extension syntactically and abort the connection with a "decode_error" alert
@@ -771,7 +771,7 @@ concatenation "tls ech", a zero byte, and the serialized ECHConfig. If
 decryption fails, the server continues to the next candidate ECHConfig.
 Otherwise, the server reconstructs ClientHelloInner from
 EncodedClientHelloInner, as described in {{encoding-inner}}. It then stops
-consider candidate ECHConfigs.
+considering candidate ECHConfigs.
 
 Upon determining the ClientHelloInner, the client-facing server then forwards
 the ClientHelloInner to the appropriate backend server, which proceeds as in
