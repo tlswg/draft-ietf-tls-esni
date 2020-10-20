@@ -443,7 +443,7 @@ algorithm identified by `ECHConfig.kem_id`, at least one KDF/AEAD algorithm
 identified by `ECHConfig.cipher_suites`, and the version of ECH indicated by
 `ECHConfig.version`. Once a suitable configuration is found, the client selects
 the cipher suite it will use for encryption. It MUST NOT choose a cipher suite
-not advertised by the configuration.
+or version not advertised by the configuration.
 
 Next, the client constructs the ClientHelloInner message just as it does a
 standard ClientHello, with the exception of the following rules:
