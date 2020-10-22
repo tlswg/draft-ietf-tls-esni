@@ -478,9 +478,9 @@ it does a standard ClientHello, with the exception of the following rules:
 1. It MUST offer to negotiate TLS 1.3 or above.
 1. If it compressed any extensions in EncodedClientHelloInner, it MUST copy the
    corresponding extensions from ClientHelloInner.
-1. It MUST ensure that all HelloRetryRequest-sensitive parameters applicable
-   to TLS 1.3 and higher versions in ClientHelloInner match that in
-   ClientHelloOuter. See {{hrr}} for the list of these parameters.   
+1. It MUST ensure that all extensions or parameters in ClientHelloInner that
+   might change in response to receiving HelloRetryRequest match that in
+   ClientHelloOuter. See {{client-hrr}} for the list of these parameters.
 1. It MAY copy any other field from the ClientHelloInner except
    ClientHelloInner.random. Instead, It MUST generate a fresh
    ClientHelloOuter.random using a secure random number generator. (See
@@ -655,10 +655,10 @@ error code.
 
 ### Handling HelloRetryRequest {#client-hrr}
 
-As required in {{send-ech}}, clients offering ECH MUST ensure that
-HelloRetryRequest-sensitive parameters applicable to TLS 1.3 or higher
-versions in ClientHelloInner match that in ClientHelloOuter. These parameters
-include:
+As required in {{send-ech}}, clients offering ECH MUST ensure that all
+extensions or parameters in ClientHelloInner applicable to TLS 1.3 or higher
+versions that might change in response to receiving HelloRetryRequest match
+that in ClientHelloOuter. These parameters include:
 
 1. TLS 1.3 {{!RFC8446}} ciphersuites in the ClientHello.cipher_suites list.
 1. The "key_share" and "supported_groups" extensions {{RFC8446}}. (These
@@ -668,8 +668,8 @@ described in {{send-ech}}.)
 earlier. Note the ClientHelloOuter MAY include these older versions, while the
 ClientHelloInner MUST omit them.
 
-Future extensions that influence the conditions in which servers send a
-HelloRetryRequest MUST also match across ClientHelloOuter and ClientHelloInner.
+Future extensions that might change across first and second ClientHello messages
+in response to a HelloRetryRequest MUST match.
 
 If the server sends a HelloRetryRequest in response to the ClientHello, the
 client sends a second updated ClientHello per the rules in {{RFC8446}}.
