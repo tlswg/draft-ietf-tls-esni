@@ -649,36 +649,22 @@ ClientHello MUST be generated, ignoring the instructions in HelloRetryRequest.
 Otherwise, the usual rules for HelloRetryRequest processing apply.
 
 Clients bind encryption of the second ClientHelloInner to encryption of the
-first ClientHelloInner via the derived ech_hrr_key by modifying HPKE setup as
-follows:
+first ClientHelloInner via the derived ech_hrr_key by running a modified
+encryption process:
 
 ~~~
     pkR = Deserialize(ECHConfig.public_key)
     enc, context = SetupPSKS(pkR, "tls ech" || 0x00 || ECHConfig,
                              ech_hrr_key, "hrr key")
+    payload = context.Seal(ClientHelloOuterAAD,
+                           EncodedClientHelloInner)
 ~~~
 
 The `info` parameter to SetupPSKS is the concatenation of "tls ech", a
-zero byte, and the serialized ECHConfig. Clients then encrypt the second
-ClientHelloInner using this new HPKE context. In doing so, the encrypted value
-is also authenticated by ech_hrr_key. The rationale for this is described in
-{{flow-hrr-hijack}}.
-
-Client-facing servers perform the corresponding process when decrypting second
-ClientHelloInner messages. In particular, upon receipt of a second ClientHello
-message with a ClientECH value, servers set up their HPKE context and
-decrypt ClientECH as follows:
-
-~~~
-    context = SetupPSKR(ClientECH.enc, skR,
-        "tls ech" || 0x00 || ECHConfig, ech_hrr_key, "hrr key")
-    EncodedClientHelloInner = context.Open(ClientHelloOuterAAD,
-                                           ClientECH.payload)
-~~~
-
-ClientHelloOuterAAD is computed from the second ClientHelloOuter as described
-in {{authenticating-outer}}. The `info` parameter to SetupPSKR is computed as
-above.
+zero byte, and the serialized ECHConfig. ClientHelloOuterAAD is computed from
+the second ClientHelloOuter as described in {{authenticating-outer}}. Note the
+encrypted value is also authenticated by ech_hrr_key. The rationale for this
+is described in {{flow-hrr-hijack}}.
 
 If the client offered ECH in the first ClientHello, then it MUST offer ECH in
 the second. Likewise, if the client did not offer ECH in the first ClientHello,
@@ -815,6 +801,20 @@ transmitted on the wire by the client:
    uses the previously-selected ECHConfig as the set of candidate ECHConfigs.
    If decryption fails, the server aborts the connection with a "decrypt_error"
    alert rather than continuing the handshake with the second ClientHelloOuter.
+
+When decrypting the second ClientECH.payload, the client-facing server
+performs a corresponding process to {{client-hrr}}:
+
+~~~
+    context = SetupPSKR(ClientECH.enc, skR,
+        "tls ech" || 0x00 || ECHConfig, ech_hrr_key, "hrr key")
+    EncodedClientHelloInner = context.Open(ClientHelloOuterAAD,
+                                           ClientECH.payload)
+~~~
+
+ClientHelloOuterAAD is computed from the second ClientHelloOuter as described
+in {{authenticating-outer}}. The `info` parameter to SetupPSKR is the
+concatenation of "tls ech", a zero byte, and the serialized ECHConfig.
 
 [[OPEN ISSUE: If the client-facing server implements stateless HRR, it has no
 way to send a cookie, short of as-yet-unspecified integration with the
