@@ -573,8 +573,8 @@ As described in {{server-behavior}}, the server MAY either accept ECH and use
 ClientHelloInner or reject it and use ClientHelloOuter. In handling the server's
 response, the client's first step is to determine which value was used. The
 client presumes acceptance if the last 8 bytes of ServerHello.random are equal
-to `accept_confirmation` as defined in {{backend-server}}. Otherwise, it
-presumes rejection.
+to the first 8 bytes of `accept_confirmation` as defined in {{backend-server}}.
+Otherwise, it presumes rejection.
 
 #### Accepted ECH
 
@@ -842,19 +842,26 @@ See issue #333.]]
 ## Backend Server {#backend-server}
 
 Upon receipt of an empty "encrypted_client_hello" extension, if the backend
-server negotiates TLS 1.3 or higher, then it MUST confirm ECH acceptance by
-setting ServerHello.random[24:32] to
+server negotiates TLS 1.3 or higher, then it MUST confirm ECH acceptance to the
+client by computing its ServerHello as described here.
 
-~~~~
-    accept_confirmation = HKDF-Expand-Label(
-        HKDF-Extract(0, ClientHelloInner.random),
-        "ech accept confirmation",
-        ServerHello.random[0:24], 8)
-~~~~
+The backend server begins by generating a message ServerHelloECHConf, which is identical
+in content to a ServerHello message with the exception that ServerHelloECHConf.random is
+equal to 24 random bytes followed by 8 zero bytes. It then computes a string
 
-where HKDF-Expand-Label and HKDF-Extract are as defined in {{RFC8446}}. The
-value of ServerHello.random[0:24] is generated as usual by invoking a secure
-random number generator (see {{RFC8446}}, Section 4.1.2).
+~~~
+    accept_confirmation =
+        Derive-Secret(Handshake Secret,
+                      "ech accept confirmation",
+                      ClientHelloInner..ServerHelloECHConf)
+~~~
+
+where Derive-Secret and Handshake Secret are as specified in {{RFC8446}},
+Section 7.1 and ClientHelloInner..ServerHelloECHConf refers to the sequence of
+handshake messages beginning with the first ClientHello and ending with
+ServerHelloECHConf. Finally, the backend server constructs its ServerHello
+message so that it is equal to ServerHelloECHConf but with the last 8 bytes of
+ServerHello.random set to the first 8 bytes of accept_confirmation.
 
 The backend server MUST NOT perform this operation if it negotiated TLS 1.2 or
 below. Note that doing so would overwrite the downgrade signal for TLS 1.3 (see
