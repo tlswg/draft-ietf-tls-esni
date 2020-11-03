@@ -334,12 +334,11 @@ provided in the corresponding `ECHConfig.cipher_suites` list.
 
 config_id
 : The configuration identifier, equal to
-`Expand(Extract("", config), "tls ech config id", Nh)`, where `config` is the
-`ECHConfig` structure and `Extract`, `Expand`, and `Nh` are as specified by the
-cipher suite KDF. (Passing the literal `""` as the salt is interpreted by
-`Extract` as no salt being provided.) The length of this value SHOULD NOT be
-less than 16 bytes unless it is optional for an application; see
-{{optional-configs}}.
+`Expand(Extract("", config), "tls ech config id", 8)`, unless it is optional
+for an application; see {{optional-configs}}. `config` is the `ECHConfig`
+structure. `Extract` and `Expand` are as specified by the cipher suite KDF.
+(Passing the literal `""` as the salt is interpreted by `Extract` as no salt
+being provided.)
 
 enc
 : The HPKE encapsulated key, used by servers to decrypt the corresponding
@@ -698,10 +697,7 @@ structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
   SHOULD vary to exercise all supported configurations, but MAY be held constant
   for successive connections to the same server in the same session.
 
-- Set the "config_id" field to a randomly-generated string of `Nh` bytes,
-  where `Nh` is the output length of the `Extract` function of the KDF
-  associated with the chosen cipher suite. (The KDF API is specified in
-  {{!I-D.irtf-cfrg-hpke}}.)
+- Set the "config_id" field to a randomly-generated 8-byte string.
 
 - Set the "enc" field to a randomly-generated valid encapsulated public key
   output by the HPKE KEM.
@@ -738,7 +734,7 @@ First, the server collects a set of candidate ECHConfigs. This set is
 determined by one of the two following methods:
 
 1. Compare ClientECH.config_id against identifiers of known ECHConfigs and
-   select the one that matches, if any, as a candidate.
+   select the ones that match, if any, as candidates.
 2. Collect all known ECHConfigs as candidates, with trial decryption below
    determining the final selection.
 
