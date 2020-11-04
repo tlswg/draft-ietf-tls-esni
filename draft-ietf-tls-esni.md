@@ -803,9 +803,9 @@ unrecognized value alone does not indicate a misconfigured ECH advertisement
 
 ### Handling HelloRetryRequest {#server-hrr}
 
-After sending a HelloRetryRequest, the client-facing server does not repeat the
+After sending or forwarding a HelloRetryRequest, the client-facing server does not repeat the
 steps in {{client-facing-server}} with the second ClientHelloOuter. Instead it
-continues the selections from the first ClientHelloOuter as follows:
+continues with the ECHConfig selection from the first ClientHelloOuter as follows:
 
 If the client-facing server accepted ECH, it checks the second ClientHelloOuter
 also contains the "encrypted_client_hello" extension. If not, it MUST abort the
