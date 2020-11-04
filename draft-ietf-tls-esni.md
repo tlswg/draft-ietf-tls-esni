@@ -830,8 +830,8 @@ backend server unmodified.
 
 If the client-facing server rejected ECH, or if the first ClientHello did not
 include an "encrypted_client_hello" extension, the client-facing server
-proceeds with the connection as usual, without decrypting any new
-ClientECH.payload value.
+proceeds with the connection as usual. The server does not decrypt the
+second ClientHello's ClientECH.payload value, if there is one.
 
 [[OPEN ISSUE: If the client-facing server implements stateless HRR, it has no
 way to send a cookie, short of as-yet-unspecified integration with the
