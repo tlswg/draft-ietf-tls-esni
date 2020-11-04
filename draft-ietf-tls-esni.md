@@ -845,9 +845,10 @@ Upon receipt of an empty "encrypted_client_hello" extension, if the backend
 server negotiates TLS 1.3 or higher, then it MUST confirm ECH acceptance to the
 client by computing its ServerHello as described here.
 
-The backend server begins by generating a message ServerHelloECHConf, which is identical
-in content to a ServerHello message with the exception that ServerHelloECHConf.random is
-equal to 24 random bytes followed by 8 zero bytes. It then computes a string
+The backend server begins by generating a message ServerHelloECHConf, which is
+identical in content to a ServerHello message with the exception that
+ServerHelloECHConf.random is equal to 24 random bytes followed by 8 zero bytes.
+It then computes a string
 
 ~~~
     accept_confirmation =
