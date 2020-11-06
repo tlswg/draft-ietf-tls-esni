@@ -317,7 +317,7 @@ extension, defined as follows:
 
 ~~~
     enum {
-       encrypted_client_hello(0xfe08), (65032)
+       encrypted_client_hello(0xfe08), (65535)
     } ExtensionType;
 ~~~
 
@@ -389,7 +389,7 @@ may use the "outer_extensions" extension.
 
 ~~~
     enum {
-       outer_extensions(0xfd00), (64768)
+       outer_extensions(0xfd00), (65535)
     } ExtensionType;
 
     ExtensionType OuterExtensions<2..254>;
