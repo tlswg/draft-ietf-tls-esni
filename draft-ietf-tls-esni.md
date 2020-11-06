@@ -673,11 +673,19 @@ HPKE context:
 ~~~
 
 ClientHelloOuterAAD is computed as described in {{authenticating-outer}}, but
-again using the second ClientHelloOuter. The `cipher_suite`, `config_id`, and
-`enc` fields in the new ClientECH structure are copied from the first
-ClientHelloOuter. Note an HPKE context maintains a sequence number, so this
-operation internally uses a fresh nonce for the AEAD operation. Reusing the
-HPKE context avoids an attack described in {{flow-hrr-hijack}}.
+again using the second ClientHelloOuter. Note an HPKE context maintains a
+sequence number, so this operation internally uses a fresh nonce for the AEAD
+operation. Reusing the HPKE context avoids an attack described in
+{{flow-hrr-hijack}}.
+
+The client then modifies the "encrypted_client_hello" extension in
+ClientHelloOuter as follows:
+
+- `cipher_suite` is unchanged and contains the client's chosen HPKE cipher
+  suite.
+- `config_id` is replaced with the empty string.
+- `enc` is replaced with the empty string.
+- `payload` is replaced with the value computed above.
 
 If the client offered ECH in the first ClientHello, then it MUST offer ECH in
 the second. Likewise, if the client did not offer ECH in the first ClientHello,
@@ -687,25 +695,26 @@ then it MUST NOT not offer ECH in the second.
 
 If the client attempts to connect to a server and does not have an ECHConfig
 structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
-"encrypted_client_hello" extension as follows:
+"encrypted_client_hello" extension in the first ClientHello as follows:
 
-- Set the "cipher_suite" field to a supported ECHCipherSuite. The selection
+- Set the `cipher_suite` field to a supported ECHCipherSuite. The selection
   SHOULD vary to exercise all supported configurations, but MAY be held constant
   for successive connections to the same server in the same session.
 
-- Set the "config_id" field to a randomly-generated 8-byte string.
+- Set the `config_id` field to a randomly-generated 8-byte string.
 
-- Set the "enc" field to a randomly-generated valid encapsulated public key
+- Set the `enc` field to a randomly-generated valid encapsulated public key
   output by the HPKE KEM.
 
-- Set the "payload" field to a randomly-generated string of L+C bytes, where C
+- Set the `payload` field to a randomly-generated string of L+C bytes, where C
   is the ciphertext expansion of the selected AEAD scheme and L is the size of
   the EncodedClientHelloInner the client would compute when offering ECH, padded
   according to {{padding}}.
 
 When sending a second ClientHello in response to a HelloRetryRequest, the
-client copies the "cipher_suite", "config_id", and "enc" fields. It generates a
-new "payload" field, using the length of a padded second EncodedClientHelloInner
+client copies the `cipher_suite` field from the first ClientHello. It sets
+`config_id`, and `enc` to the empty string. Finally, it generates a new
+`payload` field, using the length of a padded second EncodedClientHelloInner
 for L.
 
 If the server sends an "encrypted_client_hello" extension, the client MUST check
@@ -810,8 +819,13 @@ first ClientHelloOuter as follows:
 
 If the client-facing server accepted ECH, it checks the second ClientHelloOuter
 also contains the "encrypted_client_hello" extension. If not, it MUST abort the
-handshake with a "missing_extension" alert. Otherwise, it decrypts the new
-ClientECH.payload as a second message with the previous HPKE context:
+handshake with a "missing_extension" alert. Otherwise, it checks that
+ClientECH.cipher_suite is unchanged, and that ClientECH.config_id and
+ClientECH.enc are empty. If not, it MUST abort the handshake with an
+"illegal_parameter" alert.
+
+Finally, it decrypts the new ClientECH.payload as a second message with the
+previous HPKE context:
 
 ~~~
     EncodedClientHelloInner = context.Open(ClientHelloOuterAAD,
