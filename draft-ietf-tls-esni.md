@@ -430,10 +430,24 @@ ClientHelloInner.
 
 To prevent a network attacker from modifying the reconstructed ClientHelloInner
 (see {{flow-clienthello-malleability}}), ECH authenticates ClientHelloOuter by
-deriving a ClientHelloOuterAAD value. This is computed by serializing
-ClientHelloOuter with the "encrypted_client_hello" extension removed.
-ClientHelloOuterAAD is then passed as the associated data parameter to the HPKE
-encryption.
+computing ClientHelloOuterAAD as described below and passing it in as the
+associated data for HPKE sealing and opening operations. ClientHelloOuterAAD has
+the following structure:
+
+~~~
+    struct {
+       ECHCipherSuite cipher_suite; // ClientECH.cipher_suite
+       opaque config_id<0..255>;    // ClientECH.config_id
+       opaque enc<1..2^16-1>;       // ClientECH.enc
+       opaque outer_hello<1..2^16>;
+    } ClientHelloOuterAAD;
+~~~
+
+The first three parameters are equal to, respectively, the
+`ClientECH.cipher_suite`, `ClientECH.config_id`, and `ClientECH.enc` fields of
+the payload of the "encrypted_client_hello" extension. The last parameter,
+`outer_hello`, is computed by serializing ClientHelloOuter with the
+"encrypted_client_hello" extension removed.
 
 Note the decompression process in {{encoding-inner}} forbids
 "encrypted_client_hello" in OuterExtensions. This ensures the unauthenticated
