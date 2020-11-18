@@ -669,7 +669,7 @@ earlier. Note the ClientHelloOuter MAY include these older versions, while the
 ClientHelloInner MUST omit them.
 
 Future extensions that might change across first and second ClientHello messages
-in response to a HelloRetryRequest MUST match.
+in response to a HelloRetryRequest MUST have the same value.
 
 If the server sends a HelloRetryRequest in response to the ClientHello, the
 client sends a second updated ClientHello per the rules in {{RFC8446}}.
