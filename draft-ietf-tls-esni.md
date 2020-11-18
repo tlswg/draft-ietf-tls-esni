@@ -532,7 +532,7 @@ application using (D)TLS or externally configured on both sides,
 implementations MUST compute the field as specified in
 {{encrypted-client-hello}}.
 
-### Extension that Indicates ClientHelloInner {#is-inner}
+### ClientHelloInner Indication Extension {#is-inner}
 
 If, in a ClientHello, the "encrypted_client_hello" extension is not present and
 an "ech_is_inner" extension is present, the ClientHello is a
@@ -755,9 +755,9 @@ parameters. Note that successfully decrypting the extension will result in a new
 ClientHello to process, so even the client's TLS version preferences may have
 changed.
 
-(If the client offers the "ech_is_inner" extension ({{is-inner}})
+If the client offers the "ech_is_inner" extension ({{is-inner}})
 in addition to the "encrypted_client_hello" extension, the server MUST abort
-with an "illegal_parameter" alert.)
+with an "illegal_parameter" alert.
 
 First, the server collects a set of candidate ECHConfigs. This set is
 determined by one of the two following methods:
