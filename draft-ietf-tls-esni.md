@@ -423,10 +423,24 @@ ClientHelloInner.
 
 To prevent a network attacker from modifying the reconstructed ClientHelloInner
 (see {{flow-clienthello-malleability}}), ECH authenticates ClientHelloOuter by
-deriving a ClientHelloOuterAAD value. This is computed by serializing
-ClientHelloOuter with the "encrypted_client_hello" extension removed.
-ClientHelloOuterAAD is then passed as the associated data parameter to the HPKE
-encryption.
+computing ClientHelloOuterAAD as described below and passing it in as the
+associated data for HPKE sealing and opening operations. ClientHelloOuterAAD has
+the following structure:
+
+~~~
+    struct {
+       ECHCipherSuite cipher_suite; // ClientECH.cipher_suite
+       opaque config_id<0..255>;    // ClientECH.config_id
+       opaque enc<1..2^16-1>;       // ClientECH.enc
+       opaque outer_hello<1..2^16>;
+    } ClientHelloOuterAAD;
+~~~
+
+The first three parameters are equal to, respectively, the
+`ClientECH.cipher_suite`, `ClientECH.config_id`, and `ClientECH.enc` fields of
+the payload of the "encrypted_client_hello" extension. The last parameter,
+`outer_hello`, is computed by serializing ClientHelloOuter with the
+"encrypted_client_hello" extension removed.
 
 Note the decompression process in {{encoding-inner}} forbids
 "encrypted_client_hello" in OuterExtensions. This ensures the unauthenticated
@@ -501,13 +515,12 @@ In particular, this is possible because the "pre_shared_key" extension is
 forbidden in ClientHelloOuter.
 
 The client then generates the HPKE encryption context. Finally, it computes the
-encapsulated key, context, HRR key (see {{client-hrr}}), and payload as:
+encapsulated key, context, and payload as:
 
 ~~~
     pkR = Deserialize(ECHConfig.public_key)
     enc, context = SetupBaseS(pkR,
                               "tls ech" || 0x00 || ECHConfig)
-    ech_hrr_key = context.Export("tls ech hrr key", 32)
     payload = context.Seal(ClientHelloOuterAAD,
                            EncodedClientHelloInner)
 ~~~
@@ -588,8 +601,8 @@ As described in {{server-behavior}}, the server MAY either accept ECH and use
 ClientHelloInner or reject it and use ClientHelloOuter. In handling the server's
 response, the client's first step is to determine which value was used. The
 client presumes acceptance if the last 8 bytes of ServerHello.random are equal
-to `accept_confirmation` as defined in {{backend-server}}. Otherwise, it
-presumes rejection.
+to the first 8 bytes of `accept_confirmation` as defined in {{backend-server}}.
+Otherwise, it presumes rejection.
 
 #### Accepted ECH
 
@@ -678,51 +691,60 @@ may actually be invalid for one or the other ClientHello, in which case a fresh
 ClientHello MUST be generated, ignoring the instructions in HelloRetryRequest.
 Otherwise, the usual rules for HelloRetryRequest processing apply.
 
-Clients bind encryption of the second ClientHelloInner to encryption of the
-first ClientHelloInner via the derived ech_hrr_key by running a modified
-encryption process:
+The client encodes the second ClientHelloInner as in {{encoding-inner}}, using
+the second ClientHelloOuter for any referenced extensions. It then encrypts
+the new EncodedClientHelloInner value as a second message with the previous
+HPKE context:
 
 ~~~
-    pkR = Deserialize(ECHConfig.public_key)
-    enc, context = SetupPSKS(pkR, "tls ech" || 0x00 || ECHConfig,
-                             ech_hrr_key, "hrr key")
     payload = context.Seal(ClientHelloOuterAAD,
                            EncodedClientHelloInner)
 ~~~
 
-The `info` parameter to SetupPSKS is the concatenation of "tls ech", a
-zero byte, and the serialized ECHConfig. ClientHelloOuterAAD is computed from
-the second ClientHelloOuter as described in {{authenticating-outer}}. Note the
-encrypted value is also authenticated by ech_hrr_key. The rationale for this
-is described in {{flow-hrr-hijack}}.
+ClientHelloOuterAAD is computed as described in {{authenticating-outer}}, but
+again using the second ClientHelloOuter. Note an HPKE context maintains a
+sequence number, so this operation internally uses a fresh nonce for the AEAD
+operation. Reusing the HPKE context avoids an attack described in
+{{flow-hrr-hijack}}.
+
+The client then modifies the "encrypted_client_hello" extension in
+ClientHelloOuter as follows:
+
+- `cipher_suite` is unchanged and contains the client's chosen HPKE cipher
+  suite.
+- `config_id` is replaced with the empty string.
+- `enc` is replaced with the empty string.
+- `payload` is replaced with the value computed above.
 
 If the client offered ECH in the first ClientHello, then it MUST offer ECH in
 the second. Likewise, if the client did not offer ECH in the first ClientHello,
 then it MUST NOT not offer ECH in the second.
 
-[[OPEN ISSUE: Should we be using the PSK input or the info input?  On the one
-hand, the requirements on info seem weaker, but maybe actually this needs to be
-secret? Analysis needed.]]
-
 ## GREASE ECH {#grease-ech}
 
 If the client attempts to connect to a server and does not have an ECHConfig
 structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
-"encrypted_client_hello" extension as follows:
+"encrypted_client_hello" extension in the first ClientHello as follows:
 
-- Set the "cipher_suite" field to a supported ECHCipherSuite. The selection
+- Set the `cipher_suite` field to a supported ECHCipherSuite. The selection
   SHOULD vary to exercise all supported configurations, but MAY be held constant
   for successive connections to the same server in the same session.
 
-- Set the "config_id" field to a randomly-generated 8-byte string.
+- Set the `config_id` field to a randomly-generated 8-byte string.
 
-- Set the "enc" field to a randomly-generated valid encapsulated public key
+- Set the `enc` field to a randomly-generated valid encapsulated public key
   output by the HPKE KEM.
 
-- Set the "payload" field to a randomly-generated string of L+C bytes, where C
+- Set the `payload` field to a randomly-generated string of L+C bytes, where C
   is the ciphertext expansion of the selected AEAD scheme and L is the size of
   the EncodedClientHelloInner the client would compute when offering ECH, padded
   according to {{padding}}.
+
+When sending a second ClientHello in response to a HelloRetryRequest, the
+client copies the `cipher_suite` field from the first ClientHello. It sets
+`config_id`, and `enc` to the empty string. Finally, it generates a new
+`payload` field, using the length of a padded second EncodedClientHelloInner
+for L.
 
 If the server sends an "encrypted_client_hello" extension, the client MUST check
 the extension syntactically and abort the connection with a "decode_error" alert
@@ -749,11 +771,11 @@ described in {{backend-server}}.
 
 ## Client-Facing Server {#client-facing-server}
 
-Upon receiving an "encrypted_client_hello" extension, the client-facing
-server determines if it will accept ECH prior to negotiating any other TLS
-parameters. Note that successfully decrypting the extension will result in a new
-ClientHello to process, so even the client's TLS version preferences may have
-changed.
+Upon receiving an "encrypted_client_hello" extension in an initial
+ClientHello, the client-facing server determines if it will accept ECH, prior
+to negotiating any other TLS parameters. Note that successfully decrypting the
+extension will result in a new ClientHello to process, so even the client's TLS
+version preferences may have changed.
 
 If the client offers the "ech_is_inner" extension ({{is-inner}})
 in addition to the "encrypted_client_hello" extension, the server MUST abort
@@ -789,7 +811,6 @@ corresponding to ECHConfig, as follows:
                          "tls ech" || 0x00 || ECHConfig)
     EncodedClientHelloInner = context.Open(ClientHelloOuterAAD,
                                            ClientECH.payload)
-    ech_hrr_key = context.Export("tls ech hrr key", 32)
 ~~~
 
 ClientHelloOuterAAD is computed from ClientHelloOuter as described in
@@ -802,11 +823,11 @@ considering candidate ECHConfigs.
 
 Upon determining the ClientHelloInner, the client-facing server then forwards
 the ClientHelloInner to the appropriate backend server, which proceeds as in
-{{backend-server}}. If the backend server responds with a HelloRetryRequest, the
-client-facing server forwards it, decrypts the client's second ClientHelloOuter
-using the modified procedure in {{server-hrr}}, and forwards the resulting
-second ClientHelloInner. The client-facing server forwards all other TLS
-messages between the client and backend server unmodified.
+{{backend-server}}. If the backend server responds with a HelloRetryRequest,
+the client-facing server forwards it, decrypts the client's second
+ClientHelloOuter using the procedure in {{server-hrr}}, and forwards the
+resulting second ClientHelloInner. The client-facing server forwards all other
+TLS messages between the client and backend server unmodified.
 
 Otherwise, if all candidate ECHConfigs fail to decrypt the extension, the
 client-facing server MUST ignore the extension and proceed with the connection
@@ -825,34 +846,41 @@ unrecognized value alone does not indicate a misconfigured ECH advertisement
 
 ### Handling HelloRetryRequest {#server-hrr}
 
-In case a HelloRetryRequest (HRR) is sent, the client-facing server MUST
-consistently accept or decline ECH between the two ClientHellos, using the same
-ECHConfig, and abort the handshake if this is not possible. This is achieved as
-follows. Let CH1 and CH2 denote, respectively, the first and second ClientHello
-transmitted on the wire by the client:
+After sending or forwarding a HelloRetryRequest, the client-facing server does
+not repeat the steps in {{client-facing-server}} with the second
+ClientHelloOuter. Instead it continues with the ECHConfig selection from the
+first ClientHelloOuter as follows:
 
-1. If CH1 contains the "encrypted_client_hello" extension but CH2 does not, or
-   if CH2 contains the "encrypted_client_hello" extension but CH1 does not, then
-   the server MUST abort the handshake with an "illegal_parameter" alert.
-1. If the "encrypted_client_hello" extension is sent in CH2, the server follows
-   the procedure in {{client-facing-server}} to decrypt the extension, but it
-   uses the previously-selected ECHConfig as the set of candidate ECHConfigs.
-   If decryption fails, the server aborts the connection with a "decrypt_error"
-   alert rather than continuing the handshake with the second ClientHelloOuter.
+If the client-facing server accepted ECH, it checks the second ClientHelloOuter
+also contains the "encrypted_client_hello" extension. If not, it MUST abort the
+handshake with a "missing_extension" alert. Otherwise, it checks that
+ClientECH.cipher_suite is unchanged, and that ClientECH.config_id and
+ClientECH.enc are empty. If not, it MUST abort the handshake with an
+"illegal_parameter" alert.
 
-When decrypting the second ClientECH.payload, the client-facing server
-performs a corresponding process to {{client-hrr}}:
+Finally, it decrypts the new ClientECH.payload as a second message with the
+previous HPKE context:
 
 ~~~
-    context = SetupPSKR(ClientECH.enc, skR,
-        "tls ech" || 0x00 || ECHConfig, ech_hrr_key, "hrr key")
     EncodedClientHelloInner = context.Open(ClientHelloOuterAAD,
                                            ClientECH.payload)
 ~~~
 
-ClientHelloOuterAAD is computed from the second ClientHelloOuter as described
-in {{authenticating-outer}}. The `info` parameter to SetupPSKR is the
-concatenation of "tls ech", a zero byte, and the serialized ECHConfig.
+ClientHelloOuterAAD is computed as described in {{authenticating-outer}}, but
+using the second ClientHelloOuter. If decryption fails, the client-facing
+server MUST abort the handshake with a "decrypt_error" alert. Otherwise, it
+reconstructs the second ClientHelloInner from the new EncodedClientHelloInner
+as described in {{encoding-inner}}, using the second ClientHelloOuter for
+any referenced extensions.
+
+The client-facing server then forwards the resulting ClientHelloInner to the
+backend server. It forwards all subsequent TLS messages between the client and
+backend server unmodified.
+
+If the client-facing server rejected ECH, or if the first ClientHello did not
+include an "encrypted_client_hello" extension, the client-facing server
+proceeds with the connection as usual. The server does not decrypt the
+second ClientHello's ClientECH.payload value, if there is one.
 
 [[OPEN ISSUE: If the client-facing server implements stateless HRR, it has no
 way to send a cookie, short of as-yet-unspecified integration with the
@@ -862,19 +890,27 @@ See issue #333.]]
 ## Backend Server {#backend-server}
 
 Upon receipt of an "ech_is_inner" extension, if the backend
-server negotiates TLS 1.3 or higher, then it MUST confirm ECH acceptance by
-setting ServerHello.random[24:32] to
+server negotiates TLS 1.3 or higher, then it MUST confirm ECH acceptance to the
+client by computing its ServerHello as described here.
 
-~~~~
-    accept_confirmation = HKDF-Expand-Label(
-        HKDF-Extract(0, ClientHelloInner.random),
-        "ech accept confirmation",
-        ServerHello.random[0:24], 8)
-~~~~
+The backend server begins by generating a message ServerHelloECHConf, which is
+identical in content to a ServerHello message with the exception that
+ServerHelloECHConf.random is equal to 24 random bytes followed by 8 zero bytes.
+It then computes a string
 
-where HKDF-Expand-Label and HKDF-Extract are as defined in {{RFC8446}}. The
-value of ServerHello.random[0:24] is generated as usual by invoking a secure
-random number generator (see {{RFC8446}}, Section 4.1.2).
+~~~
+    accept_confirmation =
+        Derive-Secret(Handshake Secret,
+                      "ech accept confirmation",
+                      ClientHelloInner..ServerHelloECHConf)
+~~~
+
+where Derive-Secret and Handshake Secret are as specified in {{RFC8446}},
+Section 7.1 and ClientHelloInner..ServerHelloECHConf refers to the sequence of
+handshake messages beginning with the first ClientHello and ending with
+ServerHelloECHConf. Finally, the backend server constructs its ServerHello
+message so that it is equal to ServerHelloECHConf but with the last 8 bytes of
+ServerHello.random set to the first 8 bytes of accept_confirmation.
 
 The backend server MUST NOT perform this operation if it negotiated TLS 1.2 or
 below. Note that doing so would overwrite the downgrade signal for TLS 1.3 (see
@@ -1285,14 +1321,12 @@ client's chosen SNI to the attacker.
 ~~~
 {: #flow-diagram-hrr-hijack title="HelloRetryRequest hijack attack"}
 
-This attack is mitigated by binding the first and second ClientHello messages
-together. In particular, since the attacker does not possess the ech_hrr_key, it
-cannot generate a valid encryption of the second inner ClientHello. The server
-will attempt decryption using ech_hrr_key, detect failure, and fail the
-connection.
+This attack is mitigated by using the same HPKE context for both ClientHello
+messages. The attacker does not possess the context's keys, so it cannot
+generate a valid encryption of the second inner ClientHello.
 
-If the second ClientHello were not bound to the first, it might be possible for
-the server to act as an oracle if it required parameters from the first
+If the attacker could manipulate the second ClientHello, it might be possible
+for the server to act as an oracle if it required parameters from the first
 ClientHello to match that of the second ClientHello. For example, imagine the
 client's original SNI value in the inner ClientHello is "example.com", and the
 attacker's hijacked SNI value in its inner ClientHello is "test.com". A server
