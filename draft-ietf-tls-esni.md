@@ -489,6 +489,9 @@ it does a standard ClientHello, with the exception of the following rules:
 1. It MUST offer to negotiate TLS 1.3 or above.
 1. If it compressed any extensions in EncodedClientHelloInner, it MUST copy the
    corresponding extensions from ClientHelloInner.
+1. It MUST ensure that all extensions or parameters in ClientHelloInner that
+   might change in response to receiving HelloRetryRequest match that in
+   ClientHelloOuter. See {{client-hrr}} for more information.
 1. It MAY copy any other field from the ClientHelloInner except
    ClientHelloInner.random. Instead, It MUST generate a fresh
    ClientHelloOuter.random using a secure random number generator. (See
@@ -502,6 +505,15 @@ it does a standard ClientHello, with the exception of the following rules:
    extension.
 1. It MUST NOT include the "pre_shared_key" extension. (See
    {{flow-clienthello-malleability}}.)
+
+[[OPEN ISSUE: We currently require HRR-sensitive parameters to match in
+ClientHelloInner and ClientHelloOuter in order to simplify client-side
+logic in the event of HRR. See
+https://github.com/tlswg/draft-ietf-tls-esni/pull/316
+for more information. We might also solve this by including an explicit
+signal in HRR noting ECH acceptance. We need to decide if inner/outer
+variance is important for HRR-sensitive parameters, and if so, how to
+best deal with it without complicated client logic.]]
 
 The client might duplicate non-sensitive extensions in both messages. However,
 implementations need to take care to ensure that sensitive extensions are not
@@ -680,6 +692,24 @@ implemented, for instance, by reporting a failed connection with a dedicated
 error code.
 
 ### Handling HelloRetryRequest {#client-hrr}
+
+As required in {{real-ech}}, clients offering ECH MUST ensure that all
+extensions or parameters that might change in response to receiving a
+HelloRetryRequest have the same values in ClientHelloInner and
+ClientHelloOuter. That is, if a HelloRetryRequest causes a parameter to be
+changed, the same change is applied to both ClientHelloInner and
+ClientHelloOuter. Applicable parameters include:
+
+1. TLS 1.3 {{!RFC8446}} ciphersuites in the ClientHello.cipher_suites list.
+1. The "key_share" and "supported_groups" extensions {{RFC8446}}. (These
+extensions may be copied from ClientHelloOuter into ClientHelloInner as
+described in {{real-ech}}.)
+1. Versions in the "supported_versions" extension, excluding TLS 1.2 and
+earlier. Note the ClientHelloOuter MAY include these older versions, while the
+ClientHelloInner MUST omit them.
+
+Future extensions that might change across first and second ClientHello messages
+in response to a HelloRetryRequest MUST have the same value.
 
 If the server sends a HelloRetryRequest in response to the ClientHello, the
 client sends a second updated ClientHello per the rules in {{RFC8446}}.
