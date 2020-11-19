@@ -889,7 +889,7 @@ See issue #333.]]
 
 ## Backend Server {#backend-server}
 
-Upon receipt of an "ech_is_inner" extension, if the backend
+Upon receipt of an "ech_is_inner" extension in a ClientHello, if the backend
 server negotiates TLS 1.3 or higher, then it MUST confirm ECH acceptance to the
 client by computing its ServerHello as described here.
 
