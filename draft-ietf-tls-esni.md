@@ -771,10 +771,11 @@ structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
   according to {{padding}}.
 
 When sending a second ClientHello in response to a HelloRetryRequest, the
-client copies the `cipher_suite` field from the first ClientHello. It sets
-`config_id`, and `enc` to the empty string. Finally, it generates a new
-`payload` field, using the length of a padded second EncodedClientHelloInner
-for L.
+client copies the entire "encrypted_client_hello" extension from the first
+ClientHello.
+
+[[OPEN ISSUE: The above doesn't match HRR handling for either ECH acceptance or
+rejection. See issue #358.]]
 
 If the server sends an "encrypted_client_hello" extension, the client MUST check
 the extension syntactically and abort the connection with a "decode_error" alert
