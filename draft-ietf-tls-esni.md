@@ -761,7 +761,7 @@ MAY offer to resume sessions established without ECH.
 
 # Server Behavior {#server-behavior}
 
-Servers that that support ECH play one of two roles, depending on the extension
+Servers that support ECH play one of two roles, depending on the extension
 in the ClientHello. If the "encrypted_client_hello" extension is present, the
 server acts as a client-facing server and proceeds as described in
 {{client-facing-server}} to extract a ClientHelloInner, if available. If the
