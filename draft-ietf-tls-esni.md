@@ -792,13 +792,24 @@ MAY offer to resume sessions established without ECH.
 
 # Server Behavior {#server-behavior}
 
-Servers that support ECH play one of two roles, depending on the extension
-in the ClientHello. If the "encrypted_client_hello" extension is present, the
-server acts as a client-facing server and proceeds as described in
-{{client-facing-server}} to extract a ClientHelloInner, if available. If the
-"ech_is_inner" extension is present and the "encrypted_client_hello"
-extension is not present, the server acts as a backend server and proceeds as
-described in {{backend-server}}.
+Servers that support ECH play one of two roles, depending on which of the
+"ech_is_inner" and "encrypted_client_hello" extensions are present in the
+ClientHello:
+
+* If both the "ech_is_inner" and "encrypted_client_hello" extensions are
+  present in the ClientHello, the backend server MUST abort with an
+  "illegal_parameter" alert.
+
+* If only the "encrypted_client_hello" extension is present, the server acts as
+  a client-facing server and proceeds as described in {{client-facing-server}}
+  to extract a ClientHelloInner, if available.
+
+* If only the "ech_is_inner" extension is present and the
+  "encrypted_client_hello" extension is not present, the server acts as a
+  backend server and proceeds as described in {{backend-server}}.
+
+* If neither extension is present, the server completes the handshake normally,
+  as described in {{RFC8446}}.
 
 ## Client-Facing Server {#client-facing-server}
 
@@ -922,9 +933,7 @@ See issue #333.]]
 
 Upon receipt of an "ech_is_inner" extension in a ClientHello, if the backend
 server negotiates TLS 1.3 or higher, then it MUST confirm ECH acceptance to the
-client by computing its ServerHello as described here. If both the
-"ech_is_inner" and "encrypted_client_hello" extensions are present in the
-ClientHello, the backend server MUST abort with an "illegal_parameter" alert.
+client by computing its ServerHello as described here.
 
 The backend server begins by generating a message ServerHelloECHConf, which is
 identical in content to a ServerHello message with the exception that
