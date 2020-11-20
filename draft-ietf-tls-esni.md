@@ -342,7 +342,7 @@ config_id
 `Expand(Extract("", config), "tls ech config id", 8)`, unless it is optional
 for an application; see {{optional-configs}}. `config` is the `ECHConfig`
 structure. `Extract` and `Expand` are as specified by the cipher suite KDF.
-(Passing the literal `""` as the salt is interpreted by `Extract` as no salt
+(Passing the literal "" as the salt is interpreted by `Extract` as no salt
 being provided.)
 
 enc
