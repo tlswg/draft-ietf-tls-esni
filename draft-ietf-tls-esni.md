@@ -333,7 +333,7 @@ The payload MUST have the following structure:
 
 cipher_suite
 : The cipher suite used to encrypt ClientHelloInner. This MUST match a value
-provided in the corresponding `ECHConfig.cipher_suites` list.
+provided in the corresponding `ECHConfigContents.cipher_suites` list.
 
 config_id
 : The configuration identifier, equal to
@@ -458,8 +458,8 @@ otherwise.
 
 To offer ECH, the client first chooses a suitable ECH configuration. To
 determine if a given `ECHConfig` is suitable, it checks that it supports the KEM
-algorithm identified by `ECHConfig.kem_id`, at least one KDF/AEAD algorithm
-identified by `ECHConfig.cipher_suites`, and the version of ECH indicated by
+algorithm identified by `ECHConfigContents.kem_id`, at least one KDF/AEAD algorithm
+identified by `ECHConfigContents.cipher_suites`, and the version of ECH indicated by
 `ECHConfig.version`. Once a suitable configuration is found, the client selects
 the cipher suite it will use for encryption. It MUST NOT choose a cipher suite
 or version not advertised by the configuration. If no compatible configuration
@@ -499,7 +499,7 @@ it does a standard ClientHello, with the exception of the following rules:
    {{flow-client-reaction}}.)
 1. It MUST include an "encrypted_client_hello" extension with a payload
    constructed as described below.
-1. The value of `ECHConfig.public_name` MUST be placed in the "server_name"
+1. The value of `ECHConfigContents.public_name` MUST be placed in the "server_name"
    extension.
 1. It MUST NOT include the "pre_shared_key" extension. (See
    {{flow-clienthello-malleability}}.)
@@ -528,7 +528,7 @@ The client then generates the HPKE encryption context and computes the
 encapsulated key, context, and payload as:
 
 ~~~
-    pkR = Deserialize(ECHConfig.public_key)
+    pkR = Deserialize(ECHConfigContents.public_key)
     enc, context = SetupBaseS(pkR,
                               "tls ech" || 0x00 || ECHConfig)
     payload = context.Seal(ClientHelloOuterAAD,
@@ -536,8 +536,8 @@ encapsulated key, context, and payload as:
 ~~~
 
 Note that the HPKE functions Deserialize and SetupBaseS are those which match
-`ECHConfig.kem_id` and the AEAD/KDF used with `context` are those which match
-the client's chosen preference from `ECHConfig.cipher_suites`. The `info`
+`ECHConfigContents.kem_id` and the AEAD/KDF used with `context` are those which match
+the client's chosen preference from `ECHConfigContents.cipher_suites`. The `info`
 parameter to SetupBaseS is the concatenation of "tls ech", a zero byte, and
 the serialized ECHConfig.
 
@@ -591,10 +591,10 @@ ClientHello extensions can be computed in this way.
 In contrast, clients do not know the longest SNI value in the client-facing
 server's anonymity set without server input. For the "server_name" extension
 with length D, clients SHOULD use the server's length hint L
-(ECHConfig.maximum_name_length) when computing the padding as follows:
+(ECHConfigContents.maximum_name_length) when computing the padding as follows:
 
 1. If L >= D, add L - D bytes of padding. This rounds to the server's
-   advertised hint, i.e., ECHConfig.maximum_name_length.
+   advertised hint, i.e., ECHConfigContents.maximum_name_length.
 2. Otherwise, let P = 31 - ((D - 1) % 32), and add P bytes of padding, plus an
    additional 32 bytes if D + P < L + 32. This rounds D up to the nearest
    multiple of 32 bytes that permits at least 32 bytes of length ambiguity.
@@ -622,7 +622,7 @@ usual, authenticating the connection for the true server name.
 #### Rejected ECH
 
 If the server used ClientHelloOuter, the client proceeds with the handshake,
-authenticating for ECHConfig.public_name as described in {{auth-public-name}}.
+authenticating for ECHConfigContents.public_name as described in {{auth-public-name}}.
 If authentication or the handshake fails, the client MUST return a failure to
 the calling application. It MUST NOT use the retry keys.
 
