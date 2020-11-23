@@ -942,7 +942,7 @@ It then computes a string
     accept_confirmation =
         Derive-Secret(Handshake Secret,
                       "ech accept confirmation",
-                      ClientHelloInner || ServerHelloECHConf)
+                      ClientHelloInner...ServerHelloECHConf)
 ~~~
 
 where Derive-Secret and Handshake Secret are as specified in {{RFC8446}},
