@@ -51,16 +51,16 @@ encrypting a ClientHello message under a server public key.
 
 # Introduction {#intro}
 
-DISCLAIMER: This is very early a work-in-progress design and has not yet seen
-significant (or really any) security analysis. It should not be used as a basis
-for building production systems.
+DISCLAIMER: This draft is work-in-progress and has not yet seen significant (or
+really any) security analysis. It should not be used as a basis for building
+production systems.
 
 Although TLS 1.3 {{!RFC8446}} encrypts most of the handshake, including the
 server certificate, there are several ways in which an on-path attacker can
 learn private information about the connection. The plaintext Server Name
 Indication (SNI) extension in ClientHello messages, which leaks the target
-domain for a given connection, is perhaps the most sensitive information
-unencrypted in TLS 1.3.
+domain for a given connection, is perhaps the most sensitive, unencrypted
+information in TLS 1.3.
 
 The target domain may also be visible through other channels, such as plaintext
 client DNS queries, visible server IP addresses (assuming the server does not
@@ -169,10 +169,10 @@ applications rather than Web browsers, those applications might have the public
 key and metadata preconfigured.
 
 When a client wants to establish a TLS session with the backend server, it
-constructs its ClientHello as indicated in {{real-ech}}. (We will refer to
-this as the ClientHelloInner message.) The client encrypts this message using
-the public key of the ECH configuration. It then constructs a new ClientHello
-(ClientHelloOuter) with innocuous values for sensitive extensions, e.g., SNI,
+constructs its ClientHello as indicated in {{real-ech}}. We will refer to
+this as the ClientHelloInner message. The client encrypts this message using
+the public key of the ECH configuration. It then constructs a new ClientHello,
+the ClientHelloOuter, with innocuous values for sensitive extensions, e.g., SNI,
 ALPN, etc., and with an "encrypted_client_hello" extension, which this document
 defines ({{encrypted-client-hello}}). The extension's payload carries the
 encrypted ClientHelloInner and specifies the ECH configuration used for
@@ -196,10 +196,10 @@ Upon receiving the server's response, the client determines whether or not ECH
 was accepted and proceeds with the handshake accordingly. (See
 {{client-behavior}} for details.)
 
-Informally, a primary goal of ECH is ensuring that connections to servers in the
-same anonymity set are indistinguishable from one another without affecting any
-existing security properties of TLS 1.3. See {{goals}} for more details about
-the ECH security and privacy goals.
+The primary goal of ECH is to ensure that connections to servers in the same
+anonymity set are indistinguishable from one another. Moreover, it should
+achieve this goal without affecting any existing security properties of TLS 1.3.
+See {{goals}} for more details about the ECH security and privacy goals.
 
 # Encrypted ClientHello Configuration {#ech-configuration}
 
@@ -219,11 +219,9 @@ The ECH configuration is defined by the following `ECHConfig` structure.
 
     struct {
         opaque public_name<1..2^16-1>;
-
         HpkePublicKey public_key;
         HpkeKemId kem_id;
         ECHCipherSuite cipher_suites<4..2^16-4>;
-
         uint16 maximum_name_length;
         Extension extensions<0..2^16-1>;
     } ECHConfigContents;
@@ -232,7 +230,7 @@ The ECH configuration is defined by the following `ECHConfig` structure.
         uint16 version;
         uint16 length;
         select (ECHConfig.version) {
-          case 0xfe08: ECHConfigContents contents;
+          case 0xfe09: ECHConfigContents contents;
         }
     } ECHConfig;
 ~~~~
@@ -255,9 +253,9 @@ specification, the contents are an `ECHConfigContents` structure.
 The `ECHConfigContents` structure contains the following fields:
 
 public_name
-: The non-empty name of client-facing server, i.e., the entity trusted to update
-these encryption keys. This is used to repair misconfigurations, as described in
-{{handle-server-response}}.
+: The non-empty name of the client-facing server, i.e., the entity trusted to
+update the ECH configuration. This is used to correct misconfigured clients, as
+described in {{handle-server-response}}.
 
 public_key
 : The HPKE public key used by the client to encrypt ClientHelloInner.
@@ -267,15 +265,15 @@ kem_id
 `ECHConfig` structure with a key using a KEM they do not support.
 
 cipher_suites
-: The list of HPKE AEAD and KDF identifier pairs clients can use for encrypting
+: The list of HPKE KDF and AEAD identifier pairs clients can use for encrypting
 ClientHelloInner.
 
 maximum_name_length
-: The largest name the server expects to support, if known. If this value is
-not known it can be set to zero, in which case clients SHOULD use the inner
-ClientHello padding scheme described below. That could happen if wildcard names
-are in use, or if names can be added or removed from the anonymity set during
-the lifetime of a particular resource record value.
+: The longest name of a backend server, if known. If this value is not known it
+can be set to zero, in which case clients SHOULD use the inner ClientHello
+padding scheme described below. That could happen if wildcard names are in use,
+or if names can be added or removed from the anonymity set during the lifetime
+of a particular ECH configuration.
 
 extensions
 : A list of extensions that the client must take into consideration when
@@ -470,9 +468,9 @@ is found, then the client SHOULD proceed as described in {{grease-ech}}.
 Next, the client constructs the ClientHelloInner message just as it does a
 standard ClientHello, with the exception of the following rules:
 
-1. It MUST NOT offer to negotiate TLS 1.2 or below. Note this is necessary to
-   ensure the backend server does not negotiate a TLS version that is
-   incompatible with ECH.
+1. It MUST NOT offer to negotiate TLS 1.2 or below. This is necessary to ensure
+   the backend server does not negotiate a TLS version that is incompatible with
+   ECH.
 1. It MUST NOT offer to resume any session for TLS 1.2 and below.
 1. It SHOULD contain TLS padding {{!RFC7685}} as described in {{padding}}.
 1. If it intends to compress any extensions (see {{encoding-inner}}), it MUST
@@ -492,13 +490,13 @@ it does a standard ClientHello, with the exception of the following rules:
 1. It MUST ensure that all extensions or parameters in ClientHelloInner that
    might change in response to receiving HelloRetryRequest match that in
    ClientHelloOuter. See {{client-hrr}} for more information.
+1. It MUST copy the legacy\_session\_id field from ClientHelloInner. This
+   allows the server to echo the correct session ID for TLS 1.3's compatibility
+   mode (see Appendix D.4 of {{RFC8446}}) when ECH is negotiated.
 1. It MAY copy any other field from the ClientHelloInner except
    ClientHelloInner.random. Instead, It MUST generate a fresh
    ClientHelloOuter.random using a secure random number generator. (See
    {{flow-client-reaction}}.)
-1. It MUST copy the legacy\_session\_id field from ClientHelloInner. This
-   allows the server to echo the correct session ID for TLS 1.3's compatibility
-   mode (see Appendix D.4 of {{RFC8446}}) when ECH is negotiated.
 1. It MUST include an "encrypted_client_hello" extension with a payload
    constructed as described below.
 1. The value of `ECHConfig.public_name` MUST be placed in the "server_name"
@@ -526,7 +524,7 @@ requires the "encrypted_client_hello" be computed after all other extensions.
 In particular, this is possible because the "pre_shared_key" extension is
 forbidden in ClientHelloOuter.
 
-The client then generates the HPKE encryption context. Finally, it computes the
+The client then generates the HPKE encryption context and computes the
 encapsulated key, context, and payload as:
 
 ~~~
@@ -640,7 +638,7 @@ supplied by the server. The retry configurations may only be applied to the
 retry connection. The client MUST continue to use the previously-advertised
 configurations for subsequent connections. This avoids introducing pinning
 concerns or a tracking vector, should a malicious server present client-specific
-retry keys to identify clients.
+retry keys in order to identify the client in a subsequent ECH handshake.
 
 If none of the values provided in "retry_configs" contains a supported version,
 the client can regard ECH as securely disabled by the server. As below, it
@@ -732,8 +730,8 @@ HPKE context:
 ~~~
 
 ClientHelloOuterAAD is computed as described in {{authenticating-outer}}, but
-again using the second ClientHelloOuter. Note an HPKE context maintains a
-sequence number, so this operation internally uses a fresh nonce for the AEAD
+again using the second ClientHelloOuter. Note that the HPKE context maintains a
+sequence number, so this operation internally uses a fresh nonce for each AEAD
 operation. Reusing the HPKE context avoids an attack described in
 {{flow-hrr-hijack}}.
 
@@ -793,8 +791,8 @@ MAY offer to resume sessions established without ECH.
 # Server Behavior {#server-behavior}
 
 Servers that support ECH play one of two roles, depending on which of the
-"ech_is_inner" and "encrypted_client_hello" extensions are present in the
-ClientHello:
+"ech_is_inner" ({{is-inner}}) and "encrypted_client_hello"
+({{encrypted-client-hello}}) extensions are present in the ClientHello:
 
 * If both the "ech_is_inner" and "encrypted_client_hello" extensions are
   present in the ClientHello, the backend server MUST abort with an
@@ -948,7 +946,7 @@ It then computes a string
 ~~~
 
 where Derive-Secret and Handshake Secret are as specified in {{RFC8446}},
-Section 7.1 and ClientHelloInner..ServerHelloECHConf refers to the sequence of
+Section 7.1, and ClientHelloInner..ServerHelloECHConf refers to the sequence of
 handshake messages beginning with the first ClientHello and ending with
 ServerHelloECHConf. Finally, the backend server constructs its ServerHello
 message so that it is equal to ServerHelloECHConf but with the last 8 bytes of
