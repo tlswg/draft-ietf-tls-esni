@@ -458,9 +458,9 @@ otherwise.
 
 To offer ECH, the client first chooses a suitable ECH configuration. To
 determine if a given `ECHConfig` is suitable, it checks that it supports the KEM
-algorithm identified by `ECHConfigContents.kem_id`, at least one KDF/AEAD algorithm
-identified by `ECHConfigContents.cipher_suites`, and the version of ECH indicated by
-`ECHConfig.version`. Once a suitable configuration is found, the client selects
+algorithm identified by `ECHConfig.contents.kem_id`, at least one KDF/AEAD algorithm
+identified by `ECHConfig.contents.cipher_suites`, and the version of ECH indicated by
+`ECHConfig.contents.version`. Once a suitable configuration is found, the client selects
 the cipher suite it will use for encryption. It MUST NOT choose a cipher suite
 or version not advertised by the configuration. If no compatible configuration
 is found, then the client SHOULD proceed as described in {{grease-ech}}.
@@ -499,7 +499,7 @@ it does a standard ClientHello, with the exception of the following rules:
    {{flow-client-reaction}}.)
 1. It MUST include an "encrypted_client_hello" extension with a payload
    constructed as described below.
-1. The value of `ECHConfigContents.public_name` MUST be placed in the "server_name"
+1. The value of `ECHConfig.contents.public_name` MUST be placed in the "server_name"
    extension.
 1. It MUST NOT include the "pre_shared_key" extension. (See
    {{flow-clienthello-malleability}}.)
@@ -528,7 +528,7 @@ The client then generates the HPKE encryption context and computes the
 encapsulated key, context, and payload as:
 
 ~~~
-    pkR = Deserialize(ECHConfigContents.public_key)
+    pkR = Deserialize(ECHConfig.contents.public_key)
     enc, context = SetupBaseS(pkR,
                               "tls ech" || 0x00 || ECHConfig)
     payload = context.Seal(ClientHelloOuterAAD,
@@ -536,8 +536,8 @@ encapsulated key, context, and payload as:
 ~~~
 
 Note that the HPKE functions Deserialize and SetupBaseS are those which match
-`ECHConfigContents.kem_id` and the AEAD/KDF used with `context` are those which match
-the client's chosen preference from `ECHConfigContents.cipher_suites`. The `info`
+`ECHConfig.contents.kem_id` and the AEAD/KDF used with `context` are those which match
+the client's chosen preference from `ECHConfig.contents.cipher_suites`. The `info`
 parameter to SetupBaseS is the concatenation of "tls ech", a zero byte, and
 the serialized ECHConfig.
 
