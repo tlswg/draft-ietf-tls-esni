@@ -956,6 +956,10 @@ The backend server MUST NOT perform this operation if it negotiated TLS 1.2 or
 below. Note that doing so would overwrite the downgrade signal for TLS 1.3 (see
 {{RFC8446}}, Section 4.1.3).
 
+The "ech_is_inner" is expected to have an empty payload. If the payload is
+non-empty (i.e., the length of the "extension_data" field is non-zero) then the
+backend server MUST abort the handshake with an "illegal_parameter" alert.
+
 # Compatibility Issues
 
 Unlike most TLS extensions, placing the SNI value in an ECH extension is not
