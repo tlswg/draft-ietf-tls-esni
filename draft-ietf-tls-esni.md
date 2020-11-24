@@ -427,10 +427,10 @@ the following structure:
 
 ~~~
     struct {
-       ECHCipherSuite cipher_suite; // ClientECH.cipher_suite
-       opaque config_id<0..255>;    // ClientECH.config_id
-       opaque enc<1..2^16-1>;       // ClientECH.enc
-       opaque outer_hello<1..2^16>;
+       ECHCipherSuite cipher_suite;   // ClientECH.cipher_suite
+       opaque config_id<0..255>;      // ClientECH.config_id
+       opaque enc<1..2^16-1>;         // ClientECH.enc
+       opaque outer_hello<1..2^24-1>;
     } ClientHelloOuterAAD;
 ~~~
 
