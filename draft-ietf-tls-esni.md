@@ -500,8 +500,8 @@ it does a standard ClientHello, with the exception of the following rules:
    {{flow-client-reaction}}.)
 1. It MUST include an "encrypted_client_hello" extension with a payload
    constructed as described below.
-1. The value of `ECHConfig.contents.public_name` MUST be placed in the "server_name"
-   extension.
+1. The value of `ECHConfig.contents.public_name` MUST be placed in the
+   "server_name" extension.
 1. It MUST NOT include the "pre_shared_key" extension. (See
    {{flow-clienthello-malleability}}.)
 
@@ -537,10 +537,10 @@ encapsulated key, context, and payload as:
 ~~~
 
 Note that the HPKE functions Deserialize and SetupBaseS are those which match
-`ECHConfig.contents.kem_id` and the AEAD/KDF used with `context` are those which match
-the client's chosen preference from `ECHConfig.contents.cipher_suites`. The `info`
-parameter to SetupBaseS is the concatenation of "tls ech", a zero byte, and
-the serialized ECHConfig.
+`ECHConfig.contents.kem_id` and the AEAD/KDF used with `context` are those which
+match the client's chosen preference from `ECHConfig.contents.cipher_suites`.
+The `info` parameter to SetupBaseS is the concatenation of "tls ech", a zero
+byte, and the serialized ECHConfig.
 
 The value of the "encrypted_client_hello" extension in the ClientHelloOuter is
 a `ClientECH` with the following values:
