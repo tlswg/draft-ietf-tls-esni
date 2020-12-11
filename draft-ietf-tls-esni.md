@@ -1177,10 +1177,11 @@ in-band when possible, such as through the use of OCSP stapling, and clients
 SHOULD take steps to minimize or protect such requests during certificate
 validation.
 
-Attacks that rely on analysis of non-ECH traffic to infer server identity in an
-ECH connection are considered to be out of scope for this document. For example,
-a client that connects to a particular host prior to ECH deployment may resume a
-previous session or exhibit similar connection patterns under ECH.
+Attacks that rely on non-ECH traffic to infer server identity in an ECH connection are 
+out of scope for this document. For example, a client that connects to a particular host 
+prior to ECH deployment may later resume a connection to that same host after ECH 
+deployment, thereby linking the resulting ECH connection to the original non-ECH 
+connection.
 
 ## Attacks Exploiting Acceptance Confirmation
 
