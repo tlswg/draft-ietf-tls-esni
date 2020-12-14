@@ -203,7 +203,7 @@ See {{goals}} for more details about the ECH security and privacy goals.
 
 # Encrypted ClientHello Configuration {#ech-configuration}
 
-ECH uses draft-06 of HPKE for public key encryption {{!I-D.irtf-cfrg-hpke}}.
+ECH uses draft-07 of HPKE for public key encryption {{!I-D.irtf-cfrg-hpke}}.
 The ECH configuration is defined by the following `ECHConfig` structure.
 
 ~~~~
@@ -1020,6 +1020,7 @@ Clients SHOULD NOT attempt to repair the connection in this case.
 In the absence of an application profile standard specifying otherwise,
 a compliant ECH application MUST implement the following HPKE cipher suite:
 
+[[TODO: Double check the section numbers below are correct.]]
 - KEM: DHKEM(X25519, HKDF-SHA256) (see {{!I-D.irtf-cfrg-hpke}}, Section 7.1)
 - KDF: HKDF-SHA256 (see {{!I-D.irtf-cfrg-hpke}}, Section 7.2)
 - AEAD: AES-128-GCM (see {{!I-D.irtf-cfrg-hpke}}, Section 7.3)
