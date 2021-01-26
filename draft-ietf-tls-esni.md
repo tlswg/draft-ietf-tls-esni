@@ -215,14 +215,19 @@ The ECH configuration is defined by the following `ECHConfig` structure.
     struct {
         HpkeKdfId kdf_id;
         HpkeAeadId aead_id;
-    } ECHCipherSuite;
+    } HpkeSymmetricCipherSuite;
 
     struct {
-        opaque public_name<1..2^16-1>;
-        HpkePublicKey public_key;
+        uint8 key_id;
         HpkeKemId kem_id;
-        ECHCipherSuite cipher_suites<4..2^16-4>;
+        HpkePublicKey public_key;
+        HpkeSymmetricCipherSuite cipher_suites<4..2^16-4>;
+    } HpkeKeyConfig;
+
+    struct {
+        HpkeKeyConfig key_config;
         uint16 maximum_name_length;
+        opaque public_name<1..2^16-1>;
         Extension extensions<0..2^16-1>;
     } ECHConfigContents;
 
@@ -252,21 +257,9 @@ specification, the contents are an `ECHConfigContents` structure.
 
 The `ECHConfigContents` structure contains the following fields:
 
-public_name
-: The non-empty name of the client-facing server, i.e., the entity trusted to
-update the ECH configuration. This is used to correct misconfigured clients, as
-described in {{handle-server-response}}.
-
-public_key
-: The HPKE public key used by the client to encrypt ClientHelloInner.
-
-kem_id
-: The HPKE KEM identifier corresponding to `public_key`. Clients MUST ignore any
-`ECHConfig` structure with a key using a KEM they do not support.
-
-cipher_suites
-: The list of HPKE KDF and AEAD identifier pairs clients can use for encrypting
-ClientHelloInner.
+key_config
+: A `HpkeKeyConfig` structure carrying the configuration information associated
+with the HPKE public key.
 
 maximum_name_length
 : The longest name of a backend server, if known. If this value is not known it
@@ -275,10 +268,32 @@ padding scheme described below. That could happen if wildcard names are in use,
 or if names can be added or removed from the anonymity set during the lifetime
 of a particular ECH configuration.
 
+public_name
+: The non-empty name of the client-facing server, i.e., the entity trusted to
+update the ECH configuration. This is used to correct misconfigured clients, as
+described in {{handle-server-response}}.
+
 extensions
 : A list of extensions that the client must take into consideration when
 generating a ClientHello message. These are described below
 ({{config-extensions}}).
+
+The `HpkeKeyConfig` structure contains the following fields:
+
+key_id
+: A one-byte identifier for the given HPKE public key. This is used by clients
+to indicate the key used for ClientHello encryption.
+
+kem_id
+: The HPKE KEM identifier corresponding to `public_key`. Clients MUST ignore any
+`ECHConfig` structure with a key using a KEM they do not support.
+
+public_key
+: The HPKE public key used by the client to encrypt ClientHelloInner.
+
+cipher_suites
+: The list of HPKE KDF and AEAD identifier pairs clients can use for encrypting
+ClientHelloInner.
 
 The client-facing server advertises a sequence of ECH configurations to clients,
 serialized as follows.
@@ -324,24 +339,19 @@ The payload MUST have the following structure:
 
 ~~~~
     struct {
+       uint8 key_id;
        ECHCipherSuite cipher_suite;
-       opaque config_id<0..255>;
        opaque enc<1..2^16-1>;
        opaque payload<1..2^16-1>;
     } ClientECH;
 ~~~~
 
+key_id
+: The one-byte identifier matching `ECHConfigContents.key_config.key_id`.
+
 cipher_suite
 : The cipher suite used to encrypt ClientHelloInner. This MUST match a value
 provided in the corresponding `ECHConfigContents.cipher_suites` list.
-
-config_id
-: The configuration identifier, equal to
-`Expand(Extract("", config), "tls ech config id", 8)`, unless it is optional
-for an application; see {{optional-configs}}. `config` is the `ECHConfig`
-structure. `Extract` and `Expand` are as specified by the cipher suite KDF.
-(Passing the literal "" as the salt is interpreted by `Extract` as no salt
-being provided.)
 
 enc
 : The HPKE encapsulated key, used by servers to decrypt the corresponding
@@ -427,15 +437,15 @@ the following structure:
 
 ~~~
     struct {
+       uint8 key_id;                  // ClientECH.key_id
        ECHCipherSuite cipher_suite;   // ClientECH.cipher_suite
-       opaque config_id<0..255>;      // ClientECH.config_id
        opaque enc<1..2^16-1>;         // ClientECH.enc
        opaque outer_hello<1..2^24-1>;
     } ClientHelloOuterAAD;
 ~~~
 
 The first three parameters are equal to, respectively, the
-`ClientECH.cipher_suite`, `ClientECH.config_id`, and `ClientECH.enc` fields of
+`ClientECH.key_id`, `ClientECH.cipher_suite`, and `ClientECH.enc` fields of
 the payload of the "encrypted_client_hello" extension. The last parameter,
 `outer_hello`, is computed by serializing ClientHelloOuter with the
 "encrypted_client_hello" extension removed. Note this does not include the
@@ -546,13 +556,13 @@ byte, and the serialized ECHConfig.
 The value of the "encrypted_client_hello" extension in the ClientHelloOuter is
 a `ClientECH` with the following values:
 
+- `key_id`, the identifier of the chosen ECHConfig structure;
 - `cipher_suite`, the client's chosen cipher suite;
-- `config_id`, the identifier of the chosen ECHConfig structure;
 - `enc`, as computed above; and
 - `payload`, as computed above.
 
-If optional configuration identifiers (see {{optional-configs}})) are used, the
-`config_id` field MAY be empty or randomly generated. Unless specified by the
+If optional configuration identifiers (see {{optional-configs}})) are used,
+`key_id` MAY be set to a randomly generated byte. Unless specified by the
 application using (D)TLS or externally configured on both sides,
 implementations MUST compute the field as specified in
 {{encrypted-client-hello}}.
@@ -740,9 +750,9 @@ operation. Reusing the HPKE context avoids an attack described in
 The client then modifies the "encrypted_client_hello" extension in
 ClientHelloOuter as follows:
 
+- `key_id` is unchanged and contains the client's chosen HPKE key identifier.
 - `cipher_suite` is unchanged and contains the client's chosen HPKE cipher
   suite.
-- `config_id` is replaced with the empty string.
 - `enc` is replaced with the empty string.
 - `payload` is replaced with the value computed above.
 
@@ -756,11 +766,11 @@ If the client attempts to connect to a server and does not have an ECHConfig
 structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
 "encrypted_client_hello" extension in the first ClientHello as follows:
 
+- Set the `key_id` field to a random byte.
+
 - Set the `cipher_suite` field to a supported ECHCipherSuite. The selection
   SHOULD vary to exercise all supported configurations, but MAY be held constant
   for successive connections to the same server in the same session.
-
-- Set the `config_id` field to a randomly-generated 8-byte string.
 
 - Set the `enc` field to a randomly-generated valid encapsulated public key
   output by the HPKE KEM.
@@ -826,13 +836,13 @@ with an "illegal_parameter" alert.
 First, the server collects a set of candidate ECHConfigs. This set is
 determined by one of the two following methods:
 
-1. Compare ClientECH.config_id against identifiers of known ECHConfigs and
+1. Compare ClientECH.key_id against identifiers of known ECHConfigs and
    select the ones that match, if any, as candidates.
 2. Collect all known ECHConfigs as candidates, with trial decryption below
    determining the final selection.
 
-Some uses of ECH, such as local discovery mode, may omit the
-ClientECH.config_id since it can be used as a tracking vector. In such cases,
+Some uses of ECH, such as local discovery mode, may randomize the
+ClientECH.key_id since it can be used as a tracking vector. In such cases,
 the second method should be used for matching ClientECH to known ECHConfig. See
 {{optional-configs}}. Unless specified by the application using (D)TLS or
 externally configured on both sides, implementations MUST use the first method.
@@ -896,8 +906,8 @@ first ClientHelloOuter as follows:
 If the client-facing server accepted ECH, it checks the second ClientHelloOuter
 also contains the "encrypted_client_hello" extension. If not, it MUST abort the
 handshake with a "missing_extension" alert. Otherwise, it checks that
-ClientECH.cipher_suite is unchanged, and that ClientECH.config_id and
-ClientECH.enc are empty. If not, it MUST abort the handshake with an
+ClientECH.cipher_suite and ClientECH.key_id are unchanged, and that
+ClientECH.enc is empty. If not, it MUST abort the handshake with an
 "illegal_parameter" alert.
 
 Finally, it decrypts the new ClientECH.payload as a second message with the
@@ -1051,7 +1061,7 @@ then each anonymity set has size k = 1. Client-facing servers SHOULD deploy ECH
 in such a way so as to maximize the size of the anonymity set where possible.
 This means client-facing servers should use the same ECHConfig for as many hosts
 as possible. An attacker can distinguish two hosts that have different ECHConfig
-values based on the ClientECH.config_id value. This also means public
+values based on the ClientECH.key_id value. This also means public
 information in a TLS handshake is also consistent across hosts. For example, if
 a client-facing server services many backend origin hosts, only one of which
 supports some cipher suite, it may be possible to identify that host based on
@@ -1115,17 +1125,15 @@ this problem by flushing any DNS or ECHConfig state upon changing networks.
 
 Optional configuration identifiers may be useful in scenarios where clients and
 client-facing servers do not want to reveal information about the client-facing
-server in the "encrypted_client_hello" extension. In such settings, clients send
-either an empty config_id or a randomly generated config_id in the ClientECH.
-(The precise implementation choice for this mechanism is out of scope for this
-document.) Servers in these settings must perform trial decryption since they
-cannot identify the client's chosen ECH key using the config_id value. As a
-result, support for optional configuration identifiers may exacerbate DoS
-attacks. Specifically, an adversary may send malicious ClientHello messages,
-i.e., those which will not decrypt with any known ECH key, in order to force
-wasteful decryption. Servers that support this feature should, for example,
-implement some form of rate limiting mechanism to limit the damage caused by
-such attacks.
+server in the "encrypted_client_hello" extension. In such settings, clients
+send a randomly generated key_id in the ClientECH. Servers in these settings
+must perform trial decryption since they cannot identify the client's chosen
+ECH key using the key_id value. As a result, support for optional configuration
+identifiers may exacerbate DoS attacks. Specifically, an adversary may send
+malicious ClientHello messages, i.e., those which will not decrypt with any
+known ECH key, in order to force wasteful decryption. Servers that support
+this feature should, for example, implement some form of rate limiting
+mechanism to limit the damage caused by such attacks.
 
 ## Outer ClientHello {#outer-clienthello}
 
