@@ -562,8 +562,8 @@ a `ClientECH` with the following values:
 - `payload`, as computed above.
 
 If optional configuration identifiers (see {{optional-configs}})) are used,
-`config_id` MAY be set to a randomly generated eight bytes. Unless specified by
-the application using (D)TLS or externally configured on both sides,
+`config_id` SHOULD be set to a randomly generated eight bytes. Unless specified
+by the application using (D)TLS or externally configured on both sides,
 implementations MUST compute the field as specified in
 {{encrypted-client-hello}}.
 
