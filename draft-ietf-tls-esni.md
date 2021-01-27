@@ -339,8 +339,8 @@ The payload MUST have the following structure:
 
 ~~~~
     struct {
+       HpkeSymmetricCipherSuite cipher_suite;
        opaque config_id<0..255>
-       ECHCipherSuite cipher_suite;
        opaque enc<1..2^16-1>;
        opaque payload<1..2^16-1>;
     } ClientECH;
@@ -437,15 +437,15 @@ the following structure:
 
 ~~~
     struct {
-       opaque config_id<0..255>;      // ClientECH.config_id
-       ECHCipherSuite cipher_suite;   // ClientECH.cipher_suite
-       opaque enc<1..2^16-1>;         // ClientECH.enc
+       HpkeSymmetricCipherSuite cipher_suite;   // ClientECH.cipher_suite
+       opaque config_id<0..255>;                // ClientECH.config_id
+       opaque enc<1..2^16-1>;                   // ClientECH.enc
        opaque outer_hello<1..2^24-1>;
     } ClientHelloOuterAAD;
 ~~~
 
 The first three parameters are equal to, respectively, the
-`ClientECH.config_id`, `ClientECH.cipher_suite`, and `ClientECH.enc` fields of
+`ClientECH.cipher_suite`, `ClientECH.config_id`, and `ClientECH.enc` fields of
 the payload of the "encrypted_client_hello" extension. The last parameter,
 `outer_hello`, is computed by serializing ClientHelloOuter with the
 "encrypted_client_hello" extension removed. Note this does not include the
@@ -768,7 +768,7 @@ structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
 
 - Set the `config_id` field to a random eight byte string.
 
-- Set the `cipher_suite` field to a supported ECHCipherSuite. The selection
+- Set the `cipher_suite` field to a supported HpkeSymmetricCipherSuite. The selection
   SHOULD vary to exercise all supported configurations, but MAY be held constant
   for successive connections to the same server in the same session.
 
