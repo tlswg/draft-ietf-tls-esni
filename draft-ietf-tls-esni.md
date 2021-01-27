@@ -218,7 +218,7 @@ The ECH configuration is defined by the following `ECHConfig` structure.
     } HpkeSymmetricCipherSuite;
 
     struct {
-        uint8 config_id[8];
+        opaque config_id<0..255>;
         HpkeKemId kem_id;
         HpkePublicKey public_key;
         HpkeSymmetricCipherSuite cipher_suites<4..2^16-4>;
@@ -281,8 +281,8 @@ generating a ClientHello message. These are described below
 The `HpkeKeyConfig` structure contains the following fields:
 
 config_id
-: An eight byte identifier for the given HPKE key configuration. This is used
-by clients to indicate the key used for ClientHello encryption.
+: An opaque identifier for the given HPKE key configuration. This is used by
+clients to indicate the key used for ClientHello encryption.
 
 kem_id
 : The HPKE KEM identifier corresponding to `public_key`. Clients MUST ignore any
@@ -339,7 +339,7 @@ The payload MUST have the following structure:
 
 ~~~~
     struct {
-       uint8 config_id[8];
+       opaque config_id<0..255>
        ECHCipherSuite cipher_suite;
        opaque enc<1..2^16-1>;
        opaque payload<1..2^16-1>;
@@ -347,7 +347,7 @@ The payload MUST have the following structure:
 ~~~~
 
 config_id
-: The eight byte identifier matching `ECHConfigContents.key_config.config_id`.
+: The opaque byte identifier matching `ECHConfigContents.key_config.config_id`.
 
 cipher_suite
 : The cipher suite used to encrypt ClientHelloInner. This MUST match a value
@@ -437,7 +437,7 @@ the following structure:
 
 ~~~
     struct {
-       uint8 config_id[8];            // ClientECH.config_id
+       opaque config_id<0..255>;      // ClientECH.config_id
        ECHCipherSuite cipher_suite;   // ClientECH.cipher_suite
        opaque enc<1..2^16-1>;         // ClientECH.enc
        opaque outer_hello<1..2^24-1>;
@@ -750,8 +750,7 @@ operation. Reusing the HPKE context avoids an attack described in
 The client then modifies the "encrypted_client_hello" extension in
 ClientHelloOuter as follows:
 
-- `config_id` is unchanged and contains the client's chosen HPKE configuration
-  identifier.
+- `config_id` is replaced with the empty string.
 - `cipher_suite` is unchanged and contains the client's chosen HPKE cipher
   suite.
 - `enc` is replaced with the empty string.
