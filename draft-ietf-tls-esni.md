@@ -347,7 +347,7 @@ The payload MUST have the following structure:
 ~~~~
 
 config_id
-: The opaque byte identifier matching `ECHConfigContents.key_config.config_id`.
+: The ECHConfigContents.key_config.config_id for the chosen ECHConfig.
 
 cipher_suite
 : The cipher suite used to encrypt ClientHelloInner. This MUST match a value
