@@ -340,7 +340,7 @@ The payload MUST have the following structure:
 ~~~~
     struct {
        HpkeSymmetricCipherSuite cipher_suite;
-       opaque config_id<0..255>
+       opaque config_id<0..255>;
        opaque enc<1..2^16-1>;
        opaque payload<1..2^16-1>;
     } ClientECH;
