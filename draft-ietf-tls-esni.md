@@ -436,12 +436,12 @@ associated data for HPKE sealing and opening operations. ClientHelloOuterAAD has
 the following structure:
 
 ~~~
-    struct {
-       HpkeSymmetricCipherSuite cipher_suite;   // ClientECH.cipher_suite
-       opaque config_id<0..255>;                // ClientECH.config_id
-       opaque enc<1..2^16-1>;                   // ClientECH.enc
-       opaque outer_hello<1..2^24-1>;
-    } ClientHelloOuterAAD;
+   struct {
+      HpkeSymmetricCipherSuite cipher_suite;
+      opaque config_id<0..255>;
+      opaque enc<1..2^16-1>;
+      opaque outer_hello<1..2^24-1>;
+   } ClientHelloOuterAAD;
 ~~~
 
 The first three parameters are equal to, respectively, the
@@ -768,9 +768,10 @@ structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
 
 - Set the `config_id` field to a random eight byte string.
 
-- Set the `cipher_suite` field to a supported HpkeSymmetricCipherSuite. The selection
-  SHOULD vary to exercise all supported configurations, but MAY be held constant
-  for successive connections to the same server in the same session.
+- Set the `cipher_suite` field to a supported HpkeSymmetricCipherSuite. The
+  selection SHOULD vary to exercise all supported configurations, but MAY be
+  held constant for successive connections to the same server in the same
+  session.
 
 - Set the `enc` field to a randomly-generated valid encapsulated public key
   output by the HPKE KEM.
