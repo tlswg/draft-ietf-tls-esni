@@ -906,8 +906,8 @@ first ClientHelloOuter as follows:
 If the client-facing server accepted ECH, it checks the second ClientHelloOuter
 also contains the "encrypted_client_hello" extension. If not, it MUST abort the
 handshake with a "missing_extension" alert. Otherwise, it checks that
-ClientECH.cipher_suite and ClientECH.config_id are unchanged, and that
-ClientECH.enc is empty. If not, it MUST abort the handshake with an
+ClientECH.cipher_suite is unchanged, and that ClientECH.config_id and
+ClientECH.enc are empty. If not, it MUST abort the handshake with an
 "illegal_parameter" alert.
 
 Finally, it decrypts the new ClientECH.payload as a second message with the
