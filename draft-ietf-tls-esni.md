@@ -364,7 +364,7 @@ with the following payload:
 retry_configs
 : An ECHConfigs structure containing one or more ECHConfig structures, in
 decreasing order of preference, to be used by the client in subsequent
-connection attempts.
+connection attempts. These are known as the server's "retry configurations".
 
 This document also defines the "ech_required" alert, which the client MUST send
 when it offered an "encrypted_client_hello" extension that was not accepted by
@@ -626,12 +626,13 @@ usual, authenticating the connection for the true server name.
 If the server used ClientHelloOuter, the client proceeds with the handshake,
 authenticating for ECHConfig.contents.public_name as described in
 {{auth-public-name}}. If authentication or the handshake fails, the client MUST
-return a failure to the calling application. It MUST NOT use the retry keys.
+return a failure to the calling application. It MUST NOT use the retry
+configurations.
 
-Otherwise, when the handshake completes successfully with the public name
-authenticated, the client MUST abort the connection with an "ech_required"
-alert. It then processes the "retry_configs" field from the server's
-"encrypted_client_hello" extension.
+Otherwise, if the both authentication and the handshake complete successfully,
+the client MUST abort the connection with an "ech_required" alert. It then
+processes the "retry_configs" field from the server's "encrypted_client_hello"
+extension.
 
 If at least one of the values contains a version supported by the client, it can
 regard the ECH keys as securely replaced by the server. It SHOULD retry the
@@ -639,8 +640,9 @@ handshake with a new transport connection, using the retry configurations
 supplied by the server. The retry configurations may only be applied to the
 retry connection. The client MUST continue to use the previously-advertised
 configurations for subsequent connections. This avoids introducing pinning
-concerns or a tracking vector, should a malicious server present client-specific
-retry keys in order to identify the client in a subsequent ECH handshake.
+concerns or a tracking vector, should a malicious server present
+client-specific retry configurations in order to identify the client in a
+subsequent ECH handshake.
 
 If none of the values provided in "retry_configs" contains a supported version,
 the client can regard ECH as securely disabled by the server. As below, it
