@@ -629,8 +629,8 @@ authenticating for ECHConfig.contents.public_name as described in
 return a failure to the calling application. It MUST NOT use the retry
 configurations.
 
-Otherwise, if the both authentication and the handshake complete successfully,
-the client MUST abort the connection with an "ech_required" alert. It then
+Otherwise, if both authentication and the handshake complete successfully, the
+client MUST abort the connection with an "ech_required" alert. It then
 processes the "retry_configs" field from the server's "encrypted_client_hello"
 extension.
 
