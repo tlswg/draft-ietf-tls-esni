@@ -477,7 +477,7 @@ ClientHello.
 When solicited by the client, the server MAY reply by including the extension in
 its EncryptedExtensions message.
 
-The payload of the "handshake_padding" extension is any number of zeros bytes.
+The payload of the "handshake_padding" extension is any number of zero bytes.
 The extension's recipient MAY verify the payload is correct and abort with an
 "illegal_parameter" alert if not.
 
