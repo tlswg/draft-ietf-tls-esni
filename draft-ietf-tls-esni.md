@@ -263,8 +263,8 @@ with the HPKE public key. Note that this structure contains the `config_id`
 field, which applies to the entire ECHConfigContents. Sites MUST NOT publish
 two different `ECHConfigContents` values with the same `HpkeKeyConfig` value.
 The RECOMMENDED technique for choosing `config_id` is to choose a random byte.
-This process should be repeated if this config_id matches that of any existing
-(and valid) ECHConfig.
+This process is repeated if this config_id matches that of any valid ECHConfig, which
+could include any ECHConfig that has been recently removed from active use.
 
 maximum_name_length
 : The longest name of a backend server, if known. If this value is not known it
