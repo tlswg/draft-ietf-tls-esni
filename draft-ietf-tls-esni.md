@@ -1193,8 +1193,9 @@ validation.
 Attacks that rely on non-ECH traffic to infer server identity in an ECH
 connection are out of scope for this document. For example, a client that
 connects to a particular host prior to ECH deployment may later resume a
-connection to that same host after ECH deployment, thereby linking the resulting
-ECH connection to the original non-ECH connection.
+connection to that same host after ECH deployment. An adversary that observes
+this can deduce that the ECH-enabled connection was made to a host that the
+client previously connected to and which is within the same anonymity set.
 
 ## Attacks Exploiting Acceptance Confirmation
 
