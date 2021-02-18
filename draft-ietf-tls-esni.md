@@ -1061,13 +1061,13 @@ a compliant ECH application MUST implement the following HPKE cipher suite:
 ## Security and Privacy Goals {#goals}
 
 ECH considers two types of attackers: passive and active. Passive attackers can
-read packets from the network, but they cannot perform any sort of active behavior
-such as probing servers or querying DNS. A middlebox that filters based on
-plaintext packet contents is one example of a passive attacker. In contrast,
-active attackers can also write packets into the network for malicious purposes, such
-as interfering with existing connections, probing servers, and querying DNS. In
-short, an active attacker corresponds to the conventional threat model for
-TLS 1.3 {{RFC8446}}.
+read packets from the network, but they cannot perform any sort of active
+behavior such as probing servers or querying DNS. A middlebox that filters based
+on plaintext packet contents is one example of a passive attacker. In contrast,
+active attackers can also write packets into the network for malicious purposes,
+such as interfering with existing connections, probing servers, and querying
+DNS. In short, an active attacker corresponds to the conventional threat model
+for TLS 1.3 {{RFC8446}}.
 
 Given these types of attackers, the primary goals of ECH are as follows.
 
@@ -1274,14 +1274,14 @@ ECH should be deployable as well. Thus, our strategy for mitigating network
 ossification has two parts:
 1. Design a "cover" protocol (i.e., GREASE ECH) that meets some notion of
    deployability.
-1. Design the "target" protocol (i.e., ECH) so that networks do not differentiate
-   between it and the cover protocol.
+1. Design the "target" protocol (i.e., ECH) so that networks do not
+   differentiate between it and the cover protocol.
 
 This strategy is analogous to the methodology that lead to "Middlebox
 Compatibility Mode" for TLS 1.3 described in {{!RFC8446}}.
 
 In the first step, the deployability of GREASE ECH is established by deploying
-the protocol and measuring its impact. [[TODO: Document the results of an an
+the protocol and measuring its impact. [[TODO: Document the results of an
 experiment that compares the error rate of GREASE ECH connections with vanilla
 TLS 1.3.]]
 
@@ -1305,8 +1305,8 @@ of observable features is: it may include the transcript of the protocol's
 execution itself, yielding a very strong attacker; or it may be as coarse
 grained as the number of IP packets sent. The model's strength also depends on
 whether the attacker is passive or active (see {{goals}}); middleboxes have been
-known to exhibit active behavior, even without malicious intent [[TOOD: Add
-references]].
+known to exhibit active behavior, even without malicious intent. (See references
+in Section D.4 of {{!RFC8446}} for examples of active middlebox behavior.)
 
 Indifferentiability of ECH from GREASE ECH in a strong attack model is not
 feasible for all implementations. Thus, this specification aims to provide a
