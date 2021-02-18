@@ -814,8 +814,9 @@ the extension syntactically and abort the connection with a "decode_error" alert
 if it is invalid. It otherwise ignores the extension and MUST NOT use the retry
 keys.
 
-[[TODO: Provide a defense for the GREASE+resumption and GREASE+PSK
-differentiators pointed out by @kjacobs in issue #354.]]
+[[OPEN ISSUE: if the client sends a GREASE "encrypted_client_hello" extension,
+should it also send a GREASE "pre_shared_key" extension? If not, GREASE+ticket
+is a trivial distinguisher. See issue #384.]]
 
 Offering a GREASE extension is not considered offering an encrypted ClientHello
 for purposes of requirements in {{client-behavior}}. In particular, the client
@@ -1280,8 +1281,9 @@ This strategy is analogous to the methodology that lead to "Middlebox
 Compatibility Mode" for TLS 1.3 described in {{!RFC8446}}.
 
 In the first step, the deployability of GREASE ECH is established by deploying
-the protocol and measuring its impact. [[OPEN ISSUE: Run an experiment that
-compares the error rate of GREASE ECH connections with vanilla TLS 1.3.]]
+the protocol and measuring its impact. [[TODO: Document the results of an an
+experiment that compares the error rate of GREASE ECH connections with vanilla
+TLS 1.3.]]
 
 From this experiment we can deduce the set of features of the TLS handshake that
 are known to trigger differentiable treatment by the network. This set might
@@ -1324,8 +1326,8 @@ though not limited to, the following:
 1. the value of the configuration identifier;
 1. the value of the outer SNI;
 1. use of the "pre_shared_key" extension in the ClientHelloOuter, which is
-   permitted in GREASE ECH but not real ECH; [[TODO: Based on discussion in
-   #354, we intend to mitigate this differentiator.]]
+   permitted in GREASE ECH but not real ECH; [[TODO: Remove this differentiator
+   if issue #384 is resolved by a spec change.]]
 1. the TLS version negotiated, which may depend on ECH acceptance;
 1. client authentication, which may depend on ECH acceptance; and
 1. HRR issuance, which may depend on ECH acceptance.
