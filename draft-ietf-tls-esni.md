@@ -432,14 +432,14 @@ ClientHelloInner.
 Note that it is possible to implement decoding of the EncodedClientHelloInner in
 a way that creates a denial-of-service vulnerability. Specifically, the server
 needs to check that each extension in the OuterExtensions list appears in the
-ClientHelloOuter. The naive strategy would require N\*M comparisons in the worst
-case, where N is the number of extensions in the ClientHelloOuter and M is the
-number of extensions in the OuterExtensions list. Malicious clients could
-exploit this behavior in order to degrade the performance or availability of the
-server. This problem can be mitigated by representing OuterExtensions in a way
-that allows it to be searched more quickly. for example, the worst case runtime
-can be improved to N\*log(M) by sorting the OuterExtensions and using binary
-search to access it.
+ClientHelloOuter. The naive strategy would require O(N\*M) time, where N is the
+number of extensions in the ClientHelloOuter and M is the number of extensions
+in the OuterExtensions list. Malicious clients could exploit this behavior in
+order to cause excessive work for the server, possibly making it unavailable.
+This problem can be mitigated by representing OuterExtensions in a way that
+allows it to be searched more quickly. For example, the runtime can be improved
+to O(N\*log(M)) by sorting the OuterExtensions and using binary search to access
+it.
 
 ## Authenticating the ClientHelloOuter {#authenticating-outer}
 
