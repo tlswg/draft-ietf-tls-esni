@@ -203,7 +203,7 @@ See {{goals}} for more details about the ECH security and privacy goals.
 
 # Encrypted ClientHello Configuration {#ech-configuration}
 
-ECH uses draft-07 of HPKE for public key encryption {{!I-D.irtf-cfrg-hpke}}.
+ECH uses draft-08 of HPKE for public key encryption {{!I-D.irtf-cfrg-hpke}}.
 The ECH configuration is defined by the following `ECHConfig` structure.
 
 ~~~~
@@ -235,7 +235,7 @@ The ECH configuration is defined by the following `ECHConfig` structure.
         uint16 version;
         uint16 length;
         select (ECHConfig.version) {
-          case 0xfe09: ECHConfigContents contents;
+          case 0xfe0a: ECHConfigContents contents;
         }
     } ECHConfig;
 ~~~~
@@ -332,7 +332,7 @@ extension, defined as follows:
 
 ~~~
     enum {
-       encrypted_client_hello(0xfe09), (65535)
+       encrypted_client_hello(0xfe0a), (65535)
     } ExtensionType;
 ~~~
 
@@ -1475,7 +1475,7 @@ ClientHello vulnerable to an analogue of this attack.
 IANA is requested to create the following three entries in the existing registry
 for ExtensionType (defined in {{!RFC8446}}):
 
-1. encrypted_client_hello(0xfe09), with "TLS 1.3" column values set to
+1. encrypted_client_hello(0xfe0a), with "TLS 1.3" column values set to
    "CH, EE", and "Recommended" column set to "Yes".
 2. ech_is_inner (0xda09), with "TLS 1.3" column values set to
    "CH", and "Recommended" column set to "Yes".
