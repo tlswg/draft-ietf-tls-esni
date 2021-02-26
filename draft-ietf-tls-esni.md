@@ -850,8 +850,8 @@ If the client offers the "ech_is_inner" extension ({{is-inner}})
 in addition to the "encrypted_client_hello" extension, the server MUST abort
 with an "illegal_parameter" alert.
 
-First, the server collects a candidate ECHConfigList. This list is determined
-by one of the two following methods:
+First, the server collects a set of candidate ECHConfig values. This list is
+determined by one of the two following methods:
 
 1. Compare ClientECH.config_id against identifiers of each known ECHConfig
    and select the ones that match, if any, as candidates.
@@ -864,8 +864,8 @@ the second method should be used for matching ClientECH to known ECHConfig. See
 {{optional-configs}}. Unless specified by the application using (D)TLS or
 externally configured on both sides, implementations MUST use the first method.
 
-The server then iterates over the candidate ECHConfigList, attempting to decrypt
-the "encrypted_client_hello" extension:
+The server then iterates over the candidate ECHConfig values, attempting to
+decrypt the "encrypted_client_hello" extension:
 
 The server verifies that the ECHConfig supports the cipher suite indicated by
 the ClientECH.cipher_suite and that the version of ECH indicated by the client
@@ -888,7 +888,7 @@ concatenation "tls ech", a zero byte, and the serialized ECHConfig. If
 decryption fails, the server continues to the next candidate ECHConfig.
 Otherwise, the server reconstructs ClientHelloInner from
 EncodedClientHelloInner, as described in {{encoding-inner}}. It then stops
-iterating over the candidate ECHConfigList.
+iterating over the candidate ECHConfig values.
 
 Upon determining the ClientHelloInner, the client-facing server then forwards
 the ClientHelloInner to the appropriate backend server, which proceeds as in
@@ -898,14 +898,13 @@ ClientHelloOuter using the procedure in {{server-hrr}}, and forwards the
 resulting second ClientHelloInner. The client-facing server forwards all other
 TLS messages between the client and backend server unmodified.
 
-Otherwise, if all ECHConfig values in the candidate ECHConfigList fail to
-decrypt the extension, the client-facing server MUST ignore the extension and
-proceed with the connection using ClientHelloOuter. This connection proceeds as
-usual, except the server MUST include the "encrypted_client_hello" extension in
-its EncryptedExtensions with the "retry_configs" field set to one or more
-ECHConfig structures with up-to-date keys. Servers MAY supply multiple
-ECHConfig values of different versions. This allows a server to support
-multiple versions at once.
+Otherwise, if all candidate ECHConfig values fail to decrypt the extension, the
+client-facing server MUST ignore the extension and proceed with the connection
+using ClientHelloOuter. This connection proceeds as usual, except the server
+MUST include the "encrypted_client_hello" extension in its EncryptedExtensions
+with the "retry_configs" field set to one or more ECHConfig structures with
+up-to-date keys. Servers MAY supply multiple ECHConfig values of different
+versions. This allows a server to support multiple versions at once.
 
 Note that decryption failure could indicate a GREASE ECH extension (see
 {{grease-ech}}), so it is necessary for servers to proceed with the connection
