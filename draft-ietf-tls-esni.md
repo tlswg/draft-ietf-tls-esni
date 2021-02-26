@@ -481,15 +481,15 @@ otherwise.
 
 ## Offering ECH {#real-ech}
 
-To offer ECH, the client first chooses a suitable ECH configuration. To
-determine if a given `ECHConfig` is suitable, it checks that it supports the KEM
-algorithm identified by `ECHConfig.contents.kem_id`, at least one KDF/AEAD
-algorithm identified by `ECHConfig.contents.cipher_suites`, and the version of
-ECH indicated by `ECHConfig.contents.version`. Once a suitable configuration is
-found, the client selects the cipher suite it will use for encryption. It MUST
-NOT choose a cipher suite or version not advertised by the configuration. If no
-compatible configuration is found, then the client SHOULD proceed as described
-in {{grease-ech}}.
+To offer ECH, the client first chooses a suitable ECHConfig from the server's
+ECHConfigList. To determine if a given `ECHConfig` is suitable, it checks that
+it supports the KEM algorithm identified by `ECHConfig.contents.kem_id`, at
+least one KDF/AEAD algorithm identified by `ECHConfig.contents.cipher_suites`,
+and the version of ECH indicated by `ECHConfig.contents.version`. Once a
+suitable configuration is found, the client selects the cipher suite it will
+use for encryption. It MUST NOT choose a cipher suite or version not advertised
+by the configuration. If no compatible configuration is found, then the client
+SHOULD proceed as described in {{grease-ech}}.
 
 Next, the client constructs the ClientHelloInner message just as it does a
 standard ClientHello, with the exception of the following rules:
