@@ -301,10 +301,10 @@ The client-facing server advertises a sequence of ECH configurations to clients,
 serialized as follows.
 
 ~~~~
-    ECHConfig ECHConfigs<1..2^16-1>;
+    ECHConfig ECHConfigList<1..2^16-1>;
 ~~~~
 
-The `ECHConfigs` structure contains one or more `ECHConfig` structures in
+The `ECHConfigList` structure contains one or more `ECHConfig` structures in
 decreasing order of preference. This allows a server to support multiple
 versions of ECH and multiple sets of ECH parameters.
 
@@ -369,12 +369,12 @@ with the following payload:
 
 ~~~
     struct {
-       ECHConfigs retry_configs;
+       ECHConfigList retry_configs;
     } ServerECH;
 ~~~
 
 retry_configs
-: An ECHConfigs structure containing one or more ECHConfig structures, in
+: An ECHConfigList structure containing one or more ECHConfig structures, in
 decreasing order of preference, to be used by the client in subsequent
 connection attempts. These are known as the server's "retry configurations".
 
@@ -850,13 +850,13 @@ If the client offers the "ech_is_inner" extension ({{is-inner}})
 in addition to the "encrypted_client_hello" extension, the server MUST abort
 with an "illegal_parameter" alert.
 
-First, the server collects a set of candidate ECHConfigs. This set is
-determined by one of the two following methods:
+First, the server collects a candidate ECHConfigList. This list is determined
+by one of the two following methods:
 
-1. Compare ClientECH.config_id against identifiers of known ECHConfigs and
-   select the ones that match, if any, as candidates.
-2. Collect all known ECHConfigs as candidates, with trial decryption below
-   determining the final selection.
+1. Compare ClientECH.config_id against identifiers of each known ECHConfig
+   and select the ones that match, if any, as candidates.
+2. Collect all known ECHConfig values as candidates, with trial decryption
+   below determining the final selection.
 
 Some uses of ECH, such as local discovery mode, may randomize the
 ClientECH.config_id since it can be used as a tracking vector. In such cases,
@@ -864,7 +864,7 @@ the second method should be used for matching ClientECH to known ECHConfig. See
 {{optional-configs}}. Unless specified by the application using (D)TLS or
 externally configured on both sides, implementations MUST use the first method.
 
-The server then iterates over all candidate ECHConfigs, attempting to decrypt
+The server then iterates over the candidate ECHConfigList, attempting to decrypt
 the "encrypted_client_hello" extension:
 
 The server verifies that the ECHConfig supports the cipher suite indicated by
@@ -888,7 +888,7 @@ concatenation "tls ech", a zero byte, and the serialized ECHConfig. If
 decryption fails, the server continues to the next candidate ECHConfig.
 Otherwise, the server reconstructs ClientHelloInner from
 EncodedClientHelloInner, as described in {{encoding-inner}}. It then stops
-considering candidate ECHConfigs.
+iterating over the candidate ECHConfigList.
 
 Upon determining the ClientHelloInner, the client-facing server then forwards
 the ClientHelloInner to the appropriate backend server, which proceeds as in
@@ -898,13 +898,14 @@ ClientHelloOuter using the procedure in {{server-hrr}}, and forwards the
 resulting second ClientHelloInner. The client-facing server forwards all other
 TLS messages between the client and backend server unmodified.
 
-Otherwise, if all candidate ECHConfigs fail to decrypt the extension, the
-client-facing server MUST ignore the extension and proceed with the connection
-using ClientHelloOuter. This connection proceeds as usual, except the server
-MUST include the "encrypted_client_hello" extension in its EncryptedExtensions
-with the "retry_configs" field set to one or more ECHConfig structures with
-up-to-date keys. Servers MAY supply multiple ECHConfig values of different
-versions. This allows a server to support multiple versions at once.
+Otherwise, if all ECHConfig values in the candidate ECHConfigList fail to
+decrypt the extension, the client-facing server MUST ignore the extension and
+proceed with the connection using ClientHelloOuter. This connection proceeds as
+usual, except the server MUST include the "encrypted_client_hello" extension in
+its EncryptedExtensions with the "retry_configs" field set to one or more
+ECHConfig structures with up-to-date keys. Servers MAY supply multiple
+ECHConfig values of different versions. This allows a server to support
+multiple versions at once.
 
 Note that decryption failure could indicate a GREASE ECH extension (see
 {{grease-ech}}), so it is necessary for servers to proceed with the connection
@@ -1293,7 +1294,7 @@ via DNSSEC or fetched from a trusted Recursive Resolver, spoofing a
 client-facing server operating in Split Mode is not possible. See
 {{plaintext-dns}} for more details regarding plaintext DNS.
 
-Authenticating the ECHConfigs structure naturally authenticates the included
+Authenticating the ECHConfig structure naturally authenticates the included
 public name. This also authenticates any retry signals from the client-facing
 server because the client validates the server certificate against the public
 name before retrying.
