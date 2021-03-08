@@ -1561,3 +1561,20 @@ is a much more limited mechanism because it depends on the DNS for the
 protection of the ECH key. Richard Barnes, Christian Huitema, Patrick McManus,
 Matthew Prince, Nick Sullivan, Martin Thomson, and David Benjamin also provided
 important ideas and contributions.
+
+# Change Log
+
+> **RFC Editor's Note:** Please remove this section prior to publication of a
+> final version of this document.
+
+Issue and pull request numbers are listed with a leading octothorp.
+
+## Since draft-ietf-tls-esni-09
+
+- Finalize HPKE dependency (#390)
+
+- Move from client-computed to server-chosen config identifier (#376)
+
+- Rename ECHConfigs to ECHConfigList (#391)
+
+- Clarify some security and privacy properties (#385, #383)
