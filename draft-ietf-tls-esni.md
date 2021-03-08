@@ -1573,7 +1573,7 @@ Issue and pull request numbers are listed with a leading octothorp.
 
 - Finalize HPKE dependency (#390)
 
-- Move from client-computed to server-chosen config identifier (#376)
+- Move from client-computed to server-chosen, one-byte config identifier (#376, #381)
 
 - Rename ECHConfigs to ECHConfigList (#391)
 
