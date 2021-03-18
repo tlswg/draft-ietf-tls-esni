@@ -1269,57 +1269,25 @@ The GREASE ECH protocol described in {{grease-ech}} provides a low-risk way to
 evaluate the deployability of ECH. It is designed to mimic the real ECH protocol
 ({{real-ech}}) without changing the security properties of the handshake. The
 underlying theory is that if GREASE ECH is deployable without triggering
-udifferentiable behavior, and real ECH is indifferentiable from GREASE ECH, then
-ECH should be deployable as well. Thus, our strategy for mitigating network
-ossification has two parts:
-1. Design a "cover" protocol (i.e., GREASE ECH) that meets some notion of
-   deployability.
-1. Design the "target" protocol (i.e., ECH) so that networks do not
-   differentiate between it and the cover protocol.
+middlebox misbehavior, and real ECH looks enough like GREASE ECH, then ECH
+should be deployable as well. Thus, our strategy for mitigating network
+ossification is to deploy GREASE ECH widely enough to disincentivize
+differential treatment of the real ECH protocol by the network.
 
-This strategy is analogous to the methodology that lead to "Middlebox
-Compatibility Mode" for TLS 1.3 described in {{!RFC8446}}.
-
-In the first step, the deployability of GREASE ECH is established by deploying
-the protocol and measuring its impact. [[TODO: Document the results of an
-experiment that compares the error rate of GREASE ECH connections with vanilla
-TLS 1.3.]]
-
-From this experiment we can deduce the set of features of the TLS handshake that
-are known to trigger differentiable treatment by the network. This set might
-include the plaintext extensions offered by the client or server, plaintext
-alert messages, the number of round trips over the network, the length of each
-message, and so on. We will call these the protocol's "observable features". Our
-goal is to design real ECH so that each execution of the protocol has the same
-observable features as if GREASE ECH were being executed instead. For example,
-if extensions are an observable feature, then regardless of whether they are
-running the target protocol or the cover protocol, the client and server should
-appear to negotiate the same set of extensions. That way the real protocol does
-not trigger differentiable treatment that would not have been triggered by the
-cover protocol.
-
-We say that the target protocol is "indifferentiable" from cover protocol if,
-when executed in the presence of the adversary, both protocols have the same set
-of observable features. The strength of this model depends on how rich the set
-of observable features is: it may include the transcript of the protocol's
-execution itself, yielding a very strong attacker; or it may be as coarse
-grained as the number of IP packets sent. The model's strength also depends on
-whether the attacker is passive or active (see {{goals}}); middleboxes have been
-known to exhibit active behavior, even without malicious intent. (See references
-in Section D.4 of {{!RFC8446}} for examples of active middlebox behavior.)
-
-Indifferentiability of ECH from GREASE ECH in a strong attack model is not
-feasible for all implementations. Thus, this specification aims to provide a
-baseline security level that most deployments can achieve easily, while
-providing implementations enough flexibility to achieve stronger security where
-possible. Minimally, real ECH is designed to be indifferentiable from GREASE ECH
-for passive adversaries with following capabilities:
-1. The attacker does not know the ECHConfigs used by the server.
+Ensuring that networks do not differentiate between real ECH and GREASE ECH may
+not be feasible for all implementations. While most middleboxes will not treat
+them differently, some operators may wish to block real ECH usage but allow
+GREASE ECH. This specification aims to provide a baseline security level that
+most deployments can achieve easily, while providing implementations enough
+flexibility to achieve stronger security where possible. Minimally, real ECH is
+designed to be indifferentiable from GREASE ECH for passive adversaries with
+following capabilities:
+1. The attacker does not know the ECHConfigList used by the server.
 1. The attacker keeps per-connection state only. In particular, it does not
    track endpoints across connections.
-1. Observable features include: the code points of extensions negotiated in the
-   clear, but not the payloads themselves; the length of messages; and the
-   values of plaintext alert messages.
+1. ECH and GREASE ECH are designed so that the following features do not vary:
+   the code points of extensions negotiated in the clear; the length of
+   messages; and the values of plaintext alert messages.
 
 This leaves a variety of practical differentiators out-of-scope. including,
 though not limited to, the following:
