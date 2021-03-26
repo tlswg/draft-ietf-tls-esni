@@ -716,6 +716,9 @@ error code.
 
 ### Handling HelloRetryRequest {#client-hrr}
 
+As described in {{server-hrr}}, if the server has accepted ECH but needs to send
+an HRR then it will be carried in an encrypted HRR value in an "encrypted_client_hello" extension
+inside an outer HRR.
 If the server sends a HelloRetryRequest (HRR) in response to the ClientHello,
 the client first checks for the presence of the "encrypted_client_hello"
 extension. The presence of this extension is an indication that the
