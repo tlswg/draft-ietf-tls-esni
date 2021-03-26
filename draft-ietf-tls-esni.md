@@ -717,14 +717,13 @@ error code.
 ### Handling HelloRetryRequest {#client-hrr}
 
 As described in {{server-hrr}}, if the server has accepted ECH but needs to send
-an HRR then it will be carried in an encrypted HRR value in an "encrypted_client_hello" extension
-inside an outer HRR.
-If the server sends a HelloRetryRequest (HRR) in response to the ClientHello,
-the client first checks for the presence of the "encrypted_client_hello"
-extension. The presence of this extension is an indication that the
-client-facing server accepted ECH and that the backend server sent an HRR. If
-absent, then the client presumes rejection and proceeds as if the message was
-constructed by the client-facing server.
+an HRR then it will be carried in an encrypted HRR value in an
+"encrypted_client_hello" extension inside an outer HRR. If the server sends a
+HelloRetryRequest (HRR) in response to the ClientHello, the client first checks
+for the presence of the "encrypted_client_hello" extension. The presence of this
+extension is an indication that the client-facing server accepted ECH and that
+the backend server sent an HRR. If absent, then the client presumes rejection
+and proceeds as if the message was constructed by the client-facing server.
 
 The client must therefore distinguish between two HRR messages; one constructed
 by the backend server and another constructed by the client-facing server. In
