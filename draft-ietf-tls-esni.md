@@ -277,7 +277,11 @@ of a particular ECH configuration.
 public_name
 : The non-empty name of the client-facing server, i.e., the entity trusted to
 update the ECH configuration. This is used to correct misconfigured clients, as
-described in {{handle-server-response}}.
+described in {{handle-server-response}}. Clients SHOULD ignore any `ECHConfig`
+structure with a `public_name` that is not a valid DNS hostname as discussed in
+{{RFC6066}}, Section 3. For this purpose, the value must be an ASCII string
+without a trailing dot, composed of dot-separated NR-LDH labels and A-labels,
+which are defined in {{RFC5890}}, Section 2.3.2.1.
 
 extensions
 : A list of extensions that the client must take into consideration when
