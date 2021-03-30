@@ -733,7 +733,7 @@ client-facing server is called the HelloRetryRequestOuter message.
 
 #### Accepted ECH {#client-hrr-accepted-ech}
 
-As described in {{sever-hrr}, the HelloRetryRequestInner handshake message is
+As described in {{server-hrr}, the HelloRetryRequestInner handshake message is
 encrypted by the backend server and included as the payload of the
 "encrypted_client_hello" extension of the HelloRetryRequestOuter. The client
 decrypts the payload using the HPKE context it shares with the client-facing
@@ -793,6 +793,10 @@ ClientHelloOuter as follows:
   suite.
 - `enc` is replaced with the empty string.
 - `payload` is replaced with the value computed above.
+
+If the client offered ECH in the first ClientHello, then it MUST offer ECH in
+the second. Likewise, if the client did not offer ECH in the first ClientHello,
+then it MUST NOT not offer ECH in the second.
 
 #### Rejected ECH
 
@@ -977,12 +981,12 @@ backend server MUST abort the handshake with an "illegal_parameter" alert.
 ## Sending HelloRetryRequest {#server-hrr}
 
 If the backend server cannot complete the handshake with the parameters provided
-in the ClientHelloInner, then it constructs a HelloRetryRequestInner message in
-the usual way and forwards it to the client-facing server. The client-facing
-server encrypts this message using a key derived from the HPKE context, as
-described below. It then constructs HelloRetryRequestOuter message with an
-"encrypted_client_hello" extension containing the ciphertext as its payload. It
-then continues the handshake by sending this message to the client.
+in the ClientHelloInner, then it constructs a HelloRetryRequestInner message as
+described in {{RFC8446}} and forwards it to the client-facing server. The
+client-facing server encrypts this message using a key derived from the HPKE
+context, as described below. It then constructs HelloRetryRequestOuter message
+with an "encrypted_client_hello" extension containing the ciphertext as its
+payload. It then continues the handshake by sending this message to the client.
 
 The payload of the "encrypted_client_hello" extension is constructed as follows.
 The client-facing server begins by computing `hrr_inner_key` and
