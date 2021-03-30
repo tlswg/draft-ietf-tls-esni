@@ -1040,10 +1040,6 @@ The client-facing server then forwards the resulting ClientHelloInner to the
 backend server. It forwards all subsequent TLS messages between the client and
 backend server unmodified.
 
-If the client-facing server rejected ECH, or if the first ClientHello did not
-include an "encrypted_client_hello" extension, the client-facing server
-proceeds with the connection as usual.
-
 # Compatibility Issues
 
 Unlike most TLS extensions, placing the SNI value in an ECH extension is not
