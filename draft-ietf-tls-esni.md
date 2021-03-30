@@ -531,7 +531,10 @@ it does a standard ClientHello, with the exception of the following rules:
    constructed as described below.
 1. The value of `ECHConfig.contents.public_name` MUST be placed in the
    "server_name" extension.
-1. It MUST NOT include the "pre_shared_key" extension. (See
+1. When the client offers the "pre_shared_key" extension in ClientHelloInner, it
+   SHOULD also include a fake "pre_shared_key" extension in ClientHelloOuter,
+   generated in the manner described in {{grease-psk}}. The client MUST NOT use
+   this extension to advertise a PSK to the client-facing server. (See
    {{flow-clienthello-malleability}}.)
 
 [[OPEN ISSUE: We currently require HRR-sensitive parameters to match in
@@ -602,6 +605,26 @@ length.
 
 Backend servers (as described in {{server-behavior}}) MUST support the
 "ech_is_inner" extension.
+
+### GREASE PSK {#grease-psk}
+
+When offering ECH, the client is not permitted to advertise PSK identities in
+the ClientHelloOuter. However, it is useful to allow the client to add a fake
+"pre_shared_key" extension to the ClientHelloOuter whenever it advertises PSK
+identities in the ClientHelloInner. This provides cover traffic for session
+resumption with the backend server. When resuming a session with the client, the
+backend server sends a "pre_shared_key" extension in its ServerHello. This would
+appear to a network observer as if the the server were sending this extension
+without solicitation, which would violate the extension rules described in
+{{RFC8446}}. Sending a fake "pre_shared_key" extension in the ClientHelloOuter
+makes it appear to the network as if the extension were negotiated properly.
+
+The client generates the extension payload by constructing an `OfferedPsks`
+structure (see {{RFC8446}}, Section 4.2.11) as follows. For each PSK identity
+advertised in the ClientHelloInner, the client generates a random PSK identity
+with the same length. It also generates a random, 32-bit, unsinged integer to
+use as the `obfuscated_ticket_age`. Likewise, for each inner PSK binder, the
+client generates random string of the same length.
 
 ### Recommended Padding Scheme {#padding}
 
