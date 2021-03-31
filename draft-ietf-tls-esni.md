@@ -533,6 +533,10 @@ it does a standard ClientHello, with the exception of the following rules:
    "server_name" extension.
 1. It MUST NOT include the "pre_shared_key" extension. (See
    {{flow-clienthello-malleability}}.)
+1. When the client offers the "early_data" extension in ClientHelloInner, it
+   MUST also include the "early_data" extension in ClientHelloOuter. This
+   allows servers that reject ECH and use ClientHelloOuter to safely ignore any
+   early data sent by the client per {{RFC8446}}, Section 4.2.10.
 
 [[OPEN ISSUE: We currently require HRR-sensitive parameters to match in
 ClientHelloInner and ClientHelloOuter in order to simplify client-side
