@@ -278,14 +278,11 @@ public_name
 : The non-empty name of the client-facing server, i.e., the entity trusted to
 update the ECH configuration. This is used to correct misconfigured clients, as
 described in {{handle-server-response}}. Clients MUST ignore any `ECHConfig`
-structure with a `public_name` that cannot be parsed as an ASCII string
-containing an IP address or a hostname. First, the client attempts to parse
-`public_name` as an "IPv4address" or an "IPv6address" with syntax defined in
-{{RFC3986}}, Section 3.2.2. Failing that, it attempts to parse `public_name` as
-a dot-separated sequence of NR-LDH labels and A-labels, as defined in
-{{RFC5890}}, Section 2.3.2.1. For this purpose, hostnames do not begin or end
-with a dot. If this final parse succeeds, the `public_name` is considered to be
-a hostname.
+structure with a `public_name` that fails hostname validation. To validate, the
+client parses a dot-separated sequence of NR-LDH labels and A-labels, as defined
+in {{RFC5890}}, Section 2.3.2.1. Validation fails if the first or last character
+is a dot. Note that any `public_name` that passes this validation step is also a
+valid `HostName`, as defined in {{RFC6066}}, Section 3.
 
 extensions
 : A list of extensions that the client must take into consideration when
@@ -537,9 +534,8 @@ it does a standard ClientHello, with the exception of the following rules:
    {{flow-client-reaction}}.)
 1. It MUST include an "encrypted_client_hello" extension with a payload
    constructed as described below.
-1. If `ECHConfig.contents.public_name` is a hostname, its value MUST be placed
-   in the "server_name" extension. Otherwise, it is an IP address literal, and
-   the client MUST omit the "server_name" extension.
+1. The value of `ECHConfig.contents.public_name` MUST be placed in the
+   "server_name" extension.
 1. It MUST NOT include the "pre_shared_key" extension. (See
    {{flow-clienthello-malleability}}.)
 
@@ -716,9 +712,8 @@ extension instead (see {{server-behavior}}). Clients that offer ECH then
 authenticate the connection with the public name, as follows:
 
 - The client MUST verify that the certificate is valid for
-  ECHConfig.contents.public_name, which may either be a hostname or an IP
-  address. If the certificate is invalid, it MUST abort the connection with the
-  appropriate alert.
+  ECHConfig.contents.public_name. If invalid, it MUST abort the connection with
+  the appropriate alert.
 
 - If the server requests a client certificate, the client MUST respond with an
   empty Certificate message, denoting no client certificate.
