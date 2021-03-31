@@ -717,7 +717,8 @@ authenticate the connection with the public name, as follows:
 
 - The client MUST verify that the certificate is valid for
   ECHConfig.contents.public_name, which may either be a hostname or an IP
-  address. If invalid, it MUST abort the connection with the appropriate alert.
+  address. If the certificate is invalid, it MUST abort the connection with the
+  appropriate alert.
 
 - If the server requests a client certificate, the client MUST respond with an
   empty Certificate message, denoting no client certificate.
