@@ -899,14 +899,15 @@ Upon determining the ClientHelloInner, the client-facing server then checks
 that the message includes the "ech_is_inner" extension, omits the
 "encrypted_client_hello" extension, and does not offer TLS 1.2 or below
 versions. If any of these checks fails, the client-facing server MUST
-abort with an "illegal_parameter" alert. If these checks succeed, the
-client-facing server then forwards the ClientHelloInner to the appropriate
-backend server, which proceeds as in {{backend-server}}. If the backend server
-responds with a HelloRetryRequest, the client-facing server forwards it,
-decrypts the client's second ClientHelloOuter using the procedure in
-{{server-hrr}}, and forwards the resulting second ClientHelloInner. The
-client-facing server forwards all other TLS messages between the client and
-backend server unmodified.
+abort with an "illegal_parameter" alert.
+
+If these checks succeed, the client-facing server then forwards the
+ClientHelloInner to the appropriate backend server, which proceeds as in
+{{backend-server}}. If the backend server responds with a HelloRetryRequest,
+the client-facing server forwards it, decrypts the client's second
+ClientHelloOuter using the procedure in {{server-hrr}}, and forwards the
+resulting second ClientHelloInner. The client-facing server forwards all other
+TLS messages between the client and backend server unmodified.
 
 Otherwise, if all candidate ECHConfig values fail to decrypt the extension, the
 client-facing server MUST ignore the extension and proceed with the connection
