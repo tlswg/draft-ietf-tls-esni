@@ -628,7 +628,7 @@ use as the `obfuscated_ticket_age`. Likewise, for each inner PSK binder, the
 client generates random string of the same length.
 
 If the server replies with a "pre_shared_key" extension in its SeverHello, then
-the client MUST abort the handshake with a "handshake_failure" alert.
+the client MUST abort the handshake with an "illegal_parameter" alert.
 
 ### Recommended Padding Scheme {#padding}
 
