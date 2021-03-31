@@ -278,7 +278,7 @@ public_name
 : The non-empty name of the client-facing server, i.e., the entity trusted to
 update the ECH configuration. This is used to correct misconfigured clients, as
 described in {{handle-server-response}}. Clients MUST ignore any `ECHConfig`
-structure with a `public_name` that fails hostname validation. To validate, the
+structure with a `public_name` that fails validation. To validate, the
 client parses a dot-separated sequence of NR-LDH labels and A-labels, as defined
 in {{RFC5890}}, Section 2.3.2.1. Validation fails if the first or last character
 is a dot. Note that any `public_name` that passes this validation step is also a
