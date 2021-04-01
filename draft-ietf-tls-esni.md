@@ -535,9 +535,8 @@ it does a standard ClientHello, with the exception of the following rules:
    SHOULD also include a GREASE "pre_shared_key" extension in ClientHelloOuter,
    generated in the manner described in {{grease-psk}}. The client MUST NOT use
    this extension to advertise a PSK to the client-facing server. (See
-   {{flow-clienthello-malleability}}.) When it does, the client also MUST copy
-   the "psk_key_exchange_modes" from the ClientHelloInner into the
-   ClientHelloOuter.
+   {{flow-clienthello-malleability}}.) When the client includes a GREASE "pre_shared_key" extension, 
+   it MUST also copy the "psk_key_exchange_modes" from the ClientHelloInner into the ClientHelloOuter.
 
 [[OPEN ISSUE: We currently require HRR-sensitive parameters to match in
 ClientHelloInner and ClientHelloOuter in order to simplify client-side
