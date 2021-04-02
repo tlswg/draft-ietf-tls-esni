@@ -278,15 +278,15 @@ public_name
 : The non-empty name of the client-facing server, i.e., the entity trusted to
 update the ECH configuration. This is used to correct misconfigured clients, as
 described in {{handle-server-response}}. Clients MUST ignore any `ECHConfig`
-structure with a `public_name` that fails validation. To validate, the client
-first attempts to parse `public_name` as an ASCII string containing only an
-"IPv4address", with syntax defined in {{RFC3986}}, Section 3.2.2. Validation
-fails if the "IPv4address" parse succeeds. Next, the client attempts to parse a
-dot-separated sequence of NR-LDH labels and A-labels, as defined in {{RFC5890}},
-Section 2.3.2.1. Validation fails if this parse fails, or if the first or last
-character of `public_name` is a dot. Note that any `public_name` that passes
-this validation step is also a valid `HostName`, as defined in {{RFC6066}},
-Section 3.
+structure with a `public_name` that begins or ends with an ASCII dot or cannot
+be parsed as a dot-separated sequence of LDH labels, as defined in {{RFC5890}},
+Section 2.3.1. This validation procedure is incomplete; it incidentally rules
+out textual representations of IPv6 addresses (see {{RFC3986}}, Section 3.2.2),
+but it does not exclude IPv4 addresses in standard dotted-decimal or other
+non-standard notations such as octal and hexadecimal (see {{RFC3986}}, Section
+7.4). If `public_name` contains an IPv4 or IPv6 literal, the client SHOULD
+ignore the `ECHConfig` to avoid sending a non-compliant "server_name" extension
+on the ClientHelloOuter (see {{RFC6066, Section 3}}).
 
 extensions
 : A list of extensions that the client must take into consideration when
