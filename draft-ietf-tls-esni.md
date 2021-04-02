@@ -284,9 +284,9 @@ Section 2.3.1. This validation procedure is incomplete; it incidentally rules
 out textual representations of IPv6 addresses (see {{RFC3986}}, Section 3.2.2),
 but it does not exclude IPv4 addresses in standard dotted-decimal or other
 non-standard notations such as octal and hexadecimal (see {{RFC3986}}, Section
-7.4). If `public_name` contains an IPv4 or IPv6 literal, the client SHOULD
-ignore the `ECHConfig` to avoid sending a non-compliant "server_name" extension
-on the ClientHelloOuter (see {{RFC6066, Section 3}}).
+7.4). If `public_name` contains a literal IPv4 or IPv6 address, the client
+SHOULD ignore the `ECHConfig` to avoid sending a non-compliant "server_name"
+extension on the ClientHelloOuter (see {{RFC6066, Section 3}}).
 
 extensions
 : A list of extensions that the client must take into consideration when
