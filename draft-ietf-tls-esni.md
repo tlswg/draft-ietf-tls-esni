@@ -280,9 +280,9 @@ update the ECH configuration. This is used to correct misconfigured clients, as
 described in {{handle-server-response}}. This value MUST NOT begin or end with
 an ASCII dot and MUST be parsable as a dot-separated sequence of LDH labels, as
 defined in {{RFC5890}}, Section 2.3.1. Clients MUST ignore any `ECHConfig`
-structure whose `public_name` does not meet this criteria. This validation
-procedure is incomplete; it incidentally rules out textual representations of
-IPv6 addresses (see {{RFC3986}}, Section 3.2.2), but it does not exclude IPv4
+structure whose `public_name` does not meet these criteria. Note that these
+criteria are incomplete; they incidentally rule out textual representations of
+IPv6 addresses (see {{RFC3986}}, Section 3.2.2), but do not exclude IPv4
 addresses in standard dotted-decimal or other non-standard notations such as
 octal and hexadecimal (see {{RFC3986}}, Section 7.4). If `public_name` contains
 a literal IPv4 or IPv6 address, the client SHOULD ignore the `ECHConfig` to
