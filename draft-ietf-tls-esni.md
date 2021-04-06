@@ -723,38 +723,41 @@ error code.
 
 ### Handling HelloRetryRequest {#client-hrr}
 
-As required in {{real-ech}}, clients offering ECH MUST ensure that all
-extensions or parameters that might change in response to receiving a
-HelloRetryRequest have the same values in ClientHelloInner and
-ClientHelloOuter. That is, if a HelloRetryRequest causes a parameter to be
-changed, the same change is applied to both ClientHelloInner and
-ClientHelloOuter. Applicable parameters include:
-
-1. TLS 1.3 {{!RFC8446}} ciphersuites in the ClientHello.cipher_suites list.
-1. The "key_share" and "supported_groups" extensions {{RFC8446}}. (These
-extensions may be copied from ClientHelloOuter into ClientHelloInner as
-described in {{real-ech}}.)
-1. Versions in the "supported_versions" extension, excluding TLS 1.2 and
-earlier. Note the ClientHelloOuter MAY include these older versions, while the
-ClientHelloInner MUST omit them.
-
-Future extensions that might change across first and second ClientHello messages
-in response to a HelloRetryRequest MUST have the same value.
-
 If the server sends a HelloRetryRequest in response to the ClientHello, the
-client sends a second updated ClientHello per the rules in {{RFC8446}}.
-However, at this point, the client does not know whether the server processed
-ClientHelloOuter or ClientHelloInner, and MUST regenerate both values to be
-acceptable. Note: if ClientHelloOuter and ClientHelloInner use different groups
-for their key shares or differ in some other way, then the HelloRetryRequest
-may actually be invalid for one or the other ClientHello, in which case a fresh
-ClientHello MUST be generated, ignoring the instructions in HelloRetryRequest.
-Otherwise, the usual rules for HelloRetryRequest processing apply.
+client updates both ClientHelloInner and ClientHelloOuter.  At this point, the
+client does not know whether the server processed ClientHelloOuter or
+ClientHelloInner, so the changes required by the HelloRetryRequest are applied
+to both.
 
-The client encodes the second ClientHelloInner as in {{encoding-inner}}, using
-the second ClientHelloOuter for any referenced extensions. It then encrypts
-the new EncodedClientHelloInner value as a second message with the previous
-HPKE context:
+To ensure that a HelloRetryRequest is successful, clients needs to ensure that
+any values that might change in response to HelloRetryRequest are consistent in
+the two messages.  Of the values defined in {{RFC8446}}, a client needs to
+include consistent values for ClientHello.cipher_suites, the value of
+"supported_versions" and "supported_groups" extensions, and which groups are
+included in the "key_share" extension.
+
+By consistent, this means that values in ClientHelloInner are identical to those
+in ClientHelloOuter, but with any values that only apply to TLS 1.2 or lower
+removed. ClientHelloOuter might be used to negotiate TLS 1.2, but
+ClientHelloInner cannot.  A client MAY include values in ClientHelloOuter that
+are only applicable to TLS 1.2 or lower versions, but any such options MUST NOT
+be included in ClientHelloInner.
+
+A "key_share" extension MAY include different values in ClientHelloOuter and
+ClientHelloInner, but the groups for which values are provided MUST be the same.
+
+Other extensions that define a reaction to HelloRetryRequest can describe rules
+for generating values that differ between ClientHelloInner and ClientHelloOuter.
+In the absence of specific rules, including identical values in both messages
+will ensure that the HelloRetryRequest applies to both ClientHelloOuter and
+ClientHelloInner equally.  Only extensions that change in response to
+HelloRetryRequest need to have any consideration for consistency between
+ClientHelloOuter and ClientHelloInner.
+
+The client encodes the updated ClientHelloInner as in {{encoding-inner}}, using
+the updated ClientHelloOuter for any referenced extensions. It then encrypts the
+new EncodedClientHelloInner value as a second message with the previous HPKE
+context:
 
 ~~~
     payload = context.Seal(ClientHelloOuterAAD,
@@ -762,7 +765,7 @@ HPKE context:
 ~~~
 
 ClientHelloOuterAAD is computed as described in {{authenticating-outer}}, but
-again using the second ClientHelloOuter. Note that the HPKE context maintains a
+again using the updated ClientHelloOuter. Note that the HPKE context maintains a
 sequence number, so this operation internally uses a fresh nonce for each AEAD
 operation. Reusing the HPKE context avoids an attack described in
 {{flow-hrr-hijack}}.
