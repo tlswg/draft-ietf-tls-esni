@@ -956,10 +956,11 @@ include an "encrypted_client_hello" extension, the client-facing server
 proceeds with the connection as usual. The server does not decrypt the
 second ClientHello's ClientECH.payload value, if there is one.
 
-[[OPEN ISSUE: If the client-facing server implements stateless HRR, it has no
-way to send a cookie, short of as-yet-unspecified integration with the
-backend server. Stateful HRR on the client-facing server works fine, however.
-See issue https://github.com/tlswg/draft-ietf-tls-esni/issues/333.]]
+Note that a client-facing server that forwards the first ClientHello cannot
+include its own "cookie" extension if the backend server sends a
+HelloRetryRequest.  This means that the client-facing server either needs to
+maintain state for such a connection or it needs to coordinate with the backend
+server to include any information it requires to process the second ClientHello.
 
 ## Backend Server {#backend-server}
 
