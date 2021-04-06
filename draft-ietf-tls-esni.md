@@ -745,11 +745,7 @@ If the server sends a HelloRetryRequest in response to the ClientHello, the
 client sends a second updated ClientHello per the rules in {{RFC8446}}.
 However, at this point, the client does not know whether the server processed
 ClientHelloOuter or ClientHelloInner, and MUST regenerate both values to be
-acceptable. Note: if ClientHelloOuter and ClientHelloInner use different groups
-for their key shares or differ in some other way, then the HelloRetryRequest
-may actually be invalid for one or the other ClientHello, in which case a fresh
-ClientHello MUST be generated, ignoring the instructions in HelloRetryRequest.
-Otherwise, the usual rules for HelloRetryRequest processing apply.
+acceptable.
 
 The client encodes the second ClientHelloInner as in {{encoding-inner}}, using
 the second ClientHelloOuter for any referenced extensions. It then encrypts
