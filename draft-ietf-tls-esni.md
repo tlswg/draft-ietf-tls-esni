@@ -226,8 +226,8 @@ The ECH configuration is defined by the following `ECHConfig` structure.
 
     struct {
         HpkeKeyConfig key_config;
-        uint16 maximum_name_length;
-        opaque public_name<1..2^16-1>;
+        uint8 maximum_name_length;
+        opaque public_name<1..255>;
         Extension extensions<0..2^16-1>;
     } ECHConfigContents;
 
