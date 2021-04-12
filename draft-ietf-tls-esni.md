@@ -531,8 +531,12 @@ it does a standard ClientHello, with the exception of the following rules:
    constructed as described below.
 1. The value of `ECHConfig.contents.public_name` MUST be placed in the
    "server_name" extension.
-1. It MUST NOT include the "pre_shared_key" extension. (See
-   {{flow-clienthello-malleability}}.)
+1. When the client offers the "pre_shared_key" extension in ClientHelloInner, it
+   SHOULD also include a GREASE "pre_shared_key" extension in ClientHelloOuter,
+   generated in the manner described in {{grease-psk}}. The client MUST NOT use
+   this extension to advertise a PSK to the client-facing server. (See
+   {{flow-clienthello-malleability}}.) When the client includes a GREASE "pre_shared_key" extension, 
+   it MUST also copy the "psk_key_exchange_modes" from the ClientHelloInner into the ClientHelloOuter.
 
 [[OPEN ISSUE: We currently require HRR-sensitive parameters to match in
 ClientHelloInner and ClientHelloOuter in order to simplify client-side
@@ -602,6 +606,28 @@ length.
 
 Backend servers (as described in {{server-behavior}}) MUST support the
 "ech_is_inner" extension.
+
+### GREASE PSK {#grease-psk}
+
+When offering ECH, the client is not permitted to advertise PSK identities in
+the ClientHelloOuter. However, the client can send a "pre_shared_key" extension
+in the ClientHelloInner. In this case, when resuming a session with the client,
+the backend server sends a "pre_shared_key" extension in its ServerHello. This
+would appear to a network observer as if the the server were sending this
+extension without solicitation, which would violate the extension rules
+described in {{RFC8446}}. Sending a GREASE "pre_shared_key" extension in the
+ClientHelloOuter makes it appear to the network as if the extension were
+negotiated properly.
+
+The client generates the extension payload by constructing an `OfferedPsks`
+structure (see {{RFC8446}}, Section 4.2.11) as follows. For each PSK identity
+advertised in the ClientHelloInner, the client generates a random PSK identity
+with the same length. It also generates a random, 32-bit, unsigned integer to
+use as the `obfuscated_ticket_age`. Likewise, for each inner PSK binder, the
+client generates random string of the same length.
+
+If the server replies with a "pre_shared_key" extension in its SeverHello, then
+the client MUST abort the handshake with an "illegal_parameter" alert.
 
 ### Recommended Padding Scheme {#padding}
 
