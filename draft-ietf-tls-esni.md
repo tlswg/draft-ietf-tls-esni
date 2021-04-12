@@ -466,10 +466,11 @@ The first three parameters are equal to, respectively, the
 `ClientECH.cipher_suite`, `ClientECH.config_id`, and `ClientECH.enc` fields of
 the payload of the "encrypted_client_hello" extension. The last parameter,
 `outer_hello`, is computed by serializing ClientHelloOuter with the
-"encrypted_client_hello" extension removed. Note this does not include the
-four-byte header included in the Handshake structure.
+"encrypted_client_hello" extension set to the empty string, i.e., the
+`extension_data` list has zero length. Note this serialization does not include
+the four-byte header included in the Handshake structure.
 
-Note the decompression process in {{encoding-inner}} forbids
+The decompression process in {{encoding-inner}} forbids
 "encrypted_client_hello" in OuterExtensions. This ensures the unauthenticated
 portion of ClientHelloOuter is not incorporated into ClientHelloInner.
 
