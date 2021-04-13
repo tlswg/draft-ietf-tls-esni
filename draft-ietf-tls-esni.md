@@ -226,8 +226,8 @@ The ECH configuration is defined by the following `ECHConfig` structure.
 
     struct {
         HpkeKeyConfig key_config;
-        uint16 maximum_name_length;
-        opaque public_name<1..2^16-1>;
+        uint8 maximum_name_length;
+        opaque public_name<1..255>;
         Extension extensions<0..2^16-1>;
     } ECHConfigContents;
 
@@ -466,10 +466,11 @@ The first three parameters are equal to, respectively, the
 `ClientECH.cipher_suite`, `ClientECH.config_id`, and `ClientECH.enc` fields of
 the payload of the "encrypted_client_hello" extension. The last parameter,
 `outer_hello`, is computed by serializing ClientHelloOuter with the
-"encrypted_client_hello" extension removed. Note this does not include the
-four-byte header included in the Handshake structure.
+"encrypted_client_hello" extension set to the empty string, i.e., the
+`extension_data` list has zero length. Note this serialization does not include
+the four-byte header included in the Handshake structure.
 
-Note the decompression process in {{encoding-inner}} forbids
+The decompression process in {{encoding-inner}} forbids
 "encrypted_client_hello" in OuterExtensions. This ensures the unauthenticated
 portion of ClientHelloOuter is not incorporated into ClientHelloInner.
 
@@ -531,8 +532,13 @@ it does a standard ClientHello, with the exception of the following rules:
    constructed as described below.
 1. The value of `ECHConfig.contents.public_name` MUST be placed in the
    "server_name" extension.
-1. It MUST NOT include the "pre_shared_key" extension. (See
-   {{flow-clienthello-malleability}}.)
+1. When the client offers the "pre_shared_key" extension in ClientHelloInner, it
+   MUST also include a GREASE "pre_shared_key" extension in ClientHelloOuter,
+   generated in the manner described in {{grease-psk}}. The client MUST NOT use
+   this extension to advertise a PSK to the client-facing server. (See
+   {{flow-clienthello-malleability}}.) When the client includes a GREASE
+   "pre_shared_key" extension, it MUST also copy the "psk_key_exchange_modes"
+   from the ClientHelloInner into the ClientHelloOuter.
 1. When the client offers the "early_data" extension in ClientHelloInner, it
    MUST also include the "early_data" extension in ClientHelloOuter. This
    allows servers that reject ECH and use ClientHelloOuter to safely ignore any
@@ -606,6 +612,28 @@ length.
 
 Backend servers (as described in {{server-behavior}}) MUST support the
 "ech_is_inner" extension.
+
+### GREASE PSK {#grease-psk}
+
+When offering ECH, the client is not permitted to advertise PSK identities in
+the ClientHelloOuter. However, the client can send a "pre_shared_key" extension
+in the ClientHelloInner. In this case, when resuming a session with the client,
+the backend server sends a "pre_shared_key" extension in its ServerHello. This
+would appear to a network observer as if the the server were sending this
+extension without solicitation, which would violate the extension rules
+described in {{RFC8446}}. Sending a GREASE "pre_shared_key" extension in the
+ClientHelloOuter makes it appear to the network as if the extension were
+negotiated properly.
+
+The client generates the extension payload by constructing an `OfferedPsks`
+structure (see {{RFC8446}}, Section 4.2.11) as follows. For each PSK identity
+advertised in the ClientHelloInner, the client generates a random PSK identity
+with the same length. It also generates a random, 32-bit, unsigned integer to
+use as the `obfuscated_ticket_age`. Likewise, for each inner PSK binder, the
+client generates random string of the same length.
+
+If the server replies with a "pre_shared_key" extension in its SeverHello, then
+the client MUST abort the handshake with an "illegal_parameter" alert.
 
 ### Recommended Padding Scheme {#padding}
 
@@ -899,8 +927,14 @@ Otherwise, the server reconstructs ClientHelloInner from
 EncodedClientHelloInner, as described in {{encoding-inner}}. It then stops
 iterating over the candidate ECHConfig values.
 
-Upon determining the ClientHelloInner, the client-facing server then forwards
-the ClientHelloInner to the appropriate backend server, which proceeds as in
+Upon determining the ClientHelloInner, the client-facing server then checks
+that the message includes the "ech_is_inner" extension, omits the
+"encrypted_client_hello" extension, and does not offer TLS 1.2 or below
+versions. If any of these checks fails, the client-facing server MUST
+abort with an "illegal_parameter" alert.
+
+If these checks succeed, the client-facing server then forwards the
+ClientHelloInner to the appropriate backend server, which proceeds as in
 {{backend-server}}. If the backend server responds with a HelloRetryRequest,
 the client-facing server forwards it, decrypts the client's second
 ClientHelloOuter using the procedure in {{server-hrr}}, and forwards the
