@@ -533,7 +533,7 @@ it does a standard ClientHello, with the exception of the following rules:
 1. The value of `ECHConfig.contents.public_name` MUST be placed in the
    "server_name" extension.
 1. When the client offers the "pre_shared_key" extension in ClientHelloInner, it
-   MUST also include a GREASE "pre_shared_key" extension in ClientHelloOuter,
+   SHOULD also include a GREASE "pre_shared_key" extension in ClientHelloOuter,
    generated in the manner described in {{grease-psk}}. The client MUST NOT use
    this extension to advertise a PSK to the client-facing server. (See
    {{flow-clienthello-malleability}}.) When the client includes a GREASE
