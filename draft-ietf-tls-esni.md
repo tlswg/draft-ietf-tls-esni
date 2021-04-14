@@ -536,8 +536,9 @@ it does a standard ClientHello, with the exception of the following rules:
    SHOULD also include a GREASE "pre_shared_key" extension in ClientHelloOuter,
    generated in the manner described in {{grease-psk}}. The client MUST NOT use
    this extension to advertise a PSK to the client-facing server. (See
-   {{flow-clienthello-malleability}}.) When the client includes a GREASE "pre_shared_key" extension, 
-   it MUST also copy the "psk_key_exchange_modes" from the ClientHelloInner into the ClientHelloOuter.
+   {{flow-clienthello-malleability}}.) When the client includes a GREASE
+   "pre_shared_key" extension, it MUST also copy the "psk_key_exchange_modes"
+   from the ClientHelloInner into the ClientHelloOuter.
 
 [[OPEN ISSUE: We currently require HRR-sensitive parameters to match in
 ClientHelloInner and ClientHelloOuter in order to simplify client-side
@@ -1003,21 +1004,22 @@ client by computing its ServerHello as described here.
 The backend server begins by generating a message ServerHelloECHConf, which is
 identical in content to a ServerHello message with the exception that
 ServerHelloECHConf.random is equal to 24 random bytes followed by 8 zero bytes.
-It then computes a string
+It then computes an 8-byte string
 
 ~~~
-    accept_confirmation =
-        Derive-Secret(Handshake Secret,
-                      "ech accept confirmation",
-                      ClientHelloInner...ServerHelloECHConf)
+   accept_confirmation = HKDF-Expand-Label(0,
+      "ech accept confirmation",
+      Transcript-Hash(ClientHelloInner...ServerHelloECHConf),
+      8)
 ~~~
 
-where Derive-Secret and Handshake Secret are as specified in {{RFC8446}},
-Section 7.1, and ClientHelloInner...ServerHelloECHConf refers to the sequence of
-handshake messages beginning with the first ClientHello and ending with
+where HKDF-Expand-Label and Transcript-Hash are as defined in {{RFC8446}},
+Section 7.1, "0" indicates a string of Hash.length bytes set to zero, and
+ClientHelloInner...ServerHelloECHConf refers to the sequence of handshake
+messages beginning with the first ClientHello and ending with
 ServerHelloECHConf. Finally, the backend server constructs its ServerHello
 message so that it is equal to ServerHelloECHConf but with the last 8 bytes of
-ServerHello.random set to the first 8 bytes of accept_confirmation.
+ServerHello.random set to `accept_confirmation`.
 
 The backend server MUST NOT perform this operation if it negotiated TLS 1.2 or
 below. Note that doing so would overwrite the downgrade signal for TLS 1.3 (see
