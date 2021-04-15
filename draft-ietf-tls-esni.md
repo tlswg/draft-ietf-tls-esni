@@ -331,8 +331,9 @@ ignore the `ECHConfig`.
 
 # The "encrypted_client_hello" Extension {#encrypted-client-hello}
 
-The encrypted ClientHelloInner is carried in an "encrypted_client_hello"
-extension, defined as follows:
+To offer ECH, the client sends an "encrypted_client_hello" extension in the
+ClientHelloOuter. When it does, it MUST also send the extension in
+ClientHelloInner.
 
 ~~~
     enum {
@@ -340,17 +341,28 @@ extension, defined as follows:
     } ExtensionType;
 ~~~
 
-When offered by the client, the extension appears only in the ClientHelloOuter.
-The payload MUST have the following structure:
+The payload of the extension has the following structure:
 
 ~~~~
+    enum { outer(0), inner(1) } ClientECHType;
+
     struct {
-       HpkeSymmetricCipherSuite cipher_suite;
-       uint8 config_id;
-       opaque enc<1..2^16-1>;
-       opaque payload<1..2^16-1>;
+       ClientECHType type;
+       select (ClientECH.type) {
+           case outer:
+               HpkeSymmetricCipherSuite cipher_suite;
+               uint8 config_id;
+               opaque enc<1..2^16-1>;
+               opaque payload<1..2^16-1>;
+           case inner:
+               Empty;
+       };
     } ClientECH;
 ~~~~
+
+The outer extension uses the `outer` variant and the inner extension uses the
+`inner` variant. The inner extension has an empty payload. The outer
+extension has the following fields:
 
 config_id
 : The ECHConfigContents.key_config.config_id for the chosen ECHConfig.
@@ -506,9 +518,9 @@ standard ClientHello, with the exception of the following rules:
 1. It SHOULD contain TLS padding {{!RFC7685}} as described in {{padding}}.
 1. If it intends to compress any extensions (see {{encoding-inner}}), it MUST
    order those extensions consecutively.
-1. It MUST include the "ech_is_inner" extension as defined in
-   {{is-inner}}. (This requirement is not applicable when the
-   "encrypted_client_hello" extension is generated as described in
+1. It MUST include the "encrypted_client_hello" extension of type `inner` as
+   described in {{encrypted-client-hello}}. (This requirement is not applicable
+   when the "encrypted_client_hello" extension is generated as described in
    {{grease-ech}}.)
 
 The client then constructs EncodedClientHelloInner as described in
@@ -578,7 +590,7 @@ The `info` parameter to SetupBaseS is the concatenation of "tls ech", a zero
 byte, and the serialized ECHConfig.
 
 The value of the "encrypted_client_hello" extension in the ClientHelloOuter is
-a `ClientECH` with the following values:
+the `outer` variant of `ClientECH` with the following fields:
 
 - `config_id`, the identifier corresponding to the chosen ECHConfig structure;
 - `cipher_suite`, the client's chosen cipher suite;
@@ -590,24 +602,6 @@ If optional configuration identifiers (see {{optional-configs}})) are used,
 application using (D)TLS or externally configured on both sides,
 implementations MUST set the field as specified in
 {{encrypted-client-hello}}.
-
-### ClientHelloInner Indication Extension {#is-inner}
-
-If, in a ClientHello, the "encrypted_client_hello" extension is not present and
-an "ech_is_inner" extension is present, the ClientHello is a
-ClientHelloInner. This extension MUST only be sent in the ClientHello message.
-
-~~~
-    enum {
-       ech_is_inner(0xda09), (65535)
-    } ExtensionType;
-~~~
-
-The "extension_data" field of the "ech_is_inner" extension is zero
-length.
-
-Backend servers (as described in {{server-behavior}}) MUST support the
-"ech_is_inner" extension.
 
 ### GREASE PSK {#grease-psk}
 
@@ -798,6 +792,7 @@ operation. Reusing the HPKE context avoids an attack described in
 The client then modifies the "encrypted_client_hello" extension in
 ClientHelloOuter as follows:
 
+- `type` is unchanged.
 - `config_id` is unchanged and contains the `config_id` corresponding to
   the client's chosen ECHConfig.
 - `cipher_suite` is unchanged and contains the client's chosen HPKE cipher
@@ -852,24 +847,21 @@ MAY offer to resume sessions established without ECH.
 
 # Server Behavior {#server-behavior}
 
-Servers that support ECH play one of two roles, depending on which of the
-"ech_is_inner" ({{is-inner}}) and "encrypted_client_hello"
-({{encrypted-client-hello}}) extensions are present in the ClientHello:
+Servers that support ECH play one of two roles, depending on the payload of the
+"encrypted_client_hello" extension in the ClientHello:
 
-* If both the "ech_is_inner" and "encrypted_client_hello" extensions are
-  present in the ClientHello, the backend server MUST abort with an
-  "illegal_parameter" alert.
+* If `ClientECH.type` is `outer`, then the server acts as a client-facing
+  server and proceeds as described in {{client-facing-server}} to extract a
+  ClientHelloInner, if available.
 
-* If only the "encrypted_client_hello" extension is present, the server acts as
-  a client-facing server and proceeds as described in {{client-facing-server}}
-  to extract a ClientHelloInner, if available.
+* If `ClientECH.type` is `inner`, then the server acts as a backend server and
+  proceeds as described in {{backend-server}}.
 
-* If only the "ech_is_inner" extension is present and the
-  "encrypted_client_hello" extension is not present, the server acts as a
-  backend server and proceeds as described in {{backend-server}}.
+* Otherwise, if `ClientECH.type` is not a valid `ClientECHType`, then the server
+  MUST abort with an "illegal_parameter" alert.
 
-* If neither extension is present, the server completes the handshake normally,
-  as described in {{RFC8446}}.
+If the "encrypted_client_hello" is not present, then the server completes the
+handshake normally, as described in {{RFC8446}}.
 
 ## Client-Facing Server {#client-facing-server}
 
@@ -878,10 +870,6 @@ ClientHello, the client-facing server determines if it will accept ECH, prior
 to negotiating any other TLS parameters. Note that successfully decrypting the
 extension will result in a new ClientHello to process, so even the client's TLS
 version preferences may have changed.
-
-If the client offers the "ech_is_inner" extension ({{is-inner}})
-in addition to the "encrypted_client_hello" extension, the server MUST abort
-with an "illegal_parameter" alert.
 
 First, the server collects a set of candidate ECHConfig values. This list is
 determined by one of the two following methods:
@@ -923,11 +911,10 @@ Otherwise, the server reconstructs ClientHelloInner from
 EncodedClientHelloInner, as described in {{encoding-inner}}. It then stops
 iterating over the candidate ECHConfig values.
 
-Upon determining the ClientHelloInner, the client-facing server then checks
-that the message includes the "ech_is_inner" extension, omits the
-"encrypted_client_hello" extension, and does not offer TLS 1.2 or below
-versions. If any of these checks fails, the client-facing server MUST
-abort with an "illegal_parameter" alert.
+Upon determining the ClientHelloInner, the client-facing server checks that the
+message includes a well-formed "encrypted_client_hello" extension of type
+`inner` and that it does not offer TLS 1.2 or below. If either of these checks
+fails, the client-facing server MUST abort with an "illegal_parameter" alert.
 
 If these checks succeed, the client-facing server then forwards the
 ClientHelloInner to the appropriate backend server, which proceeds as in
@@ -997,9 +984,9 @@ See issue https://github.com/tlswg/draft-ietf-tls-esni/issues/333.]]
 
 ## Backend Server {#backend-server}
 
-Upon receipt of an "ech_is_inner" extension in a ClientHello, if the backend
-server negotiates TLS 1.3 or higher, then it MUST confirm ECH acceptance to the
-client by computing its ServerHello as described here.
+Upon receipt of an "encrypted_client_hello" extension in a ClientHello, if the
+backend server negotiates TLS 1.3 or higher, then it MUST confirm ECH acceptance
+to the client by computing its ServerHello as described here.
 
 The backend server begins by generating a message ServerHelloECHConf, which is
 identical in content to a ServerHello message with the exception that
@@ -1025,9 +1012,9 @@ The backend server MUST NOT perform this operation if it negotiated TLS 1.2 or
 below. Note that doing so would overwrite the downgrade signal for TLS 1.3 (see
 {{RFC8446}}, Section 4.1.3).
 
-The "ech_is_inner" is expected to have an empty payload. If the payload is
-non-empty (i.e., the length of the "extension_data" field is non-zero) then the
-backend server MUST abort the handshake with an "illegal_parameter" alert.
+The payload of "encrypted_client_hello" is expected to be a `ClientECH` with
+`ClientECH.type` is `inner`. If this is not the case, the backend server MUST
+abort the handshake with an "illegal_parameter" alert.
 
 # Compatibility Issues
 
@@ -1540,9 +1527,7 @@ for ExtensionType (defined in {{!RFC8446}}):
 
 1. encrypted_client_hello(0xfe0a), with "TLS 1.3" column values set to
    "CH, EE", and "Recommended" column set to "Yes".
-2. ech_is_inner (0xda09), with "TLS 1.3" column values set to
-   "CH", and "Recommended" column set to "Yes".
-3. ech_outer_extensions(0xfd00), with the "TLS 1.3" column values set to "",
+1. ech_outer_extensions(0xfd00), with the "TLS 1.3" column values set to "",
    and "Recommended" column set to "Yes".
 
 ## Update of the TLS Alert Registry {#alerts}
