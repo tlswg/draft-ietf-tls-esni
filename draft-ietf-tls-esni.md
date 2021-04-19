@@ -275,7 +275,7 @@ or if names can be added or removed from the anonymity set during the lifetime
 of a particular ECH configuration.
 
 public_identity
-: The identity of the client-facing server, i.e., the entity trusted to updat
+: The identity of the client-facing server, i.e., the entity trusted to update
 the ECH configuration. This is used to construct the ClientHelloOuter, as
 described in {{handle-server-response}}. This MUST be a valid DNS name or
 IP address as described in {{identity-validate}}. Clients MUST ignore any
