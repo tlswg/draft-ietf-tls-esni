@@ -539,6 +539,10 @@ it does a standard ClientHello, with the exception of the following rules:
    {{flow-clienthello-malleability}}.) When the client includes a GREASE
    "pre_shared_key" extension, it MUST also copy the "psk_key_exchange_modes"
    from the ClientHelloInner into the ClientHelloOuter.
+1. When the client offers the "early_data" extension in ClientHelloInner, it
+   MUST also include the "early_data" extension in ClientHelloOuter. This
+   allows servers that reject ECH and use ClientHelloOuter to safely ignore any
+   early data sent by the client per {{RFC8446}}, Section 4.2.10.
 
 [[OPEN ISSUE: We currently require HRR-sensitive parameters to match in
 ClientHelloInner and ClientHelloOuter in order to simplify client-side
