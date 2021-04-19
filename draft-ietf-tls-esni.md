@@ -227,7 +227,6 @@ The ECH configuration is defined by the following `ECHConfig` structure.
     struct {
         HpkeKeyConfig key_config;
         uint8 maximum_name_length;
-        opaque public_name<1..255>;
         Extension extensions<0..2^16-1>;
     } ECHConfigContents;
 
@@ -273,21 +272,6 @@ can be set to zero, in which case clients SHOULD use the inner ClientHello
 padding scheme described below. That could happen if wildcard names are in use,
 or if names can be added or removed from the anonymity set during the lifetime
 of a particular ECH configuration.
-
-public_name
-: The non-empty name of the client-facing server, i.e., the entity trusted to
-update the ECH configuration. This is used to correct misconfigured clients, as
-described in {{handle-server-response}}. This value MUST NOT begin or end with
-an ASCII dot and MUST be parsable as a dot-separated sequence of LDH labels, as
-defined in {{!RFC5890}}, Section 2.3.1. Clients MUST ignore any `ECHConfig`
-structure whose `public_name` does not meet these criteria. Note that these
-criteria are incomplete; they incidentally rule out textual representations of
-IPv6 addresses (see {{!RFC3986}}, Section 3.2.2), but do not exclude IPv4
-addresses in standard dotted-decimal or other non-standard notations such as
-octal and hexadecimal (see {{RFC3986}}, Section 7.4). If `public_name` contains
-a literal IPv4 or IPv6 address, the client SHOULD ignore the `ECHConfig` to
-avoid sending a non-compliant "server_name" extension on the ClientHelloOuter
-(see {{!RFC6066}}, Section 3).
 
 extensions
 : A list of extensions that the client must take into consideration when
@@ -338,6 +322,40 @@ extension they do not understand MUST reject the `ECHConfig` content.
 Clients MUST parse the extension list and check for unsupported mandatory
 extensions. If an unsupported mandatory extension is present, clients MUST
 ignore the `ECHConfig`.
+
+This specification introduces the following mandatory ECHConfig extension,
+"public_name":
+
+~~~
+   enum {
+       public_name(0x9200), (65535)
+   } ExtensionType;
+~~~
+
+The payload of this extension has the following structure:
+
+~~~
+   struct {
+      opaque public_name<1..255>;
+   } PublicName;
+~~~
+
+This is the non-empty identity of the client-facing server, i.e., the entity
+trusted to update the ECH configuration. This is used to correct misconfigured
+clients, as described in {{handle-server-response}}. This value MUST NOT begin
+or end with an ASCII dot and MUST be parsable as a dot-separated sequence of LDH
+labels, as defined in {{!RFC5890}}, Section 2.3.1. Clients MUST ignore any
+`ECHConfig` structure whose `public_name` does not meet these criteria. Note
+that this criteria incidentally permits a IPv4 addresses in standard
+dotted-decimal or other non-standard notations such as octal and hexadecimal
+(see {{!RFC3986}}, Section 7.4). Clients MUST ignore `ECHConfig` structures
+whose "public_name" payloads contain such addresses.
+
+The value of the "public_name" extension is hereafter referred to as the public
+identity. ECHConfig MUST contain this extension. Future extensions MAY override
+this rule provided they are marked mandatory and provide instructions for how
+clients use the extension as an alternate public identity in validating the
+client-facing server certificate. See {{auth-public-name}} for more details.
 
 # The "encrypted_client_hello" Extension {#encrypted-client-hello}
 
@@ -540,8 +558,11 @@ it does a standard ClientHello, with the exception of the following rules:
    {{flow-client-reaction}}.)
 1. It MUST include an "encrypted_client_hello" extension with a payload
    constructed as described below.
-1. The value of `ECHConfig.contents.public_name` MUST be placed in the
-   "server_name" extension.
+1. The "server_name" extension MUST be constructed based on the public
+   identity for the client-facing server. Specifically, absent an
+   application-specific profile, if the `ECHConfig` contains a valid
+   "public_name" extension, then this identity is set in the "server_name"
+   extension.
 1. When the client offers the "pre_shared_key" extension in ClientHelloInner, it
    SHOULD also include a GREASE "pre_shared_key" extension in ClientHelloOuter,
    generated in the manner described in {{grease-psk}}. The client MUST NOT use
@@ -694,7 +715,7 @@ usual, authenticating the connection for the true server name.
 #### Rejected ECH
 
 If the server used ClientHelloOuter, the client proceeds with the handshake,
-authenticating for ECHConfig.contents.public_name as described in
+authenticating for `ECHConfig` public identity as described in
 {{auth-public-name}}. If authentication or the handshake fails, the client MUST
 return a failure to the calling application. It MUST NOT use the retry
 configurations.
@@ -724,44 +745,45 @@ an "illegal_parameter" alert.
 
 If the server negotiates an earlier version of TLS, or if it does not provide an
 "encrypted_client_hello" extension in EncryptedExtensions, the client proceeds
-with the handshake, authenticating for ECHConfig.contents.public_name as
+with the handshake, authenticating for the `ECHConfig` public identity as
 described in {{auth-public-name}}. If an earlier version was negotiated, the
 client MUST NOT enable the False Start optimization {{RFC7918}} for this
 handshake. If authentication or the handshake fails, the client MUST return a
 failure to the calling application. It MUST NOT treat this as a secure signal to
 disable ECH.
 
-Otherwise, when the handshake completes successfully with the public name
-authenticated, the client MUST abort the connection with an "ech_required"
-alert. The client can then regard ECH as securely disabled by the server. It
-SHOULD retry the handshake with a new transport connection and ECH disabled.
+Otherwise, when the handshake completes successfully with the reference
+identity authenticated, the client MUST abort the connection with an
+"ech_required" alert. The client can then regard ECH as securely disabled by
+the server. It SHOULD retry the handshake with a new transport connection and
+ECH disabled.
 
 Clients SHOULD implement a limit on retries caused by "ech_retry_request" or
 servers which do not acknowledge the "encrypted_client_hello" extension. If the
 client does not retry in either scenario, it MUST report an error to the calling
 application.
 
-#### Authenticating for the Public Name {#auth-public-name}
+#### Authenticating for the Public Identity {#auth-public-name}
 
 When the server rejects ECH or otherwise ignores "encrypted_client_hello"
 extension, it continues with the handshake using the plaintext "server_name"
 extension instead (see {{server-behavior}}). Clients that offer ECH then
-authenticate the connection with the public name, as follows:
+authenticate the connection with the public identity, as follows:
 
-- The client MUST verify that the certificate is valid for
-  ECHConfig.contents.public_name. If invalid, it MUST abort the connection with
-  the appropriate alert.
+- The client MUST verify that the certificate is valid for the `ECHConfig`
+  public identity. If invalid, it MUST abort the connection with the
+  appropriate alert.
 
 - If the server requests a client certificate, the client MUST respond with an
   empty Certificate message, denoting no client certificate.
 
-Note that authenticating a connection for the public name does not authenticate
-it for the origin. The TLS implementation MUST NOT report such connections as
-successful to the application. It additionally MUST ignore all session tickets
-and session IDs presented by the server. These connections are only used to
-trigger retries, as described in {{handle-server-response}}. This may be
-implemented, for instance, by reporting a failed connection with a dedicated
-error code.
+Note that authenticating a connection for the public identity does not
+authenticate it for the origin. The TLS implementation MUST NOT report such
+connections as successful to the application. It additionally MUST ignore all
+session tickets and session IDs presented by the server. These connections are
+only used to trigger retries, as described in {{handle-server-response}}. This
+may be implemented, for instance, by reporting a failed connection with a
+dedicated error code.
 
 ### Handling HelloRetryRequest {#client-hrr}
 
@@ -1068,15 +1090,15 @@ incomplete rollout in a multi-server deployment. This may also occur if a server
 loses its ECH keys, or if a deployment of ECH must be rolled back on the server.
 
 The retry mechanism repairs inconsistencies, provided the server is
-authoritative for the public name. If server and advertised keys mismatch, the
-server will respond with ech_retry_requested. If the server does not understand
-the "encrypted_client_hello" extension at all, it will ignore it as required by
-{{RFC8446}}; Section 4.1.2. Provided the server can present a certificate valid
-for the public name, the client can safely retry with updated settings, as
-described in {{handle-server-response}}.
+authoritative for the public identity. If server and advertised keys mismatch,
+the server will respond with ech_retry_requested. If the server does not
+understand the "encrypted_client_hello" extension at all, it will ignore it as
+required by {{RFC8446}}; Section 4.1.2. Provided the server can present a
+certificate valid for the public identity, the client can safely retry with
+updated settings, as described in {{handle-server-response}}.
 
 Unless ECH is disabled as a result of successfully establishing a connection to
-the public name, the client MUST NOT fall back to using unencrypted
+the public identity, the client MUST NOT fall back to using unencrypted
 ClientHellos, as this allows a network attacker to disclose the contents of this
 ClientHello, including the SNI. It MAY attempt to use another server from the
 DNS results, if one is provided.
@@ -1086,13 +1108,14 @@ DNS results, if one is provided.
 A more serious problem is MITM proxies which do not support this extension.
 {{RFC8446}}, Section 9.3 requires that such proxies remove any extensions they
 do not understand. The handshake will then present a certificate based on the
-public name, without echoing the "encrypted_client_hello" extension to the
+public identity, without echoing the "encrypted_client_hello" extension to the
 client.
 
 Depending on whether the client is configured to accept the proxy's certificate
-as authoritative for the public name, this may trigger the retry logic described
-in {{handle-server-response}} or result in a connection failure. A proxy which
-is not authoritative for the public name cannot forge a signal to disable ECH.
+as authoritative for the public identity, this may trigger the retry logic
+described in {{handle-server-response}} or result in a connection failure. A
+proxy which is not authoritative for the public name cannot forge a signal to
+disable ECH.
 
 A non-conformant MITM proxy which instead forwards the ECH extension,
 substituting its own KeyShare value, will result in the client-facing server
@@ -1201,7 +1224,7 @@ limiting mechanism to limit the damage caused by such attacks.
 Any information that the client includes in the ClientHelloOuter is visible to
 passive observers. The client SHOULD NOT send values in the ClientHelloOuter
 which would reveal a sensitive ClientHelloInner property, such as the true
-server name. It MAY send values associated with the public name in the
+server name. It MAY send values associated with the public identity in the
 ClientHelloOuter.
 
 In particular, some extensions require the client send a server-name-specific
@@ -1374,9 +1397,9 @@ client-facing server operating in Split Mode is not possible. See
 {{plaintext-dns}} for more details regarding plaintext DNS.
 
 Authenticating the ECHConfig structure naturally authenticates the included
-public name. This also authenticates any retry signals from the client-facing
+identity name. This also authenticates any retry signals from the client-facing
 server because the client validates the server certificate against the public
-name before retrying.
+identity before retrying.
 
 ### Support Multiple Protocols
 
@@ -1557,18 +1580,33 @@ for ExtensionType (defined in {{!RFC8446}}):
 
 1. encrypted_client_hello(0xfe0a), with "TLS 1.3" column values set to
    "CH, EE", and "Recommended" column set to "Yes".
-2. ech_is_inner (0xda09), with "TLS 1.3" column values set to
+1. ech_is_inner (0xda09), with "TLS 1.3" column values set to
    "CH", and "Recommended" column set to "Yes".
-3. ech_outer_extensions(0xfd00), with the "TLS 1.3" column values set to "",
+1. ech_outer_extensions(0xfd00), with the "TLS 1.3" column values set to "",
    and "Recommended" column set to "Yes".
 
 ## Update of the TLS Alert Registry {#alerts}
 
-IANA is requested to create an entry, ech_required(121) in the existing registry
-for Alerts (defined in {{!RFC8446}}), with the "DTLS-OK" column set to
+IANA is requested to create an entry, ech_required(121) in the existing
+registry for Alerts (defined in {{!RFC8446}}), with the "DTLS-OK" column set to
 "Y".
 
-# ECHConfig Extension Guidance {#config-extensions-guidance}
+## ECHConfig Extension Registry
+
+This document defines a new ECHConfig extension registry that is maintained
+by IANA. Values with the first byte in the range 0-253 (decimal) are assigned
+via Specification Required {{!RFC8126}}.  Values with the first byte 254 or 255
+(decimal) are reserved for Private Use {{!RFC8126}}.
+
+This registry has a "Recommended" and "Mandatory" column. The registry is
+initially populated with a single entry for the "public_name" extension with
+"Recommended" and "Mandatory" values set to "Y" and "Y", respetively.
+
+The "Recommended" column is assigned a value of "N" unless explicitly
+requested, and adding a value with a "Recommended" value of "Y" requires
+Standards Action {{!RFC8126}}. IESG Approval is REQUIRED for a Y->N transition.
+
+### ECHConfig Extension Guidance {#config-extensions-guidance}
 
 Any future information or hints that influence ClientHelloOuter SHOULD be
 specified as ECHConfig extensions. This is primarily because the outer
