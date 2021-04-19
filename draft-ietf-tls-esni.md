@@ -1016,10 +1016,13 @@ It then computes an 8-byte string
 where HKDF-Expand-Label and Transcript-Hash are as defined in {{RFC8446}},
 Section 7.1, "0" indicates a string of Hash.length bytes set to zero, and
 ClientHelloInner...ServerHelloECHConf refers to the sequence of handshake
-messages beginning with the first ClientHello and ending with
-ServerHelloECHConf. Finally, the backend server constructs its ServerHello
-message so that it is equal to ServerHelloECHConf but with the last 8 bytes of
-ServerHello.random set to `accept_confirmation`.
+messages beginning with the first ClientHelloInner and ending with
+ServerHelloECHConf. (Note that ClientHelloInner and ServerHelloECHConf
+messages replace the ClientHello and ServerHello messages in the transcript
+hash sequence as specified in Section 4.1.1 of {{RFC8446}}. Finally, the
+backend server constructs its ServerHello message so that it is equal to
+ServerHelloECHConf but with the last 8 bytes of ServerHello.random set to
+`accept_confirmation`.
 
 The backend server MUST NOT perform this operation if it negotiated TLS 1.2 or
 below. Note that doing so would overwrite the downgrade signal for TLS 1.3 (see
