@@ -227,7 +227,7 @@ The ECH configuration is defined by the following `ECHConfig` structure.
     struct {
         HpkeKeyConfig key_config;
         uint8 maximum_name_length;
-        opaque public_name<1..255>;
+        opaque public_identity<1..255>;
         Extension extensions<0..2^16-1>;
     } ECHConfigContents;
 
@@ -274,20 +274,12 @@ padding scheme described below. That could happen if wildcard names are in use,
 or if names can be added or removed from the anonymity set during the lifetime
 of a particular ECH configuration.
 
-public_name
-: The non-empty name of the client-facing server, i.e., the entity trusted to
-update the ECH configuration. This is used to correct misconfigured clients, as
-described in {{handle-server-response}}. This value MUST NOT begin or end with
-an ASCII dot and MUST be parsable as a dot-separated sequence of LDH labels, as
-defined in {{!RFC5890}}, Section 2.3.1. Clients MUST ignore any `ECHConfig`
-structure whose `public_name` does not meet these criteria. Note that these
-criteria are incomplete; they incidentally rule out textual representations of
-IPv6 addresses (see {{!RFC3986}}, Section 3.2.2), but do not exclude IPv4
-addresses in standard dotted-decimal or other non-standard notations such as
-octal and hexadecimal (see {{RFC3986}}, Section 7.4). If `public_name` contains
-a literal IPv4 or IPv6 address, the client SHOULD ignore the `ECHConfig` to
-avoid sending a non-compliant "server_name" extension on the ClientHelloOuter
-(see {{!RFC6066}}, Section 3).
+public_identity
+: The identity of the client-facing server, i.e., the entity trusted to updat
+the ECH configuration. This is used to construct the ClientHelloOuter, as
+described in {{handle-server-response}}. This MUST be a valid DNS name or
+IP address as described in {{identity-validate}}. Clients MUST ignore any
+`ECHConfig` structure whose `public_identity` does not meet these criteria.
 
 extensions
 : A list of extensions that the client must take into consideration when
@@ -321,6 +313,20 @@ serialized as follows.
 The `ECHConfigList` structure contains one or more `ECHConfig` structures in
 decreasing order of preference. This allows a server to support multiple
 versions of ECH and multiple sets of ECH parameters.
+
+## Public Identity Validation {#identity-validate}
+
+The `public_identity` value corresponding to an ECHConfig MUST contain either
+a DNS name or IP address. Validation criteria for each of these values is below:
+
+- DNS names: The value MUST NOT begin or end with an ASCII dot and MUST be
+  parsable as a dot-separated sequence of LDH labels, as defined in
+  {{!RFC5890}}, Section 2.3.1.
+- IP addresses: The value MUST be as described in {{!RFC5280}}, Section
+  4.2.1.6.
+
+An ECHConfig containing a `public_identity` that does not meet either of these
+criteria MUST be ignored.
 
 ## Configuration Extensions {#config-extensions}
 
@@ -540,8 +546,11 @@ it does a standard ClientHello, with the exception of the following rules:
    {{flow-client-reaction}}.)
 1. It MUST include an "encrypted_client_hello" extension with a payload
    constructed as described below.
-1. The value of `ECHConfig.contents.public_name` MUST be placed in the
-   "server_name" extension.
+1. The "server_name" extension MUST be constructed based on the reference
+   identity in `ECHConfig.contents.public_identity`. Specifically, if
+   `ECHConfig.contents.public_identity` is a DNS name then this name is
+   set in the "server_name" extension. Otherwise, the "server_name" extension
+   is omitted.
 1. When the client offers the "pre_shared_key" extension in ClientHelloInner, it
    SHOULD also include a GREASE "pre_shared_key" extension in ClientHelloOuter,
    generated in the manner described in {{grease-psk}}. The client MUST NOT use
@@ -694,9 +703,9 @@ usual, authenticating the connection for the true server name.
 #### Rejected ECH
 
 If the server used ClientHelloOuter, the client proceeds with the handshake,
-authenticating for ECHConfig.contents.public_name as described in
-{{auth-public-name}}. If authentication or the handshake fails, the client MUST
-return a failure to the calling application. It MUST NOT use the retry
+authenticating for ECHConfig.contents.public_identity as described in
+{{auth-public-identity}}. If authentication or the handshake fails, the client
+MUST return a failure to the calling application. It MUST NOT use the retry
 configurations.
 
 Otherwise, if both authentication and the handshake complete successfully, the
@@ -724,8 +733,8 @@ an "illegal_parameter" alert.
 
 If the server negotiates an earlier version of TLS, or if it does not provide an
 "encrypted_client_hello" extension in EncryptedExtensions, the client proceeds
-with the handshake, authenticating for ECHConfig.contents.public_name as
-described in {{auth-public-name}}. If an earlier version was negotiated, the
+with the handshake, authenticating for ECHConfig.contents.public_identity as
+described in {{auth-public-identity}}. If an earlier version was negotiated, the
 client MUST NOT enable the False Start optimization {{RFC7918}} for this
 handshake. If authentication or the handshake fails, the client MUST return a
 failure to the calling application. It MUST NOT treat this as a secure signal to
@@ -741,16 +750,16 @@ servers which do not acknowledge the "encrypted_client_hello" extension. If the
 client does not retry in either scenario, it MUST report an error to the calling
 application.
 
-#### Authenticating for the Public Name {#auth-public-name}
+#### Authenticating for the Public Name {#auth-public-identity}
 
 When the server rejects ECH or otherwise ignores "encrypted_client_hello"
-extension, it continues with the handshake using the plaintext "server_name"
-extension instead (see {{server-behavior}}). Clients that offer ECH then
-authenticate the connection with the public name, as follows:
+extension, it continues with the handshake using ClientHelloOuter and its
+extensions (see {{server-behavior}}). Clients that offer ECH then authenticate
+the connection with the public identity, as follows:
 
 - The client MUST verify that the certificate is valid for
-  ECHConfig.contents.public_name. If invalid, it MUST abort the connection with
-  the appropriate alert.
+  ECHConfig.contents.public_identity. If invalid, it MUST abort the connection
+  with the appropriate alert.
 
 - If the server requests a client certificate, the client MUST respond with an
   empty Certificate message, denoting no client certificate.
