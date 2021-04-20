@@ -352,10 +352,11 @@ dotted-decimal or other non-standard notations such as octal and hexadecimal
 whose "public_name" payloads contain such addresses.
 
 The value of the "public_name" extension is hereafter referred to as the public
-identity. ECHConfig MUST contain this extension. Future extensions MAY override
-this rule provided they are marked mandatory and provide instructions for how
-clients use the extension as an alternate public identity in validating the
-client-facing server certificate. See {{auth-public-name}} for more details.
+identity. ECHConfig MUST contain this extension, and clients MUST ignore
+ECHConfigs missing the extension. Future extensions MAY override this rule
+provided they are marked mandatory and provide instructions for how clients use
+the extension as an alternate public identity in validating the client-facing
+server certificate. See {{auth-public-name}} for more details.
 
 # The "encrypted_client_hello" Extension {#encrypted-client-hello}
 
@@ -752,7 +753,7 @@ handshake. If authentication or the handshake fails, the client MUST return a
 failure to the calling application. It MUST NOT treat this as a secure signal to
 disable ECH.
 
-Otherwise, when the handshake completes successfully with the reference
+Otherwise, when the handshake completes successfully with the public
 identity authenticated, the client MUST abort the connection with an
 "ech_required" alert. The client can then regard ECH as securely disabled by
 the server. It SHOULD retry the handshake with a new transport connection and
@@ -1594,13 +1595,15 @@ registry for Alerts (defined in {{!RFC8446}}), with the "DTLS-OK" column set to
 ## ECHConfig Extension Registry
 
 This document defines a new ECHConfig extension registry that is maintained
-by IANA. Values with the first byte in the range 0-253 (decimal) are assigned
-via Specification Required {{!RFC8126}}.  Values with the first byte 254 or 255
-(decimal) are reserved for Private Use {{!RFC8126}}.
+by IANA. Values with the first byte in the range 0-126 and 128-254 (decimal)
+are assigned via Specification Required {{!RFC8126}}.  Values with the first
+byte 127 or 255 (decimal) are reserved for Private Use {{!RFC8126}}.
+An extension is mandatory if the high order bit of the first byte is 1;
+see {{config-extensions}} for implications.
 
-This registry has a "Recommended" and "Mandatory" column. The registry is
-initially populated with a single entry for the "public_name" extension with
-"Recommended" and "Mandatory" values set to "Y" and "Y", respetively.
+This registry has a single "Recommended" column. The registry is initially
+populated with a single entry for the "public_name" extension with "Recommended"
+value set to "Y".
 
 The "Recommended" column is assigned a value of "N" unless explicitly
 requested, and adding a value with a "Recommended" value of "Y" requires
