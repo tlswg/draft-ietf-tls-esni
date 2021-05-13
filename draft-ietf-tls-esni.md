@@ -930,7 +930,7 @@ corresponding to ECHConfig, as follows:
 ~~~
 
 ClientHelloOuterAAD is computed from ClientHelloOuter as described in
-{{authenticating-outer}}. The `info` parameter to SetupBaseS is the
+{{authenticating-outer}}. The `info` parameter to SetupBaseR is the
 concatenation "tls ech", a zero byte, and the serialized ECHConfig. If
 decryption fails, the server continues to the next candidate ECHConfig.
 Otherwise, the server reconstructs ClientHelloInner from
