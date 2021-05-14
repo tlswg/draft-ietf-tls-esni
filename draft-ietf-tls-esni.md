@@ -585,11 +585,11 @@ encapsulated key, context, and payload as:
                            EncodedClientHelloInner)
 ~~~
 
-Note that the HPKE functions DeserializePublicKey and SetupBaseS are those which match
-`ECHConfig.contents.kem_id` and the AEAD/KDF used with `context` are those which
-match the client's chosen preference from `ECHConfig.contents.cipher_suites`.
-The `info` parameter to SetupBaseS is the concatenation of "tls ech", a zero
-byte, and the serialized ECHConfig.
+Note that the HPKE functions DeserializePublicKey and SetupBaseS are those which
+match `ECHConfig.contents.kem_id` and the AEAD/KDF used with `context` are those
+which match the client's chosen preference from
+`ECHConfig.contents.cipher_suites`.  The `info` parameter to SetupBaseS is the
+concatenation of "tls ech", a zero byte, and the serialized ECHConfig.
 
 The value of the "encrypted_client_hello" extension in the ClientHelloOuter is
 a `ClientECH` with the following values:
