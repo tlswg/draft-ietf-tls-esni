@@ -42,6 +42,12 @@ normative:
   RFC2119:
   RFC7918:
 
+informative:
+  WhatWGURLAddressParser:
+   title: "URL Living Standard - IPv4 Parser"
+   target: https://url.spec.whatwg.org/#concept-ipv4-parser
+   date: May 2021
+
 --- abstract
 
 This document describes a mechanism in Transport Layer Security (TLS) for
@@ -283,7 +289,10 @@ labels, as defined in {{!RFC5890}}, Section 2.3.1. Clients MUST ignore any
 `ECHConfig` structure whose `public_name` does not meet these criteria. Note
 that these criteria allow IPv4 addresses in standard dotted-decimal or other
 non-standard notations such as octal and hexadecimal (see {{?RFC3986}}, Section
-7.4). Clients MUST ignore the `ECHConfig` if it contains an encoded IP address.
+7.4). Clients MUST ignore the `ECHConfig` if it contains an encoded IPv4
+address. To determine if a public_name value is an IPv4 address, clients can
+invoke the IPv4 parser algorithm in {{WhatWGURLAddressParser}}. It returns a
+value when the input is an IPv4 address.
 
 extensions
 : A list of extensions that the client must take into consideration when
