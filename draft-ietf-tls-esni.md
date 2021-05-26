@@ -275,19 +275,15 @@ or if names can be added or removed from the anonymity set during the lifetime
 of a particular ECH configuration.
 
 public_name
-: The non-empty name of the client-facing server, i.e., the entity trusted to
-update the ECH configuration. This is used to correct misconfigured clients, as
-described in {{handle-server-response}}. This value MUST NOT begin or end with
-an ASCII dot and MUST be parsable as a dot-separated sequence of LDH labels, as
-defined in {{!RFC5890}}, Section 2.3.1. Clients MUST ignore any `ECHConfig`
-structure whose `public_name` does not meet these criteria. Note that these
-criteria are incomplete; they incidentally rule out textual representations of
-IPv6 addresses (see {{!RFC3986}}, Section 3.2.2), but do not exclude IPv4
-addresses in standard dotted-decimal or other non-standard notations such as
-octal and hexadecimal (see {{RFC3986}}, Section 7.4). If `public_name` contains
-a literal IPv4 or IPv6 address, the client SHOULD ignore the `ECHConfig` to
-avoid sending a non-compliant "server_name" extension on the ClientHelloOuter
-(see {{!RFC6066}}, Section 3).
+: The non-empty DNS name of the client-facing server, i.e., the entity trusted
+to update the ECH configuration. This is used to correct misconfigured clients,
+as described in {{handle-server-response}}. This value MUST NOT begin or end
+with an ASCII dot and MUST be parsable as a dot-separated sequence of LDH
+labels, as defined in {{!RFC5890}}, Section 2.3.1. Clients MUST ignore any
+`ECHConfig` structure whose `public_name` does not meet these criteria. Note
+that these criteria allow IPv4 addresses in standard dotted-decimal or other
+non-standard notations such as octal and hexadecimal (see {{?RFC3986}}, Section
+7.4). Clients MUST ignore the `ECHConfig` if it contains an encoded IP address.
 
 extensions
 : A list of extensions that the client must take into consideration when
@@ -553,6 +549,9 @@ it does a standard ClientHello, with the exception of the following rules:
    MUST also include the "early_data" extension in ClientHelloOuter. This
    allows servers that reject ECH and use ClientHelloOuter to safely ignore any
    early data sent by the client per {{RFC8446}}, Section 4.2.10.
+
+Note that these rules may change in the presence of an application profile
+standard specifying otherwise.
 
 [[OPEN ISSUE: We currently require HRR-sensitive parameters to match in
 ClientHelloInner and ClientHelloOuter in order to simplify client-side
