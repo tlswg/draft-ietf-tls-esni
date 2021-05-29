@@ -468,7 +468,7 @@ the following structure:
       HpkeSymmetricCipherSuite cipher_suite;
       uint8 config_id;
       opaque enc<1..2^16-1>;
-      opaque outer_hello<1..2^24-1>;
+      ClientHello outer_hello;
    } ClientHelloOuterAAD;
 ~~~
 
@@ -477,7 +477,8 @@ The first three parameters are equal to, respectively, the
 the payload of the "encrypted_client_hello" extension. The last parameter,
 `outer_hello`, is computed by serializing ClientHelloOuter with the
 "encrypted_client_hello" extension set to the empty string, i.e., the
-`extension_data` list has zero length. Note this serialization does not include
+`extension_data` list has zero length. Note this serialization uses the
+ClientHello structure from Section 4.1.2 of {{RFC8446}}, which does not include
 the four-byte header included in the Handshake structure.
 
 The decompression process in {{encoding-inner}} forbids
