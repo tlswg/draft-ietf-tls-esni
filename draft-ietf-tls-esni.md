@@ -1254,6 +1254,30 @@ connection to that same host after ECH deployment. An adversary that observes
 this can deduce that the ECH-enabled connection was made to a host that the
 client previously connected to and which is within the same anonymity set.
 
+## Cookies
+
+Section 4.2.2 of {{RFC8446}} defines a cookie value that servers may send in
+HelloRetryRequest for clients to echo in the second ClientHello. These values
+are sent unencrypted in ECH. This means differences in cookies between backend
+servers, such as lengths or cleartext components, may leak information about
+the server identity.
+
+Backend servers in an anonymity set SHOULD NOT reveal information in the cookie
+which identifies the server. This may be done by handling HelloRetryRequest
+statefully, thus not sending cookies, or by using the same cookie construction
+for all backend servers.
+
+Note that, if the cookie includes a key name, analogous to Section 4 of
+{{?RFC5077}}, this may leak information if different backend servers issue
+cookies with different key names at the time of the connection. In particular,
+if the deployment operates in Split Mode, the backend servers may not share
+cookie encryption keys. Backend servers may mitigate this by either handling
+key rotation with trial decryption, or coordinating to match key names.
+
+[[OPEN ISSUE: If we land #422, replace "These values are sent unencrypted in
+ECH" with "While ECH encrypts the cookie in the second ClientHelloInner, the
+backend server's HelloRetryRequest is unencrypted."]]
+
 ## Attacks Exploiting Acceptance Confirmation
 
 To signal acceptance, the backend server overwrites 8 bytes of its
