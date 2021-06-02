@@ -477,7 +477,7 @@ The first three parameters are equal to, respectively, the
 the payload of the "encrypted_client_hello" extension. The last parameter,
 `outer_hello`, is computed by serializing ClientHelloOuter with the
 "encrypted_client_hello" extension set to the empty string, i.e., the
-`extension_data` list has zero length. Note this serialization uses the
+`extension_data` list has zero length. This serialization uses the
 ClientHello structure from Section 4.1.2 of {{RFC8446}}, which does not include
 the four-byte header included in the Handshake structure.
 
