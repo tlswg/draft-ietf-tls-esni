@@ -566,7 +566,7 @@ it does a standard ClientHello, with the exception of the following rules:
    early data sent by the client per {{RFC8446}}, Section 4.2.10.
 
 Note that these rules may change in the presence of an application profile
-standard specifying otherwise.
+specifying otherwise.
 
 [[OPEN ISSUE: We currently require HRR-sensitive parameters to match in
 ClientHelloInner and ClientHelloOuter in order to simplify client-side
