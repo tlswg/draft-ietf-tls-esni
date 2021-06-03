@@ -295,8 +295,8 @@ invoke the IPv4 parser algorithm in {{WhatWGURLAddressParser}}. It returns a
 value when the input is an IPv4 address.) Failure to validate that a public_name
 is not an IPv4 address may cause connection failures to the client-facing
 server. However, it is not expected to induce security failures. Clients will
-use this name to authenticate the client-facing server and will fail closed if
-the client-facing server cannot produce a certificate bound to the same name.
+fail closed if the client-facing server cannot produce a certificate bound
+to the a reference identity based on the public_name.
 
 extensions
 : A list of extensions that the client must take into consideration when
