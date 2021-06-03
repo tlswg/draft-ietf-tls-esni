@@ -289,15 +289,21 @@ labels, as defined in {{!RFC5890}}, Section 2.3.1. Clients MUST ignore any
 `ECHConfig` structure whose `public_name` does not meet these criteria. Note
 that these criteria allow IPv4 addresses in standard dotted-decimal or other
 non-standard notations such as octal and hexadecimal (see {{?RFC3986}}, Section
-7.4). Clients MUST ignore the `ECHConfig` if it contains an encoded IPv4
-address. To determine if a public_name value is an IPv4 address, clients can
+7.4). Clients SHOULD ignore the `ECHConfig` if it contains an encoded IPv4
+address. (To determine if a public_name value is an IPv4 address, clients can
 invoke the IPv4 parser algorithm in {{WhatWGURLAddressParser}}. It returns a
-value when the input is an IPv4 address.
+value when the input is an IPv4 address.) Failure to validate that public_name
+is not an IPv4 address may cause connection failures to the client-facing
+server. However, it is not expected to induce security failures. Clients will
+use this name to authenticate the client-facing server and will fail closed if
+the client-facing server cannot produce a certificate bound to the same name.
 
 extensions
 : A list of extensions that the client must take into consideration when
 generating a ClientHello message. These are described below
 ({{config-extensions}}).
+
+[[OPEN ISSUE: fix reference to WhatWGURLAddressParser]]
 
 The `HpkeKeyConfig` structure contains the following fields:
 
