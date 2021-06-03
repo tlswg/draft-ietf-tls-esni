@@ -292,7 +292,7 @@ non-standard notations such as octal and hexadecimal (see {{?RFC3986}}, Section
 7.4). Clients SHOULD ignore the `ECHConfig` if it contains an encoded IPv4
 address. (To determine if a public_name value is an IPv4 address, clients can
 invoke the IPv4 parser algorithm in {{WhatWGURLAddressParser}}. It returns a
-value when the input is an IPv4 address.) Failure to validate that public_name
+value when the input is an IPv4 address.) Failure to validate that a public_name
 is not an IPv4 address may cause connection failures to the client-facing
 server. However, it is not expected to induce security failures. Clients will
 use this name to authenticate the client-facing server and will fail closed if
