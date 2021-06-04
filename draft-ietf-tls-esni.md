@@ -460,26 +460,22 @@ it.
 To prevent a network attacker from modifying the reconstructed ClientHelloInner
 (see {{flow-clienthello-malleability}}), ECH authenticates ClientHelloOuter by
 computing ClientHelloOuterAAD as described below and passing it in as the
-associated data for HPKE sealing and opening operations. ClientHelloOuterAAD has
-the following structure:
+associated data for HPKE sealing and opening operations.
 
-~~~
-   struct {
-      HpkeSymmetricCipherSuite cipher_suite;
-      uint8 config_id;
-      opaque enc<1..2^16-1>;
-      ClientHello outer_hello;
-   } ClientHelloOuterAAD;
-~~~
+The server computes ClientHelloOuterAAD by making a copy of the
+ClientHelloOuter and replacing the `payload` field of the
+"encrypted_client_hello" extension with a byte string of the same length and
+zeros for contents. The structure is then reserialized as the ClientHello
+structure, defined in {{Section 4.1.2 of RFC8446}}, which does not include the
+four-byte header from the Handshake structure. Note that this transformation
+preserves all length prefixes from the original ClientHelloOuter.
 
-The first three parameters are equal to, respectively, the
-`ClientECH.cipher_suite`, `ClientECH.config_id`, and `ClientECH.enc` fields of
-the payload of the "encrypted_client_hello" extension. The last parameter,
-`outer_hello`, is computed by serializing ClientHelloOuter with the
-"encrypted_client_hello" extension set to the empty string, i.e., the
-`extension_data` list has zero length. This serialization uses the
-ClientHello structure from {{Section 4.1.2 of RFC8446}}, which does not include
-the four-byte header included in the Handshake structure.
+The client constructs the same value in the reverse order. First, the client
+predicts the length of the `payload` based on the HPKE AEAD and
+EncodedClientHelloInner. The client then constructs a ClientHelloOuter, setting
+`payload` to a byte string with the predicted length and zeros for contents. It
+then serializes ClientHelloOuterAAD as above, encrypts the payload, and
+replaces the placeholder string with the encrypted value.
 
 The decompression process in {{encoding-inner}} forbids
 "encrypted_client_hello" in OuterExtensions. This ensures the unauthenticated
