@@ -428,9 +428,9 @@ which is the following structure:
 
 The `client_hello` field is computed by first making a copy of
 ClientHelloInner with the `legacy_session_id` field with an empty string.
-Note this field uses the ClientHello structure, defined in Section 4.1.2
-of {{RFC8446}} which does not include the Handshake structure's four byte
-header.
+Note this field uses the ClientHello structure, defined in {{Section 4.1.2
+of RFC8446}} which does not include the Handshake structure's four byte
+header. The `padding` field MUST be all zeroes.
 
 The client then MAY substitute extensions which it knows will be duplicated in
 ClientHelloOuter. To do so, the client removes and replaces extensions from
