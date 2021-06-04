@@ -416,9 +416,21 @@ OuterExtensions consists of one or more ExtensionType values, each of which
 reference an extension in ClientHelloOuter.
 
 When sending ClientHello, the client first computes ClientHelloInner, including
-any PSK binders. It then computes a new value, the EncodedClientHelloInner, by
-first making a copy of ClientHelloInner. It then replaces the
-legacy\_session\_id field with an empty string.
+any PSK binders. It then computes a new value, the EncodedClientHelloInner,
+which is the following structure:
+
+~~~
+    struct {
+        ClientHello client_hello;
+        opaque padding<0..2^16-1>;
+    } EncodedClientHelloInner;
+~~~
+
+The `client_hello` field is computed by first making a copy of
+ClientHelloInner with the `legacy_session_id` field with an empty string.
+Note this field uses the ClientHello structure, defined in Section 4.1.2
+of {{RFC8446}} which does not include the Handshake structure's four byte
+header.
 
 The client then MAY substitute extensions which it knows will be duplicated in
 ClientHelloOuter. To do so, the client removes and replaces extensions from
@@ -427,13 +439,12 @@ extensions MUST be ordered consecutively in ClientHelloInner. The list of outer
 extensions, OuterExtensions, includes those which were removed from
 EncodedClientHelloInner, in the order in which they were removed.
 
-Finally, EncodedClientHelloInner is serialized as a ClientHello structure,
-defined in {{Section 4.1.2 of RFC8446}}. Note this does not include the
-four-byte header included in the Handshake structure.
+Finally, the client sets the `padding` field to a byte string whose contents
+are all zeros. {{padding}} describes a recommended padding scheme.
 
 The client-facing server computes ClientHelloInner by reversing this process.
-First it makes a copy of EncodedClientHelloInner and copies the
-legacy_session_id field from ClientHelloOuter. It then looks for an
+First it makes a copy of the `client_hello` field and copies the
+`legacy_session_id` field from ClientHelloOuter. It then looks for an
 "ech_outer_extensions" extension. If found, it replaces the extension with the
 corresponding sequence of extensions in the ClientHelloOuter. If any referenced
 extensions are missing or if "encrypted_client_hello" appears in the list, the
@@ -511,7 +522,6 @@ standard ClientHello, with the exception of the following rules:
    the backend server does not negotiate a TLS version that is incompatible with
    ECH.
 1. It MUST NOT offer to resume any session for TLS 1.2 and below.
-1. It SHOULD contain TLS padding {{!RFC7685}} as described in {{padding}}.
 1. If it intends to compress any extensions (see {{encoding-inner}}), it MUST
    order those extensions consecutively.
 1. It MUST include the "ech_is_inner" extension as defined in
@@ -675,15 +685,24 @@ extension across all application profiles. The target padding length of most
 ClientHello extensions can be computed in this way.
 
 In contrast, clients do not know the longest SNI value in the client-facing
-server's anonymity set without server input. For the "server_name" extension
-with length D, clients SHOULD use the server's length hint L
-(ECHConfig.contents.maximum_name_length) when computing the padding as follows:
+server's anonymity set without server input. Clients SHOULD use the ECHConfig's
+`maximum_name_length` field as follows, where L is the `maximum_name_length`
+value.
 
-1. If L >= D, add L - D bytes of padding. This rounds to the server's
-   advertised hint, i.e., ECHConfig.contents.maximum_name_length.
-2. Otherwise, let P = 31 - ((D - 1) % 32), and add P bytes of padding, plus an
-   additional 32 bytes if D + P < L + 32. This rounds D up to the nearest
-   multiple of 32 bytes that permits at least 32 bytes of length ambiguity.
+1. If the ClientHelloInner contained a "server_name" extension with a name of
+   length D, add max(0, L - D) bytes of padding.
+2. If the ClientHelloInner did not contain a "server_name" extension (e.g. if
+   the client is connecting to an IP address), add L + 7 bytes of padding. This
+   is the length of a "server_name" extension with an L-byte name.
+
+Finally, the client SHOULD pad the entire message as follows:
+
+1. Let L be the length of the EncodedClientHelloInner with all the padding
+   computed so far.
+2. Let P = 31 - ((L - 1) % 32) and add P bytes of padding.
+
+This rounds the overall structure up to a multiple of 32 bytes. This reduces
+the range of lengths of the EncodedClientHelloInner across all clients.
 
 In addition to padding ClientHelloInner, clients and servers will also need to
 pad all other handshake messages that have sensitive-length fields. For example,
