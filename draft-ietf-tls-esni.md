@@ -426,11 +426,11 @@ which is the following structure:
     } EncodedClientHelloInner;
 ~~~
 
-The `client_hello` field is computed by first making a copy of
-ClientHelloInner with the `legacy_session_id` field with an empty string.
-Note this field uses the ClientHello structure, defined in {{Section 4.1.2
-of RFC8446}} which does not include the Handshake structure's four byte
-header. The `padding` field MUST be all zeroes.
+The `client_hello` field is computed by first making a copy of ClientHelloInner
+and setting the `legacy_session_id` field to the empty string. Note this field
+uses the ClientHello structure, defined in {{Section 4.1.2 of RFC8446}} which
+does not include the Handshake structure's four byte header. The `padding`
+field MUST be all zeroes.
 
 The client then MAY substitute extensions which it knows will be duplicated in
 ClientHelloOuter. To do so, the client removes and replaces extensions from
@@ -444,8 +444,11 @@ are all zeros. {{padding}} describes a recommended padding scheme.
 
 The client-facing server computes ClientHelloInner by reversing this process.
 First it parses EncodedClientHelloInner, interpreting all bytes after
-`client_hello` as padding. Next it makes a copy of the `client_hello` field and
-copies the `legacy_session_id` field from ClientHelloOuter. It then looks for an
+`client_hello` as padding. If any padding byte is non-zero, the server MUST
+abort the connection with an "illegal_parameter" alert.
+
+Next it makes a copy of the `client_hello` field and copies the
+`legacy_session_id` field from ClientHelloOuter. It then looks for an
 "ech_outer_extensions" extension. If found, it replaces the extension with the
 corresponding sequence of extensions in the ClientHelloOuter. If any referenced
 extensions are missing or if "encrypted_client_hello" appears in the list, the
@@ -702,8 +705,8 @@ Finally, the client SHOULD pad the entire message as follows:
    computed so far.
 2. Let P = 31 - ((L - 1) % 32) and add P bytes of padding.
 
-This rounds the overall structure up to a multiple of 32 bytes. This reduces
-the range of lengths of the EncodedClientHelloInner across all clients.
+This rounds the length of EncodedClientHelloInner up to a multiple of 32 bytes,
+reducing the set of possible lengths across all clients.
 
 In addition to padding ClientHelloInner, clients and servers will also need to
 pad all other handshake messages that have sensitive-length fields. For example,
