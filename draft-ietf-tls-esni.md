@@ -422,7 +422,7 @@ which is the following structure:
 ~~~
     struct {
         ClientHello client_hello;
-        opaque padding<0..2^16-1>;
+        opaque padding[N];
     } EncodedClientHelloInner;
 ~~~
 
@@ -443,8 +443,9 @@ Finally, the client sets the `padding` field to a byte string whose contents
 are all zeros. {{padding}} describes a recommended padding scheme.
 
 The client-facing server computes ClientHelloInner by reversing this process.
-First it makes a copy of the `client_hello` field and copies the
-`legacy_session_id` field from ClientHelloOuter. It then looks for an
+First it parses EncodedClientHelloInner, interpreting all bytes after
+`client_hello` as padding. Next it makes a copy of the `client_hello` field and
+copies the `legacy_session_id` field from ClientHelloOuter. It then looks for an
 "ech_outer_extensions" extension. If found, it replaces the extension with the
 corresponding sequence of extensions in the ClientHelloOuter. If any referenced
 extensions are missing or if "encrypted_client_hello" appears in the list, the
