@@ -357,7 +357,7 @@ The payload MUST have the following structure:
     struct {
        HpkeSymmetricCipherSuite cipher_suite;
        uint8 config_id;
-       opaque enc<1..2^16-1>;
+       opaque enc<0..2^16-1>;
        opaque payload<1..2^16-1>;
     } ClientECH;
 ~~~~
@@ -371,7 +371,8 @@ provided in the corresponding `ECHConfigContents.cipher_suites` list.
 
 enc
 : The HPKE encapsulated key, used by servers to decrypt the corresponding
-`payload` field.
+`payload` field. This field is empty in ClientHelloOuters sent in response to
+HelloRetryRequest.
 
 payload
 : The serialized and encrypted ClientHelloInner structure, encrypted using HPKE
