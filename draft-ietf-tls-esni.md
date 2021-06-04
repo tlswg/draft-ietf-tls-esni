@@ -459,23 +459,27 @@ it.
 
 To prevent a network attacker from modifying the reconstructed ClientHelloInner
 (see {{flow-clienthello-malleability}}), ECH authenticates ClientHelloOuter by
-computing ClientHelloOuterAAD as described below and passing it in as the
-associated data for HPKE sealing and opening operations.
+passing ClientHelloOuterAAD as the associated data for HPKE sealing and opening
+operations. The ClientHelloOuterAAD is a serialized ClientHello structure,
+defined in {{Section 4.1.2 of RFC8446}}, which matches the ClientHelloOuter
+except the `payload` field of the "encrypted_client_hello" is replaced with a
+byte string of the same length but whose contents are zeros. This value does
+not include the four-byte header from the Handshake structure.
 
-The server computes ClientHelloOuterAAD by making a copy of the
-ClientHelloOuter and replacing the `payload` field of the
-"encrypted_client_hello" extension with a byte string of the same length and
-zeros for contents. The structure is then reserialized as the ClientHello
-structure, defined in {{Section 4.1.2 of RFC8446}}, which does not include the
-four-byte header from the Handshake structure. Note that this transformation
-preserves all length prefixes from the original ClientHelloOuter.
+The client constructs ClientHelloOuterAAD first, followed by ClientHelloOuter.
+First, the client predicts the length of the `payload` based on the HPKE AEAD
+and EncodedClientHelloInner. The client then constructs ClientHelloOuterAAD,
+setting `payload` to a byte string with the predicted length and zeros for
+contents. It finally encrypts the payload, and replaces the placeholder string
+with the encrypted value to compute ClientHelloOuter.
 
-The client constructs the same value in the reverse order. First, the client
-predicts the length of the `payload` based on the HPKE AEAD and
-EncodedClientHelloInner. The client then constructs a ClientHelloOuter, setting
-`payload` to a byte string with the predicted length and zeros for contents. It
-then serializes ClientHelloOuterAAD as above, encrypts the payload, and
-replaces the placeholder string with the encrypted value.
+The server then receives ClientHelloOuter and computes ClientHelloOuterAAD by
+making a copy and replacing the portion corresponding to the `payload` field
+with zeros.
+
+The payload and the placeholder strings have the same length, so it is not
+necessary for either side to recompute length prefixes when applying the above
+transformations.
 
 The decompression process in {{encoding-inner}} forbids
 "encrypted_client_hello" in OuterExtensions. This ensures the unauthenticated
