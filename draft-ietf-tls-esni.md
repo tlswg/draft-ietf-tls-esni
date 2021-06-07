@@ -43,7 +43,7 @@ normative:
   RFC7918:
 
 informative:
-  WhatWGURLAddressParser:
+  WHATWG-IPV4:
    title: "URL Living Standard - IPv4 Parser"
    target: https://url.spec.whatwg.org/#concept-ipv4-parser
    date: May 2021
@@ -281,29 +281,22 @@ or if names can be added or removed from the anonymity set during the lifetime
 of a particular ECH configuration.
 
 public_name
-: The non-empty DNS name of the client-facing server, i.e., the entity trusted
+: The DNS name of the client-facing server, i.e., the entity trusted
 to update the ECH configuration. This is used to correct misconfigured clients,
 as described in {{handle-server-response}}. This value MUST NOT begin or end
 with an ASCII dot and MUST be parsable as a dot-separated sequence of LDH
 labels, as defined in {{!RFC5890, Section 2.3.1}}. Clients MUST ignore any
 `ECHConfig` structure whose `public_name` does not meet these criteria. Note
-that these criteria allow IPv4 addresses in standard dotted-decimal or other
-non-standard notations such as octal and hexadecimal (see {{?RFC3986}}, Section
-7.4). Clients SHOULD ignore the `ECHConfig` if it contains an encoded IPv4
-address. (To determine if a public_name value is an IPv4 address, clients can
-invoke the IPv4 parser algorithm in {{WhatWGURLAddressParser}}. It returns a
-value when the input is an IPv4 address.) Failure to validate that a public_name
-is not an IPv4 address may cause connection failures to the client-facing
-server. However, it is not expected to induce security failures. Clients will
-fail closed if the client-facing server cannot produce a certificate bound
-to the reference identity based on the public_name.
+that these criteria allow IPv4 addresses in dotted-decimal or other notations,
+e.g. {{?RFC3986, Section 7.4}} and {{WHATWG-IPV4}}. See {{auth-public-name}}
+for how the client interprets this field.
 
 extensions
 : A list of extensions that the client must take into consideration when
 generating a ClientHello message. These are described below
 ({{config-extensions}}).
 
-[[OPEN ISSUE: fix reference to WhatWGURLAddressParser]]
+[[OPEN ISSUE: fix reference to WHATWG-IPV4]]
 
 The `HpkeKeyConfig` structure contains the following fields:
 
@@ -770,6 +763,15 @@ authenticate the connection with the public name, as follows:
 
 - If the server requests a client certificate, the client MUST respond with an
   empty Certificate message, denoting no client certificate.
+
+When verifying the certificate, the client uses its application-specific
+certificate profile, e.g. {{Section 4.3.4 of
+?I-D.draft-ietf-httpbis-semantics}}, with a DNS-based reference identity. If
+the public name value is not a valid DNS name for the application,
+the client MUST reject the certificate. In particular, applications that
+incorporate DNS names and IP addresses into the same syntax (e.g. {{?RFC3986,
+Section 7.4}} and {{WHATWG-IPV4}}) MUST reject names that would be interpreted
+as IPv4 addresses.
 
 Note that authenticating a connection for the public name does not authenticate
 it for the origin. The TLS implementation MUST NOT report such connections as
