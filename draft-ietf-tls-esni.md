@@ -270,7 +270,7 @@ use.
 maximum_name_length
 : The longest name of a backend server, if known. If not known, this value can
 be set to zero. It is used to compute padding ({{padding}}) and does not
-constrain the lengths of server names. Names may exceed this length if, e.g.,
+constrain server name lengths. Names may exceed this length if, e.g.,
 the server uses wildcard names or added new names to the anonymity set.
 
 public_name
