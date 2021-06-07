@@ -696,7 +696,7 @@ value.
 1. If the ClientHelloInner contained a "server_name" extension with a name of
    length D, add max(0, L - D) bytes of padding.
 2. If the ClientHelloInner did not contain a "server_name" extension (e.g., if
-   the client is connecting to an IP address), add L + 7 bytes of padding. This
+   the client is connecting to an IP address), add L + 9 bytes of padding. This
    is the length of a "server_name" extension with an L-byte name.
 
 Finally, the client SHOULD pad the entire message as follows:
