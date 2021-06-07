@@ -81,7 +81,7 @@ The TLS Working Group has studied the problem of protecting the SNI, but has
 been unable to develop a completely generic solution.
 {{?RFC8744}} provides a description of the problem space and
 some of the proposed techniques. One of the more difficult problems is "Do not
-stick out" ({{?RFC8744}}, Section 3.4): if only sensitive or
+stick out" ({{?RFC8744, Section 3.4}}): if only sensitive or
 private services use SNI encryption, then SNI encryption is a signal that a
 client is going to such a service. For this reason, much recent work has focused
 on concealing the fact that the SNI is being protected. Unfortunately, the
@@ -111,7 +111,7 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
 "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
 document are to be interpreted as described in BCP 14 {{RFC2119}} {{!RFC8174}}
 when, and only when, they appear in all capitals, as shown here. All TLS
-notation comes from {{RFC8446}}, Section 3.
+notation comes from {{RFC8446, Section 3}}.
 
 # Overview
 
@@ -188,7 +188,7 @@ Upon receiving the ClientHelloOuter, a TLS server takes one of the following
 actions:
 
 1. If it does not support ECH, it ignores the "encrypted_client_hello" extension
-   and proceeds with the handshake as usual, per {{RFC8446}}, Section 4.1.2.
+   and proceeds with the handshake as usual, per {{RFC8446, Section 4.1.2}}.
 1. If it is a client-facing server for the ECH protocol, but cannot decrypt the
    extension, then it terminates the handshake using the ClientHelloOuter. This
    is referred to as "ECH rejection". When ECH is rejected, the client-facing
@@ -285,7 +285,7 @@ public_name
 to update the ECH configuration. This is used to correct misconfigured clients,
 as described in {{handle-server-response}}. This value MUST NOT begin or end
 with an ASCII dot and MUST be parsable as a dot-separated sequence of LDH
-labels, as defined in {{!RFC5890}}, Section 2.3.1. Clients MUST ignore any
+labels, as defined in {{!RFC5890, Section 2.3.1}}. Clients MUST ignore any
 `ECHConfig` structure whose `public_name` does not meet these criteria. Note
 that these criteria allow IPv4 addresses in standard dotted-decimal or other
 non-standard notations such as octal and hexadecimal (see {{?RFC3986}}, Section
@@ -339,7 +339,7 @@ ECH configuration extensions are used to provide room for additional
 functionality as needed. See {{config-extensions-guidance}} for guidance on
 which types of extensions are appropriate for this structure.
 
-The format is as defined in {{RFC8446}}, Section 4.2.
+The format is as defined in {{RFC8446, Section 4.2}}.
 The same interpretation rules apply: extensions MAY appear in any order, but
 there MUST NOT be more than one extension of the same type in the extensions
 block. An extension can be tagged as mandatory by using an extension type
@@ -368,7 +368,7 @@ The payload MUST have the following structure:
     struct {
        HpkeSymmetricCipherSuite cipher_suite;
        uint8 config_id;
-       opaque enc<1..2^16-1>;
+       opaque enc<0..2^16-1>;
        opaque payload<1..2^16-1>;
     } ClientECH;
 ~~~~
@@ -382,7 +382,8 @@ provided in the corresponding `ECHConfigContents.cipher_suites` list.
 
 enc
 : The HPKE encapsulated key, used by servers to decrypt the corresponding
-`payload` field.
+`payload` field. This field is empty in ClientHelloOuters sent in response to
+HelloRetryRequest.
 
 payload
 : The serialized and encrypted ClientHelloInner structure, encrypted using HPKE
@@ -439,7 +440,7 @@ extensions, OuterExtensions, includes those which were removed from
 EncodedClientHelloInner, in the order in which they were removed.
 
 Finally, EncodedClientHelloInner is serialized as a ClientHello structure,
-defined in Section 4.1.2 of {{RFC8446}}. Note this does not include the
+defined in {{Section 4.1.2 of RFC8446}}. Note this does not include the
 four-byte header included in the Handshake structure.
 
 The client-facing server computes ClientHelloInner by reversing this process.
@@ -479,7 +480,7 @@ the following structure:
       HpkeSymmetricCipherSuite cipher_suite;
       uint8 config_id;
       opaque enc<1..2^16-1>;
-      opaque outer_hello<1..2^24-1>;
+      ClientHello outer_hello;
    } ClientHelloOuterAAD;
 ~~~
 
@@ -488,7 +489,8 @@ The first three parameters are equal to, respectively, the
 the payload of the "encrypted_client_hello" extension. The last parameter,
 `outer_hello`, is computed by serializing ClientHelloOuter with the
 "encrypted_client_hello" extension set to the empty string, i.e., the
-`extension_data` list has zero length. Note this serialization does not include
+`extension_data` list has zero length. This serialization uses the
+ClientHello structure from {{Section 4.1.2 of RFC8446}}, which does not include
 the four-byte header included in the Handshake structure.
 
 The decompression process in {{encoding-inner}} forbids
@@ -563,7 +565,7 @@ it does a standard ClientHello, with the exception of the following rules:
 1. When the client offers the "early_data" extension in ClientHelloInner, it
    MUST also include the "early_data" extension in ClientHelloOuter. This
    allows servers that reject ECH and use ClientHelloOuter to safely ignore any
-   early data sent by the client per {{RFC8446}}, Section 4.2.10.
+   early data sent by the client per {{RFC8446, Section 4.2.10}}.
 
 Note that these rules may change in the presence of an application profile
 specifying otherwise.
@@ -650,7 +652,7 @@ ClientHelloOuter makes it appear to the network as if the extension were
 negotiated properly.
 
 The client generates the extension payload by constructing an `OfferedPsks`
-structure (see {{RFC8446}}, Section 4.2.11) as follows. For each PSK identity
+structure (see {{RFC8446, Section 4.2.11}}) as follows. For each PSK identity
 advertised in the ClientHelloInner, the client generates a random PSK identity
 with the same length. It also generates a random, 32-bit, unsigned integer to
 use as the `obfuscated_ticket_age`. Likewise, for each inner PSK binder, the
@@ -1042,20 +1044,20 @@ It then computes an 8-byte string
       8)
 ~~~
 
-where HKDF-Expand-Label and Transcript-Hash are as defined in {{RFC8446}},
-Section 7.1, "0" indicates a string of Hash.length bytes set to zero, and
+where HKDF-Expand-Label and Transcript-Hash are as defined in {{RFC8446,
+Section 7.1}}, "0" indicates a string of Hash.length bytes set to zero, and
 ClientHelloInner...ServerHelloECHConf refers to the sequence of handshake
 messages beginning with the first ClientHelloInner and ending with
 ServerHelloECHConf. (Note that ClientHelloInner and ServerHelloECHConf
 messages replace the ClientHello and ServerHello messages in the transcript
-hash sequence as specified in Section 4.1.1 of {{RFC8446}}. Finally, the
+hash sequence as specified in {{Section 4.1.1 of RFC8446}}. Finally, the
 backend server constructs its ServerHello message so that it is equal to
 ServerHelloECHConf but with the last 8 bytes of ServerHello.random set to
 `accept_confirmation`.
 
 The backend server MUST NOT perform this operation if it negotiated TLS 1.2 or
 below. Note that doing so would overwrite the downgrade signal for TLS 1.3 (see
-{{RFC8446}}, Section 4.1.3).
+{{RFC8446, Section 4.1.3}}).
 
 The "ech_is_inner" is expected to have an empty payload. If the payload is
 non-empty (i.e., the length of the "extension_data" field is non-zero) then the
@@ -1086,9 +1088,9 @@ The retry mechanism repairs inconsistencies, provided the server is
 authoritative for the public name. If server and advertised keys mismatch, the
 server will respond with ech_retry_requested. If the server does not understand
 the "encrypted_client_hello" extension at all, it will ignore it as required by
-{{RFC8446}}; Section 4.1.2. Provided the server can present a certificate valid
-for the public name, the client can safely retry with updated settings, as
-described in {{handle-server-response}}.
+{{Section 4.1.2 of RFC8446}}. Provided the server can present a certificate
+valid for the public name, the client can safely retry with updated settings,
+as described in {{handle-server-response}}.
 
 Unless ECH is disabled as a result of successfully establishing a connection to
 the public name, the client MUST NOT fall back to using unencrypted
@@ -1099,7 +1101,7 @@ DNS results, if one is provided.
 ## Middleboxes
 
 A more serious problem is MITM proxies which do not support this extension.
-{{RFC8446}}, Section 9.3 requires that such proxies remove any extensions they
+{{RFC8446, Section 9.3}} requires that such proxies remove any extensions they
 do not understand. The handshake will then present a certificate based on the
 public name, without echoing the "encrypted_client_hello" extension to the
 client.
@@ -1119,9 +1121,9 @@ Clients SHOULD NOT attempt to repair the connection in this case.
 In the absence of an application profile standard specifying otherwise,
 a compliant ECH application MUST implement the following HPKE cipher suite:
 
-- KEM: DHKEM(X25519, HKDF-SHA256) (see {{!I-D.irtf-cfrg-hpke}}, Section 7.1)
-- KDF: HKDF-SHA256 (see {{!I-D.irtf-cfrg-hpke}}, Section 7.2)
-- AEAD: AES-128-GCM (see {{!I-D.irtf-cfrg-hpke}}, Section 7.3)
+- KEM: DHKEM(X25519, HKDF-SHA256) (see {{!I-D.irtf-cfrg-hpke, Section 7.1}})
+- KDF: HKDF-SHA256 (see {{!I-D.irtf-cfrg-hpke, Section 7.2}})
+- AEAD: AES-128-GCM (see {{!I-D.irtf-cfrg-hpke, Section 7.3}})
 
 # Security Considerations
 
@@ -1288,7 +1290,7 @@ positive occurring for a given connection is only 1 in 2^64. This value is
 smaller than the probability of network connection failures in practice.
 
 Note that the same bytes of the ServerHello.random are used to implement
-downgrade protection for TLS 1.3 (see {{RFC8446}}, Section 4.1.3). These
+downgrade protection for TLS 1.3 (see {{RFC8446, Section 4.1.3}}). These
 mechanisms do not interfere because the backend server only signals ECH
 acceptance in TLS 1.3 or higher.
 
