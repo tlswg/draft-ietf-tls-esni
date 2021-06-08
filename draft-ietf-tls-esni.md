@@ -439,8 +439,9 @@ extensions MUST be ordered consecutively in ClientHelloInner. The list of outer
 extensions, OuterExtensions, includes those which were removed from
 EncodedClientHelloInner, in the order in which they were removed.
 
-Finally, the client sets the `padding` field to a byte string whose contents
-are all zeros. {{padding}} describes a recommended padding scheme.
+Finally, the client determines the number of padding bytes, N, and sets
+the `padding` field to a byte string whose contents are N zeros.
+{{padding}} describes a recommended padding scheme.
 
 The client-facing server computes ClientHelloInner by reversing this process.
 First it parses EncodedClientHelloInner, interpreting all bytes after
@@ -703,7 +704,7 @@ Finally, the client SHOULD pad the entire message as follows:
 
 1. Let L be the length of the EncodedClientHelloInner with all the padding
    computed so far.
-2. Let P = 31 - ((L - 1) % 32) and add P bytes of padding.
+2. Let N = 31 - ((L - 1) % 32) and add N bytes of padding.
 
 This rounds the length of EncodedClientHelloInner up to a multiple of 32 bytes,
 reducing the set of possible lengths across all clients.
