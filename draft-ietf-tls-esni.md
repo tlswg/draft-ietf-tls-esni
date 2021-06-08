@@ -459,27 +459,24 @@ it.
 
 To prevent a network attacker from modifying the reconstructed ClientHelloInner
 (see {{flow-clienthello-malleability}}), ECH authenticates ClientHelloOuter by
-computing ClientHelloOuterAAD as described below and passing it in as the
-associated data for HPKE sealing and opening operations. ClientHelloOuterAAD has
-the following structure:
+passing ClientHelloOuterAAD as the associated data for HPKE sealing and opening
+operations. The ClientHelloOuterAAD is a serialized ClientHello structure,
+defined in {{Section 4.1.2 of RFC8446}}, which matches the ClientHelloOuter
+except the `payload` field of the "encrypted_client_hello" is replaced with a
+byte string of the same length but whose contents are zeros. This value does
+not include the four-byte header from the Handshake structure.
 
-~~~
-   struct {
-      HpkeSymmetricCipherSuite cipher_suite;
-      uint8 config_id;
-      opaque enc<1..2^16-1>;
-      ClientHello outer_hello;
-   } ClientHelloOuterAAD;
-~~~
+The client follows the procedure in {{encrypting-clienthello}} to first
+construct ClientHelloOuterAAD with a placeholder `payload` field, then replace
+the field with the encrypted value to compute ClientHelloOuter.
 
-The first three parameters are equal to, respectively, the
-`ClientECH.cipher_suite`, `ClientECH.config_id`, and `ClientECH.enc` fields of
-the payload of the "encrypted_client_hello" extension. The last parameter,
-`outer_hello`, is computed by serializing ClientHelloOuter with the
-"encrypted_client_hello" extension set to the empty string, i.e., the
-`extension_data` list has zero length. This serialization uses the
-ClientHello structure from {{Section 4.1.2 of RFC8446}}, which does not include
-the four-byte header included in the Handshake structure.
+The server then receives ClientHelloOuter and computes ClientHelloOuterAAD by
+making a copy and replacing the portion corresponding to the `payload` field
+with zeros.
+
+The payload and the placeholder strings have the same length, so it is not
+necessary for either side to recompute length prefixes when applying the above
+transformations.
 
 The decompression process in {{encoding-inner}} forbids
 "encrypted_client_hello" in OuterExtensions. This ensures the unauthenticated
@@ -539,8 +536,6 @@ it does a standard ClientHello, with the exception of the following rules:
    ClientHelloInner.random. Instead, It MUST generate a fresh
    ClientHelloOuter.random using a secure random number generator. (See
    {{flow-client-reaction}}.)
-1. It MUST include an "encrypted_client_hello" extension with a payload
-   constructed as described below.
 1. The value of `ECHConfig.contents.public_name` MUST be placed in the
    "server_name" extension.
 1. When the client offers the "pre_shared_key" extension in ClientHelloInner, it
@@ -554,6 +549,8 @@ it does a standard ClientHello, with the exception of the following rules:
    MUST also include the "early_data" extension in ClientHelloOuter. This
    allows servers that reject ECH and use ClientHelloOuter to safely ignore any
    early data sent by the client per {{RFC8446, Section 4.2.10}}.
+1. It MUST include an "encrypted_client_hello" extension with a payload
+   constructed as described in {{encrypting-clienthello}}.
 
 [[OPEN ISSUE: We currently require HRR-sensitive parameters to match in
 ClientHelloInner and ClientHelloOuter in order to simplify client-side
@@ -569,42 +566,58 @@ implementations need to take care to ensure that sensitive extensions are not
 offered in the ClientHelloOuter. See {{outer-clienthello}} for additional
 guidance.
 
-To encrypt EncodedClientHelloInner, the client first computes
-ClientHelloOuterAAD as described in {{authenticating-outer}}. Note this
-requires the "encrypted_client_hello" be computed after all other extensions.
-In particular, this is possible because the "pre_shared_key" extension is
-forbidden in ClientHelloOuter.
+### Encrypting the ClientHello {#encrypting-clienthello}
 
-The client then generates the HPKE encryption context and computes the
-encapsulated key, context, and payload as:
+To construct the "encrypted_client_hello", the client first determines the
+encapsulated key and HPKE encryption context. If constructing the first
+ClientHelloOuter, it computes them as:
 
 ~~~
     pkR = DeserializePublicKey(ECHConfig.contents.public_key)
     enc, context = SetupBaseS(pkR,
                               "tls ech" || 0x00 || ECHConfig)
-    payload = context.Seal(ClientHelloOuterAAD,
-                           EncodedClientHelloInner)
 ~~~
 
-Note that the HPKE functions DeserializePublicKey and SetupBaseS are those which
-match `ECHConfig.contents.kem_id` and the AEAD/KDF used with `context` are those
-which match the client's chosen preference from
-`ECHConfig.contents.cipher_suites`.  The `info` parameter to SetupBaseS is the
-concatenation of "tls ech", a zero byte, and the serialized ECHConfig.
+If constructing the second ClientHelloOuter ({{client-hrr}}), it reuses the
+encryption context computed for the first ClientHelloOuter, and sets `enc` to
+the empty string. Note that the HPKE context maintains a sequence number, so
+this operation internally uses a fresh nonce for each AEAD operation. Reusing
+the HPKE context avoids an attack described in {{flow-hrr-hijack}}.
 
-The value of the "encrypted_client_hello" extension in the ClientHelloOuter is
-a `ClientECH` with the following values:
+The client then computes ClientHelloOuterAAD ({{authenticating-outer}}) by
+constructing a ClientHello with all other extensions determined as in
+{{real-ech}}.
+
+Next, the client determines the length L of encrypting EncodedClientHelloInner
+with the selected HPKE AEAD. This is typically the sum of the plaintext length
+and the AEAD tag length. The client fills in a "encrypted_client_hello"
+extension with the following values:
 
 - `config_id`, the identifier corresponding to the chosen ECHConfig structure;
 - `cipher_suite`, the client's chosen cipher suite;
 - `enc`, as computed above; and
-- `payload`, as computed above.
+- `payload`, a placeholder byte string containing L zeros.
 
 If optional configuration identifiers (see {{optional-configs}}) are used,
-`config_id` SHOULD be set to a randomly generated byte. Unless specified by the
-application using (D)TLS or externally configured on both sides,
-implementations MUST set the field as specified in
-{{encrypted-client-hello}}.
+`config_id` SHOULD be set to a randomly generated byte in the first
+ClientHelloOuter and MUST be left unchanged for the second ClientHelloOuter.
+
+The client serializes this structure to construct the ClientHelloOuterAAD. It then
+computes the payload as:
+
+~~~
+    final_payload = context.Seal(ClientHelloOuterAAD,
+                                 EncodedClientHelloInner)
+~~~
+
+Finally, the client replaces `payload` with `final_payload` to obtain
+ClientHelloOuter. The two values have the same length, so it is not necessary
+to recompute length prefixes in the serialized structure.
+
+Note this construction requires the "encrypted_client_hello" be computed after
+all other extensions. This is possible because the ClientHelloOuter's
+"pre_shared_key" extension is either omitted, or uses a random binder
+({{grease-psk}}).
 
 ### ClientHelloInner Indication Extension {#is-inner}
 
@@ -643,8 +656,8 @@ with the same length. It also generates a random, 32-bit, unsigned integer to
 use as the `obfuscated_ticket_age`. Likewise, for each inner PSK binder, the
 client generates random string of the same length.
 
-If the server replies with a "pre_shared_key" extension in its SeverHello, then
-the client MUST abort the handshake with an "illegal_parameter" alert.
+If the server replies with a "pre_shared_key" extension in its ServerHello,
+then the client MUST abort the handshake with an "illegal_parameter" alert.
 
 ### Recommended Padding Scheme {#padding}
 
@@ -797,28 +810,7 @@ Otherwise, the usual rules for HelloRetryRequest processing apply.
 The client encodes the second ClientHelloInner as in {{encoding-inner}}, using
 the second ClientHelloOuter for any referenced extensions. It then encrypts
 the new EncodedClientHelloInner value as a second message with the previous
-HPKE context:
-
-~~~
-    payload = context.Seal(ClientHelloOuterAAD,
-                           EncodedClientHelloInner)
-~~~
-
-ClientHelloOuterAAD is computed as described in {{authenticating-outer}}, but
-again using the second ClientHelloOuter. Note that the HPKE context maintains a
-sequence number, so this operation internally uses a fresh nonce for each AEAD
-operation. Reusing the HPKE context avoids an attack described in
-{{flow-hrr-hijack}}.
-
-The client then modifies the "encrypted_client_hello" extension in
-ClientHelloOuter as follows:
-
-- `config_id` is unchanged and contains the `config_id` corresponding to
-  the client's chosen ECHConfig.
-- `cipher_suite` is unchanged and contains the client's chosen HPKE cipher
-  suite.
-- `enc` is replaced with the empty string.
-- `payload` is replaced with the value computed above.
+HPKE context as described in {{encrypting-clienthello}}.
 
 If the client offered ECH in the first ClientHello, then it MUST offer ECH in
 the second. Likewise, if the client did not offer ECH in the first ClientHello,
@@ -1197,6 +1189,9 @@ adversary may send malicious ClientHello messages, i.e., those which will not
 decrypt with any known ECH key, in order to force wasteful decryption. Servers
 that support this feature should, for example, implement some form of rate
 limiting mechanism to limit the damage caused by such attacks.
+
+Unless specified by the application using (D)TLS or externally configured on
+both sides, implementations MUST NOT use this mode.
 
 ## Outer ClientHello {#outer-clienthello}
 
