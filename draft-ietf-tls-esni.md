@@ -435,25 +435,36 @@ The client-facing server computes ClientHelloInner by reversing this process.
 First it makes a copy of EncodedClientHelloInner and copies the
 legacy_session_id field from ClientHelloOuter. It then looks for an
 "ech_outer_extensions" extension. If found, it replaces the extension with the
-corresponding sequence of extensions in the ClientHelloOuter. If any referenced
-extensions are missing or if "encrypted_client_hello" appears in the list, the
-server MUST abort the connection with an "illegal_parameter" alert.
+corresponding sequence of extensions in the ClientHelloOuter. The server MUST
+abort the connection with an "illegal_parameter" alert if any of the following
+are true:
+
+* Any referenced extension is missing in ClientHelloOuter.
+
+* "encrypted_client_hello" appears in OuterExtensions.
+
+* OuterExtensions contains duplicate values.
 
 The "ech_outer_extensions" extension is only used for compressing the
 ClientHelloInner. It MUST NOT be sent in either ClientHelloOuter or
 ClientHelloInner.
 
-Note that it is possible to implement decoding of the EncodedClientHelloInner in
-a way that creates a denial-of-service vulnerability. Specifically, the server
-needs to check that each extension in the OuterExtensions list appears in the
-ClientHelloOuter. The naive strategy would require O(N\*M) time, where N is the
-number of extensions in the ClientHelloOuter and M is the number of extensions
-in the OuterExtensions list. Malicious clients could exploit this behavior in
-order to cause excessive work for the server, possibly making it unavailable.
-This problem can be mitigated by representing OuterExtensions in a way that
-allows it to be searched more quickly. For example, the runtime can be improved
-to O(N\*log(M)) by sorting the OuterExtensions and using binary search to access
-it.
+If the cost to decode an EncodedClientHelloInner is disproportionately large in
+comparison to the input size, a malicious client could exploit this in a denial
+of service attack. Implementations SHOULD avoid the following attack vectors:
+
+* If looking up a ClientHelloOuter extension takes time linear in the number of
+  extensions, the overall decoding process would take O(M\*N) time, where
+  M is the number of ClientHelloOuter extensions ClientHelloOuter and N is the
+  size of OuterExtensions. This problem can be mitigated with a more efficient
+  lookup, such as sorting ClientHelloOuter extensions and using binary search.
+
+* If OuterExtensions contains duplicate extensions, an attacker could cause the
+  server to construct a large ClientHelloInner by including a large
+  extension in ClientHelloOuter, of length L, and an OuterExtensions list
+  referencing N copies of that extension. The server would then use O(N\*L)
+  memory in response to O(N+L) bandwidth from the client. This can be mitigated
+  by checking for duplicates before copying extensions.
 
 ## Authenticating the ClientHelloOuter {#authenticating-outer}
 
