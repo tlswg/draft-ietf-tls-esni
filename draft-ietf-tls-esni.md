@@ -606,11 +606,11 @@ The client serializes this structure to construct the ClientHelloOuterAAD. It th
 computes the payload as:
 
 ~~~
-    payload = context.Seal(ClientHelloOuterAAD,
-                           EncodedClientHelloInner)
+    final_payload = context.Seal(ClientHelloOuterAAD,
+                                 EncodedClientHelloInner)
 ~~~
 
-Finally, the client replaces `payload` with this value to obtain
+Finally, the client replaces `payload` with `final_payload` to obtain
 ClientHelloOuter. The two values have the same length, so it is not necessary
 to recompute length prefixes in the serialized structure.
 
