@@ -1256,7 +1256,7 @@ client previously connected to and which is within the same anonymity set.
 
 ## Cookies
 
-Section 4.2.2 of {{RFC8446}} defines a cookie value that servers may send in
+{{Section 4.2.2 of RFC8446}} defines a cookie value that servers may send in
 HelloRetryRequest for clients to echo in the second ClientHello. These values
 are sent unencrypted in ECH. This means differences in cookies between backend
 servers, such as lengths or cleartext components, may leak information about
