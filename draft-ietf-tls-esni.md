@@ -455,7 +455,7 @@ of service attack. Implementations SHOULD avoid the following attack vectors:
 
 * If looking up a ClientHelloOuter extension takes time linear in the number of
   extensions, the overall decoding process would take O(M\*N) time, where
-  M is the number of ClientHelloOuter extensions ClientHelloOuter and N is the
+  M is the number of extensions in ClientHelloOuter and N is the
   size of OuterExtensions. This problem can be mitigated with a more efficient
   lookup, such as sorting ClientHelloOuter extensions and using binary search.
 
