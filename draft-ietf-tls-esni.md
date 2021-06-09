@@ -472,31 +472,11 @@ are true:
 * The extensions in ClientHelloOuter corresponding to those in OuterExtensions
   do not occur in the same order.
 
-If the cost to decode an EncodedClientHelloInner is disproportionately large in
-comparison to the input size, a malicious client could exploit this in a denial
-of service attack. Implementations are RECOMMENDED to use the following
-decoding procedure, which runs in linear time:
-
-1. Let `i` be zero and `n` be the number of extensions in ClientHelloOuter.
-
-1. For each extension type, `ext`, in OuterExtensions:
-
-   * If `ext` is "encrypted_client_hello", abort the connection with an
-     "illegal_parameter" alert and terminate this procedure.
-
-   * While the `i` is less than `n` and the `i`th extension of
-     ClientHelloOuter does not have type `ext`, increment `i`.
-
-   * If `i` is equal to `n`, abort the connection with an "illegal_parameter"
-     alert and terminate this procedure.
-
-   * Otherwise, the `i`th extension of ClientHelloOuter has type `ext`. Copy
-     it to the EncodedClientHelloInner and increment `i`.
-
-Implementations that retain the ClientHelloOuter extension list in serialized
-form can equivalently replace `i` with a byte offset pointing at the first
-extension. Instead of incrementing `i`, the offset is advanced to the next
-extension.
+Implementations SHOULD bound the time to compute a ClientHelloInner
+proportionally to the ClientHelloOuter size. If the cost are disproportionately
+large, a malicious client could exploit this in a denial of service attack.
+{{linear-outer-extensions}} describes a linear-time procedure that may be used
+for this purpose.
 
 ## Authenticating the ClientHelloOuter {#authenticating-outer}
 
@@ -1668,6 +1648,30 @@ authentication, (2) non-trivial application-layer dependencies and interaction,
 and (3) obtaining the generic SNI to bootstrap the connection. In contrast,
 encrypted SNI induces no additional round trip and operates below the
 application layer.
+
+# Linear-time Outer Extension Processing {#linear-outer-extensions}
+
+The following procedure processes the "ech_outer_extensions" extension (see
+{{encoding-inner}}) in linear time:
+
+1. Let I be zero and N be the number of extensions in ClientHelloOuter.
+
+1. For each extension type, E, in OuterExtensions:
+
+   * If E is "encrypted_client_hello", abort the connection with an
+     "illegal_parameter" alert and terminate this procedure.
+
+   * While the I is less than N and the Ith extension of
+     ClientHelloOuter does not have type E, increment I.
+
+   * If I is equal to N, abort the connection with an "illegal_parameter"
+     alert and terminate this procedure.
+
+   * Otherwise, the Ith extension of ClientHelloOuter has type E. Copy
+     it to the EncodedClientHelloInner and increment I.
+
+Implementations that retain the ClientHelloOuter extension list in another
+iterable form can equivalently replace I with an iterator.
 
 # Acknowledgements
 
