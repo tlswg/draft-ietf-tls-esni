@@ -429,7 +429,15 @@ may use the "ech_outer_extensions" extension.
 ~~~
 
 OuterExtensions consists of one or more ExtensionType values, each of which
-reference an extension in ClientHelloOuter.
+reference an extension in ClientHelloOuter. The extensions in OuterExtensions
+MUST appear in ClientHelloOuter in the same relative order, however, there is
+no requirement that they be continguous. For examples, OuterExtensions may
+contain extensions A, B, C, while ClientHelloOuter contains extensions A, D, B,
+C, E, F.
+
+The "ech_outer_extensions" extension is only used for compressing the
+ClientHelloInner. It MUST NOT be sent in either ClientHelloOuter or
+ClientHelloInner.
 
 When sending ClientHello, the client first computes ClientHelloInner, including
 any PSK binders. It then computes a new value, the EncodedClientHelloInner, by
@@ -451,25 +459,44 @@ The client-facing server computes ClientHelloInner by reversing this process.
 First it makes a copy of EncodedClientHelloInner and copies the
 legacy_session_id field from ClientHelloOuter. It then looks for an
 "ech_outer_extensions" extension. If found, it replaces the extension with the
-corresponding sequence of extensions in the ClientHelloOuter. If any referenced
-extensions are missing or if "encrypted_client_hello" appears in the list, the
-server MUST abort the connection with an "illegal_parameter" alert.
+corresponding sequence of extensions in the ClientHelloOuter. The server MUST
+abort the connection with an "illegal_parameter" alert if any of the following
+are true:
 
-The "ech_outer_extensions" extension is only used for compressing the
-ClientHelloInner. It MUST NOT be sent in either ClientHelloOuter or
-ClientHelloInner.
+* Any referenced extension is missing in ClientHelloOuter.
 
-Note that it is possible to implement decoding of the EncodedClientHelloInner in
-a way that creates a denial-of-service vulnerability. Specifically, the server
-needs to check that each extension in the OuterExtensions list appears in the
-ClientHelloOuter. The naive strategy would require O(N\*M) time, where N is the
-number of extensions in the ClientHelloOuter and M is the number of extensions
-in the OuterExtensions list. Malicious clients could exploit this behavior in
-order to cause excessive work for the server, possibly making it unavailable.
-This problem can be mitigated by representing OuterExtensions in a way that
-allows it to be searched more quickly. For example, the runtime can be improved
-to O(N\*log(M)) by sorting the OuterExtensions and using binary search to access
-it.
+* "encrypted_client_hello" appears in OuterExtensions.
+
+* OuterExtensions contains duplicate values.
+
+* The extensions in ClientHelloOuter corresponding to those in OuterExtensions
+  do not occur in the same order.
+
+If the cost to decode an EncodedClientHelloInner is disproportionately large in
+comparison to the input size, a malicious client could exploit this in a denial
+of service attack. Implementations are RECOMMENDED to use the following
+decoding procedure, which runs in linear time:
+
+1. Let `i` be zero and `n` be the number of extensions in ClientHelloOuter.
+
+1. For each extension type, `ext`, in OuterExtensions:
+
+   * If `ext` is "encrypted_client_hello", abort the connection with an
+     "illegal_parameter" alert and terminate this procedure.
+
+   * While the `i` is less than `n` and the `i`th extension of
+     ClientHelloOuter does not have type `ext`, increment `i`.
+
+   * If `i` is equal to `n`, abort the connection with an "illegal_parameter"
+     alert and terminate this procedure.
+
+   * Otherwise, the `i`th extension of ClientHelloOuter has type `ext`. Copy
+     it to the EncodedClientHelloInner and increment `i`.
+
+Implementations that retain the ClientHelloOuter extension list in serialized
+form can equivalently replace `i` with a byte offset pointing at the first
+extension. Instead of incrementing `i`, the offset is advanced to the next
+extension.
 
 ## Authenticating the ClientHelloOuter {#authenticating-outer}
 
@@ -541,7 +568,8 @@ it does a standard ClientHello, with the exception of the following rules:
 
 1. It MUST offer to negotiate TLS 1.3 or above.
 1. If it compressed any extensions in EncodedClientHelloInner, it MUST copy the
-   corresponding extensions from ClientHelloInner.
+   corresponding extensions from ClientHelloInner. The copied extensions
+   additionally MUST be in the same relative order as in ClientHelloInner.
 1. It MUST copy the legacy\_session\_id field from ClientHelloInner. This
    allows the server to echo the correct session ID for TLS 1.3's compatibility
    mode (see Appendix D.4 of {{RFC8446}}) when ECH is negotiated.
