@@ -988,7 +988,8 @@ output. Finally, the backend server overwrites the last 8 bytes of the
 ServerHello.random with the following string:
 
 ~~~
-   accept_confirmation = HKDF-Expand-Label(0,
+   accept_confirmation = HKDF-Expand-Label(
+      HKDF-Extract(0, ClientHelloInner.random),
       "ech accept confirmation",
       transcript_ech_conf,
       8)
@@ -1019,7 +1020,8 @@ overwrites the payload of the "encrypted_client_hello" extension with the
 following string:
 
 ~~~
-   accept_confirmation = HKDF-Expand-Label(0,
+   accept_confirmation = HKDF-Expand-Label(
+      HKDF-Extract(0, ClientHelloInner1.random),
       "hrr ech accept confirmation",
       transcript_hrr_ech_conf,
       8)
