@@ -1275,10 +1275,6 @@ if the deployment operates in Split Mode, the backend servers may not share
 cookie encryption keys. Backend servers may mitigate this by either handling
 key rotation with trial decryption, or coordinating to match key names.
 
-[[OPEN ISSUE: If we land #422, replace "These values are sent unencrypted in
-ECH" with "While ECH encrypts the cookie in the second ClientHelloInner, the
-backend server's HelloRetryRequest is unencrypted."]]
-
 ## Attacks Exploiting Acceptance Confirmation
 
 To signal acceptance, the backend server overwrites 8 bytes of its
