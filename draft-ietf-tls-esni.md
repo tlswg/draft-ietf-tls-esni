@@ -282,17 +282,22 @@ the server uses wildcard names or added new names to the anonymity set.
 public_name
 : The DNS name of the client-facing server, i.e., the entity trusted
 to update the ECH configuration. This is used to correct misconfigured clients,
-as described in {{handle-server-response}}. This value MUST NOT begin or end
-with an ASCII dot and MUST be parsable as a dot-separated sequence of LDH
-labels, as defined in {{!RFC5890, Section 2.3.1}}. Clients MUST ignore any
-`ECHConfig` structure whose public_name does not meet these criteria. Note
-that these criteria allow IPv4 addresses in dotted-decimal or other notations,
+as described in {{handle-server-response}}.
+
+: This value MUST NOT begin or end with an ASCII dot and MUST be parsable as a
+dot-separated sequence of LDH labels, as defined in
+{{!RFC5890, Section 2.3.1}}. Clients MUST ignore any `ECHConfig` structure
+whose public_name does not meet these criteria.
+
+: These criteria allow IPv4 addresses in dotted-decimal or other notations,
 e.g. {{?RFC3986, Section 7.4}} and {{WHATWG-IPV4}}. Clients SHOULD ignore the
-`ECHConfig` if it contains an encoded IPv4 address. (To determine if a
+`ECHConfig` if it contains an encoded IPv4 address. To determine if a
 public_name value is an IPv4 address, clients can invoke the IPv4 parser
 algorithm in {{WHATWG-IPV4}}. It returns a value when the input is an IPv4
-address.) See {{auth-public-name}} for how the client interprets and validates
-the public_name.
+address.
+
+: See {{auth-public-name}} for how the client interprets and validates the
+public_name.
 
 extensions
 : A list of extensions that the client must take into consideration when
