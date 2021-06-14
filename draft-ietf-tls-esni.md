@@ -1061,6 +1061,11 @@ As above, the payload of "encrypted_client_hello" is expected to be a
 `ClientECH` with `ClientECH.type` is `inner`. If this is not the case, the
 backend server MUST abort the handshake with an "illegal_parameter" alert.
 
+The backend server does not confirm ECH acceptance twice. In particular, if it
+confirmed acceptance in HelloRetryRequest as described in this section, it does
+not confirm acceptance in the subsequent ServerHello. Instead, it computes the
+ServerHello in the usual way.
+
 # Compatibility Issues
 
 Unlike most TLS extensions, placing the SNI value in an ECH extension is not
