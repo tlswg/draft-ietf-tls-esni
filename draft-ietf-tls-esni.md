@@ -1656,6 +1656,31 @@ important ideas and contributions.
 
 Issue and pull request numbers are listed with a leading octothorp.
 
+## Since draft-ietf-tls-esni-10
+
+- Make HRR confirmation and ECH acceptance explicit (#422, #423)
+
+- Relax computation of the acceptance signal (#420, #449)
+
+- Fix ClientHelloOuterAAD generation (#438, #442)
+
+- Allow empty enc in ClientECH (#444)
+
+- Authenticate ClientECH extensions position in ClientHelloOuterAAD (#410)
+
+- Allow clients to send a dummy PSK and early_data in ClientHelloOuter when
+  applicable (#414, #415)
+
+- Compress ECHConfigContents (#409)
+
+- Validate ECHConfig.contents.public_name (#413, #456)
+
+- Validate ClientHelloInner contents (#411)
+
+- Note split-mode challenges for HRR (#418)
+
+- Editorial improvements (#428, #432, #439, #445, #458, #455)
+
 ## Since draft-ietf-tls-esni-09
 
 - Finalize HPKE dependency (#390)
