@@ -301,6 +301,8 @@ extensions
 generating a ClientHello message. These are described below
 ({{config-extensions}}).
 
+[[OPEN ISSUE: determine if clients should enforce a 63-octet label limit for
+public_name]]
 [[OPEN ISSUE: fix reference to WHATWG-IPV4]]
 
 The `HpkeKeyConfig` structure contains the following fields:
