@@ -284,11 +284,11 @@ public_name
 to update the ECH configuration. This is used to correct misconfigured clients,
 as described in {{handle-server-response}}.
 
-: This value MUST NOT begin or end with an ASCII dot and MUST be parsable as a
+: Clients MUST ignore any `ECHConfig` structure
+whose public_name does is not parsable as a
 dot-separated sequence of LDH labels, as defined in
-{{!RFC5890, Section 2.3.1}}. Clients MUST ignore any `ECHConfig` structure
-whose public_name does not meet these criteria.
-
+{{!RFC5890, Section 2.3.1}} or which
+begins or end with an ASCII dot.
 : These criteria allow IPv4 addresses in dotted-decimal or other notations,
 e.g. {{?RFC3986, Section 7.4}} and {{WHATWG-IPV4}}. Clients SHOULD ignore the
 `ECHConfig` if it contains an encoded IPv4 address. To determine if a
