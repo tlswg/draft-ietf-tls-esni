@@ -1662,7 +1662,7 @@ Issue and pull request numbers are listed with a leading octothorp.
 
 - Relax computation of the acceptance signal (#420, #449)
 
-- Fix ClientHelloOuterAAD generation (#438, #442)
+- Simplify ClientHelloOuterAAD generation (#438, #442)
 
 - Allow empty enc in ClientECH (#444)
 
