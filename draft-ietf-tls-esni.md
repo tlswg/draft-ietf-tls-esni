@@ -431,13 +431,13 @@ may use the "ech_outer_extensions" extension.
 OuterExtensions consists of one or more ExtensionType values, each of which
 reference an extension in ClientHelloOuter. The extensions in OuterExtensions
 MUST appear in ClientHelloOuter in the same relative order, however, there is
-no requirement that they be continguous. For examples, OuterExtensions may
+no requirement that they be continguous. For example, OuterExtensions may
 contain extensions A, B, C, while ClientHelloOuter contains extensions A, D, B,
 C, E, F.
 
 The "ech_outer_extensions" extension is only used for compressing the
-ClientHelloInner. It MUST NOT be sent in either ClientHelloOuter or
-ClientHelloInner.
+ClientHelloInner. It can only be included in EncodedClientHelloInner, and MUST
+NOT be sent in either ClientHelloOuter or ClientHelloInner.
 
 When sending ClientHello, the client first computes ClientHelloInner, including
 any PSK binders. It then computes a new value, the EncodedClientHelloInner, by
@@ -1661,17 +1661,14 @@ The following procedure processes the "ech_outer_extensions" extension (see
    * If E is "encrypted_client_hello", abort the connection with an
      "illegal_parameter" alert and terminate this procedure.
 
-   * While the I is less than N and the Ith extension of
+   * While I is less than N and the I-th extension of
      ClientHelloOuter does not have type E, increment I.
 
    * If I is equal to N, abort the connection with an "illegal_parameter"
      alert and terminate this procedure.
 
-   * Otherwise, the Ith extension of ClientHelloOuter has type E. Copy
+   * Otherwise, the I-th extension of ClientHelloOuter has type E. Copy
      it to the EncodedClientHelloInner and increment I.
-
-Implementations that retain the ClientHelloOuter extension list in another
-iterable form can equivalently replace I with an iterator.
 
 # Acknowledgements
 
