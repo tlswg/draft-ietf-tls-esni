@@ -42,6 +42,12 @@ normative:
   RFC2119:
   RFC7918:
 
+informative:
+  WHATWG-IPV4:
+   title: "URL Living Standard - IPv4 Parser"
+   target: https://url.spec.whatwg.org/#concept-ipv4-parser
+   date: May 2021
+
 --- abstract
 
 This document describes a mechanism in Transport Layer Security (TLS) for
@@ -274,24 +280,30 @@ constrain server name lengths. Names may exceed this length if, e.g.,
 the server uses wildcard names or added new names to the anonymity set.
 
 public_name
-: The non-empty name of the client-facing server, i.e., the entity trusted to
-update the ECH configuration. This is used to correct misconfigured clients, as
-described in {{handle-server-response}}. This value MUST NOT begin or end with
-an ASCII dot and MUST be parsable as a dot-separated sequence of LDH labels, as
-defined in {{!RFC5890, Section 2.3.1}}. Clients MUST ignore any `ECHConfig`
-structure whose `public_name` does not meet these criteria. Note that these
-criteria are incomplete; they incidentally rule out textual representations of
-IPv6 addresses (see {{!RFC3986, Section 3.2.2}}), but do not exclude IPv4
-addresses in standard dotted-decimal or other non-standard notations such as
-octal and hexadecimal (see {{RFC3986, Section 7.4}}). If `public_name` contains
-a literal IPv4 or IPv6 address, the client SHOULD ignore the `ECHConfig` to
-avoid sending a non-compliant "server_name" extension on the ClientHelloOuter
-(see {{!RFC6066, Section 3}}).
+: The DNS name of the client-facing server, i.e., the entity trusted
+to update the ECH configuration. This is used to correct misconfigured clients,
+as described in {{handle-server-response}}.
+
+: Clients MUST ignore any `ECHConfig` structure whose public_name is not
+parsable as a dot-separated sequence of LDH labels, as defined in
+{{!RFC5890, Section 2.3.1}} or which begins or end with an ASCII dot.
+
+: Clients SHOULD ignore the `ECHConfig` if it contains an encoded IPv4 address.
+To determine if a public_name value is an IPv4 address, clients can invoke the
+IPv4 parser algorithm in {{WHATWG-IPV4}}. It returns a value when the input is
+an IPv4 address.
+
+: See {{auth-public-name}} for how the client interprets and validates the
+public_name.
 
 extensions
 : A list of extensions that the client must take into consideration when
 generating a ClientHello message. These are described below
 ({{config-extensions}}).
+
+[[OPEN ISSUE: determine if clients should enforce a 63-octet label limit for
+public_name]]
+[[OPEN ISSUE: fix reference to WHATWG-IPV4]]
 
 The `HpkeKeyConfig` structure contains the following fields:
 
@@ -573,6 +585,9 @@ it does a standard ClientHello, with the exception of the following rules:
 1. It MUST include an "encrypted_client_hello" extension with a payload
    constructed as described in {{encrypting-clienthello}}.
 
+Note that these rules may change in the presence of an application profile
+specifying otherwise.
+
 [[OPEN ISSUE: We currently require HRR-sensitive parameters to match in
 ClientHelloInner and ClientHelloOuter in order to simplify client-side
 logic in the event of HRR. See
@@ -774,6 +789,13 @@ authenticate the connection with the public name, as follows:
 
 - If the server requests a client certificate, the client MUST respond with an
   empty Certificate message, denoting no client certificate.
+
+In verifying the client-facing server certificate, the client MUST interpret
+the public name as a DNS-based reference identity. Clients that incorporate DNS
+names and IP addresses into the same syntax (e.g. {{?RFC3986, Section 7.4}} and
+{{WHATWG-IPV4}}) MUST reject names that would be interpreted as IPv4 addresses.
+Clients that enforce this by checking and rejecting encoded IPv4 addresses
+in ECHConfig.contents.public_name do not need to repeat the check at this layer.
 
 Note that authenticating a connection for the public name does not authenticate
 it for the origin. The TLS implementation MUST NOT report such connections as
