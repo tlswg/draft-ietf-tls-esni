@@ -438,15 +438,15 @@ which is the following structure:
 ~~~
     struct {
         ClientHello client_hello;
-        opaque padding[N];
+        uint8 zeros[length_of_padding];
     } EncodedClientHelloInner;
 ~~~
 
 The `client_hello` field is computed by first making a copy of ClientHelloInner
 and setting the `legacy_session_id` field to the empty string. Note this field
 uses the ClientHello structure, defined in {{Section 4.1.2 of RFC8446}} which
-does not include the Handshake structure's four byte header. The `padding`
-field MUST be all zeroes.
+does not include the Handshake structure's four byte header. The `zeros` field
+MUST be all zeroes.
 
 The client then MAY substitute extensions which it knows will be duplicated in
 ClientHelloOuter. To do so, the client removes and replaces extensions from
@@ -455,9 +455,9 @@ extensions MUST be ordered consecutively in ClientHelloInner. The list of outer
 extensions, OuterExtensions, includes those which were removed from
 EncodedClientHelloInner, in the order in which they were removed.
 
-Finally, the client determines the number of padding bytes, N, and sets
-the `padding` field to a byte string whose contents are N zeros.
-{{padding}} describes a recommended padding scheme.
+Finally, the client determines the number of padding bytes, N, and sets the
+`zeros` field to a byte string whose contents are N zeros. {{padding}}
+describes a recommended padding scheme.
 
 The client-facing server computes ClientHelloInner by reversing this process.
 First it parses EncodedClientHelloInner, interpreting all bytes after
