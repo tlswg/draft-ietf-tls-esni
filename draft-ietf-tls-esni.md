@@ -588,15 +588,6 @@ it does a standard ClientHello, with the exception of the following rules:
 Note that these rules may change in the presence of an application profile
 specifying otherwise.
 
-[[OPEN ISSUE: We currently require HRR-sensitive parameters to match in
-ClientHelloInner and ClientHelloOuter in order to simplify client-side
-logic in the event of HRR. See
-https://github.com/tlswg/draft-ietf-tls-esni/pull/316
-for more information. We might also solve this by including an explicit
-signal in HRR noting ECH acceptance. We need to decide if inner/outer
-variance is important for HRR-sensitive parameters, and if so, how to
-best deal with it without complicated client logic.]]
-
 The client might duplicate non-sensitive extensions in both messages. However,
 implementations need to take care to ensure that sensitive extensions are not
 offered in the ClientHelloOuter. See {{outer-clienthello}} for additional
@@ -1050,7 +1041,7 @@ overwrites the payload of the "encrypted_client_hello" extension with the
 following string:
 
 ~~~
-   accept_confirmation = HKDF-Expand-Label(
+   hrr_accept_confirmation = HKDF-Expand-Label(
       HKDF-Extract(0, ClientHelloInner1.random),
       "hrr ech accept confirmation",
       transcript_hrr_ech_conf,
