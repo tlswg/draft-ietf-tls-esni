@@ -241,7 +241,7 @@ The ECH configuration is defined by the following `ECHConfig` structure.
         uint16 version;
         uint16 length;
         select (ECHConfig.version) {
-          case 0xfe0a: ECHConfigContents contents;
+          case 0xfe0b: ECHConfigContents contents;
         }
     } ECHConfig;
 ~~~~
