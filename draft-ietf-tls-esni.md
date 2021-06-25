@@ -479,8 +479,6 @@ are true:
 
 * "encrypted_client_hello" appears in OuterExtensions.
 
-* OuterExtensions contains duplicate values.
-
 * The extensions in ClientHelloOuter corresponding to those in OuterExtensions
   do not occur in the same order.
 
