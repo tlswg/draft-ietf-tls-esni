@@ -1721,6 +1721,8 @@ Issue and pull request numbers are listed with a leading octothorp.
 
 - Move ClientHello padding to the encoding (#443)
 
+- Align codepoints (#464)
+
 - Relax OuterExtensions checks for alignment with RFC8446 (#467)
 
 - Editorial improvements (#468, #465, #462, #461)
