@@ -394,7 +394,7 @@ provided in the corresponding `ECHConfigContents.cipher_suites` list.
 
 enc
 : The HPKE encapsulated key, used by servers to decrypt the corresponding
-`payload` field. This field is empty in ClientHelloOuters sent in response to
+`payload` field. This field is empty in a ClientHelloOuter sent in response to
 HelloRetryRequest.
 
 payload
@@ -630,8 +630,8 @@ constructing a ClientHello with all other extensions determined as in
 
 Next, the client determines the length L of encrypting EncodedClientHelloInner
 with the selected HPKE AEAD. This is typically the sum of the plaintext length
-and the AEAD tag length. The client fills in a "encrypted_client_hello"
-extension with the outer variant of ClientECH with following values:
+and the AEAD tag length. The client fills in an "encrypted_client_hello"
+extension with the outer variant of ClientECH with the following values:
 
 - `config_id`, the identifier corresponding to the chosen ECHConfig structure;
 - `cipher_suite`, the client's chosen cipher suite;
@@ -676,10 +676,12 @@ structure (see {{RFC8446, Section 4.2.11}}) as follows. For each PSK identity
 advertised in the ClientHelloInner, the client generates a random PSK identity
 with the same length. It also generates a random, 32-bit, unsigned integer to
 use as the `obfuscated_ticket_age`. Likewise, for each inner PSK binder, the
-client generates random string of the same length.
+client generates a random string of the same length.
 
-If the server replies with a "pre_shared_key" extension in its ServerHello,
-then the client MUST abort the handshake with an "illegal_parameter" alert.
+Per the rules of {{real-ech}}, the server is not permitted to resume a
+connection in the outer handshake. If ECH is rejected and the client-facing
+server replies with a "pre_shared_key" extension in its ServerHello, then the
+client MUST abort the handshake with an "illegal_parameter" alert.
 
 ### Recommended Padding Scheme {#padding}
 
@@ -868,10 +870,6 @@ If the server sends an "encrypted_client_hello" extension, the client MUST check
 the extension syntactically and abort the connection with a "decode_error" alert
 if it is invalid. It otherwise ignores the extension and MUST NOT use the retry
 keys.
-
-[[OPEN ISSUE: if the client sends a GREASE "encrypted_client_hello" extension,
-should it also send a GREASE "pre_shared_key" extension? If not, GREASE+ticket
-is a trivial distinguisher. See issue #384.]]
 
 Offering a GREASE extension is not considered offering an encrypted ClientHello
 for purposes of requirements in {{client-behavior}}. In particular, the client
