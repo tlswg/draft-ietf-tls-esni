@@ -878,7 +878,7 @@ MAY offer to resume sessions established without ECH.
 # Server Behavior {#server-behavior}
 
 Servers that support ECH play one of two roles, depending on the payload of the
-"encrypted_client_hello" extension in the ClientHello:
+"encrypted_client_hello" extension in the initial ClientHello:
 
 * If `ClientECH.type` is `outer`, then the server acts as a client-facing
   server and proceeds as described in {{client-facing-server}} to extract a
@@ -1068,13 +1068,8 @@ following string:
       8)
 ~~~
 
-As above, the payload of "encrypted_client_hello" is expected to be a
-`ClientECH` with `ClientECH.type` is `inner`. If this is not the case, the
-backend server MUST abort the handshake with an "illegal_parameter" alert.
-
-Note that, in case of HelloRetryRequest, the backend server confirms ECH
-acceptance twice: first In HelloRetryRequest, as described here; and then in the
-subsequent ServerHello, as described above.
+In the subsequent ServerHello message, the backend server sends the
+accept_confirmation value as described in {{backend-server}}.
 
 # Compatibility Issues
 
