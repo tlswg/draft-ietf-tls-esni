@@ -665,7 +665,7 @@ with the same length. It also generates a random, 32-bit, unsigned integer to
 use as the `obfuscated_ticket_age`. Likewise, for each inner PSK binder, the
 client generates a random string of the same length.
 
-Per the rules of {{real-ech}}, the client is not permitted to resume a
+Per the rules of {{real-ech}}, the server is not permitted to resume a
 connection in the outer handshake. If ECH is rejected and the client-facing
 server replies with a "pre_shared_key" extension in its ServerHello, then the
 client MUST abort the handshake with an "illegal_parameter" alert.
