@@ -1717,6 +1717,14 @@ important ideas and contributions.
 
 Issue and pull request numbers are listed with a leading octothorp.
 
+## Since draft-ietf-tls-esni-11
+
+- Move ClientHello padding to the encoding (#443)
+
+- Relax OuterExtensions checks for alignment with RFC8446 (#467)
+
+- Editorial improvements (#468, #465, #462, #461)
+
 ## Since draft-ietf-tls-esni-10
 
 - Make HRR confirmation and ECH acceptance explicit (#422, #423)
