@@ -1725,6 +1725,8 @@ Issue and pull request numbers are listed with a leading octothorp.
 
 - Relax OuterExtensions checks for alignment with RFC8446 (#467)
 
+- Clarify HRR acceptance and rejection logic (#470)
+
 - Editorial improvements (#468, #465, #462, #461)
 
 ## Since draft-ietf-tls-esni-10
