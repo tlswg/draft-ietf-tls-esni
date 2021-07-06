@@ -1078,7 +1078,7 @@ interoperable with existing servers, which expect the value in the existing
 plaintext extension. Thus server operators SHOULD ensure servers understand a
 given set of ECH keys before advertising them. Additionally, servers SHOULD
 retain support for any previously-advertised keys for the duration of their
-validity
+validity.
 
 However, in more complex deployment scenarios, this may be difficult to fully
 guarantee. Thus this protocol was designed to be robust in case of
