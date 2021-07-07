@@ -839,7 +839,8 @@ When the server sends a HelloRetryRequest, the client checks for the presence of
 an "encrypted_client_hello" extension. If none is found, then the client
 presumes rejection and handles the HelloRetryRequest using ClientHelloOuter.
 (Note that the client-facing server does not send this extension in its
-HelloRetryRequest.) Otherwise it proceeds as follows.
+HelloRetryRequest. [[NOTE: This may change, depending on the outcome of
+issue#450.]]) Otherwise it proceeds as follows.
 
 If the extension's payload has a length other than 8, then the client aborts the
 handshake with an "decode_error" alert. If the payload length is equal to
@@ -929,10 +930,10 @@ determined by one of the two following methods:
 
 Some uses of ECH, such as local discovery mode, may randomize the
 ECHClientHello.config_id since it can be used as a tracking vector. In such
-cases, the second method should be used for matching ECHClientHello to known
-ECHConfig. See {{optional-configs}}. Unless specified by the application using
-(D)TLS or externally configured on both sides, implementations MUST use the
-first method.
+cases, the second method should be used for matching the ECHClientHello to a
+known ECHConfig. See {{optional-configs}}. Unless specified by the application
+using (D)TLS or externally configured on both sides, implementations MUST use
+the first method.
 
 The server then iterates over the candidate ECHConfig values, attempting to
 decrypt the "encrypted_client_hello" extension:
