@@ -69,41 +69,24 @@ domain for a given connection, is perhaps the most sensitive, unencrypted
 information in TLS 1.3.
 
 The target domain may also be visible through other channels, such as plaintext
-client DNS queries, visible server IP addresses (assuming the server does not
-use domain-based virtual hosting), or other indirect mechanisms such as traffic
-analysis. DoH {{?RFC8484}} and DPRIVE {{?RFC7858}}
-{{?RFC8094}} provide mechanisms for clients to conceal DNS lookups from network
-inspection, and many TLS servers host multiple domains on the same IP address.
-In such environments, the SNI remains the primary explicit signal used to
-determine the server's identity.
-
-The TLS Working Group has studied the problem of protecting the SNI, but has
-been unable to develop a completely generic solution.
-{{?RFC8744}} provides a description of the problem space and
-some of the proposed techniques. One of the more difficult problems is "Do not
-stick out" ({{?RFC8744, Section 3.4}}): if only sensitive or
-private services use SNI encryption, then SNI encryption is a signal that a
-client is going to such a service. For this reason, much recent work has focused
-on concealing the fact that the SNI is being protected. Unfortunately, the
-result often has undesirable performance consequences, incomplete coverage, or
-both.
-
-The protocol specified by this document takes a different approach. It assumes
-that private origins will co-locate with or hide behind a provider (reverse
-proxy, application server, etc.) that protects sensitive ClientHello parameters,
-including the SNI, for all of the domains it hosts. These co-located servers
-form an anonymity set wherein all elements have a consistent configuration,
-e.g., the set of supported application protocols, ciphersuites, TLS versions,
-and so on. Usage of this mechanism reveals that a client is connecting to a
-particular service provider, but does not reveal which server from the anonymity
-set terminates the connection. Thus, it leaks no more than what is already
-visible from the server IP address.
+client DNS queries or visible server IP addresses. However, DoH {{?RFC8484}}
+and DPRIVE {{?RFC7858}} {{?RFC8094}} provide mechanisms for clients to conceal
+DNS lookups from network inspection, and many TLS servers host multiple domains
+on the same IP address. Private origins may also be deployed behind a common
+provider, such as a reverse proxy. In such environments, the SNI remains the
+primary explicit signal used to determine the server's identity.
 
 This document specifies a new TLS extension, called Encrypted Client Hello
-(ECH), that allows clients to encrypt their ClientHello to a supporting server.
+(ECH), that allows clients to encrypt their ClientHello to such a deployment.
 This protects the SNI and other potentially sensitive fields, such as the ALPN
-list {{?RFC7301}}. This extension is only supported with (D)TLS 1.3 {{!RFC8446}}
-and newer versions of the protocol.
+list {{?RFC7301}}. Co-located servers with consistent externally visible TLS
+configuration (e.g. versions and cipher suites) form an anonymity set. Usage of
+this mechanism reveals that a client is connecting to a particular service
+provider, but does not reveal which server from the anonymity set terminates
+the connection.
+
+ECH is only supported with (D)TLS 1.3 {{!RFC8446}} and newer versions of the
+protocol.
 
 # Conventions and Definitions
 
