@@ -146,44 +146,34 @@ and backend servers are physically separated.
 
 ## Encrypted ClientHello (ECH)
 
-ECH allows the client to encrypt sensitive ClientHello extensions, e.g., SNI,
-ALPN, etc., under the public key of the client-facing server. This requires the
-client-facing server to publish the public key and metadata it uses for ECH for
-all the domains for which it serves directly or indirectly (via Split Mode).
-This document defines the format of the ECH encryption public key and metadata,
-referred to as an ECH configuration, and delegates DNS publication details to
-{{!HTTPS-RR=I-D.ietf-dnsop-svcb-https}}, though other delivery mechanisms are
-possible. In particular, if some of the clients of a private server are
-applications rather than Web browsers, those applications might have the public
-key and metadata preconfigured.
+A client-facing server enables ECH by publishing an ECH configuration, which
+is an encryption public key and associated metadata. The server must publish
+this for all the domains it serves via Shared or Split Mode. This document
+defines the ECH configuration's format, but delegates DNS publication details
+to {{!HTTPS-RR=I-D.ietf-dnsop-svcb-https}}. Other delivery mechanisms are also
+possible. For example, the client may have the ECH configuration preconfigured.
 
-When a client wants to establish a TLS session with the backend server, it
-constructs its ClientHello as indicated in {{real-ech}}. We will refer to
-this as the ClientHelloInner message. The client encrypts this message using
-the public key of the ECH configuration. It then constructs a new ClientHello,
-the ClientHelloOuter, with innocuous values for sensitive extensions, e.g., SNI,
-ALPN, etc., and with an "encrypted_client_hello" extension, which this document
-defines ({{encrypted-client-hello}}). The extension's payload carries the
-encrypted ClientHelloInner and specifies the ECH configuration used for
-encryption. Finally, it sends ClientHelloOuter to the server.
+When a client wants to establish a TLS session with some backend server, it
+constructs a private ClientHello, referred to as the ClientHelloInner.
+The client then constructs a public ClientHello, referred to as the
+ClientHelloOuter. The ClientHelloOuter contains innocuous values for
+sensitive extensions and an "encrypted_client_hello" extension
+({{encrypted-client-hello}}), which carries the encrypted ClientHelloInner.
+Finally, the client sends ClientHelloOuter to the server.
 
-Upon receiving the ClientHelloOuter, a TLS server takes one of the following
-actions:
+The server takes one of the following actions:
 
-1. If it does not support ECH, it ignores the "encrypted_client_hello" extension
-   and proceeds with the handshake as usual, per {{RFC8446, Section 4.1.2}}.
-1. If it is a client-facing server for the ECH protocol, but cannot decrypt the
-   extension, then it terminates the handshake using the ClientHelloOuter. This
-   is referred to as "ECH rejection". When ECH is rejected, the client-facing
-   server sends an acceptable ECH configuration in its EncryptedExtensions
-   message.
-1. If it supports ECH and decrypts the extension, it forwards the
-   ClientHelloInner to the backend server, who terminates the connection. This
-   is referred to as "ECH acceptance".
+1. If it does not support ECH or cannot decrypt the extension, it completes
+   the handshake with ClientHelloOuter. This is referred to as rejecting ECH.
+1. If it successfully decrypts the extension, it forwards the ClientHelloInner
+   to the backend server, which completes the handshake. This is referred to
+   as accepting ECH.
 
 Upon receiving the server's response, the client determines whether or not ECH
-was accepted and proceeds with the handshake accordingly. (See
-{{client-behavior}} for details.)
+was accepted ({{handle-server-response}}) and proceeds with the handshake
+accordingly. When ECH is rejected, the resulting connection is not usable by
+the client for application data. Instead, ECH rejection allows the client to
+retry with up-to-date configuration ({{rejected-ech}}).
 
 The primary goal of ECH is to ensure that connections to servers in the same
 anonymity set are indistinguishable from one another. Moreover, it should
@@ -737,7 +727,7 @@ it presumes acceptance. Otherwise, the client presumes rejection.
 If the server used ClientHelloInner, the client proceeds with the connection as
 usual, authenticating the connection for the true server name.
 
-#### Rejected ECH
+#### Rejected ECH {#rejected-ech}
 
 If the server used ClientHelloOuter, the client proceeds with the handshake,
 authenticating for ECHConfig.contents.public_name as described in
@@ -874,7 +864,7 @@ if it is invalid. It otherwise ignores the extension and MUST NOT use the retry
 keys.
 
 Offering a GREASE extension is not considered offering an encrypted ClientHello
-for purposes of requirements in {{client-behavior}}. In particular, the client
+for purposes of requirements in {{real-ech}}. In particular, the client
 MAY offer to resume sessions established without ECH.
 
 # Server Behavior {#server-behavior}
