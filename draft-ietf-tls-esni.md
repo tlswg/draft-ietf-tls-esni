@@ -80,7 +80,7 @@ This document specifies a new TLS extension, called Encrypted Client Hello
 (ECH), that allows clients to encrypt their ClientHello to such a deployment.
 This protects the SNI and other potentially sensitive fields, such as the ALPN
 list {{?RFC7301}}. Co-located servers with consistent externally visible TLS
-configuration (e.g. versions and cipher suites) form an anonymity set. Usage of
+configurations, including supported versions and cipher suites, form an anonymity set. Usage of
 this mechanism reveals that a client is connecting to a particular service
 provider, but does not reveal which server from the anonymity set terminates
 the connection.
