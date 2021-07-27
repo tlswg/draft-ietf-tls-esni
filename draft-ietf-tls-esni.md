@@ -155,7 +155,7 @@ mechanisms are also possible. For example, the client may have the ECH
 configuration preconfigured.
 
 When a client wants to establish a TLS session with some backend server, it
-constructs a secret ClientHello, referred to as the ClientHelloInner.
+constructs a private ClientHello, referred to as the ClientHelloInner.
 The client then constructs a public ClientHello, referred to as the
 ClientHelloOuter. The ClientHelloOuter contains innocuous values for
 sensitive extensions and an "encrypted_client_hello" extension
@@ -172,9 +172,9 @@ The server takes one of the following actions:
 
 Upon receiving the server's response, the client determines whether or not ECH
 was accepted ({{handle-server-response}}) and proceeds with the handshake
-accordingly. When ECH is rejected, the connection is not directly usable for
-the client, but allows the client to retry with up-to-date configuration
-({{rejected-ech}}).
+accordingly. When ECH is rejected, the resulting connection is not usable by
+the client for application data. Instead, ECH rejection allows the client to
+retry with up-to-date configuration ({{rejected-ech}}).
 
 The primary goal of ECH is to ensure that connections to servers in the same
 anonymity set are indistinguishable from one another. Moreover, it should
