@@ -148,11 +148,10 @@ and backend servers are physically separated.
 
 A client-facing server enables ECH by publishing an ECH configuration, which
 is an encryption public key and associated metadata. The server must publish
-this for all the domains it serves directly or indirectly (via Split Mode).
-This document defines the ECH configuration's format, but delegates DNS
-publication details to {{!HTTPS-RR=I-D.ietf-dnsop-svcb-https}}. Other delivery
-mechanisms are also possible. For example, the client may have the ECH
-configuration preconfigured.
+this for all the domains it serves via Shared or Split Mode. This document
+defines the ECH configuration's format, but delegates DNS publication details
+to {{!HTTPS-RR=I-D.ietf-dnsop-svcb-https}}. Other delivery mechanisms are also
+possible. For example, the client may have the ECH configuration preconfigured.
 
 When a client wants to establish a TLS session with some backend server, it
 constructs a private ClientHello, referred to as the ClientHelloInner.
