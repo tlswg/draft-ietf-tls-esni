@@ -255,7 +255,7 @@ the server uses wildcard names or added new names to the anonymity set.
 public_name
 : The DNS name of the client-facing server, i.e., the entity trusted
 to update the ECH configuration. This is used to correct misconfigured clients,
-as described in {{handle-server-response}}.
+as described in {{rejected-ech}}.
 
 : Clients MUST ignore any `ECHConfig` structure whose public_name is not
 parsable as a dot-separated sequence of LDH labels, as defined in
@@ -802,9 +802,8 @@ Note that authenticating a connection for the public name does not authenticate
 it for the origin. The TLS implementation MUST NOT report such connections as
 successful to the application. It additionally MUST ignore all session tickets
 and session IDs presented by the server. These connections are only used to
-trigger retries, as described in {{handle-server-response}}. This may be
-implemented, for instance, by reporting a failed connection with a dedicated
-error code.
+trigger retries, as described in {{rejected-ech}}. This may be implemented, for
+instance, by reporting a failed connection with a dedicated error code.
 
 ### Handling HelloRetryRequest {#client-hrr}
 
@@ -1091,7 +1090,7 @@ server will respond with ech_retry_requested. If the server does not understand
 the "encrypted_client_hello" extension at all, it will ignore it as required by
 {{Section 4.1.2 of RFC8446}}. Provided the server can present a certificate
 valid for the public name, the client can safely retry with updated settings,
-as described in {{handle-server-response}}.
+as described in {{rejected-ech}}.
 
 Unless ECH is disabled as a result of successfully establishing a connection to
 the public name, the client MUST NOT fall back to using unencrypted
@@ -1111,8 +1110,8 @@ the "encrypted_client_hello" extension.
 
 Depending on whether the client is configured to accept the proxy's certificate
 as authoritative for the public name, this may trigger the retry logic described
-in {{handle-server-response}} or result in a connection failure. A proxy which
-is not authoritative for the public name cannot forge a signal to disable ECH.
+in {{rejected-ech}} or result in a connection failure. A proxy which is not
+authoritative for the public name cannot forge a signal to disable ECH.
 
 # Compliance Requirements {#compliance}
 
