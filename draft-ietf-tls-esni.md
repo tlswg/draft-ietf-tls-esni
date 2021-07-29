@@ -998,6 +998,9 @@ If the client-facing server rejected ECH, or if the first ClientHello did not
 include an "encrypted_client_hello" extension, the client-facing server
 proceeds with the connection as usual. The server does not decrypt the
 second ClientHello's ECHClientHello.payload value, if there is one.
+If the client-facing server rejected ECH and the first ClientHello included an
+"encrypted_client_hello" extension, the client-facing server MAY include
+the "encrypted_client_hello" extension with a payload of 8 random bytes.
 
 Note that a client-facing server that forwards the first ClientHello cannot
 include its own "cookie" extension if the backend server sends a
