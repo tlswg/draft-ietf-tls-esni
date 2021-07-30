@@ -600,7 +600,7 @@ offered in the ClientHelloOuter. See {{outer-clienthello}} for additional
 guidance.
 
 Finally, the client encrypts the EncodedClientHelloInner with the above values,
-as described in {{encrypting-clienthello}}, to consctruct a ClientHelloOuter. It
+as described in {{encrypting-clienthello}}, to construct a ClientHelloOuter. It
 sends this to the server, and processes the response as described in
 {{determining-ech-acceptance}}.
 
@@ -770,18 +770,13 @@ ClientHello message as follows:
    uses a fresh nonce for each AEAD operation. Reusing the HPKE context avoids
    an attack described in {{flow-hrr-hijack}}.
 
-Note this procedure does not apply {{Section 4.1.4 of RFC8446}} to the
-ClientHelloOuter, only ClientHelloInner. The server generates HelloRetryRequest
-from ClientHelloInner. If the ClientHelloOuter and ClientHelloInner expressed
-different preferences, applying the standard procedure to ClientHelloOuter may
-not succeed.
 
 The client then sends the second ClientHelloOuter to the server. However, as
-above, it uses the second ClientHelloInner for preferences and the transcript
-hash. Additionally, it checks the resulting ServerHello for ECH acceptance as in
-{{determining-ech-acceptance}}. If the ServerHello does not also indicate ECH
-acceptance, the client MUST terminate the connection with an "illegal_parameter"
-alert.
+above, it uses the second ClientHelloInner for preferences, and both the
+ClientHelloInner messages for the transcript hash. Additionally, it checks the
+resulting ServerHello for ECH acceptance as in {{determining-ech-acceptance}}.
+If the ServerHello does not also indicate ECH acceptance, the client MUST
+terminate the connection with an "illegal_parameter" alert.
 
 ### Handshaking with ClientHelloOuter {#rejected-ech}
 
