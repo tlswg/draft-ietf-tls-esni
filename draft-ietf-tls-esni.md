@@ -878,16 +878,15 @@ structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
 
 If sending a second ClientHello in response to a HelloRetryRequest, the
 client copies the entire "encrypted_client_hello" extension from the first
-ClientHello.
+ClientHello. The identical value will reveal to an observer that the value of
+"encrypted_client_hello" was fake, but this only occurs if there is a
+HelloRetryRequest. 
 
 If the server sends an "encrypted_client_hello" extension in either
 HelloRetryRequest or EncryptedExtensions, the client MUST check the extension
 syntactically and abort the connection with a "decode_error" alert if it is
 invalid. It otherwise ignores the extension. It MUST NOT save the "retry_config"
 value in EncryptedExtensions.
-
-[[OPEN ISSUE: Depending on what we do for issue#450, it may be appropriate to
-change the client behavior if the HRR extension is present.]]
 
 Offering a GREASE extension is not considered offering an encrypted ClientHello
 for purposes of requirements in {{real-ech}}. In particular, the client
