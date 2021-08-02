@@ -880,7 +880,7 @@ If sending a second ClientHello in response to a HelloRetryRequest, the
 client copies the entire "encrypted_client_hello" extension from the first
 ClientHello. The identical value will reveal to an observer that the value of
 "encrypted_client_hello" was fake, but this only occurs if there is a
-HelloRetryRequest. 
+HelloRetryRequest.
 
 If the server sends an "encrypted_client_hello" extension in either
 HelloRetryRequest or EncryptedExtensions, the client MUST check the extension
