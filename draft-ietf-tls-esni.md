@@ -182,7 +182,7 @@ See {{goals}} for more details about the ECH security and privacy goals.
 
 # Encrypted ClientHello Configuration {#ech-configuration}
 
-ECH uses draft-08 of HPKE for public key encryption {{!I-D.irtf-cfrg-hpke}}.
+ECH uses draft-11 of HPKE for public key encryption {{!I-D.irtf-cfrg-hpke}}.
 The ECH configuration is defined by the following `ECHConfig` structure.
 
 ~~~~
