@@ -1779,6 +1779,24 @@ important ideas and contributions.
 
 Issue and pull request numbers are listed with a leading octothorp.
 
+## Since draft-ietf-tls-esni-12
+
+- Abort on duplicate OuterExtensions (#514)
+
+- Improve EncodedClientHelloInner definition (#503)
+
+- Clarify retry configuration usage (#498)
+
+- Expand on config_id generation implications (#491)
+
+- Server-side acceptance signal extension GREASE (#481)
+
+- Refactor overview, client implementation, and middlebox
+  sections (#480, #478, #475, #508)
+
+- Editorial iprovements (#485, #488, #490, #495, #496, #499, #500,
+  #501, #504, #505, #507, #510, #511)
+
 ## Since draft-ietf-tls-esni-11
 
 - Move ClientHello padding to the encoding (#443)
