@@ -948,17 +948,17 @@ messages between the client and backend server unmodified.
 
 Otherwise, if all candidate ECHConfig values fail to decrypt the extension, the
 client-facing server MUST ignore the extension and proceed with the connection
-using ClientHelloOuter. If this does not result in sending a HelloRetryRequest,
-the connection proceeds as usual, except the server MUST include the
-"encrypted_client_hello" extension in its EncryptedExtensions with the
-"retry_configs" field set to one or more ECHConfig structures with up-to-date
-keys. Servers MAY supply multiple ECHConfig values of different versions. This
-allows a server to support multiple versions at once. Otherwise, if this results
-in sending a HelloRetryRequest, and the corresponding ClientHello included an
-"encrypted_client_hello" extension, the client-facing server MAY include the
-"encrypted_client_hello" extension in the HelloRetryRequest with a payload of
-8 random bytes; see {{dont-stick-out}} for details. Afterwards, the
-client-facing server proceeds as described in {{client-facing-server-hrr}}.
+using ClientHelloOuter, with the following modifications:
+
+* If sending a HelloRetryRequest, the server MAY include an
+  "encrypted_client_hello" extension with a payload of 8 random bytes; see
+  {{dont-stick-out}} for details.
+
+* If the server is configured with any ECHConfigs, it MUST include the
+  "encrypted_client_hello" extension in its EncryptedExtensions with the
+  "retry_configs" field set to one or more ECHConfig structures with up-to-date
+  keys. Servers MAY supply multiple ECHConfig values of different versions.
+  This allows a server to support multiple versions at once.
 
 Note that decryption failure could indicate a GREASE ECH extension (see
 {{grease-ech}}), so it is necessary for servers to proceed with the connection
@@ -1004,9 +1004,10 @@ If the client-facing server rejected ECH, or if the first ClientHello did not
 include an "encrypted_client_hello" extension, the client-facing server
 proceeds with the connection as usual. The server does not decrypt the
 second ClientHello's ECHClientHello.payload value, if there is one.
-Moreover, the server MUST include the "encrypted_client_hello" extension in its
-EncryptedExtensions with the "retry_configs" field set to one or more ECHConfig
-structures with up-to-date keys, as described in {{client-facing-server}}.
+Moreover, if the server is configured with any ECHConfigs, it MUST include the
+"encrypted_client_hello" extension in its EncryptedExtensions with the
+"retry_configs" field set to one or more ECHConfig structures with up-to-date
+keys, as described in {{client-facing-server}}.
 
 Note that a client-facing server that forwards the first ClientHello cannot
 include its own "cookie" extension if the backend server sends a
