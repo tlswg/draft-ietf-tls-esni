@@ -374,8 +374,8 @@ payload
 : The serialized and encrypted ClientHelloInner structure, encrypted using HPKE
 as described in {{real-ech}}.
 
-When the client offers the "encrypted_client_hello" extension, if the payload is
-the `outer` variant, then the server MAY include an "encrypted_client_hello"
+When a client offers the `outer` version of an "encrypted_client_hello" extension, 
+then, for example if decryption fails, the server MAY include an "encrypted_client_hello"
 extension in its EncryptedExtensions message with the following payload:
 
 ~~~
