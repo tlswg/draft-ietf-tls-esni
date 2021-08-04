@@ -239,12 +239,7 @@ The `ECHConfigContents` structure contains the following fields:
 key_config
 : A `HpkeKeyConfig` structure carrying the configuration information associated
 with the HPKE public key. Note that this structure contains the `config_id`
-field, which applies to the entire ECHConfigContents. Sites MUST NOT publish
-two different `ECHConfigContents` values with the same `HpkeKeyConfig` value.
-The RECOMMENDED technique for choosing `config_id` is to choose a random byte.
-This process is repeated if this config_id matches that of any valid ECHConfig,
-which could include any ECHConfig that has been recently removed from active
-use.
+field, which applies to the entire ECHConfigContents.
 
 maximum_name_length
 : The longest name of a backend server, if known. If not known, this value can
@@ -282,7 +277,8 @@ The `HpkeKeyConfig` structure contains the following fields:
 
 config_id
 : A one-byte identifier for the given HPKE key configuration. This is used by
-clients to indicate the key used for ClientHello encryption.
+clients to indicate the key used for ClientHello encryption. {{config-ids}}
+describes how client-facing servers allocate this value.
 
 kem_id
 : The HPKE KEM identifier corresponding to `public_key`. Clients MUST ignore any
@@ -305,6 +301,26 @@ serialized as follows.
 The `ECHConfigList` structure contains one or more `ECHConfig` structures in
 decreasing order of preference. This allows a server to support multiple
 versions of ECH and multiple sets of ECH parameters.
+
+## Configuration Identifiers {#config-ids}
+
+A client-facing server has a set of known ECHConfig values, with corresponding
+private keys. This set SHOULD contain the currently published values, as well as
+previous values that may still be in use. For example, clients may cache DNS
+records up to a TTL or longer.
+
+{{client-facing-server}} describes a trial decryption process for decrypting the
+ClientHello. This can impact performance when the client-facing server maintains
+many known ECHConfig values. To avoid this, the client-facing server SHOULD
+allocate distinct `config_id` values for each ECHConfig in its known set. The
+RECOMMENDED strategy is to, when generating an ECHConfig, select `config_id`
+randomly, and repeat if it matches any known ECHConfig.
+
+It is not necessary for `config_id` values across different client-facing
+servers to be distinct. A backend server may be hosted behind two different
+client-facing servers with colliding `config_id` values without any performance
+impact. Values may also be reused if the previous ECHConfig is no longer in the
+known set.
 
 ## Configuration Extensions {#config-extensions}
 
