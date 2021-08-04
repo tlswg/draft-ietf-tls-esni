@@ -416,7 +416,9 @@ Some TLS 1.3 extensions can be quite large, thus repeating them in the
 ClientHelloInner and ClientHelloOuter can lead to an excessive overall size.
 One pathological example is "key_share" with post-quantum
 algorithms. To reduce the impact of duplicated extensions, the client
-may use the "ech_outer_extensions" extension.
+may use the "ech_outer_extensions" extension which appears in
+an encoded form of the ClientHelloInner (the EncodedClientHelloInner)
+that will form the plaintext for encryption..
 
 ~~~
     enum {
