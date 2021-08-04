@@ -228,7 +228,9 @@ draft-08, the version is the same as the code point for the
 structure with a version they do not support.
 
 length
-: The length, in bytes, of the next field.
+: The length, in bytes, of the next field. This field is redundant,
+as only one ECHConfigContents can currently be present in an ECHConfig,
+but is provided for future-proofing.
 
 contents
 : An opaque byte string whose contents depend on the version. For this
