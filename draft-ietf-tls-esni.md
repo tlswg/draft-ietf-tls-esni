@@ -214,7 +214,7 @@ The ECH configuration is defined by the following `ECHConfig` structure.
         uint16 version;
         uint16 length;
         select (ECHConfig.version) {
-          case 0xfe0c: ECHConfigContents contents;
+          case 0xfe0d: ECHConfigContents contents;
         }
     } ECHConfig;
 ~~~~
@@ -331,7 +331,7 @@ ClientHelloInner.
 
 ~~~
     enum {
-       encrypted_client_hello(0xfe0c), (65535)
+       encrypted_client_hello(0xfe0d), (65535)
     } ExtensionType;
 ~~~
 
@@ -374,8 +374,8 @@ payload
 : The serialized and encrypted ClientHelloInner structure, encrypted using HPKE
 as described in {{real-ech}}.
 
-When the client offers the "encrypted_client_hello" extension, if the payload
-is the outer variant, then the server MAY include an "encrypted_client_hello"
+When the client offers the "encrypted_client_hello" extension, if the payload is
+the `outer` variant, then the server MAY include an "encrypted_client_hello"
 extension in its EncryptedExtensions message with the following payload:
 
 ~~~
@@ -1619,7 +1619,7 @@ ClientHello vulnerable to an analogue of this attack.
 IANA is requested to create the following three entries in the existing registry
 for ExtensionType (defined in {{!RFC8446}}):
 
-1. encrypted_client_hello(0xfe0c), with "TLS 1.3" column values set to
+1. encrypted_client_hello(0xfe0d), with "TLS 1.3" column values set to
    "CH, HRR, EE", and "Recommended" column set to "Yes".
 1. ech_outer_extensions(0xfd00), with the "TLS 1.3" column values set to "",
    and "Recommended" column set to "Yes".
