@@ -239,12 +239,12 @@ The `ECHConfigContents` structure contains the following fields:
 key_config
 : A `HpkeKeyConfig` structure carrying the configuration information associated
 with the HPKE public key. Note that this structure contains the `config_id`
-field, which applies to the entire ECHConfigContents. Sites MUST NOT publish
+field, which applies to the entire ECHConfigContents. Sites SHOULD NOT publish
 two different `ECHConfigContents` values with the same `HpkeKeyConfig` value.
 The RECOMMENDED technique for choosing `config_id` is to choose a random byte.
-This process is repeated if this config_id matches that of any valid ECHConfig,
-which could include any ECHConfig that has been recently removed from active
-use.
+This could lead to `config_id` collisions, especially if a backend server
+is provided with ECHConfig values by more than one client-facing server and
+if each of those support multiple KEMs, hence the SHOULD above.
 
 maximum_name_length
 : The longest name of a backend server, if known. If not known, this value can
