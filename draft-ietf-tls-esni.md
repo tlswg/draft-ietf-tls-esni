@@ -393,6 +393,13 @@ retry_configs
 decreasing order of preference, to be used by the client in subsequent
 connection attempts. These are known as the server's "retry configurations".
 
+If a server acting as a backend receives an `inner` variant
+"encrypted_client_hello" from a host that is a client-facing server then the
+server may conclude that ECH was attempted and proceed on that basis in further
+processing. (How the server might know the host is a client-facing server, and
+how the ClientHelloInner might be protected in such a case are out of scope of
+this specification.) 
+
 Finally, when the client offers the "encrypted_client_hello", if the payload is
 the `inner` variant and the server responds with HelloRetryRequest, it MUST
 include an "encrypted_client_hello" extension with the following payload:
