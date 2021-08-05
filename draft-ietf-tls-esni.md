@@ -306,8 +306,8 @@ versions of ECH and multiple sets of ECH parameters.
 
 A client-facing server has a set of known ECHConfig values, with corresponding
 private keys. This set SHOULD contain the currently published values, as well as
-previous values that may still be in use. For example, clients may cache DNS
-records up to a TTL or longer.
+previous values that may still be in use, since clients may cache DNS records
+up to a TTL or longer.
 
 {{client-facing-server}} describes a trial decryption process for decrypting the
 ClientHello. This can impact performance when the client-facing server maintains
