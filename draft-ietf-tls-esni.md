@@ -313,8 +313,8 @@ up to a TTL or longer.
 ClientHello. This can impact performance when the client-facing server maintains
 many known ECHConfig values. To avoid this, the client-facing server SHOULD
 allocate distinct `config_id` values for each ECHConfig in its known set. The
-RECOMMENDED strategy is to, when generating an ECHConfig, select `config_id`
-randomly, and repeat if it matches any known ECHConfig.
+RECOMMENDED strategy is via rejection sampling, i.e., to randomly select
+`config_id` repeatedly until it does not match any known ECHConfig.
 
 It is not necessary for `config_id` values across different client-facing
 servers to be distinct. A backend server may be hosted behind two different
