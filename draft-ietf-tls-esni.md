@@ -431,34 +431,8 @@ the server. (See {{alerts}}.)
 
 ## Encoding the ClientHelloInner {#encoding-inner}
 
-Some TLS 1.3 extensions can be quite large, thus repeating them in the
-ClientHelloInner and ClientHelloOuter can lead to an excessive overall size.
-One pathological example is "key_share" with post-quantum
-algorithms. To reduce the impact of duplicated extensions, the client
-may use the "ech_outer_extensions" extension.
-
-~~~
-    enum {
-       ech_outer_extensions(0xfd00), (65535)
-    } ExtensionType;
-
-    ExtensionType OuterExtensions<2..254>;
-~~~
-
-OuterExtensions consists of one or more ExtensionType values, each of which
-reference an extension in ClientHelloOuter. The extensions in OuterExtensions
-MUST appear in ClientHelloOuter in the same relative order, however, there is
-no requirement that they be continguous. For example, OuterExtensions may
-contain extensions A, B, C, while ClientHelloOuter contains extensions A, D, B,
-C, E, F.
-
-The "ech_outer_extensions" extension is only used for compressing the
-ClientHelloInner. It can only be included in EncodedClientHelloInner, and MUST
-NOT be sent in either ClientHelloOuter or ClientHelloInner.
-
-When sending ClientHello, the client first computes ClientHelloInner, including
-any PSK binders. It then computes a new value, the EncodedClientHelloInner,
-which is the following structure:
+Before encrypting, the client pads and optionally compresses ClientHelloInner
+into a EncodedClientHelloInner structure, defined below:
 
 ~~~
     struct {
@@ -473,12 +447,33 @@ uses the ClientHello structure, defined in {{Section 4.1.2 of RFC8446}} which
 does not include the Handshake structure's four byte header. The `zeros` field
 MUST be all zeroes.
 
-The client then MAY substitute extensions which it knows will be duplicated in
-ClientHelloOuter. To do so, the client removes and replaces extensions from
-EncodedClientHelloInner with a single "ech_outer_extensions" extension. Removed
-extensions MUST be ordered consecutively in ClientHelloInner. The list of outer
-extensions, OuterExtensions, includes those which were removed from
-EncodedClientHelloInner, in the order in which they were removed.
+Repeating large extensions, such as "key_share" with post-quantum algorithms,
+between ClientHelloInner and ClientHelloOuter can lead to excessive size. To
+reduce the size impact, the client MAY substitute extensions which it knows
+will be duplicated in ClientHelloOuter. It does so by removing and replacing
+extensions from EncodedClientHelloInner with a single "ech_outer_extensions"
+extension, defined as follows:
+
+~~~
+    enum {
+       ech_outer_extensions(0xfd00), (65535)
+    } ExtensionType;
+
+    ExtensionType OuterExtensions<2..254>;
+~~~
+
+OuterExtensions contains the removed ExtensionType values. Each value references
+the matching extension in ClientHelloOuter. The values MUST be ordered
+contiguously in ClientHelloInner, and the "ech_outer_extensions" extension MUST
+be inserted in the corresponding position in EncodedClientHelloInner.
+Additionally, the extensions MUST appear in ClientHelloOuter in the same
+relative order. However, there is no requirement that they be contiguous. For
+example, OuterExtensions may contain extensions A, B, C, while ClientHelloOuter
+contains extensions A, D, B, C, E, F.
+
+The "ech_outer_extensions" extension can only be included in
+EncodedClientHelloInner, and MUST NOT appear in either ClientHelloOuter or
+ClientHelloInner.
 
 Finally, the client pads the message by setting the `zeros` field to a byte
 string whose contents are all zeros and whose length is the amount of padding
