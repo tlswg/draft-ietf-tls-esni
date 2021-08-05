@@ -949,7 +949,7 @@ Some uses of ECH, such as local discovery mode, may randomize the
 ECHClientHello.config_id since it can be used as a tracking vector. In such
 cases, the second method should be used for matching the ECHClientHello to a
 known ECHConfig. See {{optional-configs}}. Unless specified by the application
-using (D)TLS or externally configured on both sides, implementations MUST use
+using (D)TLS or externally configured, implementations MUST use
 the first method.
 
 The server then iterates over the candidate ECHConfig values, attempting to
