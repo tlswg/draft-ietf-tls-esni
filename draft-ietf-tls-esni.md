@@ -485,7 +485,7 @@ are true:
   do not occur in the same order.
 
 Implementations SHOULD bound the time to compute a ClientHelloInner
-proportionally to the ClientHelloOuter size. If the cost are disproportionately
+proportionally to the ClientHelloOuter size. If the cost is disproportionately
 large, a malicious client could exploit this in a denial of service attack.
 {{linear-outer-extensions}} describes a linear-time procedure that may be used
 for this purpose.
@@ -676,7 +676,7 @@ client's configuration or may require server input.
 
 By way of example, clients typically support a small number of application
 profiles. For instance, a browser might support HTTP with ALPN values
-["http/1.1, "h2"] and WebRTC media with ALPNs ["webrtc", "c-webrtc"]. Clients
+["http/1.1", "h2"] and WebRTC media with ALPNs ["webrtc", "c-webrtc"]. Clients
 SHOULD pad this extension by rounding up to the total size of the longest ALPN
 extension across all application profiles. The target padding length of most
 ClientHello extensions can be computed in this way.
@@ -726,7 +726,7 @@ If the message is a HelloRetryRequest, the client checks for the
 ECH. Otherwise, if it has a length other than 8, the client aborts the handshake
 with a "decode_error" alert. Otherwise, the client computes
 `hrr_accept_confirmation` as described in {{backend-server-hrr}}. If this value
-matches the extension payload, the server has accept ECH. Otherwise, it has
+matches the extension payload, the server has accepted ECH. Otherwise, it has
 rejected ECH.
 
 [[OPEN ISSUE: Depending on what we do for issue#450, it may be appropriate to
@@ -1176,8 +1176,8 @@ in such a way so as to maximize the size of the anonymity set where possible.
 This means client-facing servers should use the same ECHConfig for as many hosts
 as possible. An attacker can distinguish two hosts that have different ECHConfig
 values based on the ECHClientHello.config_id value. This also means public
-information in a TLS handshake is also consistent across hosts. For example, if
-a client-facing server services many backend origin hosts, only one of which
+information in a TLS handshake should be consistent across hosts. For example,
+if a client-facing server services many backend origin hosts, only one of which
 supports some cipher suite, it may be possible to identify that host based on
 the contents of unencrypted handshake messages.
 
@@ -1197,7 +1197,7 @@ poison DNS caches, which is a common scenario in client access networks, can
 supply clients with fake ECH records (so that the client encrypts data to them)
 or strip the ECH record from the response. However, in the face of an attacker
 that controls DNS, no encryption scheme can work because the attacker can
-replace the IP address, thus blocking client connections, or substituting a
+replace the IP address, thus blocking client connections, or substitute a
 unique IP address which is 1:1 with the DNS name that was looked up (modulo DNS
 wildcards). Thus, allowing the ECH records in the clear does not make the
 situation significantly worse.
@@ -1512,7 +1512,7 @@ about a legitimate ClientHello using its own attacker-controlled ClientHello.
 To begin, the attacker intercepts and forwards a legitimate ClientHello with an
 "encrypted_client_hello" (ech) extension to the server, which triggers a
 legitimate HelloRetryRequest in return. Rather than forward the retry to the
-client, the attacker, attempts to generate its own ClientHello in response based
+client, the attacker attempts to generate its own ClientHello in response based
 on the contents of the first ClientHello and HelloRetryRequest exchange with the
 result that the server encrypts the Certificate to the attacker. If the server
 used the SNI from the first ClientHello and the key share from the second
