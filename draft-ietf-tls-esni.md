@@ -448,7 +448,7 @@ the matching extension in ClientHelloOuter. The values MUST be ordered
 contiguously in ClientHelloInner, and the "ech_outer_extensions" extension MUST
 be inserted in the corresponding position in EncodedClientHelloInner.
 Additionally, the extensions MUST appear in ClientHelloOuter in the same
-relative order, however, there is no requirement that they be continguous. For
+relative order. However, there is no requirement that they be contiguous. For
 example, OuterExtensions may contain extensions A, B, C, while ClientHelloOuter
 contains extensions A, D, B, C, E, F.
 
