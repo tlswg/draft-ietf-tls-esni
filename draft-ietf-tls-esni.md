@@ -292,7 +292,7 @@ public_key
 
 cipher_suites
 : The list of HPKE KDF and AEAD identifier pairs clients can use for encrypting
-ClientHelloInner.
+ClientHelloInner. See {{real-ech}} for how clients choose from this list.
 
 The client-facing server advertises a sequence of ECH configurations to clients,
 serialized as follows.
