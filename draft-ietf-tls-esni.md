@@ -784,12 +784,16 @@ If the server rejects ECH, the client proceeds with the handshake,
 authenticating for ECHConfig.contents.public_name as described in
 {{auth-public-name}}. If authentication or the handshake fails, the client MUST
 return a failure to the calling application. It MUST NOT use the retry
-configurations.
+configurations. It MUST NOT treat this as a secure signal to
+disable ECH.
 
 Otherwise, if both authentication and the handshake complete successfully, the
-client MUST abort the connection with an "ech_required" alert. It then
-processes the "retry_configs" field from the server's "encrypted_client_hello"
-extension.
+client MUST perform the processing described below then abort the connection
+with an "ech_required" alert.
+
+If the server supplied an "encrypted_client_hello" extension in its
+EncryptedExtensions message, the "retry_configs" field is processed as
+follows.
 
 If at least one of the values contains a version supported by the client, it can
 regard the ECH keys as securely replaced by the server. It SHOULD retry the
@@ -802,31 +806,20 @@ client-specific retry configurations in order to identify the client in a
 subsequent ECH handshake.
 
 If none of the values provided in "retry_configs" contains a supported version,
-the client can regard ECH as securely disabled by the server. As below, it
-SHOULD then retry the handshake with a new transport connection and ECH
-disabled.
+the client can regard ECH as securely disabled by the server.
 
-If the field contains any other value, the client MUST abort the connection with
-an "illegal_parameter" alert.
+If an earlier TLS version was negotiated, the client can regard ECH as
+securely disabled by the server, and the client MUST NOT enable the
+False Start optimization {{RFC7918}} for this handshake.
 
-If the server negotiates an earlier version of TLS, or if it does not provide an
-"encrypted_client_hello" extension in EncryptedExtensions, the client proceeds
-with the handshake, authenticating for ECHConfig.contents.public_name as
-described in {{auth-public-name}}. If an earlier version was negotiated, the
-client MUST NOT enable the False Start optimization {{RFC7918}} for this
-handshake. If authentication or the handshake fails, the client MUST return a
-failure to the calling application. It MUST NOT treat this as a secure signal to
-disable ECH.
+If according to the above, the client regards ECH as securely disabled
+by the server, it SHOULD retry the handshake with a new transport
+connection and ECH disabled.
 
-Otherwise, when the handshake completes successfully with the public name
-authenticated, the client MUST abort the connection with an "ech_required"
-alert. The client can then regard ECH as securely disabled by the server. It
-SHOULD retry the handshake with a new transport connection and ECH disabled.
-
-Clients SHOULD implement a limit on retries caused by "ech_retry_request" or
-servers which do not acknowledge the "encrypted_client_hello" extension. If the
-client does not retry in either scenario, it MUST report an error to the calling
-application.
+Clients SHOULD implement a limit on retries caused by receipt of "retry_configs"
+or servers which do not acknowledge the "encrypted_client_hello" extension. If
+the client does not retry in either scenario, it MUST report an error to the
+calling application.
 
 ### Authenticating for the Public Name {#auth-public-name}
 
