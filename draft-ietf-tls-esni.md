@@ -1152,14 +1152,15 @@ a compliant ECH application MUST implement the following HPKE cipher suite:
 
 ## Security and Privacy Goals {#goals}
 
-ECH considers two types of attackers: passive and active. Passive attackers can
-read packets from the network, but they cannot perform any sort of active
-behavior such as probing servers or querying DNS. A middlebox that filters based
-on plaintext packet contents is one example of a passive attacker. In contrast,
-active attackers can also write packets into the network for malicious purposes,
-such as interfering with existing connections, probing servers, and querying
-DNS. In short, an active attacker corresponds to the conventional threat model
-for TLS 1.3 {{RFC8446}}.
+ECH considers two types of attackers: passive and active, each restricted to
+the network segment between the client and the client-facing server. Passive
+attackers can read packets from the network, but they cannot perform any sort
+of active behavior such as probing servers or querying DNS. A middlebox that
+filters based on plaintext packet contents is one example of a passive
+attacker. In contrast, active attackers can also write packets into the network
+for malicious purposes, such as interfering with existing connections, probing
+servers, and querying DNS. In short, an active attacker corresponds to the
+conventional threat model for TLS 1.3 {{RFC8446}}.
 
 Given these types of attackers, the primary goals of ECH are as follows.
 
