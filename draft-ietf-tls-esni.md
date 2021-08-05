@@ -453,7 +453,7 @@ example, OuterExtensions may contain extensions A, B, C, while ClientHelloOuter
 contains extensions A, D, B, C, E, F.
 
 The "ech_outer_extensions" extension can only be included in
-EncodedClientHelloInner, and MUST NOT be sent in either ClientHelloOuter or
+EncodedClientHelloInner, and MUST NOT appear in either ClientHelloOuter or
 ClientHelloInner.
 
 Finally, the client pads the message by setting the `zeros` field to a byte
