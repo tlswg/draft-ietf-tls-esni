@@ -228,7 +228,9 @@ draft-08, the version is the same as the code point for the
 structure with a version they do not support.
 
 length
-: The length, in bytes, of the next field.
+: The length, in bytes, of the next field. This length field allows
+implementations to skip over the elements in such a list where they cannot
+parse the specific version of ECHConfig.
 
 contents
 : An opaque byte string whose contents depend on the version. For this
