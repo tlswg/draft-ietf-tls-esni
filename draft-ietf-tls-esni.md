@@ -59,7 +59,8 @@ encrypting a ClientHello message under a server public key.
 
 DISCLAIMER: This draft is work-in-progress and has not yet seen significant (or
 really any) security analysis. It should not be used as a basis for building
-production systems.
+production systems. This published version of the draft has been designated
+an "implementation draft" for testing and interop purposes.
 
 Although TLS 1.3 {{!RFC8446}} encrypts most of the handshake, including the
 server certificate, there are several ways in which an on-path attacker can
