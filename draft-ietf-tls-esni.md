@@ -795,11 +795,12 @@ If at least one of the values contains a version supported by the client, it can
 regard the ECH keys as securely replaced by the server. It SHOULD retry the
 handshake with a new transport connection, using the retry configurations
 supplied by the server. The retry configurations may only be applied to the
-retry connection. The client MUST continue to use the previously-advertised
-configurations for subsequent connections. This avoids introducing pinning
-concerns or a tracking vector, should a malicious server present
-client-specific retry configurations in order to identify the client in a
-subsequent ECH handshake.
+retry connection. The client MUST only use a retry configuration for subsequent
+connections for a short (client-defined) duration and MUST revert to use the
+previously-advertised configurations after that duration has passed.  This
+avoids introducing pinning concerns or a tracking vector, should a malicious
+server present client-specific retry configurations in order to identify the
+client in a subsequent ECH handshake.
 
 If none of the values provided in "retry_configs" contains a supported version,
 the client can regard ECH as securely disabled by the server. As below, it
