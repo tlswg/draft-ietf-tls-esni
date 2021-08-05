@@ -1112,7 +1112,8 @@ loses its ECH keys, or if a deployment of ECH must be rolled back on the server.
 
 The retry mechanism repairs inconsistencies, provided the server is
 authoritative for the public name. If server and advertised keys mismatch, the
-server will respond with ech_retry_requested. If the server does not understand
+server will reject ECH and respond with "retry_configs". If the server does
+not understand
 the "encrypted_client_hello" extension at all, it will ignore it as required by
 {{Section 4.1.2 of RFC8446}}. Provided the server can present a certificate
 valid for the public name, the client can safely retry with updated settings,
