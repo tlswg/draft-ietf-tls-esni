@@ -1621,7 +1621,7 @@ for ExtensionType (defined in {{!RFC8446}}):
 
 1. encrypted_client_hello(0xfe0d), with "TLS 1.3" column values set to
    "CH, HRR, EE", and "Recommended" column set to "Yes".
-1. ech_outer_extensions(0xfd00), with the "TLS 1.3" column values set to "",
+1. ech_outer_extensions(0xfd00), with the "TLS 1.3" column values set to "CH",
    and "Recommended" column set to "Yes".
 
 ## Update of the TLS Alert Registry {#alerts}
