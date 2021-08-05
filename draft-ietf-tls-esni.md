@@ -757,10 +757,10 @@ ClientHello message as follows:
 1. It constructs EncodedClientHelloInner as described in {{encoding-inner}}.
 
 1. It constructs a second partial ClientHelloOuterAAD. This MUST be constructed
-   as described in {{encrypting-clienthello}} with an empty `enc` field. The
-   extensions MAY be copied from the original ClientHelloOuter unmodified, or
-   omitted. If not sensitive, the client MAY copy updated extensions from the
-   second ClientHelloInner for compression.
+   afresh as described in {{encrypting-clienthello}}. The extensions MAY be copied
+   from the original ClientHelloOuter unmodified, or omitted. If not sensitive,
+   the client MAY copy updated extensions from the second ClientHelloInner for
+   compression.
 
 1. It encrypts EncodedClientHelloInner as described in
    {{encrypting-clienthello}}, using the second partial ClientHelloOuterAAD, to
