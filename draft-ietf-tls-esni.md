@@ -1415,6 +1415,7 @@ most deployments can achieve easily, while providing implementations enough
 flexibility to achieve stronger security where possible. Minimally, real ECH is
 designed to be indifferentiable from GREASE ECH for passive adversaries with
 following capabilities:
+
 1. The attacker does not know the ECHConfigList used by the server.
 1. The attacker keeps per-connection state only. In particular, it does not
    track endpoints across connections.
@@ -1424,11 +1425,9 @@ following capabilities:
 
 This leaves a variety of practical differentiators out-of-scope. including,
 though not limited to, the following:
+
 1. the value of the configuration identifier;
 1. the value of the outer SNI;
-1. use of the "pre_shared_key" extension in the ClientHelloOuter, which is
-   permitted in GREASE ECH but not real ECH; [[TODO: Remove this differentiator
-   if issue #384 is resolved by a spec change.]]
 1. the TLS version negotiated, which may depend on ECH acceptance;
 1. client authentication, which may depend on ECH acceptance; and
 1. HRR issuance, which may depend on ECH acceptance.
