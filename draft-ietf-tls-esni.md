@@ -390,8 +390,8 @@ MUST abort with an "unsupported_extension" alert.
 
 retry_configs
 : An ECHConfigList structure containing one or more ECHConfig structures, in
-decreasing order of preference, to be used by the client in subsequent
-connection attempts. These are known as the server's "retry configurations".
+decreasing order of preference, to be used by the client as described in
+{{rejected-ech}}. These are known as the server's "retry configurations".
 
 Finally, when the client offers the "encrypted_client_hello", if the payload is
 the `inner` variant and the server responds with HelloRetryRequest, it MUST
