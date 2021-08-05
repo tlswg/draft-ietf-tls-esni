@@ -228,11 +228,7 @@ draft-08, the version is the same as the code point for the
 structure with a version they do not support.
 
 length
-: The length, in bytes, of the next field. One primary method of
-distributing ECHConfig values is via the DNS
-{{!HTTPS-RR=I-D.ietf-dnsop-svcb-https}} where they may be found in HTTPS or
-SVCB records that can (and will commonly) contain a list of ECHConfig values
-using the ECHConfigList syntax defined below.  This length field allows
+: The length, in bytes, of the next field. This length field allows
 implementations to skip over the elements in such a list where they cannot
 parse the specific version of ECHConfig.
 
