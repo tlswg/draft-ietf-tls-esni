@@ -430,7 +430,7 @@ MUST be all zeroes.
 
 Repeating large extensions, such as "key_share" with post-quantum algorithms,
 between ClientHelloInner and ClientHelloOuter can lead to excessive size. To
-reduce the size impact, the client then MAY substitute extensions which it knows
+reduce the size impact, the client MAY substitute extensions which it knows
 will be duplicated in ClientHelloOuter. It does so by removing and replacing
 extensions from EncodedClientHelloInner with a single "ech_outer_extensions"
 extension, defined as follows:
