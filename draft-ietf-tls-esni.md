@@ -337,8 +337,7 @@ The format is as defined in {{RFC8446, Section 4.2}}.
 The same interpretation rules apply: extensions MAY appear in any order, but
 there MUST NOT be more than one extension of the same type in the extensions
 block. An extension can be tagged as mandatory by using an extension type
-codepoint with the high order bit set to 1. A client that receives a mandatory
-extension they do not understand MUST reject the `ECHConfig` content.
+codepoint with the high order bit set to 1.
 
 Clients MUST parse the extension list and check for unsupported mandatory
 extensions. If an unsupported mandatory extension is present, clients MUST
