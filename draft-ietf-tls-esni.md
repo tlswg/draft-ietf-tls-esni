@@ -788,12 +788,14 @@ configurations. It MUST NOT treat this as a secure signal to
 disable ECH.
 
 Otherwise, if both authentication and the handshake complete successfully, the
-client MUST perform the processing described below then abort the connection
-with an "ech_required" alert.
+client then processes the server's response as follows.
 
 If the server supplied an "encrypted_client_hello" extension in its
-EncryptedExtensions message, the "retry_configs" field is processed as
-follows.
+EncryptedExtensions message, the client MUST check that it is syntactically
+valid and the client MUST abort the connection with a "decode_error" alert
+otherwise.  If the extension is valid, the client MUST process the
+"retry_configs" from the extension as described below and then abort the
+connection with an "ech_required" alert.
 
 If at least one of the values contains a version supported by the client, it can
 regard the ECH keys as securely replaced by the server. It SHOULD retry the
@@ -809,8 +811,9 @@ If none of the values provided in "retry_configs" contains a supported version,
 the client can regard ECH as securely disabled by the server.
 
 If an earlier TLS version was negotiated, the client can regard ECH as
-securely disabled by the server, and the client MUST NOT enable the
-False Start optimization {{RFC7918}} for this handshake.
+securely disabled by the server, the client MUST NOT enable the False Start
+optimization {{RFC7918}} for this handshake, and the client MUST abort the
+connection with an "ech_required" alert.
 
 If according to the above, the client regards ECH as securely disabled
 by the server, it SHOULD retry the handshake with a new transport
