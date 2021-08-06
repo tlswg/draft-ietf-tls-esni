@@ -138,8 +138,9 @@ Client <----------------------------->|                     |
 In Split Mode, the provider is not the origin server for private domains.
 Rather, the DNS records for private domains point to the provider, and the
 provider's server relays the connection back to the origin server, who
-terminates the TLS connection with the client. Importantly, service provider
-does not have access to the plaintext of the connection.
+terminates the TLS connection with the client. Importantly, the service provider
+does not have access to the plaintext of the connection beyond the unencrypted
+portions of the handshake.
 
 In the remainder of this document, we will refer to the ECH-service provider as
 the "client-facing server" and to the TLS terminator as the "backend server".
