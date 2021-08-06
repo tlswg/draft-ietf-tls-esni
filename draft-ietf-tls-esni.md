@@ -115,6 +115,7 @@ Client <----->  | private.example.org |
                 |                     |
                 +---------------------+
                         Server
+          (Client-Facing and Backend Combined)
 ~~~~
 {: #shared-mode title="Shared Mode Topology"}
 
