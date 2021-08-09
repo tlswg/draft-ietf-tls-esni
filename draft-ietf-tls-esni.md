@@ -811,7 +811,7 @@ otherwise. If an earlier TLS version was negotiated, the client MUST NOT enable
 the False Start optimization {{RFC7918}} for this handshake. If both
 authentication and the handshake complete successfully, the client MUST perform
 the processing described below then abort the connection with an "ech_required"
-alert.
+alert before sending any application data to the server.
 
 If the server provided "retry_configs" and if at least one of the values
 contains a version supported by the client, the client can regard the ECH keys
