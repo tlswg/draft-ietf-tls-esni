@@ -812,8 +812,8 @@ the client can regard ECH as securely disabled by the server.
 
 If an earlier TLS version was negotiated, the client can regard ECH as
 securely disabled by the server, the client MUST NOT enable the False Start
-optimization {{RFC7918}} for this handshake, and the client MUST abort the
-connection with an "ech_required" alert.
+optimization {{RFC7918}} for this handshake (it may be enabled for the retry
+connection), and the client MUST abort the connection with an "ech_required" alert.
 
 If according to the above, the client regards ECH as securely disabled
 by the server, it SHOULD retry the handshake with a new transport
