@@ -813,7 +813,7 @@ regard the ECH keys as securely replaced by the server. It SHOULD retry the
 handshake with a new transport connection, using the retry configurations
 supplied by the server. The retry configurations may only be applied to the
 retry connection. The client MUST NOT use retry configurations for connections
-beyond the retry. This avoids introducing pinning concerns or a tracking 
+beyond the retry. This avoids introducing pinning concerns or a tracking
 vector, should a malicious server present client-specific retry configurations
 in order to identify the client in a subsequent ECH handshake.
 
