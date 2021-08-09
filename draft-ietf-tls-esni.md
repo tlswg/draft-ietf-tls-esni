@@ -1264,7 +1264,7 @@ known ECH key, in order to force wasteful decryption. Servers that support this
 feature should, for example, implement some form of rate limiting mechanism to
 limit the potential damage caused by such attacks.
 
-Unless specified by the application using (D)TLS or externally configured, 
+Unless specified by the application using (D)TLS or externally configured,
 implementations MUST NOT use this mode.
 
 ## Outer ClientHello {#outer-clienthello}
