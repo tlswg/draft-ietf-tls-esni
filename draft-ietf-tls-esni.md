@@ -1660,7 +1660,7 @@ or may be much larger than the incoming packet:
   backend server.
 
 ECH mitigates this attack by requiring that OuterExtensions be referenced in
-order, that duplicate references be rejected and by recommending that
+order, that duplicate references be rejected, and by recommending that
 client-facing servers use a linear scan to perform decompression. These
 requirements are detailed in {{encoding-inner}}.
 
