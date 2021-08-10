@@ -495,10 +495,16 @@ are true:
 
 * Any referenced extension is missing in ClientHelloOuter.
 
-* "encrypted_client_hello" appears in OuterExtensions.
+* Any extension is referenced in OuterExtensions more than once.
+
+* "encrypted_client_hello" is referenced in OuterExtensions.
 
 * The extensions in ClientHelloOuter corresponding to those in OuterExtensions
   do not occur in the same order.
+
+These requirements prevent an attacker from performing a packet amplification
+attack, by crafting a ClientHelloOuter which decompresses to a much larger
+ClientHelloInner. This is discussed further in {{decompression-amp}}.
 
 Implementations SHOULD bound the time to compute a ClientHelloInner
 proportionally to the ClientHelloOuter size. If the cost is disproportionately
@@ -1627,6 +1633,31 @@ ClientHelloInner and authenticating all inputs to the ClientHelloInner
 encrypted and authenticated the "server_name" extension, which left the overall
 ClientHello vulnerable to an analogue of this attack.
 
+### ClientHelloInner Packet Amplification Mitigation {#decompression-amp}
+
+Client-facing servers must decompress EncodedClientHelloInners. A malicious
+attacker may craft a packet which takes excessive resources to decompress
+or may be much larger than the incoming packet:
+
+* If looking up a ClientHelloOuter extension takes time linear in the number of
+  extensions, the overall decoding process would take O(M\*N) time, where
+  M is the number of extensions in ClientHelloOuter and N is the
+  size of OuterExtensions.
+
+* If the same ClientHelloOuter extension can be copied multiple times,
+  an attacker could cause the client-facing server to construct a large
+  ClientHelloInner by including a large extension in ClientHelloOuter,
+  of length L, and an OuterExtensions list referencing N copies of that
+  extension. The client-facing server would then use O(N\*L) memory in
+  response to O(N+L) bandwidth from the client. In split-mode, an
+  O(N\*L) sized packet would then be transmitted to the
+  backend server.
+
+ECH mitigates this attack by requiring that OuterExtensions be referenced in
+order, that duplicate references be rejected, and by recommending that
+client-facing servers use a linear scan to perform decompression. These
+requirements are detailed in {{encoding-inner}}.
+
 # IANA Considerations
 
 ## Update of the TLS ExtensionType Registry
@@ -1714,7 +1745,8 @@ application layer.
 # Linear-time Outer Extension Processing {#linear-outer-extensions}
 
 The following procedure processes the "ech_outer_extensions" extension (see
-{{encoding-inner}}) in linear time:
+{{encoding-inner}}) in linear time, ensuring that each referenced extension
+in the ClientHelloOuter is included at most once:
 
 1. Let I be zero and N be the number of extensions in ClientHelloOuter.
 
