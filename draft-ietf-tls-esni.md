@@ -1727,7 +1727,7 @@ application layer.
 # Linear-time Outer Extension Processing {#linear-outer-extensions}
 
 The following procedure processes the "ech_outer_extensions" extension (see
-{{encoding-inner}}) in linear time, ensuring that each extension in the
+{{encoding-inner}}) in linear time, ensuring that each referenced extension in the
 ClientHelloOuter is included at most once:
 
 1. Let I be zero and N be the number of extensions in ClientHelloOuter.
