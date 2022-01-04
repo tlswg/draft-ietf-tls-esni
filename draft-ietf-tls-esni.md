@@ -1662,8 +1662,8 @@ requirements are detailed in {{encoding-inner}}.
 
 ## Update of the TLS ExtensionType Registry
 
-IANA is requested to create the following three entries in the existing registry
-for ExtensionType (defined in {{!RFC8446}}):
+IANA is requested to create the following entries in the existing registry for
+ExtensionType (defined in {{!RFC8446}}):
 
 1. encrypted_client_hello(0xfe0d), with "TLS 1.3" column values set to
    "CH, HRR, EE", and "Recommended" column set to "Yes".
