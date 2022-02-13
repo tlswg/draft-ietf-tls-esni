@@ -1779,6 +1779,10 @@ important ideas and contributions.
 
 Issue and pull request numbers are listed with a leading octothorp.
 
+## Since draft-ietf-tls-esni-13
+
+- Editorial improvements
+
 ## Since draft-ietf-tls-esni-12
 
 - Abort on duplicate OuterExtensions (#514)
