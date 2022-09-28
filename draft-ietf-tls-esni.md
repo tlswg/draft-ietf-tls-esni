@@ -47,6 +47,20 @@ informative:
    title: "URL Living Standard - IPv4 Parser"
    target: https://url.spec.whatwg.org/#concept-ipv4-parser
    date: May 2021
+  ECH-Analysis:
+    title: "A Symbolic Analysis of Privacy for TLS 1.3 with Encrypted Client Hello"
+    date: November 2022
+    authors:
+      -
+        ins: K. Bhargavan
+        org: Inria
+      -
+        ins: V. Cheval
+        org: Inria
+      -
+        ins: C. Wood
+        org: Cloudflare
+
 
 --- abstract
 
@@ -1185,21 +1199,28 @@ for TLS 1.3 {{RFC8446}}.
 
 Given these types of attackers, the primary goals of ECH are as follows.
 
-1. Use of ECH does not weaken the security properties of TLS without ECH.
-1. TLS connection establishment to a host with a specific ECHConfig and TLS
-   configuration is indistinguishable from a connection to any other host with
-   the same ECHConfig and TLS configuration. (The set of hosts which share the
-   same ECHConfig and TLS configuration is referred to as the anonymity set.)
+1. Security preservation. Use of ECH does not weaken the security properties of
+   TLS without ECH.
+1. Handshake privacy. TLS connection establishment to a host with a specific
+   ECHConfig and TLS configuration is indistinguishable from a connection to
+   any other host with the same ECHConfig and TLS configuration. (The set of
+   hosts which share the same ECHConfig and TLS configuration is referred to
+   as the anonymity set.)
+1. Downgrade resistance. An attacker cannot downgrade a connection that
+   attempts to use ECH to one that does not use ECH.
 
-Client-facing server configuration determines the size of the anonymity set. For
-example, if a client-facing server uses distinct ECHConfig values for each host,
-then each anonymity set has size k = 1. Client-facing servers SHOULD deploy ECH
-in such a way so as to maximize the size of the anonymity set where possible.
-This means client-facing servers should use the same ECHConfig for as many hosts
-as possible. An attacker can distinguish two hosts that have different ECHConfig
-values based on the ECHClientHello.config_id value. This also means public
-information in a TLS handshake should be consistent across hosts. For example,
-if a client-facing server services many backend origin hosts, only one of which
+These properties were formally proven in {{ECH-Analysis}}.
+
+With regards to handshake privacy, client-facing server configuration
+determines the size of the anonymity set. For example, if a client-facing
+server uses distinct ECHConfig values for each host, then each anonymity set
+has size k = 1. Client-facing servers SHOULD deploy ECH in such a way so as to
+maximize the size of the anonymity set where possible. This means client-facing
+servers should use the same ECHConfig for as many hosts as possible. An
+attacker can distinguish two hosts that have different ECHConfig values based
+on the ECHClientHello.config_id value. This also means public information in a
+TLS handshake should be consistent across hosts. For example, if a
+client-facing server services many backend origin hosts, only one of which
 supports some cipher suite, it may be possible to identify that host based on
 the contents of unencrypted handshake messages.
 
@@ -1778,6 +1799,14 @@ important ideas and contributions.
 > final version of this document.
 
 Issue and pull request numbers are listed with a leading octothorp.
+
+## Since draft-ietf-tls-esni-15
+
+- Add CCS2022 reference and summary (#539)
+
+## Since draft-ietf-tls-esni-14
+
+- Keep-alive
 
 ## Since draft-ietf-tls-esni-13
 
