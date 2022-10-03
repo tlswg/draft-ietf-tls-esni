@@ -1,0 +1,95 @@
+name: "Perform Initial Repository Setup"
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  setup:
+    name: "Setup Repository"
+    runs-on: ubuntu-latest
+    steps:
+    - name: "Checkout"
+      uses: actions/checkout@v2
+
+    - name: "Check For Initial Commit"
+      id: first
+      run: |
+        if [ -n "$(git show --max-parents=0 -q --format='format:%h' HEAD)" ]; then
+           echo "Skipping build for the first commit"
+           echo "::set-output name=first::true"
+        fi
+
+    - name: "Git Config"
+      if: ${{ steps.first.outputs.first != 'true' }}
+      run: |
+        git config user.email "idbot@example.com"
+        git config user.name "I-D Bot"
+
+    - name: "Update Draft Name"
+      if: ${{ steps.first.outputs.first != 'true' }}
+      run: |
+        if [ -z "$(ls draft-* rfc* 2>/dev/null | grep -v draft-todo-yourname-protocol.md)" ]; then
+          echo
+          echo "============================================================="
+          echo
+          echo "Please rename the draft file."
+          echo "The file can be renamed at:"
+          echo
+          echo "    https://github.com/${{github.repository}}/edit/main/draft-todo-yourname-protocol.md"
+          echo
+          echo "Change the name of the file and its title."
+          echo "Commit the changes to the 'main' branch."
+          echo
+          echo "============================================================="
+          echo
+          exit 1
+        fi
+        for i in draft-*; do
+          if [ "$(head -1 "$i")" = "---" ]; then
+            sed -i -e '2,/^---/{/^###/,/^###/d
+              s|^docname: .*|docname: '"${i%.md}-latest"'|
+              s|^    name: Your Name Here|    name: "'"$(git show -q --format='format:%aN' @)"'"|
+              s|^    email: your\.email@example\.com|    email: "'"$(git show -q --format='format:%aE' @)"'"|
+            }' "$i"
+          fi
+          sed -i -e "s/draft-todo-yourname-protocol-latest/${i%.md}-latest/g" "$i"
+          git add "$i"
+        done
+        if [ -n "$(git status --porcelain draft-*)" ]; then
+          git commit -m "Update draft labels" draft-*
+        fi
+
+    - name: "Cleanup"
+      if: ${{ steps.first.outputs.first != 'true' }}
+      run: |
+        git rm -rf .github/workflows/setup.yml README.md
+        git commit -m "Remove setup files"
+
+    - name: "Clone the i-d-template Repo"
+      if: ${{ steps.first.outputs.first != 'true' }}
+      run: |
+        git clone --depth=1 https://github.com/martinthomson/i-d-template lib
+
+    - name: "Run i-d-template Setup"
+      if: ${{ steps.first.outputs.first != 'true' }}
+      uses: martinthomson/i-d-template@v1
+      with:
+        make: setup
+
+    - name: "Update Venue Information"
+      if: ${{ steps.first.outputs.first != 'true' }}
+      uses: martinthomson/i-d-template@v1
+      with:
+        make: update-venue
+
+    - name: "Update GitHub Pages"
+      if: ${{ steps.first.outputs.first != 'true' }}
+      uses: martinthomson/i-d-template@v1
+      with:
+        make: gh-pages
+
+    - name: "Push Changes"
+      if: ${{ steps.first.outputs.first != 'true' }}
+      run: |
+        git push

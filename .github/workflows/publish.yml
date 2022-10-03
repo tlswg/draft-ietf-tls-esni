@@ -1,26 +1,21 @@
-name: "Update Editor's Copy"
+name: "Publish New Draft Version"
 
 on:
   push:
-    paths-ignore:
-    - README.md
-    - CONTRIBUTING.md
-    - LICENSE.md
-    - .gitignore
-  pull_request:
-    paths-ignore:
-    - README.md
-    - CONTRIBUTING.md
-    - LICENSE.md
-    - .gitignore
+    tags:
+      - "draft-*"
 
 jobs:
   build:
-    name: "Update Editor's Copy"
+    name: "Publish New Draft Version"
     runs-on: ubuntu-latest
     steps:
     - name: "Checkout"
       uses: actions/checkout@v2
+
+    # See https://github.com/actions/checkout/issues/290
+    - name: "Get Tag Annotations"
+      run: git fetch -f origin ${{ github.ref }}:${{ github.ref }}
 
     - name: "Cache Setup"
       id: cache-setup
@@ -35,9 +30,9 @@ jobs:
         path: |
           ${{ steps.cache-setup.outputs.path }}
           .targets.mk
-        key: refcache-${{ steps.cache-setup.outputs.date }}
+        key: refcache-${{ steps.date.outputs.date }}
         restore-keys: |
-          refcache-${{ steps.cache-setup.outputs.date }}
+          refcache-${{ steps.date.outputs.date }}
           refcache-
 
     - name: "Build Drafts"
@@ -45,16 +40,12 @@ jobs:
       with:
         token: ${{ github.token }}
 
-    - name: "Update GitHub Pages"
+    - name: "Upload to Datatracker"
       uses: martinthomson/i-d-template@v1
-      if: ${{ github.event_name == 'push' }}
       with:
-        make: gh-pages
-        token: ${{ github.token }}
+        make: upload
 
-    - name: "Archive Built Drafts"
+    - name: "Archive Submitted Drafts"
       uses: actions/upload-artifact@v2
       with:
-        path: |
-          draft-*.html
-          draft-*.txt
+        path: "draft-*-[0-9][0-9].xml"
