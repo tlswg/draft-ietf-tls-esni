@@ -1800,6 +1800,10 @@ important ideas and contributions.
 
 Issue and pull request numbers are listed with a leading octothorp.
 
+## Since draft-ietf-tls-esni-16
+
+- Keep-alive
+
 ## Since draft-ietf-tls-esni-15
 
 - Add CCS2022 reference and summary (#539)
