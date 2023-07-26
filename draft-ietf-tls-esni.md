@@ -100,7 +100,7 @@ anonymity set. Usage of this mechanism reveals that a client is connecting to a
 particular service provider, but does not reveal which server from the
 anonymity set terminates the connection.
 
-ECH is only supported with TLS 1.3 {{!RFC8446}}, DTLS 1.3 {{!RFC9147}}, and
+ECH is supported in TLS 1.3 {{!RFC8446}}, DTLS 1.3 {{!RFC9147}}, and
 newer versions of the TLS and DTLS protocols.
 
 # Conventions and Definitions
