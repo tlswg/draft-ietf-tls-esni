@@ -910,7 +910,7 @@ HelloRetryRequest.
 If the server sends an "encrypted_client_hello" extension in either
 HelloRetryRequest or EncryptedExtensions, the client MUST check the extension
 syntactically and abort the connection with a "decode_error" alert if it is
-invalid. It otherwise ignores the extension. It MUST NOT save the "retry_config"
+invalid. It otherwise ignores the extension. It MUST NOT save the "retry_configs"
 value in EncryptedExtensions.
 
 Offering a GREASE extension is not considered offering an encrypted ClientHello
