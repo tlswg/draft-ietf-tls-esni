@@ -100,8 +100,8 @@ anonymity set. Usage of this mechanism reveals that a client is connecting to a
 particular service provider, but does not reveal which server from the
 anonymity set terminates the connection.
 
-ECH is only supported with (D)TLS 1.3 {{!RFC8446}} and newer versions of the
-protocol.
+ECH is supported in TLS 1.3 {{!RFC8446}}, DTLS 1.3 {{!RFC9147}}, and
+newer versions of the TLS and DTLS protocols.
 
 # Conventions and Definitions
 
@@ -199,14 +199,14 @@ See {{goals}} for more details about the ECH security and privacy goals.
 
 # Encrypted ClientHello Configuration {#ech-configuration}
 
-ECH uses HPKE for public key encryption {{!I-D.irtf-cfrg-hpke}}.
+ECH uses HPKE for public key encryption {{!HPKE=RFC9180}}.
 The ECH configuration is defined by the following `ECHConfig` structure.
 
 ~~~~
     opaque HpkePublicKey<1..2^16-1>;
-    uint16 HpkeKemId;  // Defined in I-D.irtf-cfrg-hpke
-    uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
-    uint16 HpkeAeadId; // Defined in I-D.irtf-cfrg-hpke
+    uint16 HpkeKemId;  // Defined in RFC9180
+    uint16 HpkeKdfId;  // Defined in RFC9180
+    uint16 HpkeAeadId; // Defined in RFC9180
 
     struct {
         HpkeKdfId kdf_id;
@@ -1180,9 +1180,9 @@ authoritative for the public name cannot forge a signal to disable ECH.
 In the absence of an application profile standard specifying otherwise,
 a compliant ECH application MUST implement the following HPKE cipher suite:
 
-- KEM: DHKEM(X25519, HKDF-SHA256) (see {{!I-D.irtf-cfrg-hpke, Section 7.1}})
-- KDF: HKDF-SHA256 (see {{!I-D.irtf-cfrg-hpke, Section 7.2}})
-- AEAD: AES-128-GCM (see {{!I-D.irtf-cfrg-hpke, Section 7.3}})
+- KEM: DHKEM(X25519, HKDF-SHA256) (see {{Section 7.1 of HPKE}})
+- KDF: HKDF-SHA256 (see {{Section 7.2 of HPKE}})
+- AEAD: AES-128-GCM (see {{Section 7.3 of HPKE}})
 
 # Security Considerations
 
@@ -1755,7 +1755,7 @@ encrypted SNI requires no such coordination.
 In this variant, clients request secondary certificates with CERTIFICATE_REQUEST
 HTTP/2 frames after TLS connection completion. In response, servers supply
 certificates via TLS exported authenticators
-{{!I-D.ietf-tls-exported-authenticator}} in CERTIFICATE frames. Clients use a
+{{?EXPORTED-AUTHENTICATORS=RFC9261}} in CERTIFICATE frames. Clients use a
 generic SNI for the underlying client-facing server TLS connection. Problems
 with this approach include: (1) one additional round trip before peer
 authentication, (2) non-trivial application-layer dependencies and interaction,
