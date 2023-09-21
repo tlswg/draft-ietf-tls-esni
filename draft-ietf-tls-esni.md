@@ -167,8 +167,10 @@ A client-facing server enables ECH by publishing an ECH configuration, which
 is an encryption public key and associated metadata. The server must publish
 this for all the domains it serves via Shared or Split Mode. This document
 defines the ECH configuration's format, but delegates DNS publication details
-to {{!HTTPS-RR=I-D.ietf-dnsop-svcb-https}}. Other delivery mechanisms are also
-possible. For example, the client may have the ECH configuration preconfigured.
+to {{!HTTPS-RR=I-D.ietf-dnsop-svcb-https}}; see {{svcb}} for information about
+how the ECH configuration is encoded in the SVCB record. Other delivery
+mechanisms are also possible. For example, the client may have the ECH
+configuration preconfigured.
 
 When a client wants to establish a TLS session with some backend server, it
 constructs a private ClientHello, referred to as the ClientHelloInner.
@@ -320,6 +322,11 @@ serialized as follows.
 The `ECHConfigList` structure contains one or more `ECHConfig` structures in
 decreasing order of preference. This allows a server to support multiple
 versions of ECH and multiple sets of ECH parameters.
+
+The standard deployment model for ECH uses DNS to advertise ECHConfigList
+values. In particular, ECHConfigList are encoded as the value for the DNS
+Service Binding parameter named "ech"; see {{svcb}} for information about
+this parameter.
 
 ## Configuration Identifiers {#config-ids}
 
@@ -1696,6 +1703,19 @@ ExtensionType (defined in {{!RFC8446}}):
 IANA is requested to create an entry, ech_required(121) in the existing registry
 for Alerts (defined in {{!RFC8446}}), with the "DTLS-OK" column set to
 "Y".
+
+## Update of the Service Parameter Keys (SvcParamKeys) Registry {#svcb}
+
+IANA is requested to add the following entry to the Service Parameter Keys
+registry:
+
+- Number: 5
+- Name: ech
+- Meaning: TLS Encrypted Client Hello
+- Format Reference: ECHConfigList, as defined in {{ech-configuration}}
+  of this document
+- Change controller: IETF
+- Reference: This document
 
 # ECHConfig Extension Guidance {#config-extensions-guidance}
 
