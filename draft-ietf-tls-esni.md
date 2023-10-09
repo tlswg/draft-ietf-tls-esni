@@ -95,10 +95,11 @@ This document specifies a new TLS extension, called Encrypted Client Hello
 (ECH), that allows clients to encrypt their ClientHello to such a deployment.
 This protects the SNI and other potentially sensitive fields, such as the ALPN
 list {{?RFC7301}}. Co-located servers with consistent externally visible TLS
-configurations, including supported versions and cipher suites, form an
-anonymity set. Usage of this mechanism reveals that a client is connecting to a
-particular service provider, but does not reveal which server from the
-anonymity set terminates the connection.
+configurations and behavior, including supported versions and cipher suites and
+how they respond to incoming client connections, form an anonymity set. Usage
+of this mechanism reveals that a client is connecting to a particular service
+provider, but does not reveal which server from the anonymity set terminates
+the connection.
 
 ECH is supported in TLS 1.3 {{!RFC8446}}, DTLS 1.3 {{!RFC9147}}, and
 newer versions of the TLS and DTLS protocols.
