@@ -1445,9 +1445,13 @@ following capabilities:
 1. The attacker does not know the ECHConfigList used by the server.
 1. The attacker keeps per-connection state only. In particular, it does not
    track endpoints across connections.
-1. ECH and GREASE ECH are designed so that the following features do not vary:
-   the code points of extensions negotiated in the clear; the length of
-   messages; and the values of plaintext alert messages.
+
+Moreover, real ECH and GREASE ECH are designed so that the following features
+do not vary:
+
+1. the code points of extensions negotiated in the clear;
+1. the length of messages; and
+1. the values of plaintext alert messages.
 
 This leaves a variety of practical differentiators out-of-scope. including,
 though not limited to, the following:
@@ -1459,8 +1463,9 @@ though not limited to, the following:
 1. HRR issuance, which may depend on ECH acceptance.
 
 These can be addressed with more sophisticated implementations, but some
-mitigations require coordination between the client and server. These
-mitigations are out-of-scope for this specification.
+mitigations require coordination between the client and server, and even
+across different client and server implementations. These mitigations are
+out-of-scope for this specification.
 
 ### Maintain Forward Secrecy
 
