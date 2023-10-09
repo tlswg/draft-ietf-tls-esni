@@ -114,7 +114,8 @@ notation comes from {{RFC8446, Section 3}}.
 # Overview
 
 This protocol is designed to operate in one of two topologies illustrated below,
-which we call "Shared Mode" and "Split Mode".
+which we call "Shared Mode" and "Split Mode". These modes are described in the
+following section.
 
 ## Topologies
 
@@ -1203,15 +1204,20 @@ for TLS 1.3 {{RFC8446}}.
 Passive and active attackers can exist anywhere in the network, including
 between the client and client-facing server, as well as between the
 client-facing and backend servers when running ECH in Split Mode. However,
-for Split Mode in particular, ECH assumes that the attacker cannot correlate
-messages between client and client-facing server with messages between
-client-facing and backend server. Such correlation could allow an attacker
-to link information unique to a backend server, such as their server name
-or IP address, with a client's encrypted ClientHelloInner. Such correlation
-could occur through timing analysis of messages across the client-facing
-server, or via examining the contents of messages sent between client-facing
-and backend servers. The exact mechanism for preventing this sort of
-correlation is out of scope for this document.
+for Split Mode in particular, ECH makes two additional assumptions:
+
+1. The channel between the client-facing and backend server is authenticated
+such that the backend server only accepts messages from trusted client-facing
+servers. The exact mechanism for establishing this authenticated channel is
+out of scope for this document.
+1. The attacker cannot correlate messages between client and client-facing
+server with messages between client-facing and backend server. Such correlation
+could allow an attacker to link information unique to a backend server, such as
+their server name or IP address, with a client's encrypted ClientHelloInner.
+Correlation could occur through timing analysis of messages across the
+client-facing server, or via examining the contents of messages sent between
+client-facing and backend servers. The exact mechanism for preventing this sort
+of correlation is out of scope for this document.
 
 Given this threat model, the primary goals of ECH are as follows.
 
