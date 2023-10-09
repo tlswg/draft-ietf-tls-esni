@@ -161,6 +161,9 @@ the "client-facing server" and to the TLS terminator as the "backend server".
 These are the same entity in Shared Mode, but in Split Mode, the client-facing
 and backend servers are physically separated.
 
+See {{security-considerations}} for more discussion about the ECH threat model
+and how it relates to the client, client-facing server, and backend server.
+
 ## Encrypted ClientHello (ECH)
 
 A client-facing server enables ECH by publishing an ECH configuration, which
@@ -1197,7 +1200,20 @@ such as interfering with existing connections, probing servers, and querying
 DNS. In short, an active attacker corresponds to the conventional threat model
 for TLS 1.3 {{RFC8446}}.
 
-Given these types of attackers, the primary goals of ECH are as follows.
+Passive and active attackers can exist anywhere in the network, including
+between the client and client-facing server, as well as between the
+client-facing and backend servers when running ECH in Split Mode. However,
+for Split Mode in particular, ECH assumes that the attacker cannot correlate
+messages between client and client-facing server with messages between
+client-facing and backend server. Such correlation could allow an attacker
+to link information unique to a backend server, such as their server name
+or IP address, with a client's encrypted ClientHelloInner. Such correlation
+could occur through timing analysis of messages across the client-facing
+server, or via examining the contents of messages sent between client-facing
+and backend servers. The exact mechanism for preventing this sort of
+correlation is out of scope for this document.
+
+Given this threat model, the primary goals of ECH are as follows.
 
 1. Security preservation. Use of ECH does not weaken the security properties of
    TLS without ECH.
