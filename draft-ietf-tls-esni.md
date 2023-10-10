@@ -1194,8 +1194,7 @@ Some use cases which depend on information ECH encrypts may break with the
 deployment of ECH. The extent of breakage depends on a number of external
 factors, including, for example, whether ECH can be disabled, whether or not
 the party disabling ECH is trusted to do so, and whether or not client
-implementations will fall back to TLS without ECH in the event of such a
-toggle.
+implementations will fall back to TLS without ECH in the event of disablement.
 
 Depending on implementation details and deployment settings, use cases
 which depend on plaintext TLS information may require fundamentally different
