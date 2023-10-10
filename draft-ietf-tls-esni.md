@@ -842,7 +842,7 @@ suits their deployment. For example, clients can reuse the same IP address
 when establishing the new transport connection or they can choose to use a
 different IP address if provided with options from DNS. ECH does not mandate
 any specific implementation choices when establishing this new connection.)
-The retry configurations may only be applied to the retry connection. The
+The retry configurations may only be applied to the retried connection. The
 client MUST NOT use retry configurations for connections beyond the retry.
 This avoids introducing pinning concerns or a tracking vector, should a
 malicious server present client-specific retry configurations in order to
