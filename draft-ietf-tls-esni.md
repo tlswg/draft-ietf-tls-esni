@@ -837,11 +837,14 @@ If the server provided "retry_configs" and if at least one of the values
 contains a version supported by the client, the client can regard the ECH keys
 as securely replaced by the server. It SHOULD retry the handshake with a new
 transport connection, using the retry configurations supplied by the
-server. (Clients can implement a new transport connection in a way that best
+server.
+
+Clients can implement a new transport connection in a way that best
 suits their deployment. For example, clients can reuse the same IP address
 when establishing the new transport connection or they can choose to use a
 different IP address if provided with options from DNS. ECH does not mandate
-any specific implementation choices when establishing this new connection.)
+any specific implementation choices when establishing this new connection.
+
 The retry configurations may only be applied to the retried connection. The
 client MUST NOT use retry configurations for connections beyond the retry.
 This avoids introducing pinning concerns or a tracking vector, should a
