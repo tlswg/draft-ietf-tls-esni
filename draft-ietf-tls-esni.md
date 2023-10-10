@@ -1202,8 +1202,8 @@ which depend on plaintext TLS information may require fundamentally different
 approaches to continue working. For example, in managed enterprise settings,
 one approach may be to disable ECH entirely and for client implementations
 to honor this request. Another approach may be to intercept and decrypt client
-TLS connections. The feasibility of alternative solutions specific to individual
-deployments.
+TLS connections. The feasibility of alternative solutions is specific to
+individual deployments.
 
 # Compliance Requirements {#compliance}
 
