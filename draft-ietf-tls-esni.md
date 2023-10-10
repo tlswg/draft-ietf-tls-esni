@@ -1133,7 +1133,7 @@ client-facing and backend server requires care, as deployment mistakes
 can lead to compatibility issues. These are discussed in {{compat-issues}}.
 
 Beyond coordination difficulties, ECH deployments may also induce challenges
-for use cases of information that ECH is designed to encrypt. In particular,
+for use cases of information that ECH protects. In particular,
 use cases which depend on this unencrypted information may no longer work
 as desired. This is elaborated upon in {{no-sni}}.
 
