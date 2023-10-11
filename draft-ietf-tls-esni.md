@@ -1206,7 +1206,7 @@ between the client and client-facing server, as well as between the
 client-facing and backend servers when running ECH in Split Mode. However,
 for Split Mode in particular, ECH makes two additional assumptions:
 
-1. The channel between the client-facing and backend server is authenticated
+1. The channel between each client-facing and each backend server is authenticated
 such that the backend server only accepts messages from trusted client-facing
 servers. The exact mechanism for establishing this authenticated channel is
 out of scope for this document.
