@@ -1317,7 +1317,7 @@ and value itself are not sensitive. See {{dont-stick-out}}.
 
 ## Inner ClientHello {#inner-clienthello}
 
-Values which dependent on the contents of ClientHelloInner, such as the
+Values which depend on the contents of ClientHelloInner, such as the
 true server name, can influence how client-facing servers process this message.
 In particular, timing side channels can reveal information about the contents
 of ClientHelloInner. Implementations should take such side channels into
