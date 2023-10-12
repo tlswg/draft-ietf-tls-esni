@@ -221,8 +221,8 @@ The ECH configuration is defined by the following `ECHConfig` structure.
     } HpkeKeyConfig;
 
     struct {
-        ECHConfigExtensionType ech_config_extension_type;
-        opaque extension_data<0..2^16-1>;
+        ECHConfigExtensionType type;
+        opaque data<0..2^16-1>;
     } ECHConfigExtension;
 
     struct {
@@ -289,9 +289,11 @@ an IPv4 address.
 public_name.
 
 extensions
-: A list of ECH configuration extensions that the client must take into
-consideration when generating a ClientHello message. These are described below
-({{config-extensions}}).
+: A list of ECHConfigExtension values that the client must take into
+consideration when generating a ClientHello message. Each ECHConfigExtension
+has a 2-octet type and opaque data value, where the data value is encoded
+with a 2-octet integer representing the length of the data, in network byte
+order. ECHConfigExtension values are described below ({{config-extensions}}).
 
 [[OPEN ISSUE: determine if clients should enforce a 63-octet label limit for
 public_name]]
@@ -357,9 +359,9 @@ The format is as defined in {{ech-configuration}} and mirrors
 maintained by IANA as described in {{config-extensions-iana}}.
 ECH configuration extensions follow the same interpretation rules as TLS
 extensions: extensions MAY appear in any order, but there MUST NOT be more
-than one extension of the same type in the extensions block. Unlike TLS extensions, an extension can
-be tagged as mandatory by using an extension type codepoint with the high
-order bit set to 1.
+than one extension of the same type in the extensions block. Unlike TLS
+extensions, an extension can be tagged as mandatory by using an extension type
+codepoint with the high order bit set to 1.
 
 Clients MUST parse the extension list and check for unsupported mandatory
 extensions. If an unsupported mandatory extension is present, clients MUST
