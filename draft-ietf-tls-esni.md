@@ -357,7 +357,7 @@ The format is as defined in {{ech-configuration}} and mirrors
 maintained by IANA as described in {{config-extensions-iana}}.
 ECH configuration extensions follow the same interpretation rules as TLS
 extensions: extensions MAY appear in any order, but there MUST NOT be more
-than one extension of the same type in the extensions block. An extension can
+than one extension of the same type in the extensions block. Unlike TLS extensions, an extension can
 be tagged as mandatory by using an extension type codepoint with the high
 order bit set to 1.
 
