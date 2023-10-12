@@ -1186,6 +1186,8 @@ a compliant ECH application MUST implement the following HPKE cipher suite:
 
 # Security Considerations
 
+This section contains security considerations for ECH.
+
 ## Security and Privacy Goals {#goals}
 
 ECH considers two types of attackers: passive and active. Passive attackers can
@@ -1305,13 +1307,21 @@ send context-specific values in ClientHelloOuter.
 Values which are independent of the true server name, or other information the
 client wishes to protect, MAY be included in ClientHelloOuter. If they match
 the corresponding ClientHelloInner, they MAY be compressed as described in
-{{encoding-inner}}. However, note the payload length reveals information about
-which extensions are compressed, so inner extensions which only sometimes match
-the corresponding outer extension SHOULD NOT be compressed.
+{{encoding-inner}}. However, note that the payload length reveals information
+about which extensions are compressed, so inner extensions which only sometimes
+match the corresponding outer extension SHOULD NOT be compressed.
 
 Clients MAY include additional extensions in ClientHelloOuter to avoid
 signaling unusual behavior to passive observers, provided the choice of value
 and value itself are not sensitive. See {{dont-stick-out}}.
+
+## Inner ClientHello {#inner-clienthello}
+
+Values which depend on the contents of ClientHelloInner, such as the
+true server name, can influence how client-facing servers process this message.
+In particular, timing side channels can reveal information about the contents
+of ClientHelloInner. Implementations should take such side channels into
+consideration when reasoning about the privacy properties that ECH provides.
 
 ## Related Privacy Leaks
 
