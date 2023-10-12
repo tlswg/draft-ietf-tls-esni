@@ -1206,10 +1206,10 @@ between the client and client-facing server, as well as between the
 client-facing and backend servers when running ECH in Split Mode. However,
 for Split Mode in particular, ECH makes two additional assumptions:
 
-1. The channel between each client-facing and each backend server is authenticated
-such that the backend server only accepts messages from trusted client-facing
-servers. The exact mechanism for establishing this authenticated channel is
-out of scope for this document.
+1. The channel between each client-facing and each backend server is
+authenticated such that the backend server only accepts messages from trusted
+client-facing servers. The exact mechanism for establishing this authenticated
+channel is out of scope for this document.
 1. The attacker cannot correlate messages between client and client-facing
 server with messages between client-facing and backend server. Such correlation
 could allow an attacker to link information unique to a backend server, such as
