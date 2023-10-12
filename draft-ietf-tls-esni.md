@@ -1412,7 +1412,7 @@ values with different keys using a short TTL.
 This design requires servers to decrypt ClientHello messages with ECHClientHello
 extensions carrying valid digests. Thus, it is possible for an attacker to force
 decryption operations on the server. This attack is bound by the number of valid
-TCP connections an attacker can open.
+transport connections an attacker can open.
 
 ### Do Not Stick Out {#dont-stick-out}
 
