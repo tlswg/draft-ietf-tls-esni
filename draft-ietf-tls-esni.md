@@ -1199,10 +1199,18 @@ implementations will fall back to TLS without ECH in the event of disablement.
 Depending on implementation details and deployment settings, use cases
 which depend on plaintext TLS information may require fundamentally different
 approaches to continue working. For example, in managed enterprise settings,
-one approach may be to disable ECH entirely and for client implementations
-to honor this request. Another approach may be to intercept and decrypt client
-TLS connections. The feasibility of alternative solutions is specific to
-individual deployments.
+one approach may be to disable ECH entirely via via group policy and for
+client implementations to honor this action. Another approach may be to
+intercept and decrypt client TLS connections. The feasibility of alternative
+solutions is specific to individual deployments.
+
+In environments where the network operator controls the endpoint devices, but
+is concerned about the security consequences of compromised devices, e.g., data
+exfiltration, the SNI field is unsuitable for use as a control even in the
+absence of ECH. This is because compromised devices can alter or spoof the
+value in an SNI field already, and can even bypass security appliances which
+try to 'double-check' websites hosted by the target server. ECH does not
+materially change this situation.
 
 # Compliance Requirements {#compliance}
 
