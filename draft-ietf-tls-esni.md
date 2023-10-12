@@ -224,10 +224,15 @@ The ECH configuration is defined by the following `ECHConfig` structure.
     } HpkeKeyConfig;
 
     struct {
+        ECHConfigExtensionType type;
+        opaque data<0..2^16-1>;
+    } ECHConfigExtension;
+
+    struct {
         HpkeKeyConfig key_config;
         uint8 maximum_name_length;
         opaque public_name<1..255>;
-        Extension extensions<0..2^16-1>;
+        ECHConfigExtension extensions<0..2^16-1>;
     } ECHConfigContents;
 
     struct {
@@ -287,9 +292,11 @@ an IPv4 address.
 public_name.
 
 extensions
-: A list of extensions that the client must take into consideration when
-generating a ClientHello message. These are described below
-({{config-extensions}}).
+: A list of ECHConfigExtension values that the client must take into
+consideration when generating a ClientHello message. Each ECHConfigExtension
+has a 2-octet type and opaque data value, where the data value is encoded
+with a 2-octet integer representing the length of the data, in network byte
+order. ECHConfigExtension values are described below ({{config-extensions}}).
 
 [[OPEN ISSUE: determine if clients should enforce a 63-octet label limit for
 public_name]]
@@ -350,10 +357,13 @@ ECH configuration extensions are used to provide room for additional
 functionality as needed. See {{config-extensions-guidance}} for guidance on
 which types of extensions are appropriate for this structure.
 
-The format is as defined in {{RFC8446, Section 4.2}}.
-The same interpretation rules apply: extensions MAY appear in any order, but
-there MUST NOT be more than one extension of the same type in the extensions
-block. An extension can be tagged as mandatory by using an extension type
+The format is as defined in {{ech-configuration}} and mirrors
+{{Section 4.2 of RFC8446}}. However, ECH configuration extension types are
+maintained by IANA as described in {{config-extensions-iana}}.
+ECH configuration extensions follow the same interpretation rules as TLS
+extensions: extensions MAY appear in any order, but there MUST NOT be more
+than one extension of the same type in the extensions block. Unlike TLS
+extensions, an extension can be tagged as mandatory by using an extension type
 codepoint with the high order bit set to 1.
 
 Clients MUST parse the extension list and check for unsupported mandatory
@@ -1709,6 +1719,38 @@ ExtensionType (defined in {{!RFC8446}}):
 IANA is requested to create an entry, ech_required(121) in the existing registry
 for Alerts (defined in {{!RFC8446}}), with the "DTLS-OK" column set to
 "Y".
+
+## ECH Configuration Extension Registry {#config-extensions-iana}
+
+IANA is requested to create a new "ECHConfig Extension" registry in a new
+"TLS Encrypted Client Hello (ECH) Configuration Extensions" page. New
+registrations need to list the following attributes:
+
+Value:
+: The two-byte identifier for the ECHConfigExtension, i.e., the
+ECHConfigExtensionType
+
+Extension Name:
+: Name of the ECHConfigExtension
+
+Recommended:
+: A "Y" or "N" value indicating if the extension is TLS WG recommends that the
+extension be supported. This column is assigned a value of "N" unless
+explicitly requested. Adding a value with a value of "Y" requires Standards
+Action {{RFC8126}}.
+
+Reference:
+: The specification where the ECHConfigExtension is defined
+
+Notes:
+: Any notes associated with the entry
+{: spacing="compact"}
+
+New entries in this registry are subject to the Specification Required
+registration policy ({{!RFC8126, Section 4.6}}).
+
+The registration policy for for the "ECHConfig Extension Type" registry
+is Specification Required {{!RFC8126}}.
 
 # ECHConfig Extension Guidance {#config-extensions-guidance}
 
