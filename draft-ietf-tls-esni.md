@@ -1204,13 +1204,14 @@ client implementations to honor this action. Another approach may be to
 intercept and decrypt client TLS connections. The feasibility of alternative
 solutions is specific to individual deployments.
 
-In environments where the network operator does not control the endpoint devices, or does controls the endpoint devices, but
-is concerned about the security consequences of compromised devices, e.g., data
-exfiltration, the SNI field is unsuitable for use as a control even in the
-absence of ECH. This is because devices without controls, or which have been compromised, can alter or spoof the
-value in an SNI field already, and can even bypass security appliances which
-try to 'double-check' websites hosted by the target server. ECH does not
-materially change this situation.
+In environments where the network operator does not control the endpoint
+devices, or does controls the endpoint devices, but is concerned about the
+security consequences of compromised devices, e.g., data exfiltration, the
+SNI field is unsuitable for use as a control even in the absence of ECH. This
+is because devices without controls, or which have been compromised, can alter
+or spoof the value in an SNI field already, and can even bypass security
+appliances which try to 'double-check' websites hosted by the target server.
+ECH does not materially change this situation.
 
 # Compliance Requirements {#compliance}
 
