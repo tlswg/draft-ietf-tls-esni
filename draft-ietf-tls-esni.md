@@ -98,7 +98,8 @@ list {{?RFC7301}}. Co-located servers with consistent externally visible TLS
 configurations, including supported versions and cipher suites, form an
 anonymity set. Usage of this mechanism reveals that a client is connecting to a
 particular service provider, but does not reveal which server from the
-anonymity set terminates the connection.
+anonymity set terminates the connection. Deployment implications of this
+feature are discussed in {{deployment}}.
 
 ECH is supported in TLS 1.3 {{!RFC8446}}, DTLS 1.3 {{!RFC9147}}, and
 newer versions of the TLS and DTLS protocols.
@@ -1137,7 +1138,19 @@ following string:
 In the subsequent ServerHello message, the backend server sends the
 accept_confirmation value as described in {{backend-server}}.
 
-# Compatibility Issues
+# Deployment Considerations {#deployment}
+
+The design of ECH as specified in this document necessarily requires changes
+to client, client-facing server, and backend server. Coordination between
+client-facing and backend server requires care, as deployment mistakes
+can lead to compatibility issues. These are discussed in {{compat-issues}}.
+
+Beyond coordination difficulties, ECH deployments may also induce challenges
+for use cases of information that ECH protects. In particular,
+use cases which depend on this unencrypted information may no longer work
+as desired. This is elaborated upon in {{no-sni}}.
+
+## Compatibility Issues {#compat-issues}
 
 Unlike most TLS extensions, placing the SNI value in an ECH extension is not
 interoperable with existing servers, which expect the value in the existing
@@ -1151,7 +1164,7 @@ guarantee. Thus this protocol was designed to be robust in case of
 inconsistencies between systems that advertise ECH keys and servers, at the cost
 of extra round-trips due to a retry. Two specific scenarios are detailed below.
 
-## Misconfiguration and Deployment Concerns {#misconfiguration}
+### Misconfiguration and Deployment Concerns {#misconfiguration}
 
 It is possible for ECH advertisements and servers to become inconsistent. This
 may occur, for instance, from DNS misconfiguration, caching issues, or an
@@ -1173,7 +1186,7 @@ ClientHellos, as this allows a network attacker to disclose the contents of this
 ClientHello, including the SNI. It MAY attempt to use another server from the
 DNS results, if one is provided.
 
-## Middleboxes
+### Middleboxes
 
 When connecting through a TLS-terminating proxy that does not support this
 extension, {{RFC8446, Section 9.3}} requires the proxy still act as a
@@ -1187,6 +1200,31 @@ Depending on whether the client is configured to accept the proxy's certificate
 as authoritative for the public name, this may trigger the retry logic described
 in {{rejected-ech}} or result in a connection failure. A proxy which is not
 authoritative for the public name cannot forge a signal to disable ECH.
+
+## Deployment Impact {#no-sni}
+
+Some use cases which depend on information ECH encrypts may break with the
+deployment of ECH. The extent of breakage depends on a number of external
+factors, including, for example, whether ECH can be disabled, whether or not
+the party disabling ECH is trusted to do so, and whether or not client
+implementations will fall back to TLS without ECH in the event of disablement.
+
+Depending on implementation details and deployment settings, use cases
+which depend on plaintext TLS information may require fundamentally different
+approaches to continue working. For example, in managed enterprise settings,
+one approach may be to disable ECH entirely via via group policy and for
+client implementations to honor this action. Another approach may be to
+intercept and decrypt client TLS connections. The feasibility of alternative
+solutions is specific to individual deployments.
+
+In environments where the network operator does not control the endpoint
+devices, or does controls the endpoint devices but is concerned about the
+security consequences of compromised devices, e.g., data exfiltration, the
+SNI field is unsuitable for use as a control even in the absence of ECH. This
+is because devices without controls, or which have been compromised, can alter
+or spoof the value in an SNI field already, and can even bypass security
+appliances which try to 'double-check' websites hosted by the target server.
+ECH does not materially change this situation.
 
 # Compliance Requirements {#compliance}
 
