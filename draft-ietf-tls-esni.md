@@ -1447,7 +1447,7 @@ following capabilities:
    track endpoints across connections.
 
 Moreover, real ECH and GREASE ECH are designed so that the following features
-do not vary:
+do not noticeably vary to the attacker, i.e., they are not distinguishers:
 
 1. the code points of extensions negotiated in the clear, and their order;
 1. the length of messages; and
