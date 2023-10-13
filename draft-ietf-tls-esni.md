@@ -1449,7 +1449,7 @@ following capabilities:
 Moreover, real ECH and GREASE ECH are designed so that the following features
 do not vary:
 
-1. the code points of extensions negotiated in the clear;
+1. the code points of extensions negotiated in the clear, and their order;
 1. the length of messages; and
 1. the values of plaintext alert messages.
 
