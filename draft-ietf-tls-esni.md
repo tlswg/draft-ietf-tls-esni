@@ -867,11 +867,12 @@ when establishing the new transport connection or they can choose to use a
 different IP address if provided with options from DNS. ECH does not mandate
 any specific implementation choices when establishing this new connection.
 
-The retry configurations may only be applied to the retried connection. The
-client MUST NOT use retry configurations for connections beyond the retry.
-This avoids introducing pinning concerns or a tracking vector, should a
-malicious server present client-specific retry configurations in order to
-identify the client in a subsequent ECH handshake.
+The retry configurations are meant to be used for retried connections. Further
+use of retry configurations could yield a tracking vector. In settings where
+the client will otherwise already let the server track the client, e.g.,
+because the client will send cookies to the server in parallel connections,
+using the retry configurations for these parallel connections does not
+introduce a new tracking vector.
 
 If none of the values provided in "retry_configs" contains a supported version,
 or an earlier TLS version was negotiated, the client can regard ECH as securely
