@@ -295,7 +295,9 @@ parsable as a dot-separated sequence of LDH labels, as defined in
 : Clients SHOULD ignore the `ECHConfig` if it contains an encoded IPv4 address.
 To determine if a public_name value is an IPv4 address, clients can invoke the
 IPv4 parser algorithm in {{WHATWG-IPV4}}. It returns a value when the input is
-an IPv4 address.
+an IPv4 address. Additionally, clients SHOULD ignore the `ECHConfig` if the
+length of any label in the DNS name is longer than 63 octets, as this is the
+maximum length of a DNS label.
 
 : See {{auth-public-name}} for how the client interprets and validates the
 public_name.
@@ -306,10 +308,6 @@ consideration when generating a ClientHello message. Each ECHConfigExtension
 has a 2-octet type and opaque data value, where the data value is encoded
 with a 2-octet integer representing the length of the data, in network byte
 order. ECHConfigExtension values are described below ({{config-extensions}}).
-
-[[OPEN ISSUE: determine if clients should enforce a 63-octet label limit for
-public_name]]
-[[OPEN ISSUE: fix reference to WHATWG-IPV4]]
 
 The `HpkeKeyConfig` structure contains the following fields:
 
