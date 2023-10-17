@@ -1288,11 +1288,10 @@ Given this threat model, the primary goals of ECH are as follows.
 
 1. Security preservation. Use of ECH does not weaken the security properties of
    TLS without ECH.
-1. Handshake privacy. TLS connection establishment to a host with a specific
-   ECHConfig and TLS configuration is indistinguishable from a connection to
-   any other host with the same ECHConfig and TLS configuration. (The set of
-   hosts which share the same ECHConfig and TLS configuration is referred to
-   as the anonymity set.)
+1. Handshake privacy. TLS connection establishment to a host within an
+   anonymity set is indistinguishable from a connection to any other host
+   within the anonymity set. (The anonymity set is defined in
+   {{introduction}}.)
 1. Downgrade resistance. An attacker cannot downgrade a connection that
    attempts to use ECH to one that does not use ECH.
 
