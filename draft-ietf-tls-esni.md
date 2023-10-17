@@ -1829,6 +1829,35 @@ registration policy ({{!RFC8126, Section 4.6}}).
 The registration policy for for the "ECHConfig Extension Type" registry
 is Specification Required {{!RFC8126}}.
 
+This document defines several Reserved values for ECH configuration extensions.
+These can be used by clients and servers to "grease" the contents of the
+ECH configuration, as inspired by {{?RFC8701}}. Implementations SHOULD
+select reserved values at random when including them in ECH configurations.
+Note that the reserved values with the high-order bit set to 1 are mandatory,
+as defined in {{config-extensions}}.
+
+The initial contents for this registry consists of multiple reserved values,
+with the following attributes, which are repeated for each registration:
+
+Value:
+: 0x0000, 0x1A1A, 0x2A2A, 0x3A3A, 0x4A4A, 0x5A5A, 0x6A6A, 0x7A7A, 0x8A8A,
+0x9A9A, 0xAAAA, 0xBABA, 0xCACA, 0xDADA, 0xEAEA, 0xFAFA
+
+Extension Name:
+: RESERVED
+
+Recommended:
+: Y
+
+Reference:
+: This document
+
+Notes:
+: None
+{: spacing="compact"}
+
+--- back
+
 # ECHConfig Extension Guidance {#config-extensions-guidance}
 
 Any future information or hints that influence ClientHelloOuter SHOULD be
