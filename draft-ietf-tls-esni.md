@@ -1831,10 +1831,17 @@ is Specification Required {{!RFC8126}}.
 
 This document defines several Reserved values for ECH configuration extensions.
 These can be used by clients and servers to "grease" the contents of the
-ECH configuration, as inspired by {{?RFC8701}}. Implementations SHOULD
-select reserved values at random when including them in ECH configurations.
-Note that the reserved values with the high-order bit set to 1 are mandatory,
-as defined in {{config-extensions}}.
+ECH configuration, as inspired by {{?RFC8701}}. This helps ensure clients
+process ECH extensions correctly. When constructing ECH configurations,
+servers SHOULD randomly select from reserved values with the high-order
+bit clear. Correctly-implemented client will ignore those extensions.
+
+The reserved values with the high-order bit set are mandatory, as defined
+in {{config-extensions}}. Servers SHOULD randomly select from these
+values and include them in extraneous ECH configurations. These
+extraneous ECH configurations SHOULD have invalid keys, and public
+names which the server does not respond to. Correctly-implemented
+clients will ignore these configurations.
 
 The initial contents for this registry consists of multiple reserved values,
 with the following attributes, which are repeated for each registration:
