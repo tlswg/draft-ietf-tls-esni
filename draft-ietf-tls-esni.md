@@ -295,7 +295,9 @@ additionally SHOULD ignore the structure if the final LDH label either consists
 of all ASCII digits (i.e. '0' through '9') or is "0x" or "0X" followed by some,
 possibly empty, sequence of ASCII hexadecimal digits (i.e. '0' through '9', 'a'
 through 'f', and 'A' through 'F'). Thus avoids public_name values that may be
-interpreted as IPv4 literals.
+interpreted as IPv4 literals. Additionally, clients MAY ignore the
+`ECHConfig` if the length of any label in the DNS name is longer than 63
+octets, as this is the maximum length of a DNS label.
 
 : See {{auth-public-name}} for how the client interprets and validates the
 public_name.
@@ -306,9 +308,6 @@ consideration when generating a ClientHello message. Each ECHConfigExtension
 has a 2-octet type and opaque data value, where the data value is encoded
 with a 2-octet integer representing the length of the data, in network byte
 order. ECHConfigExtension values are described below ({{config-extensions}}).
-
-[[OPEN ISSUE: determine if clients should enforce a 63-octet label limit for
-public_name]]
 
 The `HpkeKeyConfig` structure contains the following fields:
 
