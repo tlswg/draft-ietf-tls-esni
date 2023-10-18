@@ -1830,7 +1830,7 @@ The registration policy for for the "ECHConfig Extension Type" registry
 is Specification Required {{!RFC8126}}.
 
 This document defines several Reserved values for ECH configuration extensions.
-These can be used by clients and servers to "grease" the contents of the
+These can be used by servers to "grease" the contents of the
 ECH configuration, as inspired by {{?RFC8701}}. This helps ensure clients
 process ECH extensions correctly. When constructing ECH configurations,
 servers SHOULD randomly select from reserved values with the high-order
