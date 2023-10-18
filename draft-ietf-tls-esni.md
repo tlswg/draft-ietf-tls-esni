@@ -290,12 +290,12 @@ as described in {{rejected-ech}}.
 
 : Clients MUST ignore any `ECHConfig` structure whose public_name is not
 parsable as a dot-separated sequence of LDH labels, as defined in
-{{!RFC5890, Section 2.3.1}} or which begins or end with an ASCII dot.
-
-: Clients SHOULD ignore the `ECHConfig` if it contains an encoded IPv4 address.
-To determine if a public_name value is an IPv4 address, clients can invoke the
-IPv4 parser algorithm in {{WHATWG-IPV4}}. It returns a value when the input is
-an IPv4 address.
+{{!RFC5890, Section 2.3.1}} or which begins or end with an ASCII dot. Clients
+additionally SHOULD ignore the structure if the final LDH label either consists
+of all ASCII digits (i.e. '0' through '9') or is "0x" or "0X" followed by some,
+possibly empty, sequence of ASCII hexadecimal digits (i.e. '0' through '9', 'a'
+through 'f', and 'A' through 'F'). Thus avoids public_name values that may be
+interpreted as IPv4 literals.
 
 : See {{auth-public-name}} for how the client interprets and validates the
 public_name.
@@ -309,7 +309,6 @@ order. ECHConfigExtension values are described below ({{config-extensions}}).
 
 [[OPEN ISSUE: determine if clients should enforce a 63-octet label limit for
 public_name]]
-[[OPEN ISSUE: fix reference to WHATWG-IPV4]]
 
 The `HpkeKeyConfig` structure contains the following fields:
 
@@ -900,8 +899,8 @@ In verifying the client-facing server certificate, the client MUST interpret
 the public name as a DNS-based reference identity. Clients that incorporate DNS
 names and IP addresses into the same syntax (e.g. {{?RFC3986, Section 7.4}} and
 {{WHATWG-IPV4}}) MUST reject names that would be interpreted as IPv4 addresses.
-Clients that enforce this by checking and rejecting encoded IPv4 addresses
-in ECHConfig.contents.public_name do not need to repeat the check at this layer.
+Clients that enforce this by checking ECHConfig.contents.public_name do not need
+to repeat the check at this layer.
 
 Note that authenticating a connection for the public name does not authenticate
 it for the origin. The TLS implementation MUST NOT report such connections as
