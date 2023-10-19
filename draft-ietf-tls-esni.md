@@ -636,7 +636,8 @@ ClientHello, with the exception of the following rules:
 1. It SHOULD place the value of `ECHConfig.contents.public_name` in the
    "server_name" extension. Clients that do not follow this step, or place a
    different value in the "server_name" extension, risk breaking the retry
-   mechanism described in {{rejected-ech}}.
+   mechanism described in {{rejected-ech}} or failing to interoperate with
+   servers that require this step to be done; see {{client-facing-server}}.
 1. When the client offers the "pre_shared_key" extension in ClientHelloInner, it
    SHOULD also include a GREASE "pre_shared_key" extension in ClientHelloOuter,
    generated in the manner described in {{grease-psk}}. The client MUST NOT use
