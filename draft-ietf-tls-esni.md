@@ -633,8 +633,10 @@ ClientHello, with the exception of the following rules:
    ClientHelloInner.random. Instead, It MUST generate a fresh
    ClientHelloOuter.random using a secure random number generator. (See
    {{flow-client-reaction}}.)
-1. The value of `ECHConfig.contents.public_name` MUST be placed in the
-   "server_name" extension.
+1. The value of `ECHConfig.contents.public_name` is placed in the
+   "server_name" extension. Clients that do not follow this step, or place a
+   different value in the "server_name" extension, risk breaking the retry
+   mechanism described in {{rejected-ech}}.
 1. When the client offers the "pre_shared_key" extension in ClientHelloInner, it
    SHOULD also include a GREASE "pre_shared_key" extension in ClientHelloOuter,
    generated in the manner described in {{grease-psk}}. The client MUST NOT use
@@ -987,7 +989,7 @@ profile or otherwise externally configured, implementations MUST use the first
 method.
 
 The server then iterates over the candidate ECHConfig values, attempting to
-decrypt the "encrypted_client_hello" extension:
+decrypt the "encrypted_client_hello" extension as follows.
 
 The server verifies that the ECHConfig supports the cipher suite indicated by
 the ECHClientHello.cipher_suite and that the version of ECH indicated by the
@@ -1009,8 +1011,14 @@ ClientHelloOuterAAD is computed from ClientHelloOuter as described in
 concatenation "tls ech", a zero byte, and the serialized ECHConfig. If
 decryption fails, the server continues to the next candidate ECHConfig.
 Otherwise, the server reconstructs ClientHelloInner from
-EncodedClientHelloInner, as described in {{encoding-inner}}. It then stops
-iterating over the candidate ECHConfig values.
+EncodedClientHelloInner, as described in {{encoding-inner}}. The server
+SHOULD require that the value in the ClientHelloOuter "server_name" extension
+matches the value of ECHConfig.contents.public_name from the candidate
+ECHConfig, and abort with an "illegal_parameter" alert if these do not match.
+Failure to enforce this check can allow clients to lie about the
+ClientHelloOuter SNI, possibly with the intent of bypassing network policies
+that might otherwise block ECH. Once these checks are complete, the client then
+stops iterating over the candidate ECHConfig values.
 
 Upon determining the ClientHelloInner, the client-facing server checks that the
 message includes a well-formed "encrypted_client_hello" extension of type
