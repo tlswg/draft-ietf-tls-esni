@@ -633,7 +633,7 @@ ClientHello, with the exception of the following rules:
    ClientHelloInner.random. Instead, It MUST generate a fresh
    ClientHelloOuter.random using a secure random number generator. (See
    {{flow-client-reaction}}.)
-1. The value of `ECHConfig.contents.public_name` is placed in the
+1. It SHOULD place the value of `ECHConfig.contents.public_name` in the
    "server_name" extension. Clients that do not follow this step, or place a
    different value in the "server_name" extension, risk breaking the retry
    mechanism described in {{rejected-ech}}.
