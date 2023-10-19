@@ -1012,14 +1012,15 @@ ClientHelloOuterAAD is computed from ClientHelloOuter as described in
 concatenation "tls ech", a zero byte, and the serialized ECHConfig. If
 decryption fails, the server continues to the next candidate ECHConfig.
 Otherwise, the server reconstructs ClientHelloInner from
-EncodedClientHelloInner, as described in {{encoding-inner}}. The server
-SHOULD require that the value in the ClientHelloOuter "server_name" extension
-matches the value of ECHConfig.contents.public_name from the candidate
-ECHConfig, and abort with an "illegal_parameter" alert if these do not match.
-Failure to enforce this check can allow clients to lie about the
-ClientHelloOuter SNI, possibly with the intent of bypassing network policies
-that might otherwise block ECH. Once these checks are complete, the client then
-stops iterating over the candidate ECHConfig values.
+EncodedClientHelloInner, as described in {{encoding-inner}}. It then stops
+iterating over the candidate ECHConfig values.
+
+Once the server has chosen the correct ECHConfig, it SHOULD verify that the
+value in the ClientHelloOuter "server_name" extension matches the value of
+`ECHConfig.contents.public_name`, and abort with an "illegal_parameter" alert
+if these do not match. Failure to enforce this check can allow clients to lie
+about the ClientHelloOuter SNI, possibly with the intent of bypassing network
+policies that might otherwise block ECH.
 
 Upon determining the ClientHelloInner, the client-facing server checks that the
 message includes a well-formed "encrypted_client_hello" extension of type
