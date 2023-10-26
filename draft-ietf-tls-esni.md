@@ -1015,12 +1015,14 @@ Otherwise, the server reconstructs ClientHelloInner from
 EncodedClientHelloInner, as described in {{encoding-inner}}. It then stops
 iterating over the candidate ECHConfig values.
 
-Once the server has chosen the correct ECHConfig, it SHOULD verify that the
-value in the ClientHelloOuter "server_name" extension matches the value of
-`ECHConfig.contents.public_name`, and abort with an "illegal_parameter" alert
-if these do not match. Failure to enforce this check can allow clients to lie
-about the ClientHelloOuter SNI, possibly with the intent of bypassing network
-policies that might otherwise block ECH.
+Once the server has chosen the correct ECHConfig, it MAY verify that the value
+in the ClientHelloOuter "server_name" extension matches the value of
+ECHConfig.contents.public_name, and abort with an "illegal_parameter" alert if
+these do not match. This optional check allows the server to limit ECH
+connections to only use the public SNI values advertised in its ECHConfigs.
+The server must be careful not to unnecessarily reject connections if the same
+ECHConfig id or keypair is used in multiple ECHConfigs with distinct public
+names.
 
 Upon determining the ClientHelloInner, the client-facing server checks that the
 message includes a well-formed "encrypted_client_hello" extension of type
