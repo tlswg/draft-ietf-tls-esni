@@ -219,7 +219,7 @@ The ECH configuration is defined by the following `ECHConfig` structure.
     uint16 HpkeKemId;              // Defined in RFC9180
     uint16 HpkeKdfId;              // Defined in RFC9180
     uint16 HpkeAeadId;             // Defined in RFC9180
-    uint16 ECHConfigExtensionType; // Defined in {{config-extensions-iana}}
+    uint16 ECHConfigExtensionType; // Defined in Section 11.3
 
     struct {
         HpkeKdfId kdf_id;
