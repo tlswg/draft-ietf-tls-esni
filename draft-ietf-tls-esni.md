@@ -1228,7 +1228,7 @@ implementations will fall back to TLS without ECH in the event of disablement.
 Depending on implementation details and deployment settings, use cases
 which depend on plaintext TLS information may require fundamentally different
 approaches to continue working. For example, in managed enterprise settings,
-one approach may be to disable ECH entirely via via group policy and for
+one approach may be to disable ECH entirely via group policy and for
 client implementations to honor this action. Another approach may be to
 intercept and decrypt client TLS connections. The feasibility of alternative
 solutions is specific to individual deployments.
