@@ -634,8 +634,11 @@ ClientHello, with the exception of the following rules:
    ClientHelloInner.random. Instead, It MUST generate a fresh
    ClientHelloOuter.random using a secure random number generator. (See
    {{flow-client-reaction}}.)
-1. The value of `ECHConfig.contents.public_name` MUST be placed in the
-   "server_name" extension.
+1. It SHOULD place the value of `ECHConfig.contents.public_name` in the
+   "server_name" extension. Clients that do not follow this step, or place a
+   different value in the "server_name" extension, risk breaking the retry
+   mechanism described in {{rejected-ech}} or failing to interoperate with
+   servers that require this step to be done; see {{client-facing-server}}.
 1. When the client offers the "pre_shared_key" extension in ClientHelloInner, it
    SHOULD also include a GREASE "pre_shared_key" extension in ClientHelloOuter,
    generated in the manner described in {{grease-psk}}. The client MUST NOT use
@@ -989,7 +992,7 @@ profile or otherwise externally configured, implementations MUST use the first
 method.
 
 The server then iterates over the candidate ECHConfig values, attempting to
-decrypt the "encrypted_client_hello" extension:
+decrypt the "encrypted_client_hello" extension as follows.
 
 The server verifies that the ECHConfig supports the cipher suite indicated by
 the ECHClientHello.cipher_suite and that the version of ECH indicated by the
@@ -1013,6 +1016,15 @@ decryption fails, the server continues to the next candidate ECHConfig.
 Otherwise, the server reconstructs ClientHelloInner from
 EncodedClientHelloInner, as described in {{encoding-inner}}. It then stops
 iterating over the candidate ECHConfig values.
+
+Once the server has chosen the correct ECHConfig, it MAY verify that the value
+in the ClientHelloOuter "server_name" extension matches the value of
+ECHConfig.contents.public_name, and abort with an "illegal_parameter" alert if
+these do not match. This optional check allows the server to limit ECH
+connections to only use the public SNI values advertised in its ECHConfigs.
+The server must be careful not to unnecessarily reject connections if the same
+ECHConfig id or keypair is used in multiple ECHConfigs with distinct public
+names.
 
 Upon determining the ClientHelloInner, the client-facing server checks that the
 message includes a well-formed "encrypted_client_hello" extension of type
@@ -1209,8 +1221,9 @@ extension, {{RFC8446, Section 9.3}} requires the proxy still act as a
 conforming TLS client and server. The proxy must ignore unknown parameters, and
 generate its own ClientHello containing only parameters it understands. Thus,
 when presenting a certificate to the client or sending a ClientHello to the
-server, the proxy will act as if connecting to the public name, without echoing
-the "encrypted_client_hello" extension.
+server, the proxy will act as if connecting to the ClientHelloOuter
+server_name, which SHOULD match the public name (see {{real-ech}}), without
+echoing the "encrypted_client_hello" extension.
 
 Depending on whether the client is configured to accept the proxy's certificate
 as authoritative for the public name, this may trigger the retry logic described
