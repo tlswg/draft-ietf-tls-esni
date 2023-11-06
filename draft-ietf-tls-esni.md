@@ -706,7 +706,7 @@ When offering ECH, the client is not permitted to advertise PSK identities in
 the ClientHelloOuter. However, the client can send a "pre_shared_key" extension
 in the ClientHelloInner. In this case, when resuming a session with the client,
 the backend server sends a "pre_shared_key" extension in its ServerHello. This
-would appear to a network observer as if the server was sending this
+would appear to a network observer as if the server were sending this
 extension without solicitation, which would violate the extension rules
 described in {{RFC8446}}. Sending a GREASE "pre_shared_key" extension in the
 ClientHelloOuter makes it appear to the network as if the extension were
