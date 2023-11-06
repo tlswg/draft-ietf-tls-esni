@@ -709,7 +709,7 @@ When offering ECH, the client is not permitted to advertise PSK identities in
 the ClientHelloOuter. However, the client can send a "pre_shared_key" extension
 in the ClientHelloInner. In this case, when resuming a session with the client,
 the backend server sends a "pre_shared_key" extension in its ServerHello. This
-would appear to a network observer as if the the server were sending this
+would appear to a network observer as if the server were sending this
 extension without solicitation, which would violate the extension rules
 described in {{RFC8446}}. Sending a GREASE "pre_shared_key" extension in the
 ClientHelloOuter makes it appear to the network as if the extension were
@@ -1894,7 +1894,8 @@ The following procedure processes the "ech_outer_extensions" extension (see
 {{encoding-inner}}) in linear time, ensuring that each referenced extension
 in the ClientHelloOuter is included at most once:
 
-1. Let I be zero and N be the number of extensions in ClientHelloOuter.
+1. Let I be initialized to zero and N be set to the number of extensions
+in ClientHelloOuter.
 
 1. For each extension type, E, in OuterExtensions:
 
