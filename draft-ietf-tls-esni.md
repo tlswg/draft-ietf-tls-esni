@@ -1881,7 +1881,8 @@ The following procedure processes the "ech_outer_extensions" extension (see
 {{encoding-inner}}) in linear time, ensuring that each referenced extension
 in the ClientHelloOuter is included at most once:
 
-1. Let I be initialized to zero and N be set to the number of extensions in ClientHelloOuter.
+1. Let I be initialized to zero and N be set to the number of extensions
+in ClientHelloOuter.
 
 1. For each extension type, E, in OuterExtensions:
 
