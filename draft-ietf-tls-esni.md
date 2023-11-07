@@ -28,8 +28,8 @@ author:
  -
        ins: N. Sullivan
        name: Nick Sullivan
-       organization: Cloudflare
-       email: nick@cloudflare.com
+       organization: Cryptography Consulting LLC
+       email: nicholas.sullivan+ietf@gmail.com
 
  -
        ins: C. A. Wood
