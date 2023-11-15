@@ -1242,7 +1242,9 @@ Depending on implementation details and deployment settings, use cases
 which depend on plaintext TLS information may require fundamentally different
 approaches to continue working. For example, in managed enterprise settings,
 one approach may be to disable ECH entirely via group policy and for
-client implementations to honor this action. Another approach may be to
+client implementations to honor this action.
+
+In the context of {{rejected-ech}}, another approach may be to
 intercept and decrypt client TLS connections. The feasibility of alternative
 solutions is specific to individual deployments.
 
