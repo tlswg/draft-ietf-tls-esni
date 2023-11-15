@@ -116,6 +116,73 @@ document are to be interpreted as described in BCP 14 {{RFC2119}} {{!RFC8174}}
 when, and only when, they appear in all capitals, as shown here. All TLS
 notation comes from {{RFC8446, Section 3}}.
 
+# Abbreviations
+
+
+This section expands abbreviations that are not 'well known' as per RFC Editors
+abbreviations list.
+
+AAD
+: Additional Authenticated Data
+: Associated Authenticated Data
+
+AEAD
+: Authenticated Encryption with Associated Data
+
+ALPN
+: Application-Layer Protocol Negotiation
+
+CA
+: Certificate Authority
+
+CH
+: Client Hello
+
+CRL
+: Certificate Revocation List
+
+DoH
+: DNS over HTTP
+
+DPRIVE
+: DNS PRIVate Exchange
+
+DTLS
+: Datagram Transport Layer Security
+
+ECH
+: Encrypted Client Hello
+
+EE
+: Encrypted Extensions
+
+KDF
+: Key Derivation Function
+
+KEM
+: Key Encapsulation Mechanism
+
+HPKE
+: Hybrid Public Key Encryption
+
+HRR
+: Hello Retry Request
+
+HTTPS-RR
+: HTTPS Resource Record
+
+OCSP
+: Online Certificate Status Protocol
+
+PSK
+: Pre Shared Key
+
+RR
+: Resource Record
+
+SNI
+: Server Name Indication
+
 # Overview
 
 This protocol is designed to operate in one of two topologies illustrated below,
