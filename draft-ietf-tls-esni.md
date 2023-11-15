@@ -116,38 +116,33 @@ document are to be interpreted as described in BCP 14 {{RFC2119}} {{!RFC8174}}
 when, and only when, they appear in all capitals, as shown here. All TLS
 notation comes from {{RFC8446, Section 3}}.
 
+The following terms are defined in this document:
+
+* Backend server: the origin server.
+
+* Client-Facing server: the entity trusted to update the ECH configuration.
+
+* ECH configuration: the structure containing the ECH metadata that the client
+needs to construct the Encrypted Client Hello message and engage TLS1.3 with
+the ECH extension.
+
+* ECH-service provider: a synonym for Client-Facing server.
+
+* public name: the DNS name of the client-facing server. It will be represented
+by the attribute 'public_name' which will be further technically defined later
+in the document (see {{ech-configuration}}).
+
+Note: depending on the context of the clauses of this document, either the term
+'public name' or the attribute 'public_name' will be used with the same meaning.
+
 # Overview
-
-ECH is a protocol extension to TLS1.3 which objective is to encrypt the
-ClientHello to fulfill a number of goals (see {{goals}}), in particular
-hiding the destination and therefore the Server Name Indication (SNI).
-
-In order to fulfill these goals ECH introduced and relies on a number
-of key design ideas:
-
-* A new ClientHello message: the ClientHello message is defined now as
-a non-encrypted ClientHello "outer" which encapsulates an encrypted
-ClientHello "inner",
-* A new cryptography: the encryption is performed using a new cryptography
-called Hybrid Public Key Encrpytion (HPKE) (see {{!HPKE=RFC9180}}),
-* New origin server roles: the origin servers are now defined as two roles:
-a) a Client-Facing server role and b) a Backend Server role
-(see {{topologies}}),
-* An ECH configuration: the Client-Facing server is responsible to produce
-the ECH configuration (see {{ech-configuration}}) including the HPKE
-public key and metadata,
-* ECH configuration delivery mechanisms: the ECH configuration can
-be shared by different delivery mechanisms in particular the DNS
-leveraging new service bindings,
-* A real ECH and GREASE ECH modes: the client offers a real ECH if
-it is in possession of a compatible ECH configuration and sends GREASE
-ECH otherwise (see {{dont-stick-out}}).
-
-## Topologies {#topologies}
 
 This protocol is designed to operate in one of two topologies illustrated below,
 which we call "Shared Mode" and "Split Mode". These modes are described in the
 following section.
+
+
+## Topologies
 
 ~~~~
                 +---------------------+
@@ -164,9 +159,9 @@ Client <----->  | private.example.org |
 ~~~~
 {: #shared-mode title="Shared Mode Topology"}
 
-In Shared Mode, the provider is the origin server for all the domains whose DNS
-records point to it. In this mode, the TLS connection is terminated by the
-provider.
+In Shared Mode, the ECH-service provider is the origin server for all the
+domains whose DNS records point to it. In this mode, the TLS connections
+is terminated by the ECH-service provider.
 
 ~~~~
            +--------------------+     +---------------------+
@@ -180,12 +175,12 @@ Client <----------------------------->|                     |
 ~~~~
 {: #split-mode title="Split Mode Topology"}
 
-In Split Mode, the provider is not the origin server for private domains.
-Rather, the DNS records for private domains point to the provider, and the
-provider's server relays the connection back to the origin server, who
-terminates the TLS connection with the client. Importantly, the service provider
-does not have access to the plaintext of the connection beyond the unencrypted
-portions of the handshake.
+In Split Mode, the ECH-service provider is not the origin server for private
+domains. Rather, the DNS records for private domains point to the ECH-service
+provider, and the provider's server relays the connection back to the origin
+server, who terminates the TLS connection with the client. Importantly, the
+service ECH-service provider does not have access to the plaintext of the
+connection beyond the unencrypted portions of the handshake.
 
 In the remainder of this document, we will refer to the ECH-service provider as
 the "client-facing server" and to the TLS terminator as the "backend server".
