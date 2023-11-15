@@ -5,7 +5,8 @@ docname: draft-ietf-tls-esni-latest
 category: std
 
 ipr: trust200902
-area: General
+submissiontype: IETF
+area: SEC
 workgroup: tls
 keyword: Internet-Draft
 
@@ -586,11 +587,14 @@ otherwise.
 
 ## Offering ECH {#real-ech}
 
-To offer ECH, the client first chooses a suitable ECHConfig from the server's
-ECHConfigList. To determine if a given `ECHConfig` is suitable, it checks that
+To begin, to offer ECH, the client chooses a suitable ECHConfig from the
+server's ECHConfigList.
+To determine if a given `ECHConfig` is suitable, it checks that
 it supports the KEM algorithm identified by `ECHConfig.contents.kem_id`, at
 least one KDF/AEAD algorithm identified by `ECHConfig.contents.cipher_suites`,
-and the version of ECH indicated by `ECHConfig.contents.version`. Once a
+and the version of ECH indicated by `ECHConfig.contents.version`.
+
+Once a
 suitable configuration is found, the client selects the cipher suite it will
 use for encryption. It MUST NOT choose a cipher suite or version not advertised
 by the configuration. If no compatible configuration is found, then the client
@@ -670,8 +674,10 @@ Given an EncodedClientHelloInner, an HPKE encryption context and `enc` value,
 and a partial ClientHelloOuterAAD, the client constructs a ClientHelloOuter as
 follows.
 
-First, the client determines the length L of encrypting EncodedClientHelloInner
-with the selected HPKE AEAD. This is typically the sum of the plaintext length
+To begin, the client determines the length L of encrypting
+EncodedClientHelloInner with the selected HPKE AEAD.
+
+This is typically the sum of the plaintext length
 and the AEAD tag length. The client then completes the ClientHelloOuterAAD with
 an "encrypted_client_hello" extension. This extension value contains the outer
 variant of ECHClientHello with the following fields:
@@ -976,7 +982,7 @@ to negotiating any other TLS parameters. Note that successfully decrypting the
 extension will result in a new ClientHello to process, so even the client's TLS
 version preferences may have changed.
 
-First, the server collects a set of candidate ECHConfig values. This list is
+To begin, the server collects a set of candidate ECHConfig values. This list is
 determined by one of the two following methods:
 
 1. Compare ECHClientHello.config_id against identifiers of each known ECHConfig
@@ -1424,7 +1430,7 @@ consideration when reasoning about the privacy properties that ECH provides.
 
 ECH requires encrypted DNS to be an effective privacy protection mechanism.
 However, verifying the server's identity from the Certificate message,
-particularly when using the X509 CertificateType, may result in additional
+particularly when using the X.509 CertificateType, may result in additional
 network traffic that may reveal the server identity. Examples of this traffic
 may include requests for revocation information, such as OCSP or CRL traffic, or
 requests for repository information, such as authorityInformationAccess. It may
@@ -1718,7 +1724,7 @@ response. In particular, the compression mechanism described in
 ClientHelloOuter to construct ClientHelloInner, or a buggy server may
 incorrectly apply parameters from ClientHelloOuter to the handshake.
 
-To begin, the attacker first interacts with a server to obtain a resumption
+To begin, the attacker interacts with a server to obtain a resumption
 ticket for a given test domain, such as "example.com". Later, upon receipt of a
 ClientHelloOuter, it modifies it such that the server will process the
 resumption ticket with ClientHelloInner. If the server only accepts resumption
