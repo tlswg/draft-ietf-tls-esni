@@ -118,11 +118,36 @@ notation comes from {{RFC8446, Section 3}}.
 
 # Overview
 
+ECH is a protocol extension to TLS1.3 which objective is to encrypt the
+ClientHello to fulfill a number of goals (see {{goals}}), in particular
+hiding the destination and therefore the Server Name Indication (SNI).
+
+In order to fulfill these goals ECH introduced and relies on a number
+of key design ideas:
+
+* A new ClientHello message: the ClientHello message is defined now as
+a non-encrypted ClientHello "outer" which encapsulates an encrypted
+ClientHello "inner",
+* A new cryptography: the encryption is performed using a new cryptography
+called Hybrid Public Key Encrpytion (HPKE) (see {{!HPKE=RFC9180}}),
+* New origin server roles: the origin servers are now defined as two roles:
+a) a Client-Facing server role and b) a Backend Server role
+(see {{topologies}}),
+* An ECH configuration: the Client-Facing server is responsible to produce
+the ECH configuration (see {{ech-configuration}}) including the HPKE
+public key and metadata,
+* ECH configuration delivery mechanisms: the ECH configuration can
+be shared by different delivery mechanisms in particular the DNS
+leveraging new service bindings,
+* A real ECH and GREASE ECH modes: the client offers a real ECH if
+it is in possession of a compatible ECH configuration and sends GREASE
+ECH otherwise (see {{dont-stick-out}}).
+
+## Topologies {#topologies}
+
 This protocol is designed to operate in one of two topologies illustrated below,
 which we call "Shared Mode" and "Split Mode". These modes are described in the
 following section.
-
-## Topologies
 
 ~~~~
                 +---------------------+
