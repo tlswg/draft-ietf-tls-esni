@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2023-11-14T01:04:48.929478+00:00",
+  "timestamp": "2023-11-16T01:07:04.989201+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12423,6 +12423,102 @@
       "body": "Need to indicate where extension can appear.",
       "createdAt": "2023-11-08T16:40:29Z",
       "updatedAt": "2023-11-08T16:40:29Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 586,
+      "id": "I_kwDOB-yxNc520Yrc",
+      "title": "Server retry flow, section 7.1",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/586",
+      "state": "OPEN",
+      "author": "sayrer",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "I understand why the last part of this section is there.\r\n\r\n`Otherwise, if all candidate ECHConfig values fail to decrypt the extension, the client-facing server MUST ignore the extension and proceed with the connection using ClientHelloOuter, ...`\r\n\r\nIs this part really a MUST, though? Maybe `if the server wishes to allow retries...`? I noticed that you can get the same effect by sending no `retry_configs` and refusing non-ECH connections, just with double the connection attempts. So why not allow `ech_failure` errors? Apologies if this part was already discussed, I might have missed it.",
+      "createdAt": "2023-11-14T19:44:00Z",
+      "updatedAt": "2023-11-15T21:55:28Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "This is really a MUST. The entire design of both the recovery flow and GREASE is predicated on this.\r\n\r\nThe recovery flow requires the server handshake with ClientHelloOuter in order to authenticate the retry signal. As a client, we would not be willing to deploy ECH if servers were not required to send a retry signal because it's far too much of a footgun and the end result is users cannot visit sites.\r\n\r\nEven, if we were to make the retry signal optional, this is necessary for GREASE to work. Consider a server transitioning from not deploying ECH to deploying ECH. Because DNS fundamentally may get out of sync with the server, there will be a period of time when the serving endpoint implements ECH, but the client does not realize it. (Cached DNS records, etc.) Such a client will then send ECH GREASE. To the server, ECH GREASE looks like a payload that cannot decrypt with any available ECH key. For such connections to work, the server must handshake with ClientHelloOuter.",
+          "createdAt": "2023-11-14T21:21:07Z",
+          "updatedAt": "2023-11-14T21:21:43Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Note this transition may also last indefinitely. It could well be that the server deploys ECH, has published ECH in the DNS, but for whatever reason, the client does not have those records. The client could be using a non-DoH DNS resolver where the records don't get through. The record may just fail to get through because DNS is flake. Or the client's local policy may have ECH disabled.\r\n\r\nEven if that client cannot take advantage of ECH, it may still send ECH GREASE to help prevent network ossification. But, again, that only works if servers all correctly handshake with ClientHelloOuter.\r\n",
+          "createdAt": "2023-11-14T21:23:41Z",
+          "updatedAt": "2023-11-14T21:23:41Z"
+        },
+        {
+          "author": "sayrer",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I believe I understand all of your points, and I agree with most of them, I think. My point is that you can still comply with the current draft, and have this flow:\r\n\r\n1) Fail to decrypt ECH, whether it's because of an invalid or stale ECHConfig, or GREASE\r\n2) Respond with no `retry_configs`\r\n3) Refuse any ClientHello messages without ECH (`\"SHOULD retry the handshake with a new transport connection and ECH disabled\"`)\r\n\r\nOne could also send a HelloRetryRequest with the wrong number of bytes in the encrypted_client_hello extension. So, there are a couple of ways to do this already. What I'm asking about here is whether there should be a way to signal \"you need an up-to-date ECHConfig, and the server is not going to supply one.\"",
+          "createdAt": "2023-11-14T21:42:38Z",
+          "updatedAt": "2023-11-14T22:05:25Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> What I'm asking about here is whether there should be a way to signal \"you need an up-to-date ECHConfig, and the server is not going to supply one.\"\r\n\r\nThere should not. The current protocol is that the server should supply one. This is important for ECH to be deployable.",
+          "createdAt": "2023-11-14T23:27:27Z",
+          "updatedAt": "2023-11-14T23:27:27Z"
+        },
+        {
+          "author": "sayrer",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> > What I'm asking about here is whether there should be a way to signal \"you need an up-to-date ECHConfig, and the server is not going to supply one.\"\r\n> \r\n> There should not. The current protocol is that the server should supply one. This is important for ECH to be deployable.\r\n\r\nAh, but that is not the current protocol by my read. See the text `If the server is configured with any ECHConfig` and `If the server provided \"retry_configs\"...`. That means the server can be configured without them, or choose not to supply them, I think.\r\n\r\nI agree that most servers will want to supply these `retry_configs`.",
+          "createdAt": "2023-11-14T23:42:09Z",
+          "updatedAt": "2023-11-14T23:45:54Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "\"If the server is configured with any ECHConfigs\" refers to whether the server is capable of decrypting any encrypted ClientHellos at all. I.e. if it is not configured with any ECHConfigs, it does not have ECH enabled.\r\n\r\n'If the server provided \"retry_configs\"' is text for the client. The client needs to accommodate servers that do not implement this protocol. In particular, it's possible to offer ECH and find the server doesn't enable ECH if, e.g., the server had to rollback support for ECH in an emergency. In order for ECH to be safe for a server operator to enable, it must be safe to rollback in case something goes wrong with the deployment.\r\n\r\nThe rule is not that *most* servers will want to supply retry configs. The rule is that *all* servers that intend to enable ECH *must* supply retry configs. If they do not, they have not correctly enabled ECH.",
+          "createdAt": "2023-11-15T00:25:03Z",
+          "updatedAt": "2023-11-15T00:25:03Z"
+        },
+        {
+          "author": "sayrer",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> \r\n> The rule is not that _most_ servers will want to supply retry configs. The rule is that _all_ servers that intend to enable ECH _must_ supply retry configs. If they do not, they have not correctly enabled ECH.\r\n\r\nWell, I didn't read it that way at all. But you can still get this same behavior by supplying something in retry configs you know will not work.\r\n\r\n`If none of the values provided in \"retry_configs\" contains a supported version, or an earlier TLS version was negotiated, the client can regard ECH as securely disabled by the server`\r\n\r\nI don't think this part is right. The server could send an ECHConfig with an \"unsupported mandatory extension\", for example.\r\n\r\n",
+          "createdAt": "2023-11-15T04:34:58Z",
+          "updatedAt": "2023-11-15T04:34:58Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I suppose that depends on what how you read \"can regard as\". If a client sees an ECHConfigList in DNS with only incompatible ECHConfigs, it will not offer ECH. Likewise, if the client sees it in retry configs, it should retry without offering ECH. This is to repair DNS/endpoint mismatches, so it should act as if it saw that in DNS.\r\n\r\nAnyway, I'd suggest that if some of the wording isn't clear to you, put together a PR? Hopefully the intent of the spec is clearer now.",
+          "createdAt": "2023-11-15T04:56:43Z",
+          "updatedAt": "2023-11-15T04:56:43Z"
+        },
+        {
+          "author": "sayrer",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I can understand your point of view here. But even accepting everything you've written, you can still get the effect I described in the first post. It just costs two connections vs an error right away. I guess you could also send `handshake_failure` on the first attempt.",
+          "createdAt": "2023-11-15T21:55:27Z",
+          "updatedAt": "2023-11-15T21:55:27Z"
+        }
+      ]
+    },
+    {
+      "number": 591,
+      "id": "I_kwDOB-yxNc526A8r",
+      "title": "Can we clarify the Misconfiguration section?",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/591",
+      "state": "OPEN",
+      "author": "taddhar",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "I am really struggling with this section and before I try again to make a proposal (I failed 3 times on my side) I will ask questions here and then see if and how I can make a proposal. Again consider WHO is the target audience of this section, not TLS developers or people who have been 30 years in it. Operational people will be either completely lost OR worse they will believe they understood which won't be the case. \r\n\r\nI understand too we can't expand too much the text here but now it is reaaally too compact to read it from non-expert side. \r\n\r\nSo to guide the help I need, here are a few questions.\r\n\r\nIn the clause \r\n\r\n```\r\n\"The retry mechanism repairs inconsistencies, provided the server is\r\nauthoritative for the public name. If server and advertised keys mismatch, the\r\nserver will reject ECH and respond with \"retry_configs\". If the server does\r\nnot understand\r\nthe \"encrypted_client_hello\" extension at all, it will ignore it as required by\r\n{{Section 4.1.2 of RFC8446}}. Provided the server can present a certificate\r\nvalid for the public name, the client can safely retry with updated settings,\r\nas described in {{rejected-ech}}.\"\r\n```\r\nCan somebody provide me with a precise definition of the term `the server is authoritative for the public name`\r\n\r\nCan somebody clarify me `If server and advertised keys mismatch` and give me some example. Good example of where you have to build in your brain, which server, which keys, why can they mismatch, etc. remember not everybody is a TLS developer or 30 years in it. Especially for WHO is the audience of this section.\r\n\r\nCan somebody clarify me `can present a certificate valid for the public name`. \r\n\r\nFinally can someone give an example after \r\n```\r\nUnless ECH is disabled as a result of successfully establishing a connection to\r\nthe public name \r\n\r\n```\r\n",
+      "createdAt": "2023-11-15T14:43:02Z",
+      "updatedAt": "2023-11-15T14:43:02Z",
       "closedAt": null,
       "comments": []
     }
@@ -54607,6 +54703,303 @@
           ]
         }
       ]
+    },
+    {
+      "number": 587,
+      "id": "PR_kwDOB-yxNc5fgMU4",
+      "title": "Proposed changes to the overview section to give better justice to ECH.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/587",
+      "state": "OPEN",
+      "author": "taddhar",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Currently the overview section is a sentence that is actually not giving an overview of the protocol. The sentence is simply the highlight for the topologies sub-section. But the topologies sub-section is not a protocol overview. ECH is much more than just a topology. \r\n\r\nThe proposal is to give justice to ECH and improve the overview section. \r\n\r\nAs I am both coming at a very late state of the development of this text and this is the first time I do this review I contemplate that there could be more options. \r\n\r\nFor example the first part of my text is a bit redundant with some of the text in the introduction, calling for whether my proposal should be moved to introductions or to rearrange the sections. \r\n\r\nYet, there is no where in the text a description on all the key design ideas and maybe my selection could be completed by more ideas, e.g. list DoH and DPRIVE too in this list, which will then be calling to overlaps with introduction section.\r\n\r\nAnyway, this is my current proposal because right now, the overview is not giving justice nor anywhere in the text to ECH.\r\n",
+      "createdAt": "2023-11-15T10:21:35Z",
+      "updatedAt": "2023-11-15T10:21:36Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
+      "headRepository": "taddhar/draft-ietf-tls-esni",
+      "headRefName": "ech-improve-overview",
+      "headRefOid": "26733de8130746f707f13ff13728344a190da47c",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 588,
+      "id": "PR_kwDOB-yxNc5fgUi4",
+      "title": "Ech proposed definitions",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/588",
+      "state": "OPEN",
+      "author": "taddhar",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This is a first attempt to propose some definitions. \r\n\r\nThere are indeed a number of problems in the document. \r\n\r\n- Some terms are inconsistently used, e.g. 'provider', 'ECH-service provider', 'client-facing' server. So I tried to fix that a little bit in the text. I think that the concept of 'provider' is actually good and is so indirectly understood, I wonder if there shouldn't be a bit more text to develop this good concept.\r\n- Some terms are abused e.g. 'public name' and 'public_name'. In addition on this one if you come the first time to this text, the immediate thinking is 'public name of what?'. So I understand why this term in the context of this text and understand it would be heavy to precise the 'public name of the origin server client-facing role' but still. Would be happy to discuss how we can make it a bit more explicit if at all possible.\r\n\r\nI am wondering if there are other terms that we should define too here but let's propose this first change. ",
+      "createdAt": "2023-11-15T10:44:17Z",
+      "updatedAt": "2023-11-15T10:44:18Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
+      "headRepository": "taddhar/draft-ietf-tls-esni",
+      "headRefName": "ech-proposed-definitions",
+      "headRefOid": "67a063fb7bded671aee843eae6f1c1324126a968",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 589,
+      "id": "PR_kwDOB-yxNc5fgbnA",
+      "title": "Minor editorial issues and fixing metadata to stop annoying make errors.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/589",
+      "state": "OPEN",
+      "author": "taddhar",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "- Fixing some minor editorial issues, e.g. the abuse of 'first' with no 'then' or 'second' or 'secondly' etc. \r\n- In X.509 don't forget the dot\r\n- Boring make errors because of metadata issues\r\n\r\nAbout the latter, I get the warning that I don't know how to fix\r\n\r\n```\r\nwarnings.warn(\r\n*** attributes left {\"authors\"=>[{\"ins\"=>\"K. Bhargavan\", \"org\"=>\"Inria\"}, {\"ins\"=>\"V. Cheval\", \"org\"=>\"Inria\"}, {\"ins\"=>\"C. Wood\", \"org\"=>\"Cloudflare\"}]}!\r\n```\r\n",
+      "createdAt": "2023-11-15T10:57:59Z",
+      "updatedAt": "2023-11-15T17:21:06Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
+      "headRepository": "taddhar/draft-ietf-tls-esni",
+      "headRefName": "ech-minor-edits",
+      "headRefOid": "a3aa9ab121d365b656294901da0864c03ebd752b",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "There's nothing wrong with \"First\"...\"later\". I don't think we should change these.",
+          "createdAt": "2023-11-15T17:20:49Z",
+          "updatedAt": "2023-11-15T17:20:49Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc5nRHUS",
+          "commit": {
+            "abbreviatedOid": "a3aa9ab"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "",
+          "createdAt": "2023-11-15T17:19:57Z",
+          "updatedAt": "2023-11-15T17:21:06Z",
+          "comments": [
+            {
+              "originalPosition": 55,
+              "body": "This is not correct. Yes, they are X.509 certificates, but the name of the enum in RFC 8446 (S 4.4.2i) ix \"X509\"\r\n\r\n```suggestion\r\nparticularly when using the X509 CertificateType, may result in additional\r\n```",
+              "createdAt": "2023-11-15T17:19:57Z",
+              "updatedAt": "2023-11-15T17:21:06Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 590,
+      "id": "PR_kwDOB-yxNc5fgr8Q",
+      "title": "Experimental proposal to add an Abbreviation section ommitting 'well \u2026",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/590",
+      "state": "OPEN",
+      "author": "taddhar",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "\u2026known' ones.\r\n\r\nSo this one is an experimental proposal because indeed I couldn't see many Abbreviation sections in any RFCs. \r\nI found an abbreviation list from 'Editors' but it stops being updated in 2021 (wondering the story behind this one).\r\nBut I liked the concept of well known abbreviations vs not well known ones. \r\n\r\nIn general when I read a text and moreover a complicated text, I hate to have to guess what means acronym A, B, C and or to have my brain to 'calculate' on the fly what it is or to have to research in another document. In my mind, it is 'basic respect' to the reader to put the acronym in plain. \r\n\r\nOF COURSE I do understand that for developers these are completely obvious. I get that. But for Operational people or other persona, sorry, I am not coding TLS every day so I made a mistake to understand HRR or EE and for example AAD has two meanings ... which is calling why we might want to put more definitions (See my other PR on definitions).\r\n\r\nAnyway we can debate if X or Y or Z is well known or not but I think there are too many new things in this one and an Abbreviation section would help.\r\n\r\nAs said in IETF 118, ECH is complex, so am trying to help a little bit on that line, but if nobody happy with it, just reject it.\r\n",
+      "createdAt": "2023-11-15T11:46:30Z",
+      "updatedAt": "2023-11-15T11:46:31Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
+      "headRepository": "taddhar/draft-ietf-tls-esni",
+      "headRefName": "ech-proposed-abbreviations",
+      "headRefOid": "6c991962d14c6c5b7899f2a97cbd95a9fa0bf52a",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 592,
+      "id": "PR_kwDOB-yxNc5fiVZ8",
+      "title": "Deployment considerations: Improving the compatibility middlebox sect\u2026",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/592",
+      "state": "OPEN",
+      "author": "taddhar",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "\u2026ion a little bit.\r\n\r\nIn this proposal I believe what is missing is the intention of this section. So I simply made it explicit so that it is easier to read what then comes after. \r\n\r\nIf not, it took me a long time and a discussion with colleagues to understand it without this context. Now you have a 'direction' of reading and it falls better in at least my mind.",
+      "createdAt": "2023-11-15T16:17:17Z",
+      "updatedAt": "2023-11-15T16:17:17Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
+      "headRepository": "taddhar/draft-ietf-tls-esni",
+      "headRefName": "ech-compatibility-middleboxes",
+      "headRefOid": "8bdfbe4cc1e853cd7827f1d09550bfe1a8e4da90",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 593,
+      "id": "PR_kwDOB-yxNc5fiidk",
+      "title": "A first proposal to fix the no-sni section.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/593",
+      "state": "OPEN",
+      "author": "taddhar",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "In this part of the text there would be a lot to say. \r\n\r\nFirst for non-English native speakers who are not familiar with the topic and in particular in operations or even to some degree in system architecture or network security domains, the text will be very difficult to read. \r\n\r\nIn fact think about someone in a Small and Medium Enterprises organization that has to ensure the security of its organization it will be close to impossible to connect the dots. How many dozen of millions of SMEs on the planet? \r\n\r\nAnyway, it is VERY hard to be more explicit in the context of this draft though I would be tempted to add examples and be more explicit on sub-contexts and on use cases e.g. put in hard BYOD will fail. but anyway this links to OUR Internet Draft on Deployment Considerations that suddenly makes a lot of sense as an expansion of this section from 1 page to 20+.\r\n\r\nOne could argue that there are many types of Middleboxes and they all will be affected by that (DPI, Firewalls, Proxies, etc.)\r\n\r\nHowever there is ONE section which is simply 1) wrong and 2) completely irrelevant is the last section which I removed. The only alternative would be to make a significant fix in that section and even if I fix it, it will add nothing to the fact that when a number of devices won't be able to access the SNI, they will break, period. \r\n\r\nSo I am happy to rework a section but the section will say that whilst in general the SNI is unreliable, in practice there are essential sub-context where is is not only VERY reliable but as well is a very valuable information for in-path actors who have many ways to check and validate and handle the unreliable part.",
+      "createdAt": "2023-11-15T16:52:03Z",
+      "updatedAt": "2023-11-15T16:59:43Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
+      "headRepository": "taddhar/draft-ietf-tls-esni",
+      "headRefName": "ech-proposed-no-sni-2",
+      "headRefOid": "615b0807b5c849b8b3cb8c4acd7d8866e1c0a136",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "taddhar",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Sorry this one is a mistake and should be rejected. I forgot to actually remove the paragraph. #594 is correct.",
+          "createdAt": "2023-11-15T16:59:43Z",
+          "updatedAt": "2023-11-15T16:59:43Z"
+        }
+      ],
+      "reviews": []
+    },
+    {
+      "number": 594,
+      "id": "PR_kwDOB-yxNc5fikZG",
+      "title": "A first proposal to fix the no-sni section.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/594",
+      "state": "OPEN",
+      "author": "taddhar",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "In this part of the text there would be a lot to say.\r\n\r\nFirst for non-English native speakers who are not familiar with the topic and in particular in operations or even to some degree in system architecture or network security domains, the text will be very difficult to read.\r\n\r\nIn fact think about someone in a Small and Medium Enterprises organization that has to ensure the security of its organization it will be close to impossible to connect the dots. How many dozen of millions of SMEs on the planet?\r\n\r\nAnyway, it is VERY hard to be more explicit in the context of this draft though I would be tempted to add examples and be more explicit on sub-contexts and on use cases e.g. put in hard BYOD will fail. but anyway this links to OUR Internet Draft on Deployment Considerations that suddenly makes a lot of sense as an expansion of this section from 1 page to 20+.\r\n\r\nOne could argue that there are many types of Middleboxes and they all will be affected by that (DPI, Firewalls, Proxies, etc.)\r\n\r\nHowever there is ONE section which is simply 1) wrong and 2) completely irrelevant is the last section which I removed. The only alternative would be to make a significant fix in that section and even if I fix it, it will add nothing to the fact that when a number of devices won't be able to access the SNI, they will break, period.\r\n\r\nSo I am happy to rework a section but the section will say that whilst in general the SNI is unreliable, in practice there are essential sub-context where is is not only VERY reliable but as well is a very valuable information for in-path actors who have many ways to check and validate and handle the unreliable part.",
+      "createdAt": "2023-11-15T16:57:15Z",
+      "updatedAt": "2023-11-16T00:31:29Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
+      "headRepository": "taddhar/draft-ietf-tls-esni",
+      "headRefName": "ech-proposed-no-sni-3",
+      "headRefOid": "1030cfb565bb6efc17fe38bf8f356c1b760135c1",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> So I am happy to rework a section but the section will say that whilst in general the SNI is unreliable, in practice there are essential sub-context where is is not only VERY reliable but as well is a very valuable information for in-path actors who have many ways to check and validate and handle the unreliable part.\r\n\r\nYou're going to have to explain more about why you think this is the case. Validating the certificate is insufficient. You need to ensure that the site has the corresponding private key, which you can't do passively with TLS 1.2 in non-PFS mode.",
+          "createdAt": "2023-11-15T17:05:22Z",
+          "updatedAt": "2023-11-15T17:05:22Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I appreciate that people *use* the SNI the way you indicate. But the point of this text is that this practice is not secure if the endpoint is compromised.",
+          "createdAt": "2023-11-15T17:14:12Z",
+          "updatedAt": "2023-11-15T17:14:12Z"
+        },
+        {
+          "author": "roelfdutoit",
+          "authorAssociation": "NONE",
+          "body": "Network security middleboxes utilize various techniques to improve the reliability of the control in an enterprise environment, inter alia:\r\n1. DNS hostname lookup of SNI and optional destination redirect or failure on mismatch.\r\n2. TLS \"probe\" sessions to validate not only the certificate and SAN entries, but also the ability of the destination to complete the TLS handshake.",
+          "createdAt": "2023-11-15T18:38:48Z",
+          "updatedAt": "2023-11-15T18:38:48Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I don't understand what (1) means. Re (2) this is not reliable because the attacker can simply forward the TLS connection to the true endpoint when being probed and it's straightforward to arrange that the probe connection doesn't look like a connection from their own compromised clients.\r\n",
+          "createdAt": "2023-11-15T18:50:34Z",
+          "updatedAt": "2023-11-15T18:50:34Z"
+        },
+        {
+          "author": "roelfdutoit",
+          "authorAssociation": "NONE",
+          "body": "> I don't understand what (1) means\r\n\r\ndstip_client = destination as observed on client side of middlebox\r\ndstip_sni = gethostbyname(SNI)\r\nOption 1: if (dstip_sni != dstip_client) then reset connection.\r\nOption 2: dstip = dstip_sni, i.e. redirect the connection to dstip_sni, where \"redirect\" is implementation specific.",
+          "createdAt": "2023-11-15T19:03:01Z",
+          "updatedAt": "2023-11-15T19:03:28Z"
+        },
+        {
+          "author": "roelfdutoit",
+          "authorAssociation": "NONE",
+          "body": "> (2) this is not reliable because the attacker can simply forward the TLS connection to the true endpoint \r\n\r\nSure, I agree, but do they really?  Implementing (2) forces the attacker to implement this relay, and when combined with (1) gives the middlebox a mechanism to detect an anomaly where the true endpoint dstip seems to have \"jumped\".",
+          "createdAt": "2023-11-15T19:12:56Z",
+          "updatedAt": "2023-11-15T19:12:56Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> > I don't understand what (1) means\r\n> \r\n> dstip_client = destination as observed on client side of middlebox dstip_sni = gethostbyname(SNI) Option 1: if (dstip_sni != dstip_client) then reset connection. Option 2: dstip = dstip_sni, i.e. redirect the connection to dstip_sni, where \"redirect\" is implementation specific.\r\n\r\nWait, you're talking about comparing the IP address? It's incredibly common to get different IPs for the same DNS name, so (1) is a non-starter (2) is really just like fighting with the load balancing on the server, so is bad news.\r\n",
+          "createdAt": "2023-11-15T19:25:06Z",
+          "updatedAt": "2023-11-15T19:25:06Z"
+        },
+        {
+          "author": "roelfdutoit",
+          "authorAssociation": "NONE",
+          "body": "> Wait, you're talking about comparing the IP address? It's incredibly common to get different IPs for the same DNS name, so (1) is a non-starter (2) is really just like fighting with the load balancing on the server, so is bad news.\r\n\r\nThe context of my comments is \"enterprise environment\".  Calling (1) a non-starter ignores the level of control an enterprise has over DNS (including DoH requests) and `gethostbyname` in my pseudo-code is not referring to a simple lookup.\r\n\r\nAs for (2).. the attacker tries to bypass the middlebox by using `www.example.org` as SNI on a TLS session to `c2.attacker.xxx`.  The middlebox will resolve `www.example.org` and connect upstream to `www.example.org`, not to `c2.attacker.xxx`.",
+          "createdAt": "2023-11-15T19:48:38Z",
+          "updatedAt": "2023-11-15T19:48:38Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "\r\n\r\nOn 15/11/2023 19:48, Roelof DuToit wrote:\r\n> The context of my comments is \"enterprise environment\".\r\n\r\nIMO any disagreement about the goals of this specification needs to be\r\nraised on the TLS WG list and (if it to have any effect) not as an\r\nissue on github. And in particular, one ought note the TLS WG and IETF\r\nmore broadly have already reached consensus on RFC8744 so attempts to\r\ncircumvent that consensus via github issues/PRs should and will\r\neventually be rejected on at least that basis.\r\n\r\nS.\r\n\r\n",
+          "createdAt": "2023-11-15T23:14:19Z",
+          "updatedAt": "2023-11-15T23:14:19Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> > Wait, you're talking about comparing the IP address? It's incredibly common to get different IPs for the same DNS name, so (1) is a non-starter (2) is really just like fighting with the load balancing on the server, so is bad news.\r\n> \r\n> The context of my comments is \"enterprise environment\". Calling (1) a non-starter ignores the level of control an enterprise has over DNS (including DoH requests) and `gethostbyname` in my pseudo-code is not referring to a simple lookup.\r\n> \r\n> As for (2).. the attacker tries to bypass the middlebox by using `www.example.org` as SNI on a TLS session to `c2.attacker.xxx`. The middlebox will resolve `www.example.org` and connect upstream to `www.example.org`, not to `c2.attacker.xxx`.\r\n\r\nThe relevant case here is one where the endpoint is doing its own DNS resolution invisibly to the enterprise, because *otherwise* the enterprise can just strip the ECHConfigs.\r\n\r\n",
+          "createdAt": "2023-11-16T00:05:38Z",
+          "updatedAt": "2023-11-16T00:05:38Z"
+        },
+        {
+          "author": "roelfdutoit",
+          "authorAssociation": "NONE",
+          "body": "> The relevant case here is one where the endpoint is doing its own DNS resolution invisibly to the enterprise, because otherwise the enterprise can just strip the ECHConfigs.\r\n\r\nUnderstood, but I thought we were discussing the reliabillity of SNI as control irrespective of ECH as stated in the text this PR is trying to modify: _\"use as a control even in the absence of ECH\"_.\r\n\r\nIn an enterprise environment where the client device is compromised the network security device will use the techniques I have described above to **improve** the reliability of SNI as a control.  I understand that the attacker can also improve its chances of not being detected, but it has to move up the [Pyramid of Pain](https://detect-respond.blogspot.com/2013/03/the-pyramid-of-pain.html) - just spoofing the SNI is an unreliable way to bypass advanced network security devices.",
+          "createdAt": "2023-11-16T00:31:29Z",
+          "updatedAt": "2023-11-16T00:31:29Z"
+        }
+      ],
+      "reviews": []
     }
   ]
 }
