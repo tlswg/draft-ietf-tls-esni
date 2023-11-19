@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2023-11-16T01:07:04.989201+00:00",
+  "timestamp": "2023-11-19T01:11:22.981744+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -54868,21 +54868,21 @@
       "id": "PR_kwDOB-yxNc5fiidk",
       "title": "A first proposal to fix the no-sni section.",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/593",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "taddhar",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "In this part of the text there would be a lot to say. \r\n\r\nFirst for non-English native speakers who are not familiar with the topic and in particular in operations or even to some degree in system architecture or network security domains, the text will be very difficult to read. \r\n\r\nIn fact think about someone in a Small and Medium Enterprises organization that has to ensure the security of its organization it will be close to impossible to connect the dots. How many dozen of millions of SMEs on the planet? \r\n\r\nAnyway, it is VERY hard to be more explicit in the context of this draft though I would be tempted to add examples and be more explicit on sub-contexts and on use cases e.g. put in hard BYOD will fail. but anyway this links to OUR Internet Draft on Deployment Considerations that suddenly makes a lot of sense as an expansion of this section from 1 page to 20+.\r\n\r\nOne could argue that there are many types of Middleboxes and they all will be affected by that (DPI, Firewalls, Proxies, etc.)\r\n\r\nHowever there is ONE section which is simply 1) wrong and 2) completely irrelevant is the last section which I removed. The only alternative would be to make a significant fix in that section and even if I fix it, it will add nothing to the fact that when a number of devices won't be able to access the SNI, they will break, period. \r\n\r\nSo I am happy to rework a section but the section will say that whilst in general the SNI is unreliable, in practice there are essential sub-context where is is not only VERY reliable but as well is a very valuable information for in-path actors who have many ways to check and validate and handle the unreliable part.",
       "createdAt": "2023-11-15T16:52:03Z",
-      "updatedAt": "2023-11-15T16:59:43Z",
+      "updatedAt": "2023-11-16T11:24:45Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
       "headRepository": "taddhar/draft-ietf-tls-esni",
       "headRefName": "ech-proposed-no-sni-2",
       "headRefOid": "615b0807b5c849b8b3cb8c4acd7d8866e1c0a136",
-      "closedAt": null,
+      "closedAt": "2023-11-16T11:24:45Z",
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
@@ -54909,7 +54909,7 @@
       "labels": [],
       "body": "In this part of the text there would be a lot to say.\r\n\r\nFirst for non-English native speakers who are not familiar with the topic and in particular in operations or even to some degree in system architecture or network security domains, the text will be very difficult to read.\r\n\r\nIn fact think about someone in a Small and Medium Enterprises organization that has to ensure the security of its organization it will be close to impossible to connect the dots. How many dozen of millions of SMEs on the planet?\r\n\r\nAnyway, it is VERY hard to be more explicit in the context of this draft though I would be tempted to add examples and be more explicit on sub-contexts and on use cases e.g. put in hard BYOD will fail. but anyway this links to OUR Internet Draft on Deployment Considerations that suddenly makes a lot of sense as an expansion of this section from 1 page to 20+.\r\n\r\nOne could argue that there are many types of Middleboxes and they all will be affected by that (DPI, Firewalls, Proxies, etc.)\r\n\r\nHowever there is ONE section which is simply 1) wrong and 2) completely irrelevant is the last section which I removed. The only alternative would be to make a significant fix in that section and even if I fix it, it will add nothing to the fact that when a number of devices won't be able to access the SNI, they will break, period.\r\n\r\nSo I am happy to rework a section but the section will say that whilst in general the SNI is unreliable, in practice there are essential sub-context where is is not only VERY reliable but as well is a very valuable information for in-path actors who have many ways to check and validate and handle the unreliable part.",
       "createdAt": "2023-11-15T16:57:15Z",
-      "updatedAt": "2023-11-16T00:31:29Z",
+      "updatedAt": "2023-11-16T12:35:58Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
@@ -54997,6 +54997,20 @@
           "body": "> The relevant case here is one where the endpoint is doing its own DNS resolution invisibly to the enterprise, because otherwise the enterprise can just strip the ECHConfigs.\r\n\r\nUnderstood, but I thought we were discussing the reliabillity of SNI as control irrespective of ECH as stated in the text this PR is trying to modify: _\"use as a control even in the absence of ECH\"_.\r\n\r\nIn an enterprise environment where the client device is compromised the network security device will use the techniques I have described above to **improve** the reliability of SNI as a control.  I understand that the attacker can also improve its chances of not being detected, but it has to move up the [Pyramid of Pain](https://detect-respond.blogspot.com/2013/03/the-pyramid-of-pain.html) - just spoofing the SNI is an unreliable way to bypass advanced network security devices.",
           "createdAt": "2023-11-16T00:31:29Z",
           "updatedAt": "2023-11-16T00:31:29Z"
+        },
+        {
+          "author": "taddhar",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "There is no disagreement on the goal of this draft, the disagreement is that the clause we are debating is wrong but more importantly it is irrelevant to this draft, so we are not even trying to fix it, this will confuse anyone and adds nothing to the benefit of ECH. ",
+          "createdAt": "2023-11-16T07:14:08Z",
+          "updatedAt": "2023-11-16T07:14:08Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "\r\n\r\nOn 16/11/2023 07:14, Arnaud Taddei wrote:\r\n> There is no disagreement on the goal of this draft\r\n\r\nGreat! I was more reacting to the discussion on the PR\r\nthan the PR text itself btw.\r\n\r\nS.\r\n",
+          "createdAt": "2023-11-16T12:35:58Z",
+          "updatedAt": "2023-11-16T12:35:58Z"
         }
       ],
       "reviews": []
