@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2023-11-19T01:11:22.981744+00:00",
+  "timestamp": "2023-11-21T01:09:36.096042+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12519,6 +12519,22 @@
       "body": "I am really struggling with this section and before I try again to make a proposal (I failed 3 times on my side) I will ask questions here and then see if and how I can make a proposal. Again consider WHO is the target audience of this section, not TLS developers or people who have been 30 years in it. Operational people will be either completely lost OR worse they will believe they understood which won't be the case. \r\n\r\nI understand too we can't expand too much the text here but now it is reaaally too compact to read it from non-expert side. \r\n\r\nSo to guide the help I need, here are a few questions.\r\n\r\nIn the clause \r\n\r\n```\r\n\"The retry mechanism repairs inconsistencies, provided the server is\r\nauthoritative for the public name. If server and advertised keys mismatch, the\r\nserver will reject ECH and respond with \"retry_configs\". If the server does\r\nnot understand\r\nthe \"encrypted_client_hello\" extension at all, it will ignore it as required by\r\n{{Section 4.1.2 of RFC8446}}. Provided the server can present a certificate\r\nvalid for the public name, the client can safely retry with updated settings,\r\nas described in {{rejected-ech}}.\"\r\n```\r\nCan somebody provide me with a precise definition of the term `the server is authoritative for the public name`\r\n\r\nCan somebody clarify me `If server and advertised keys mismatch` and give me some example. Good example of where you have to build in your brain, which server, which keys, why can they mismatch, etc. remember not everybody is a TLS developer or 30 years in it. Especially for WHO is the audience of this section.\r\n\r\nCan somebody clarify me `can present a certificate valid for the public name`. \r\n\r\nFinally can someone give an example after \r\n```\r\nUnless ECH is disabled as a result of successfully establishing a connection to\r\nthe public name \r\n\r\n```\r\n",
       "createdAt": "2023-11-15T14:43:02Z",
       "updatedAt": "2023-11-15T14:43:02Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 595,
+      "id": "I_kwDOB-yxNc53X0M-",
+      "title": "Will we loosen the ECHConfig.version == ECH-extension-codepoint requirement in the longer term?",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/595",
+      "state": "OPEN",
+      "author": "sftcd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "The text that describes ECHConfig.version includes: \"Beginning with draft-08, the version is the same as the code point for the \"encrypted_client_hello\" extension.\" I guess that'll need wordsmithing a bit before the RFC issues, but I have a question - am I right in assuming that if/when ECHv2 is defined with an extension codepoint of e.g. \"0xfe0e\" then it'd still be ok to use an ECHConfig with a version of 0xfe0d when emitting an ECHv2 extension in a ClientHello? \r\n\r\nThat assumes the specifiers of ECHv2 maintain some kind of backwards compatibility of course but I'd be surprised if that weren't done.\r\n\r\nReason to ask now is I'm looking at the ``#define``'d symbols in my code and wondering what code comment to add:-)",
+      "createdAt": "2023-11-20T18:05:14Z",
+      "updatedAt": "2023-11-20T18:05:14Z",
       "closedAt": null,
       "comments": []
     }
