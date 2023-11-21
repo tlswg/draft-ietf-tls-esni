@@ -1737,7 +1737,7 @@ oracle for testing encrypted SNI values.
       ClientHello
       + key_share
       + ech
-      + ech_outer_extensions(pre_shared_key)
+         + ech_outer_extensions(pre_shared_key)
       + pre_shared_key
                   -------->
                         (intercept)
