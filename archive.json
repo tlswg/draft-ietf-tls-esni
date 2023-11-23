@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2023-11-21T01:09:36.096042+00:00",
+  "timestamp": "2023-11-23T01:06:32.740441+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -55029,6 +55029,58 @@
           "updatedAt": "2023-11-16T12:35:58Z"
         }
       ],
+      "reviews": []
+    },
+    {
+      "number": 596,
+      "id": "PR_kwDOB-yxNc5gC8Cl",
+      "title": "Figure 5: figure spacing",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/596",
+      "state": "OPEN",
+      "author": "seanturner",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "I think ech_outer_extensions should be indented under ech.",
+      "createdAt": "2023-11-21T16:52:07Z",
+      "updatedAt": "2023-11-21T16:52:07Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
+      "headRepository": "tlswg/draft-ietf-tls-esni",
+      "headRefName": "seanturner-fig5-spacing",
+      "headRefOid": "94993b2085bab0104d9923069fcffd22499723d6",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 597,
+      "id": "PR_kwDOB-yxNc5gFNjd",
+      "title": "ech_outer_extensions: TLS 1.3 column change",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/597",
+      "state": "OPEN",
+      "author": "seanturner",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Change from \"\" to \"N/A\".",
+      "createdAt": "2023-11-22T01:40:23Z",
+      "updatedAt": "2023-11-22T01:40:23Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
+      "headRepository": "tlswg/draft-ietf-tls-esni",
+      "headRefName": "seanturner-reg-tweak-forech_out_ext",
+      "headRefOid": "5268e5bd3424d4aff1da9ddad7c07a7720a5b0f3",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
       "reviews": []
     }
   ]
