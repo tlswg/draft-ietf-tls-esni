@@ -1801,8 +1801,9 @@ ExtensionType (defined in {{!RFC8446}}):
 1. encrypted_client_hello(0xfe0d), with "TLS 1.3" column values set to
    "CH, HRR, EE", "DTLS-Only" column set to "N", and "Recommended" column set
    to "Yes".
-1. ech_outer_extensions(0xfd00), with the "TLS 1.3" column values set to "N/A",
-   "DTLS-Only" column set to "N", and "Recommended" column set to "Yes".
+1. ech_outer_extensions(0xfd00), with the "TLS 1.3" column values set to "CH",
+   "DTLS-Only" column set to "N", "Recommended" column set to "Yes", and the
+   "Comments" column set to "Only appears in inner CH."
 
 ## Update of the TLS Alert Registry {#alerts}
 
