@@ -5,12 +5,12 @@
 tls                                                          E. Rescorla
 Internet-Draft                                                RTFM, Inc.
 Intended status: Standards Track                                  K. Oku
-Expires: 25 May 2024                                              Fastly
+Expires: 14 June 2024                                             Fastly
                                                              N. Sullivan
                                              Cryptography Consulting LLC
                                                               C. A. Wood
                                                               Cloudflare
-                                                        22 November 2023
+                                                        12 December 2023
 
 
                        TLS Encrypted Client Hello
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 25 May 2024.
+   This Internet-Draft will expire on 14 June 2024.
 
 Copyright Notice
 
@@ -2002,8 +2002,9 @@ Table of Contents
        "Recommended" column set to "Yes".
 
    2.  ech_outer_extensions(0xfd00), with the "TLS 1.3" column values
-       set to "N/A", "DTLS-Only" column set to "N", and "Recommended"
-       column set to "Yes".
+       set to "CH", "DTLS-Only" column set to "N", "Recommended" column
+       set to "Yes", and the "Comments" column set to "Only appears in
+       inner CH."
 
 11.2.  Update of the TLS Alert Registry
 
