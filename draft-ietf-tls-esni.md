@@ -1803,7 +1803,7 @@ ExtensionType (defined in {{!RFC8446}}):
    to "Yes".
 1. ech_outer_extensions(0xfd00), with the "TLS 1.3" column values set to "CH",
    "DTLS-Only" column set to "N", "Recommended" column set to "Yes", and the
-   "Comments" column set to "Only appears in inner CH."
+   "Comment" column set to "Only appears in inner CH."
 
 ## Update of the TLS Alert Registry {#alerts}
 
