@@ -2714,18 +2714,20 @@ DNS results, if one is provided.<a href="#section-8.1.1-3" class="pilcrow">¶</a
           <h4 id="name-middleboxes">
 <a href="#section-8.1.2" class="section-number selfRef">8.1.2. </a><a href="#name-middleboxes" class="section-name selfRef">Middleboxes</a>
           </h4>
-<p id="section-8.1.2-1">When connecting through a TLS-terminating proxy that does not support this
-extension, <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>], <a href="https://rfc-editor.org/rfc/rfc8446#section-9.3" class="relref">Section 9.3</a></span> requires the proxy still act as a
-conforming TLS client and server. The proxy must ignore unknown parameters, and
+<p id="section-8.1.2-1">The requirements in <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>], <a href="https://rfc-editor.org/rfc/rfc8446#section-9.3" class="relref">Section 9.3</a></span> which require proxies to
+act as conforming TLS client and server provide interoperability
+with TLS-terminating proxies even in cases where the server supports
+ECH but the proxy does not, as detailed below.<a href="#section-8.1.2-1" class="pilcrow">¶</a></p>
+<p id="section-8.1.2-2">The proxy must ignore unknown parameters, and
 generate its own ClientHello containing only parameters it understands. Thus,
 when presenting a certificate to the client or sending a ClientHello to the
 server, the proxy will act as if connecting to the ClientHelloOuter
 server_name, which SHOULD match the public name (see <a href="#real-ech" class="auto internal xref">Section 6.1</a>), without
-echoing the "encrypted_client_hello" extension.<a href="#section-8.1.2-1" class="pilcrow">¶</a></p>
-<p id="section-8.1.2-2">Depending on whether the client is configured to accept the proxy's certificate
+echoing the "encrypted_client_hello" extension.<a href="#section-8.1.2-2" class="pilcrow">¶</a></p>
+<p id="section-8.1.2-3">Depending on whether the client is configured to accept the proxy's certificate
 as authoritative for the public name, this may trigger the retry logic described
 in <a href="#rejected-ech" class="auto internal xref">Section 6.1.6</a> or result in a connection failure. A proxy which is not
-authoritative for the public name cannot forge a signal to disable ECH.<a href="#section-8.1.2-2" class="pilcrow">¶</a></p>
+authoritative for the public name cannot forge a signal to disable ECH.<a href="#section-8.1.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
