@@ -1216,13 +1216,10 @@ DNS results, if one is provided.
 
 ### Middleboxes
 
-Middleboxes that are comforming to TLS1.3 specification will have the basis
-to ensure a good compatibility experience when handling a TLS1.3 communication
-with ECH extension.
-
-Indeed, when connecting through a TLS-terminating proxy that does not support
-this extension, {{RFC8446, Section 9.3}} requires the proxy still act as a
-conforming TLS client and server.
+The requirements in {{RFC8446, Section 9.3}} which require proxies to
+act as conforming TLS client and server provide interoperability
+with TLS-terminating proxies even in cases where the server supports
+ECH but the proxy does not, as detailed below.
 
 The proxy must ignore unknown parameters, and
 generate its own ClientHello containing only parameters it understands. Thus,
