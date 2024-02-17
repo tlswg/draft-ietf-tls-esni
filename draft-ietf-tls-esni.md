@@ -88,8 +88,8 @@ client DNS queries or visible server IP addresses. However, DoH {{?RFC8484}}
 and DPRIVE {{?RFC7858}} {{?RFC8094}} provide mechanisms for clients to conceal
 DNS lookups from network inspection, and many TLS servers host multiple domains
 on the same IP address. Private origins may also be deployed behind a common
-provider, such as a reverse proxy. In such environments, the SNI remains the
-primary explicit signal used to determine the server's identity.
+service provider, such as a reverse proxy. In such environments, the SNI remains
+the primary explicit signal used to determine the server's identity.
 
 This document specifies a new TLS extension, called Encrypted Client Hello
 (ECH), that allows clients to encrypt their ClientHello to such a deployment.
@@ -116,13 +116,31 @@ document are to be interpreted as described in BCP 14 {{RFC2119}} {{!RFC8174}}
 when, and only when, they appear in all capitals, as shown here. All TLS
 notation comes from {{RFC8446, Section 3}}.
 
-# Overview
+# Deployment Overview
 
 This protocol is designed to operate in one of two topologies illustrated below,
 which we call "Shared Mode" and "Split Mode". These modes are described in the
 following section.
 
 ## Topologies
+
+The simplest topology is "Shared Mode", in which a service provider is
+the origin server for multiple domains ("private.example.org" and
+"public.example.com" in {{shared-mode}}). The DNS records for both
+domains point to the service provider's server and so when the client
+wished to connect to one of those domains it forms a transport-level
+connection to that server which then terminates the TLS connection,
+with the SNI used to distinguish which domain the client is trying to
+reach. This corresponds to how TLS servers are deployed today, and in
+Shared Mode ECH differs only in that the ClientHello (and hence the
+SNI) is encrypted for the server, thus preventing on-path attackers
+from determining which domains the client is connecting to.
+
+Note that even in Shared mode, it is possible that the service provider's
+server actually is contacting some other server at the application layer
+(as in a reverse proxy) but this is invisible at the TLS layer; from
+the perspective of the client, the servicer provider's server is the
+server.
 
 ~~~~
                 +---------------------+
@@ -139,9 +157,9 @@ Client <----->  | private.example.org |
 ~~~~
 {: #shared-mode title="Shared Mode Topology"}
 
-In Shared Mode, the provider is the origin server for all the domains whose DNS
-records point to it. In this mode, the TLS connection is terminated by the
-provider.
+ECH can also be operated in "Split Mode", in which the transport-level
+connection is terminated by one server but the TLS-level connection is
+terminated by a server behind it, as shown in {{split-mode}}.
 
 ~~~~
            +--------------------+     +---------------------+
@@ -155,17 +173,39 @@ Client <----------------------------->|                     |
 ~~~~
 {: #split-mode title="Split Mode Topology"}
 
-In Split Mode, the provider is not the origin server for private domains.
-Rather, the DNS records for private domains point to the provider, and the
-provider's server relays the connection back to the origin server, who
-terminates the TLS connection with the client. Importantly, the service provider
-does not have access to the plaintext of the connection beyond the unencrypted
-portions of the handshake.
+As before, the DNS records for "public.example.com" and "private.example.org"
+point to the same server, which is typically still operated by some large
+provider (thus retaining a large anonymity set), but that server is not
+the TLS origin for the private domains. For concreteness, we call this
+the server the "Client-facing server". When the client wants to connect
+to either site, it makes a transport-level connection to the client-facing
+server and provides the encrypted ClientHello. The client-facing server
+decrypts that ClientHello value and recovers the SNI
+(see the next section for the case where the server is unable to decrypt
+the ClientHello). Depending on the contents of the SNI, the server will either.
 
-In the remainder of this document, we will refer to the ECH-service provider as
-the "client-facing server" and to the TLS terminator as the "backend server".
-These are the same entity in Shared Mode, but in Split Mode, the client-facing
-and backend servers are physically separated.
+* If the SNI corresponds to a domain served by the client-facing server, it will
+  terminate the TLS connection itself.
+
+* If the SNI corresponds to a private domain served by another server
+  (the "backend server") it will forward the TLS connection to that
+  server, which will terminate it at the TLS layer. The client-facing
+  server relays the TLS-encrypted traffic to between the client and
+  the backend server but does not have access to the plaintext of the
+  connection beyond the unencrypted portions of the handshake.
+
+A given client-facing server may serve multiple private domains which
+are served by distinct backend servers, using the SNI value to multiplex
+between them. However, it is necessary for a client-facing server to
+itself be the origin server for at least one domain, corresponding to
+the "public name". This enables the client-facing server to quickly
+update its ECH keys or disable ECH entirely without waiting for
+DNS changes to propagate, as described in the next
+section {{rejected-ech}}.
+
+Note that the client does not need to know whether a given domain
+is operating in Shared Mode or Split Mode; its behavior is the same
+in either case.
 
 See {{security-considerations}} for more discussion about the ECH threat model
 and how it relates to the client, client-facing server, and backend server.
