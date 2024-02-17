@@ -877,9 +877,11 @@ because the client will send cookies to the server in parallel connections,
 using the retry configurations for these parallel connections does not
 introduce a new tracking vector.
 
-If none of the values provided in "retry_configs" contains a supported version,
-or an earlier TLS version was negotiated, the client can regard ECH as securely
-disabled by the server, and it SHOULD retry the handshake with a new transport
+If none of the values provided in "retry_configs" contains a supported
+version, the server did not supply an "encrypted_client_hello"
+extension in its EncryptedExtensions message, or an earlier TLS
+version was negotiated, the client can regard ECH as securely disabled
+by the server, and it SHOULD retry the handshake with a new transport
 connection and ECH disabled.
 
 Clients SHOULD implement a limit on retries caused by receipt of "retry_configs"
