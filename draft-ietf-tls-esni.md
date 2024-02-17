@@ -5,7 +5,8 @@ docname: draft-ietf-tls-esni-latest
 category: std
 
 ipr: trust200902
-area: General
+submissiontype: IETF
+area: SEC
 workgroup: tls
 keyword: Internet-Draft
 
