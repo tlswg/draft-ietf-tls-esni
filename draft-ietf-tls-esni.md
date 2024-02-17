@@ -116,13 +116,14 @@ document are to be interpreted as described in BCP 14 {{RFC2119}} {{!RFC8174}}
 when, and only when, they appear in all capitals, as shown here. All TLS
 notation comes from {{RFC8446, Section 3}}.
 
-# Deployment Overview
+# Overview
 
-This protocol is designed to operate in one of two topologies illustrated below,
-which we call "Shared Mode" and "Split Mode". These modes are described in the
-following section.
+This section provides an overview of ECH Protocol Operation.
 
 ## Topologies
+
+This protocol is designed to operate in one of two topologies illustrated below,
+which we call "Shared Mode" and "Split Mode".
 
 The simplest topology is "Shared Mode", in which a service provider is
 the origin server for multiple domains ("private.example.org" and
@@ -200,8 +201,7 @@ between them. However, it is necessary for a client-facing server to
 itself be the origin server for at least one domain, corresponding to
 the "public name". This enables the client-facing server to quickly
 update its ECH keys or disable ECH entirely without waiting for
-DNS changes to propagate, as described in the next
-section {{rejected-ech}}.
+DNS changes to propagate, as described in {{misconfiguration}}.
 
 Note that the client does not need to know whether a given domain
 is operating in Shared Mode or Split Mode; its behavior is the same
@@ -248,6 +248,52 @@ The primary goal of ECH is to ensure that connections to servers in the same
 anonymity set are indistinguishable from one another. Moreover, it should
 achieve this goal without affecting any existing security properties of TLS 1.3.
 See {{goals}} for more details about the ECH security and privacy goals.
+
+
+### Misconfiguration and Deployment Concerns {#misconfiguration}
+
+It is possible for ECH advertisements and servers to become inconsistent. This
+may occur, for instance, from DNS misconfiguration, caching issues, or an
+incomplete rollout in a multi-server deployment. This may also occur if a server
+loses its ECH keys, or if a deployment of ECH must be rolled back on the server.
+Whatever the cause, there are two main consequences:
+
+* The server has ECH configured but the client has an ECH configuration with a
+  key not known to the server.
+
+* The server has ECH configured but the client has a ECH configuration
+  and so is attempting ECH.
+
+In either case, the server will not be able to decrypt the
+ClientHelloInner.  ECH includes a retry mechanism that allows the
+server to repair these inconsistencies, as described in this section.
+
+As described above, the client-facing server must be the
+origin server for at least one domain, the "public name", and
+must have a valid certificate containing that name. The
+ECH configuration contains the public name, so the client knows
+it at the time it tries to create the TLS connection.
+
+If the client-facing server is unable to decrypt the ClientHelloInner
+field, then it instead terminates the TLS connection with the
+certificate and private key corresponding to that name (see
+{{rejected-ech}}.
+
+* If the server supports ECH but not with the key the client used,
+  the server's handshake will contain the correct key, in which
+  case the client can retry ECH with the new key.
+
+* If the server does not understand the "encrypted_client_hello"
+  extension at all, it will ignore it as required by
+  {{Section 4.1.2 of RFC8446}}, in which case the client
+  can retry the connection without ECH.
+
+Note that the security of this mechanism depends on the server
+actually being able to complete the handshake using a valid
+certificate for the public name. An attacker without such
+a certificate will not be able to use this retry mechanism
+to recover the actual SNI value.
+
 
 # Encrypted ClientHello Configuration {#ech-configuration}
 
@@ -1232,27 +1278,34 @@ guarantee. Thus this protocol was designed to be robust in case of
 inconsistencies between systems that advertise ECH keys and servers, at the cost
 of extra round-trips due to a retry. Two specific scenarios are detailed below.
 
-### Misconfiguration and Deployment Concerns {#misconfiguration}
+### Misconfiguration and Deployment Concerns {#misconfiguration-deployment}
 
-It is possible for ECH advertisements and servers to become inconsistent. This
-may occur, for instance, from DNS misconfiguration, caching issues, or an
-incomplete rollout in a multi-server deployment. This may also occur if a server
-loses its ECH keys, or if a deployment of ECH must be rolled back on the server.
+The retry mechanism described in {{rejected-ech}} allows the server to
+recover from situations where it is not able to decrypt the ECH field,
+for instance if the client has a stale ECHConfig or the server has lost
+the keys. The security of this mechanism is rooted in the server having
+a certificate for the public name in the ECHConfig.
 
-The retry mechanism repairs inconsistencies, provided the server is
-authoritative for the public name. If server and advertised keys mismatch, the
-server will reject ECH and respond with "retry_configs". If the server does
-not understand
-the "encrypted_client_hello" extension at all, it will ignore it as required by
-{{Section 4.1.2 of RFC8446}}. Provided the server can present a certificate
-valid for the public name, the client can safely retry with updated settings,
-as described in {{rejected-ech}}.
+Unless ECH is disabled as a result of successfully establishing a
+connection to the public name, the client MUST NOT fall back to using
+unencrypted ClientHellos. This means that there are situations where
+the client may not be able to connect to the server at all, such as:
 
-Unless ECH is disabled as a result of successfully establishing a connection to
-the public name, the client MUST NOT fall back to using unencrypted
-ClientHellos, as this allows a network attacker to disclose the contents of this
-ClientHello, including the SNI. It MAY attempt to use another server from the
+- If there is a transport-level failure
+- If TLS handshake does not complete successfully
+- If TLS handshake completes using the ClientHelloOuter but with a certificate
+  which is not valid for the public name.
+
+Falling back to unencrypted ClientHellos in any of these cases would
+allow a network attacker to disclose the contents of this ClientHello,
+including the SNI. This restriction may mean that certain kinds of
+network misbehavior or misconfiguration (see {{middleboxes}} may make
+it impossible to complete an ECH connection where an ordinary TLS 1.3
+connection would work.
+
+Clients MAY attempt to use another server or ECHConfig value from the
 DNS results, if one is provided.
+
 
 ### Middleboxes
 
