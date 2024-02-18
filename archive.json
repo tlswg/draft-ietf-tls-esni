@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-02-15T01:03:18.286245+00:00",
+  "timestamp": "2024-02-18T01:06:44.349745+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -72,6 +72,21 @@
       "name": "parked",
       "description": "Parked for deployment experience",
       "color": "FB56EA"
+    },
+    {
+      "name": "propose to close",
+      "description": "",
+      "color": "3C1057"
+    },
+    {
+      "name": "merge ready",
+      "description": "",
+      "color": "0E8A16"
+    },
+    {
+      "name": "pr available",
+      "description": "",
+      "color": "c2e0c6"
     }
   ],
   "issues": [
@@ -12415,16 +12430,24 @@
       "id": "I_kwDOB-yxNc52QXZg",
       "title": "s11.1 item 2: include \"TLS 1.3\" column values",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/585",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "seanturner",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "Need to indicate where extension can appear.",
       "createdAt": "2023-11-08T16:40:29Z",
-      "updatedAt": "2023-11-08T16:40:29Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2024-02-17T15:25:23Z",
+      "closedAt": "2024-02-17T15:25:23Z",
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Done.",
+          "createdAt": "2024-02-17T15:25:23Z",
+          "updatedAt": "2024-02-17T15:25:23Z"
+        }
+      ]
     },
     {
       "number": 586,
@@ -12435,10 +12458,12 @@
       "author": "sayrer",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "propose to close"
+      ],
       "body": "I understand why the last part of this section is there.\r\n\r\n`Otherwise, if all candidate ECHConfig values fail to decrypt the extension, the client-facing server MUST ignore the extension and proceed with the connection using ClientHelloOuter, ...`\r\n\r\nIs this part really a MUST, though? Maybe `if the server wishes to allow retries...`? I noticed that you can get the same effect by sending no `retry_configs` and refusing non-ECH connections, just with double the connection attempts. So why not allow `ech_failure` errors? Apologies if this part was already discussed, I might have missed it.",
       "createdAt": "2023-11-14T19:44:00Z",
-      "updatedAt": "2023-11-15T21:55:28Z",
+      "updatedAt": "2024-02-17T15:27:20Z",
       "closedAt": null,
       "comments": [
         {
@@ -12503,6 +12528,13 @@
           "body": "I can understand your point of view here. But even accepting everything you've written, you can still get the effect I described in the first post. It just costs two connections vs an error right away. I guess you could also send `handshake_failure` on the first attempt.",
           "createdAt": "2023-11-15T21:55:27Z",
           "updatedAt": "2023-11-15T21:55:27Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Absent more support, I plan to close this on 2/24.",
+          "createdAt": "2024-02-17T15:26:57Z",
+          "updatedAt": "2024-02-17T15:27:14Z"
         }
       ]
     },
@@ -12515,26 +12547,69 @@
       "author": "taddhar",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "pr available"
+      ],
       "body": "I am really struggling with this section and before I try again to make a proposal (I failed 3 times on my side) I will ask questions here and then see if and how I can make a proposal. Again consider WHO is the target audience of this section, not TLS developers or people who have been 30 years in it. Operational people will be either completely lost OR worse they will believe they understood which won't be the case. \r\n\r\nI understand too we can't expand too much the text here but now it is reaaally too compact to read it from non-expert side. \r\n\r\nSo to guide the help I need, here are a few questions.\r\n\r\nIn the clause \r\n\r\n```\r\n\"The retry mechanism repairs inconsistencies, provided the server is\r\nauthoritative for the public name. If server and advertised keys mismatch, the\r\nserver will reject ECH and respond with \"retry_configs\". If the server does\r\nnot understand\r\nthe \"encrypted_client_hello\" extension at all, it will ignore it as required by\r\n{{Section 4.1.2 of RFC8446}}. Provided the server can present a certificate\r\nvalid for the public name, the client can safely retry with updated settings,\r\nas described in {{rejected-ech}}.\"\r\n```\r\nCan somebody provide me with a precise definition of the term `the server is authoritative for the public name`\r\n\r\nCan somebody clarify me `If server and advertised keys mismatch` and give me some example. Good example of where you have to build in your brain, which server, which keys, why can they mismatch, etc. remember not everybody is a TLS developer or 30 years in it. Especially for WHO is the audience of this section.\r\n\r\nCan somebody clarify me `can present a certificate valid for the public name`. \r\n\r\nFinally can someone give an example after \r\n```\r\nUnless ECH is disabled as a result of successfully establishing a connection to\r\nthe public name \r\n\r\n```\r\n",
       "createdAt": "2023-11-15T14:43:02Z",
-      "updatedAt": "2023-11-15T14:43:02Z",
+      "updatedAt": "2024-02-17T18:15:20Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "See #602.",
+          "createdAt": "2024-02-17T18:12:45Z",
+          "updatedAt": "2024-02-17T18:12:45Z"
+        }
+      ]
     },
     {
       "number": 595,
       "id": "I_kwDOB-yxNc53X0M-",
       "title": "Will we loosen the ECHConfig.version == ECH-extension-codepoint requirement in the longer term?",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/595",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "sftcd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "propose to close"
+      ],
       "body": "The text that describes ECHConfig.version includes: \"Beginning with draft-08, the version is the same as the code point for the \"encrypted_client_hello\" extension.\" I guess that'll need wordsmithing a bit before the RFC issues, but I have a question - am I right in assuming that if/when ECHv2 is defined with an extension codepoint of e.g. \"0xfe0e\" then it'd still be ok to use an ECHConfig with a version of 0xfe0d when emitting an ECHv2 extension in a ClientHello? \r\n\r\nThat assumes the specifiers of ECHv2 maintain some kind of backwards compatibility of course but I'd be surprised if that weren't done.\r\n\r\nReason to ask now is I'm looking at the ``#define``'d symbols in my code and wondering what code comment to add:-)",
       "createdAt": "2023-11-20T18:05:14Z",
-      "updatedAt": "2023-11-20T18:05:14Z",
+      "updatedAt": "2024-02-17T17:01:34Z",
+      "closedAt": "2024-02-17T17:01:34Z",
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "This text should just go away once the RFC is published, so I think we can close this. @sftcd ",
+          "createdAt": "2024-02-17T15:26:31Z",
+          "updatedAt": "2024-02-17T15:26:31Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "at this point, close away",
+          "createdAt": "2024-02-17T17:01:06Z",
+          "updatedAt": "2024-02-17T17:01:06Z"
+        }
+      ]
+    },
+    {
+      "number": 604,
+      "id": "I_kwDOB-yxNc5_lKDj",
+      "title": "Memory for ECH rejection",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/604",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "In https://mailarchive.ietf.org/arch/msg/tls/bvvWbtxJAiMfilfy32EvdaCszQ4/, Elardus Erasmus suggests that the suggestion to limit retries for servers which have rejected ECH is too broad, and we should have different guidance for key/config changes than for just disabling ECH. He also suggests a \"holdoff period\" when connections were disabled.  I do think that this gets at something real, but I'm not sure of the proposed resolution. \r\n\r\nISTM that there are two issues:\r\n\r\n\r\n# Limiting Retries\r\n\r\nIf the server securely disables ECH, then the client should expect a subsequent connection to succeed and there is no way for the server to ask for a retry. So I don't think we need a limit here.\r\n\r\nHowever, if the server supplies a new key, it's possible to get into some kind of loop, for instance, if there are two servers with different keys and the client bounces between them. Rather than suggesting that there be an unspecified limit, I think it would be better just to forbid a connection initiated from a retry_config from itself causing a new connection. That means that if servers are so misconfigured that they offer a retry_config that then doesn't work that they will just fail, but that should be rare, and in any case, you're in deep trouble in that case.\r\n\r\n\r\n# Remembering Retry\r\n\r\nUnless I've misread the text, it implies but doesn't say that the retry_configs and secure disablement are for this connection only and that the client should not use them even for a connection which is initiated immediately after the one where it retries (as in multiple HTTP 1.1 connections). As Erasmus indicates, this increases load on the server as well as latency and has to be balanced with the observation that the retry_configs are a tracking vector (as noted in the text). He suggests a \"holdoff\" where you don't retry ECH if it was securely disabled, but no change in cases where a valid retry_config was provided.\r\n\r\nI wonder if we should be a bit more expansive about this, given that we have other TLS-related tracking vectors that clients already need to mitigate (e.g., resumption) and there are already mechanisms to handle this. With that in mind, how about:\r\n\r\n- Clients should remember updated configuration or disabled ECH for up to the lifetime of the ECHConfig (this also gives some content to \"holdoff\").\r\n- Clients should partition retry_configs in both time and space the same way they would for resumption PSKs (this is something browsers already do).\r\n\r\nAm I missing something important?\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+      "createdAt": "2024-02-17T18:47:13Z",
+      "updatedAt": "2024-02-17T18:47:13Z",
       "closedAt": null,
       "comments": []
     }
@@ -54729,10 +54804,12 @@
       "author": "taddhar",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "propose to close"
+      ],
       "body": "Currently the overview section is a sentence that is actually not giving an overview of the protocol. The sentence is simply the highlight for the topologies sub-section. But the topologies sub-section is not a protocol overview. ECH is much more than just a topology. \r\n\r\nThe proposal is to give justice to ECH and improve the overview section. \r\n\r\nAs I am both coming at a very late state of the development of this text and this is the first time I do this review I contemplate that there could be more options. \r\n\r\nFor example the first part of my text is a bit redundant with some of the text in the introduction, calling for whether my proposal should be moved to introductions or to rearrange the sections. \r\n\r\nYet, there is no where in the text a description on all the key design ideas and maybe my selection could be completed by more ideas, e.g. list DoH and DPRIVE too in this list, which will then be calling to overlaps with introduction section.\r\n\r\nAnyway, this is my current proposal because right now, the overview is not giving justice nor anywhere in the text to ECH.\r\n",
       "createdAt": "2023-11-15T10:21:35Z",
-      "updatedAt": "2023-11-15T10:21:36Z",
+      "updatedAt": "2024-02-17T18:13:01Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
@@ -54743,7 +54820,15 @@
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "See #602",
+          "createdAt": "2024-02-17T17:17:59Z",
+          "updatedAt": "2024-02-17T18:13:01Z"
+        }
+      ],
       "reviews": []
     },
     {
@@ -54755,10 +54840,12 @@
       "author": "taddhar",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "propose to close"
+      ],
       "body": "This is a first attempt to propose some definitions. \r\n\r\nThere are indeed a number of problems in the document. \r\n\r\n- Some terms are inconsistently used, e.g. 'provider', 'ECH-service provider', 'client-facing' server. So I tried to fix that a little bit in the text. I think that the concept of 'provider' is actually good and is so indirectly understood, I wonder if there shouldn't be a bit more text to develop this good concept.\r\n- Some terms are abused e.g. 'public name' and 'public_name'. In addition on this one if you come the first time to this text, the immediate thinking is 'public name of what?'. So I understand why this term in the context of this text and understand it would be heavy to precise the 'public name of the origin server client-facing role' but still. Would be happy to discuss how we can make it a bit more explicit if at all possible.\r\n\r\nI am wondering if there are other terms that we should define too here but let's propose this first change. ",
       "createdAt": "2023-11-15T10:44:17Z",
-      "updatedAt": "2023-11-15T10:44:18Z",
+      "updatedAt": "2024-02-17T17:17:17Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
@@ -54769,7 +54856,15 @@
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I see what you're getting at here. See #601.",
+          "createdAt": "2024-02-17T17:17:17Z",
+          "updatedAt": "2024-02-17T17:17:17Z"
+        }
+      ],
       "reviews": []
     },
     {
@@ -54777,21 +54872,21 @@
       "id": "PR_kwDOB-yxNc5fgbnA",
       "title": "Minor editorial issues and fixing metadata to stop annoying make errors.",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/589",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "taddhar",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "- Fixing some minor editorial issues, e.g. the abuse of 'first' with no 'then' or 'second' or 'secondly' etc. \r\n- In X.509 don't forget the dot\r\n- Boring make errors because of metadata issues\r\n\r\nAbout the latter, I get the warning that I don't know how to fix\r\n\r\n```\r\nwarnings.warn(\r\n*** attributes left {\"authors\"=>[{\"ins\"=>\"K. Bhargavan\", \"org\"=>\"Inria\"}, {\"ins\"=>\"V. Cheval\", \"org\"=>\"Inria\"}, {\"ins\"=>\"C. Wood\", \"org\"=>\"Cloudflare\"}]}!\r\n```\r\n",
       "createdAt": "2023-11-15T10:57:59Z",
-      "updatedAt": "2023-11-15T17:21:06Z",
+      "updatedAt": "2024-02-17T15:12:28Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
       "headRepository": "taddhar/draft-ietf-tls-esni",
       "headRefName": "ech-minor-edits",
       "headRefOid": "a3aa9ab121d365b656294901da0864c03ebd752b",
-      "closedAt": null,
+      "closedAt": "2024-02-17T15:12:27Z",
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
@@ -54802,6 +54897,13 @@
           "body": "There's nothing wrong with \"First\"...\"later\". I don't think we should change these.",
           "createdAt": "2023-11-15T17:20:49Z",
           "updatedAt": "2023-11-15T17:20:49Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I have fixed the metadata issue in #599. \r\n\r\nAs noted above, I don't believe the proposed text changes are necessary/right and as they are within editorial discretion, I am closing the PR unmerged.",
+          "createdAt": "2024-02-17T15:12:28Z",
+          "updatedAt": "2024-02-17T15:12:28Z"
         }
       ],
       "reviews": [
@@ -54832,25 +54934,33 @@
       "id": "PR_kwDOB-yxNc5fgr8Q",
       "title": "Experimental proposal to add an Abbreviation section ommitting 'well \u2026",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/590",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "taddhar",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "\u2026known' ones.\r\n\r\nSo this one is an experimental proposal because indeed I couldn't see many Abbreviation sections in any RFCs. \r\nI found an abbreviation list from 'Editors' but it stops being updated in 2021 (wondering the story behind this one).\r\nBut I liked the concept of well known abbreviations vs not well known ones. \r\n\r\nIn general when I read a text and moreover a complicated text, I hate to have to guess what means acronym A, B, C and or to have my brain to 'calculate' on the fly what it is or to have to research in another document. In my mind, it is 'basic respect' to the reader to put the acronym in plain. \r\n\r\nOF COURSE I do understand that for developers these are completely obvious. I get that. But for Operational people or other persona, sorry, I am not coding TLS every day so I made a mistake to understand HRR or EE and for example AAD has two meanings ... which is calling why we might want to put more definitions (See my other PR on definitions).\r\n\r\nAnyway we can debate if X or Y or Z is well known or not but I think there are too many new things in this one and an Abbreviation section would help.\r\n\r\nAs said in IETF 118, ECH is complex, so am trying to help a little bit on that line, but if nobody happy with it, just reject it.\r\n",
       "createdAt": "2023-11-15T11:46:30Z",
-      "updatedAt": "2023-11-15T11:46:31Z",
+      "updatedAt": "2024-02-17T15:13:53Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
       "headRepository": "taddhar/draft-ietf-tls-esni",
       "headRefName": "ech-proposed-abbreviations",
       "headRefOid": "6c991962d14c6c5b7899f2a97cbd95a9fa0bf52a",
-      "closedAt": null,
+      "closedAt": "2024-02-17T15:13:52Z",
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I don't think this is necessary. Most of these are terms of art in TLS. I don't see how it's possible to understand this specification in the context of TLS without knowing what AEAD is, for instance.",
+          "createdAt": "2024-02-17T15:13:52Z",
+          "updatedAt": "2024-02-17T15:13:52Z"
+        }
+      ],
       "reviews": []
     },
     {
@@ -54858,25 +54968,33 @@
       "id": "PR_kwDOB-yxNc5fiVZ8",
       "title": "Deployment considerations: Improving the compatibility middlebox sect\u2026",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/592",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "taddhar",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "\u2026ion a little bit.\r\n\r\nIn this proposal I believe what is missing is the intention of this section. So I simply made it explicit so that it is easier to read what then comes after. \r\n\r\nIf not, it took me a long time and a discussion with colleagues to understand it without this context. Now you have a 'direction' of reading and it falls better in at least my mind.",
       "createdAt": "2023-11-15T16:17:17Z",
-      "updatedAt": "2023-11-15T16:17:17Z",
+      "updatedAt": "2024-02-17T15:29:21Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
       "headRepository": "taddhar/draft-ietf-tls-esni",
       "headRefName": "ech-compatibility-middleboxes",
       "headRefOid": "8bdfbe4cc1e853cd7827f1d09550bfe1a8e4da90",
-      "closedAt": null,
+      "closedAt": "2024-02-17T15:29:20Z",
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Superceded by PR #600",
+          "createdAt": "2024-02-17T15:29:20Z",
+          "updatedAt": "2024-02-17T15:29:20Z"
+        }
+      ],
       "reviews": []
     },
     {
@@ -54922,10 +55040,12 @@
       "author": "taddhar",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "merge ready"
+      ],
       "body": "In this part of the text there would be a lot to say.\r\n\r\nFirst for non-English native speakers who are not familiar with the topic and in particular in operations or even to some degree in system architecture or network security domains, the text will be very difficult to read.\r\n\r\nIn fact think about someone in a Small and Medium Enterprises organization that has to ensure the security of its organization it will be close to impossible to connect the dots. How many dozen of millions of SMEs on the planet?\r\n\r\nAnyway, it is VERY hard to be more explicit in the context of this draft though I would be tempted to add examples and be more explicit on sub-contexts and on use cases e.g. put in hard BYOD will fail. but anyway this links to OUR Internet Draft on Deployment Considerations that suddenly makes a lot of sense as an expansion of this section from 1 page to 20+.\r\n\r\nOne could argue that there are many types of Middleboxes and they all will be affected by that (DPI, Firewalls, Proxies, etc.)\r\n\r\nHowever there is ONE section which is simply 1) wrong and 2) completely irrelevant is the last section which I removed. The only alternative would be to make a significant fix in that section and even if I fix it, it will add nothing to the fact that when a number of devices won't be able to access the SNI, they will break, period.\r\n\r\nSo I am happy to rework a section but the section will say that whilst in general the SNI is unreliable, in practice there are essential sub-context where is is not only VERY reliable but as well is a very valuable information for in-path actors who have many ways to check and validate and handle the unreliable part.",
       "createdAt": "2023-11-15T16:57:15Z",
-      "updatedAt": "2023-11-16T12:35:58Z",
+      "updatedAt": "2024-02-17T15:33:37Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
@@ -55027,33 +55147,56 @@
           "body": "\r\n\r\nOn 16/11/2023 07:14, Arnaud Taddei wrote:\r\n> There is no disagreement on the goal of this draft\r\n\r\nGreat! I was more reacting to the discussion on the PR\r\nthan the PR text itself btw.\r\n\r\nS.\r\n",
           "createdAt": "2023-11-16T12:35:58Z",
           "updatedAt": "2023-11-16T12:35:58Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "OK, given that this is not in security considerations and (1) the text here makes a claim which is disputed and (2) the effect of removing the text is to make the impact of ECH seem bigger than it did in the previous text which seems to be erring on the safe side, I'm going to merge this PR unless someone objects by 2/24.\r\n",
+          "createdAt": "2024-02-17T15:32:10Z",
+          "updatedAt": "2024-02-17T15:32:30Z"
         }
       ],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc5wcy7g",
+          "commit": {
+            "abbreviatedOid": "1030cfb"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-02-17T15:32:57Z",
+          "updatedAt": "2024-02-17T15:32:57Z",
+          "comments": []
+        }
+      ]
     },
     {
       "number": 596,
       "id": "PR_kwDOB-yxNc5gC8Cl",
       "title": "Figure 5: figure spacing",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/596",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "seanturner",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "I think ech_outer_extensions should be indented under ech.",
       "createdAt": "2023-11-21T16:52:07Z",
-      "updatedAt": "2023-11-21T16:52:07Z",
+      "updatedAt": "2024-02-17T15:07:29Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
       "headRepository": "tlswg/draft-ietf-tls-esni",
       "headRefName": "seanturner-fig5-spacing",
       "headRefOid": "94993b2085bab0104d9923069fcffd22499723d6",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-02-17T15:07:29Z",
+      "mergedAt": "2024-02-17T15:07:29Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "5706c9c88055510068e76b326ac23b3473b99042"
+      },
       "comments": [],
       "reviews": []
     },
@@ -55062,24 +55205,26 @@
       "id": "PR_kwDOB-yxNc5gFNjd",
       "title": "ech_outer_extensions: TLS 1.3 column change",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/597",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "seanturner",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "Change from \"\" to \"N/A\".",
       "createdAt": "2023-11-22T01:40:23Z",
-      "updatedAt": "2023-12-13T00:03:11Z",
+      "updatedAt": "2024-02-17T15:07:06Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
       "headRepository": "tlswg/draft-ietf-tls-esni",
       "headRefName": "seanturner-reg-tweak-forech_out_ext",
       "headRefOid": "da089351db4572042acb0c514e9c695c9b1f6d79",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-02-17T15:07:06Z",
+      "mergedAt": "2024-02-17T15:07:06Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "0e0774798496fb04009c778e4cf8a4f9413efb80"
+      },
       "comments": [
         {
           "author": "seanturner",
@@ -55144,6 +55289,164 @@
           "comments": []
         }
       ]
+    },
+    {
+      "number": 599,
+      "id": "PR_kwDOB-yxNc5nLAeK",
+      "title": "Fix the metadata fields",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/599",
+      "state": "MERGED",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2024-02-17T15:10:26Z",
+      "updatedAt": "2024-02-17T15:11:15Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "5706c9c88055510068e76b326ac23b3473b99042",
+      "headRepository": "tlswg/draft-ietf-tls-esni",
+      "headRefName": "fix_metadata",
+      "headRefOid": "120d12f6366853b0c540d25994b48e7839c6e584",
+      "closedAt": "2024-02-17T15:11:15Z",
+      "mergedAt": "2024-02-17T15:11:15Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "8ad257a7088b71a2c11786785149742ee4dda60e"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 600,
+      "id": "PR_kwDOB-yxNc5nLDZb",
+      "title": "Ech compatibility middleboxes",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/600",
+      "state": "MERGED",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Clarify the intention of the Middlebox section.  Closes PR#592.",
+      "createdAt": "2024-02-17T15:24:03Z",
+      "updatedAt": "2024-02-17T15:24:50Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "8ad257a7088b71a2c11786785149742ee4dda60e",
+      "headRepository": "ekr/draft-ietf-tls-esni",
+      "headRefName": "ech-compatibility-middleboxes",
+      "headRefOid": "e63c783c4b843cbc30a0a743fefc6071ff9bedff",
+      "closedAt": "2024-02-17T15:24:50Z",
+      "mergedAt": "2024-02-17T15:24:50Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "5bb3bbbac8f11412f00c9a2c1cf3f6fdd674bb72"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 601,
+      "id": "PR_kwDOB-yxNc5nLj_O",
+      "title": "Expand overview to clarify the topologies. Fixes #588",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/601",
+      "state": "CLOSED",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "I rewrote this section a bit to try to make things clearer. I think this addresses @taddhar's issues from #588.\r\n\r\n@martinthomson @dennisjackson  PTAL.",
+      "createdAt": "2024-02-17T17:16:30Z",
+      "updatedAt": "2024-02-17T18:09:31Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "b5aed7b1680f8eb94b36456ee72c236e61ab10d5",
+      "headRepository": "tlswg/draft-ietf-tls-esni",
+      "headRefName": "overview_expansion",
+      "headRefOid": "89998fd98ea6a85c9bafcc126163ee22229b2295",
+      "closedAt": "2024-02-17T18:09:31Z",
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Please hold off on reviewing this. More changes coming.",
+          "createdAt": "2024-02-17T17:43:34Z",
+          "updatedAt": "2024-02-17T17:43:34Z"
+        }
+      ],
+      "reviews": []
+    },
+    {
+      "number": 602,
+      "id": "PR_kwDOB-yxNc5nL0ko",
+      "title": "More explanatory text.. Fixes #587. Fixes #591",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/602",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Rewrite the overview section to be a bit clearer and clarified the misconfiguration pieces.\r\n\r\n* Added more narrative text around the topologies.\r\n* Moved much of misconfiguration piece up to overview so people have some signposting.\r\n* Expanded the misconfiguration pieces a bit.\r\n",
+      "createdAt": "2024-02-17T18:12:09Z",
+      "updatedAt": "2024-02-17T18:12:31Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "overview_expansion",
+      "baseRefOid": "89998fd98ea6a85c9bafcc126163ee22229b2295",
+      "headRepository": "ekr/draft-ietf-tls-esni",
+      "headRefName": "overview_expansion",
+      "headRefOid": "80ec94401a582e5f44b01fc80d62e1443d4a8cf6",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@dennisjackson @martinthomson ",
+          "createdAt": "2024-02-17T18:12:30Z",
+          "updatedAt": "2024-02-17T18:12:30Z"
+        }
+      ],
+      "reviews": []
+    },
+    {
+      "number": 603,
+      "id": "PR_kwDOB-yxNc5nL5Gb",
+      "title": "Clarify that you can fall back by providing no ECH in EE",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/603",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Clarification due to Elardus Erasmus",
+      "createdAt": "2024-02-17T18:27:26Z",
+      "updatedAt": "2024-02-17T18:27:40Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "b5aed7b1680f8eb94b36456ee72c236e61ab10d5",
+      "headRepository": "ekr/draft-ietf-tls-esni",
+      "headRefName": "no_ech_in_ee_means_retry",
+      "headRefOid": "0054c8e0476a02490a6bb7456131af828f767a84",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@dennisjackson",
+          "createdAt": "2024-02-17T18:27:39Z",
+          "updatedAt": "2024-02-17T18:27:39Z"
+        }
+      ],
+      "reviews": []
     }
   ]
 }
