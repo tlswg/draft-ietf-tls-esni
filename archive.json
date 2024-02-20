@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-02-18T01:06:44.349745+00:00",
+  "timestamp": "2024-02-20T01:01:58.052424+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12609,9 +12609,111 @@
       "labels": [],
       "body": "In https://mailarchive.ietf.org/arch/msg/tls/bvvWbtxJAiMfilfy32EvdaCszQ4/, Elardus Erasmus suggests that the suggestion to limit retries for servers which have rejected ECH is too broad, and we should have different guidance for key/config changes than for just disabling ECH. He also suggests a \"holdoff period\" when connections were disabled.  I do think that this gets at something real, but I'm not sure of the proposed resolution. \r\n\r\nISTM that there are two issues:\r\n\r\n\r\n# Limiting Retries\r\n\r\nIf the server securely disables ECH, then the client should expect a subsequent connection to succeed and there is no way for the server to ask for a retry. So I don't think we need a limit here.\r\n\r\nHowever, if the server supplies a new key, it's possible to get into some kind of loop, for instance, if there are two servers with different keys and the client bounces between them. Rather than suggesting that there be an unspecified limit, I think it would be better just to forbid a connection initiated from a retry_config from itself causing a new connection. That means that if servers are so misconfigured that they offer a retry_config that then doesn't work that they will just fail, but that should be rare, and in any case, you're in deep trouble in that case.\r\n\r\n\r\n# Remembering Retry\r\n\r\nUnless I've misread the text, it implies but doesn't say that the retry_configs and secure disablement are for this connection only and that the client should not use them even for a connection which is initiated immediately after the one where it retries (as in multiple HTTP 1.1 connections). As Erasmus indicates, this increases load on the server as well as latency and has to be balanced with the observation that the retry_configs are a tracking vector (as noted in the text). He suggests a \"holdoff\" where you don't retry ECH if it was securely disabled, but no change in cases where a valid retry_config was provided.\r\n\r\nI wonder if we should be a bit more expansive about this, given that we have other TLS-related tracking vectors that clients already need to mitigate (e.g., resumption) and there are already mechanisms to handle this. With that in mind, how about:\r\n\r\n- Clients should remember updated configuration or disabled ECH for up to the lifetime of the ECHConfig (this also gives some content to \"holdoff\").\r\n- Clients should partition retry_configs in both time and space the same way they would for resumption PSKs (this is something browsers already do).\r\n\r\nAm I missing something important?\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
       "createdAt": "2024-02-17T18:47:13Z",
-      "updatedAt": "2024-02-17T18:47:13Z",
+      "updatedAt": "2024-02-19T06:35:34Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "There was one third issue, which is how the retry interacts with HTTPS-RR/SVCB's multi-CDN business. That is, if I connected previously and got retry configs, how do I know whether those retry configs apply to the next connection? For all I know, they may have gone through a completely different set of HTTPS-RR/SVCB records.\r\n\r\nAt the time I proposed the retry mechanism, SVCB's design was a little less set yet, and while, as you say, the tracking concerns are actually pretty easy to resolve by saying \"do the same thing you'd do with all other state\", I didn't want to open both of those can of worms at the same time as working through the retry mechanism itself. So my initial proposal just said it was a one-time use, and I figured we could work through all that when/if someone was enthusiastic about remembering them, but the enthusiasm never quite came up.",
+          "createdAt": "2024-02-18T02:02:29Z",
+          "updatedAt": "2024-02-18T02:02:29Z"
+        },
+        {
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I think that the multi-CDN scenario is adequately addressed by having the retry only apply to the immediate case.  So it does get harder if you consider what conditions might allow you to reuse that configuration.  Things that seem likely to invalidate that choice:\r\n\r\n* Changes to DNS records (that are invisible to clients).  This is limited by TTL at that layer; people configuring DNS know that they can't rely on propagation for TTL+X (where X is \u311f( \u2594, \u2594 )\u310f more often than not).\r\n* Picking a different DNS RR.  At any stage of the name resolution process.\r\n* Changes to network conditions at the client end. The client might be able to detect this, but not reliably.\r\n* Changes to routing such that a different path is chosen.\r\n* Changes to server deployments. Including servers going down.\r\n\r\nThe sensible thing to do is not to specify anything concrete here, but to explain what might happen that would cause a cached value to become bad, let clients make up their own mind about how long to keep them.\r\n\r\nHowever, if a client uses a retry configuration and it turns out to be bad, I would expect that the server would want to be able to correct it with another retry configuration.  That conflicts with a simpler rule you might write about not accepting retry configurations if the client is using one already.\r\n\r\nSo I see two options here:\r\n\r\n1. Keep things simple and only allow one retry.  If you receive a retry, use it, then discard it.  If you get a retry when you are using a retry, give up.\r\n2. Make things more complex.  A retry configuration can be used for up to some time.  Clients need to limit the time over which they use that according to both their own rules for partitioning state.  They might also consider dropping the value if name resolution cannot produce the same result[^1] or they detect any change to the network conditions.  However, if a retry configuration is used after the first use - or maybe after a minimal period - a client needs to use a retry configuration they get from the server.\r\n\r\nThat last bit is fiddly.  It's something that a server deployment might like to be able to manage with an explicit, TLS-level TTL for a retry configuration.  Also, the whole bit where the first retry is special is going to be very annoying to implement.\r\n\r\n[^1]: This makes certain forms of RR selection design very likely to produce this outcome.  That's OK, because it is a safe failure.  Though it complicates the choice for those who might prefer that sort of deployment, because it now comes with additional costs in the form of the handshakes that Erasmus is suggesting we try to minimize.",
+          "createdAt": "2024-02-19T06:17:32Z",
+          "updatedAt": "2024-02-19T06:17:32Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> However, if a client uses a retry configuration and it turns out to be bad, I would expect that the server would want to be able to correct it with another retry configuration.\r\n\r\nOne complication here: if you got a retry config from CDN A and accidentally used it for CDN B, you're likely to not have the same public names, and CDN B will not actually be able to give you a retry config.",
+          "createdAt": "2024-02-19T06:26:46Z",
+          "updatedAt": "2024-02-19T06:26:46Z"
+        },
+        {
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I think that this falls under the \"if DNS gives you different answers, don't use the old retry configuration\" clause.\r\n\r\nPresumably, you would have resolved the name and concluded that the retry configuration was OK to reuse.  But the DNS configuration should not use the same SVCB records at all, because the ECH configuration you have now would include the CDN B public name.  The use of different public names also rules out anycast as a means of getting into this state.",
+          "createdAt": "2024-02-19T06:35:33Z",
+          "updatedAt": "2024-02-19T06:35:33Z"
+        }
+      ]
+    },
+    {
+      "number": 605,
+      "id": "I_kwDOB-yxNc5_mHsq",
+      "title": "Use Session ID and/or PSK in Client Hello to transfer enctypred SNI",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/605",
+      "state": "OPEN",
+      "author": "0x391F",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Sorry, I sent this message in mailing list on July 26, 2023, but nobody discover it. \r\n\r\nIs it possible to use Session ID in Client Hello, which is obsoleted in TLS 1.3, to transfer enctypred SNI? If it looks random enough, attacker could't distinguish Session ID is encrypted SNI or not.\r\n \r\nIt may have some restrictions, for example, the SNI maybe couldn't longer than Session ID (32 bytes).\r\n \r\nSo we could also additional use TLS 1.3's PSK. It may break the limit of 32 bytes when using Session ID and able to transfer the whole SNI, but it may more distinguishable compare with using Session ID. In thi situation, Session ID is a \"signal\" that ECH is enabled, the real SNI is in PSK. ",
+      "createdAt": "2024-02-18T02:17:18Z",
+      "updatedAt": "2024-02-19T01:58:08Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "A few points here:\r\n\r\n1. You can't use session ID to carry ESNI because the minimum size of ESNI far exceeds 32 octets. Just the public key in the HPKE is 32 octets or more. Moreover, there's no point in having encrypted SNI in TLS < 1.3  because the certificate is in the clear.\r\n\r\n2. It's not really possible to conceal the fact that you are sending something that is vaguely ECH shaped, because the CH is going to be really enormous compared to a regular CH, and in particular quite a bit larger than the usual PSK. This is one reason why we do GREASE ECH.\r\n\r\nIn any case, we already have a nontrivial amount of deployment experience, so I think it's too late to consider this  kind of reboot of the specification. If you'd like to propose a different design in a separate draft, that's of course still possible.",
+          "createdAt": "2024-02-18T02:59:22Z",
+          "updatedAt": "2024-02-18T02:59:22Z"
+        },
+        {
+          "author": "0x391F",
+          "authorAssociation": "NONE",
+          "body": "> Moreover, there's no point in having encrypted SNI in TLS < 1.3 because the certificate is in the clear.\r\n\r\nYes, this is the reason why use Session ID - it has been obsoleted in TLS 1.3. \r\n\r\n>     2. It's not really possible to conceal the fact that you are sending something that is vaguely ECH shaped, because the CH is going to be really enormous compared to a regular CH, and in particular quite a bit larger than the usual PSK. This is one reason why we do GREASE ECH.\r\n\r\nNo, in fact, in this situation, we only need to transfer encrypted SNI, not the whole client hello. AFAIK domian name couldn't longer than 63 btyes, the whole length should't longer than 253 bytes, it may not too big in most situation. ",
+          "createdAt": "2024-02-18T03:15:53Z",
+          "updatedAt": "2024-02-18T03:15:53Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "We started out with designs that just encrypted the SNI but it turned out to be too difficult to protect against active attacks, which is why we now encrypt the entire ClientHello. I don't see why the situation would be any different with this way of adding the encrypted SNI to the CH.\r\n\r\n\r\n",
+          "createdAt": "2024-02-18T03:28:32Z",
+          "updatedAt": "2024-02-18T03:28:32Z"
+        },
+        {
+          "author": "0x391F",
+          "authorAssociation": "NONE",
+          "body": "How about using \"early data\"? It's it possible to transfer encrypted client hello in \"early data\", and Session ID indicate that in fact it is a ECH. ",
+          "createdAt": "2024-02-18T04:32:44Z",
+          "updatedAt": "2024-02-18T04:32:44Z"
+        },
+        {
+          "author": "richsalz",
+          "authorAssociation": "NONE",
+          "body": "> How about using \"early data\"? It's it possible to transfer encrypted client hello in \"early data\", and Session ID indicate that in fact it is a ECH.\r\n\r\nAnd what is the benefit of that?\r\n\r\nWhat is it you are trying to do?  Fit ECH into something smaller so the clientHello message doesn't grow much?",
+          "createdAt": "2024-02-18T17:38:29Z",
+          "updatedAt": "2024-02-18T17:38:29Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> How about using \"early data\"? It's it possible to transfer encrypted client hello in \"early data\", and Session ID indicate that in fact it is a ECH.\r\n\r\nThis would also be a major change. We're trying to get this document finished, so absent there being something really wrong with this design I think we should be focused on shipping rather than looking at alternatives. TLS is extensible, as is ECHConfig, so if you were to write up a full proposal that people agreed was better, there's nothing precluding us considering it in the future.\r\n\r\n",
+          "createdAt": "2024-02-18T17:46:50Z",
+          "updatedAt": "2024-02-18T17:46:50Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "+1 to ekr's points here, such designs were considered but superseded by the current design, so I think this issue would be best closed as I know of nobody else who would like to change to something other than the current design. I certainly have no such plans, and would be surprised if other implementers had.\r\n\r\nThat said, I do have a couple of students experimenting with what we're calling \"stealthy ECH\" and who are thinking about such designs afresh. However, that's very much *not* intended to be a replacement for ECH, rather that work is to see if we can figure out some possible fallbacks (for co-operating clients/servers) should ECH \"fail,\" i.e. not see widespread deployment for technical or political reasons. I'll be happy to discuss that work later in the year when the students have had a chance to work on it.",
+          "createdAt": "2024-02-18T22:41:08Z",
+          "updatedAt": "2024-02-18T22:41:08Z"
+        },
+        {
+          "author": "0x391F",
+          "authorAssociation": "NONE",
+          "body": "> > How about using \"early data\"? It's it possible to transfer encrypted client hello in \"early data\", and Session ID indicate that in fact it is a ECH.\r\n> \r\n> And what is the benefit of that?\r\n\r\nIt will be helpful to bypass goverment's censorship, for example, some country, such as China may block ECH in the future, like how they treat ESNI (they have been block ESNI), so use somehing like PSK might more undectable. \r\n\r\n> What is it you are trying to do? Fit ECH into something smaller so the clientHello message doesn't grow much?\r\n\r\nSee above. \r\n",
+          "createdAt": "2024-02-19T01:58:07Z",
+          "updatedAt": "2024-02-19T01:58:07Z"
+        }
+      ]
     }
   ],
   "pulls": [
@@ -55392,7 +55494,7 @@
       "labels": [],
       "body": "Rewrite the overview section to be a bit clearer and clarified the misconfiguration pieces.\r\n\r\n* Added more narrative text around the topologies.\r\n* Moved much of misconfiguration piece up to overview so people have some signposting.\r\n* Expanded the misconfiguration pieces a bit.\r\n",
       "createdAt": "2024-02-17T18:12:09Z",
-      "updatedAt": "2024-02-17T18:12:31Z",
+      "updatedAt": "2024-02-19T06:31:05Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "overview_expansion",
       "baseRefOid": "89998fd98ea6a85c9bafcc126163ee22229b2295",
@@ -55410,9 +55512,101 @@
           "body": "@dennisjackson @martinthomson ",
           "createdAt": "2024-02-17T18:12:30Z",
           "updatedAt": "2024-02-17T18:12:30Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "other than the above, this change seems fine",
+          "createdAt": "2024-02-18T23:24:40Z",
+          "updatedAt": "2024-02-18T23:24:40Z"
         }
       ],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc5weqva",
+          "commit": {
+            "abbreviatedOid": "80ec944"
+          },
+          "author": "wbl",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-02-18T05:41:42Z",
+          "updatedAt": "2024-02-18T05:41:42Z",
+          "comments": [
+            {
+              "originalPosition": 132,
+              "body": "Looks spurious",
+              "createdAt": "2024-02-18T05:41:42Z",
+              "updatedAt": "2024-02-18T05:41:42Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc5wfsue",
+          "commit": {
+            "abbreviatedOid": "80ec944"
+          },
+          "author": "sftcd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-02-18T23:16:34Z",
+          "updatedAt": "2024-02-18T23:16:34Z",
+          "comments": [
+            {
+              "originalPosition": 47,
+              "body": "Missing a negative in 2nd bullet above?",
+              "createdAt": "2024-02-18T23:16:34Z",
+              "updatedAt": "2024-02-18T23:16:34Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc5wgvUG",
+          "commit": {
+            "abbreviatedOid": "80ec944"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "Any point saying that:\r\n\r\n> This makes availability of a certificate for the public name - and its associated private key - a critical component for server deployment of ECH.  This certificate is used both to recover from transient misconfiguration problems and to disable ECH in the event that a server cannot continue to support the capability.",
+          "createdAt": "2024-02-19T06:18:39Z",
+          "updatedAt": "2024-02-19T06:31:05Z",
+          "comments": [
+            {
+              "originalPosition": 40,
+              "body": "```suggestion\r\nloses its ECH keys, or if a deployment of ECH is rolled back on the server.\r\n```\r\nor \"needs to be\", but \"is\" works.",
+              "createdAt": "2024-02-19T06:18:39Z",
+              "updatedAt": "2024-02-19T06:31:05Z"
+            },
+            {
+              "originalPosition": 47,
+              "body": "```suggestion\r\n* The server does not have ECH configured but the client has a ECH configuration\r\n  and so is attempting ECH.\r\n```",
+              "createdAt": "2024-02-19T06:19:09Z",
+              "updatedAt": "2024-02-19T06:31:05Z"
+            },
+            {
+              "originalPosition": 97,
+              "body": "```suggestion\r\nthe keys. The security of this mechanism depends on the server having\r\n```",
+              "createdAt": "2024-02-19T06:22:10Z",
+              "updatedAt": "2024-02-19T06:31:05Z"
+            },
+            {
+              "originalPosition": 122,
+              "body": "```suggestion\r\nFalling back to an unencrypted ClientHello in any of these cases would\r\n```",
+              "createdAt": "2024-02-19T06:22:58Z",
+              "updatedAt": "2024-02-19T06:31:05Z"
+            },
+            {
+              "originalPosition": 126,
+              "body": "```suggestion\r\nit impossible to complete an ECH connection where an ordinary TLS\r\n```",
+              "createdAt": "2024-02-19T06:28:22Z",
+              "updatedAt": "2024-02-19T06:31:05Z"
+            }
+          ]
+        }
+      ]
     },
     {
       "number": 603,
@@ -55426,7 +55620,7 @@
       "labels": [],
       "body": "Clarification due to Elardus Erasmus",
       "createdAt": "2024-02-17T18:27:26Z",
-      "updatedAt": "2024-02-17T18:27:40Z",
+      "updatedAt": "2024-02-18T15:00:20Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "b5aed7b1680f8eb94b36456ee72c236e61ab10d5",
@@ -55446,7 +55640,21 @@
           "updatedAt": "2024-02-17T18:27:39Z"
         }
       ],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc5wfUUt",
+          "commit": {
+            "abbreviatedOid": "0054c8e"
+          },
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-02-18T15:00:19Z",
+          "updatedAt": "2024-02-18T15:00:19Z",
+          "comments": []
+        }
+      ]
     }
   ]
 }
