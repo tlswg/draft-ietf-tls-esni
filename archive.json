@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-02-20T01:01:58.052424+00:00",
+  "timestamp": "2024-02-22T01:02:16.231809+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12654,7 +12654,7 @@
       "labels": [],
       "body": "Sorry, I sent this message in mailing list on July 26, 2023, but nobody discover it. \r\n\r\nIs it possible to use Session ID in Client Hello, which is obsoleted in TLS 1.3, to transfer enctypred SNI? If it looks random enough, attacker could't distinguish Session ID is encrypted SNI or not.\r\n \r\nIt may have some restrictions, for example, the SNI maybe couldn't longer than Session ID (32 bytes).\r\n \r\nSo we could also additional use TLS 1.3's PSK. It may break the limit of 32 bytes when using Session ID and able to transfer the whole SNI, but it may more distinguishable compare with using Session ID. In thi situation, Session ID is a \"signal\" that ECH is enabled, the real SNI is in PSK. ",
       "createdAt": "2024-02-18T02:17:18Z",
-      "updatedAt": "2024-02-19T01:58:08Z",
+      "updatedAt": "2024-02-21T02:54:15Z",
       "closedAt": null,
       "comments": [
         {
@@ -12712,6 +12712,13 @@
           "body": "> > How about using \"early data\"? It's it possible to transfer encrypted client hello in \"early data\", and Session ID indicate that in fact it is a ECH.\r\n> \r\n> And what is the benefit of that?\r\n\r\nIt will be helpful to bypass goverment's censorship, for example, some country, such as China may block ECH in the future, like how they treat ESNI (they have been block ESNI), so use somehing like PSK might more undectable. \r\n\r\n> What is it you are trying to do? Fit ECH into something smaller so the clientHello message doesn't grow much?\r\n\r\nSee above. \r\n",
           "createdAt": "2024-02-19T01:58:07Z",
           "updatedAt": "2024-02-19T01:58:07Z"
+        },
+        {
+          "author": "x0wllaar",
+          "authorAssociation": "NONE",
+          "body": "As it is, ECH will still have a ton of distinguishers, like having crypto.cloudflare.com in the outer SNI anyway. It's also enough to block DoH to completely break ECH.\r\n\r\nThe real way to resist censorship here is to make ECH mandatory for a significant part of the internet, so that it becomes too big to block (although this does not always work sadly).\r\n\r\nAlso, we have an actual case where a big censorship target (Telegram) tried to hide behind CDNs. In the end, the CDNs (well, a couple million of Amazon/Azure IPs) ended up blocked in Russia for some time, and then almost all of them disabled domain fronting. I'm not sure whether anyone wants to go this route again, only this time with a more official implementation of the same domain fronting idea. ",
+          "createdAt": "2024-02-21T02:46:11Z",
+          "updatedAt": "2024-02-21T02:54:15Z"
         }
       ]
     }
