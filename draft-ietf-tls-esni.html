@@ -2335,9 +2335,11 @@ the client will otherwise already let the server track the client, e.g.,
 because the client will send cookies to the server in parallel connections,
 using the retry configurations for these parallel connections does not
 introduce a new tracking vector.<a href="#section-6.1.6-5" class="pilcrow">¶</a></p>
-<p id="section-6.1.6-6">If none of the values provided in "retry_configs" contains a supported version,
-or an earlier TLS version was negotiated, the client can regard ECH as securely
-disabled by the server, and it SHOULD retry the handshake with a new transport
+<p id="section-6.1.6-6">If none of the values provided in "retry_configs" contains a supported
+version, the server did not supply an "encrypted_client_hello"
+extension in its EncryptedExtensions message, or an earlier TLS
+version was negotiated, the client can regard ECH as securely disabled
+by the server, and it SHOULD retry the handshake with a new transport
 connection and ECH disabled.<a href="#section-6.1.6-6" class="pilcrow">¶</a></p>
 <p id="section-6.1.6-7">Clients SHOULD implement a limit on retries caused by receipt of "retry_configs"
 or servers which do not acknowledge the "encrypted_client_hello" extension. If
