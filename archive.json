@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-02-22T01:02:16.231809+00:00",
+  "timestamp": "2024-02-25T01:06:51.866106+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12454,7 +12454,7 @@
       "id": "I_kwDOB-yxNc520Yrc",
       "title": "Server retry flow, section 7.1",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/586",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "sayrer",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
@@ -12463,8 +12463,8 @@
       ],
       "body": "I understand why the last part of this section is there.\r\n\r\n`Otherwise, if all candidate ECHConfig values fail to decrypt the extension, the client-facing server MUST ignore the extension and proceed with the connection using ClientHelloOuter, ...`\r\n\r\nIs this part really a MUST, though? Maybe `if the server wishes to allow retries...`? I noticed that you can get the same effect by sending no `retry_configs` and refusing non-ECH connections, just with double the connection attempts. So why not allow `ech_failure` errors? Apologies if this part was already discussed, I might have missed it.",
       "createdAt": "2023-11-14T19:44:00Z",
-      "updatedAt": "2024-02-17T15:27:20Z",
-      "closedAt": null,
+      "updatedAt": "2024-02-24T23:47:49Z",
+      "closedAt": "2024-02-24T23:47:49Z",
       "comments": [
         {
           "author": "davidben",
@@ -12543,7 +12543,7 @@
       "id": "I_kwDOB-yxNc526A8r",
       "title": "Can we clarify the Misconfiguration section?",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/591",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "taddhar",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
@@ -12552,8 +12552,8 @@
       ],
       "body": "I am really struggling with this section and before I try again to make a proposal (I failed 3 times on my side) I will ask questions here and then see if and how I can make a proposal. Again consider WHO is the target audience of this section, not TLS developers or people who have been 30 years in it. Operational people will be either completely lost OR worse they will believe they understood which won't be the case. \r\n\r\nI understand too we can't expand too much the text here but now it is reaaally too compact to read it from non-expert side. \r\n\r\nSo to guide the help I need, here are a few questions.\r\n\r\nIn the clause \r\n\r\n```\r\n\"The retry mechanism repairs inconsistencies, provided the server is\r\nauthoritative for the public name. If server and advertised keys mismatch, the\r\nserver will reject ECH and respond with \"retry_configs\". If the server does\r\nnot understand\r\nthe \"encrypted_client_hello\" extension at all, it will ignore it as required by\r\n{{Section 4.1.2 of RFC8446}}. Provided the server can present a certificate\r\nvalid for the public name, the client can safely retry with updated settings,\r\nas described in {{rejected-ech}}.\"\r\n```\r\nCan somebody provide me with a precise definition of the term `the server is authoritative for the public name`\r\n\r\nCan somebody clarify me `If server and advertised keys mismatch` and give me some example. Good example of where you have to build in your brain, which server, which keys, why can they mismatch, etc. remember not everybody is a TLS developer or 30 years in it. Especially for WHO is the audience of this section.\r\n\r\nCan somebody clarify me `can present a certificate valid for the public name`. \r\n\r\nFinally can someone give an example after \r\n```\r\nUnless ECH is disabled as a result of successfully establishing a connection to\r\nthe public name \r\n\r\n```\r\n",
       "createdAt": "2023-11-15T14:43:02Z",
-      "updatedAt": "2024-02-17T18:15:20Z",
-      "closedAt": null,
+      "updatedAt": "2024-02-25T00:04:42Z",
+      "closedAt": "2024-02-25T00:04:42Z",
       "comments": [
         {
           "author": "ekr",
@@ -12647,15 +12647,15 @@
       "id": "I_kwDOB-yxNc5_mHsq",
       "title": "Use Session ID and/or PSK in Client Hello to transfer enctypred SNI",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/605",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "0x391F",
       "authorAssociation": "NONE",
       "assignees": [],
       "labels": [],
       "body": "Sorry, I sent this message in mailing list on July 26, 2023, but nobody discover it. \r\n\r\nIs it possible to use Session ID in Client Hello, which is obsoleted in TLS 1.3, to transfer enctypred SNI? If it looks random enough, attacker could't distinguish Session ID is encrypted SNI or not.\r\n \r\nIt may have some restrictions, for example, the SNI maybe couldn't longer than Session ID (32 bytes).\r\n \r\nSo we could also additional use TLS 1.3's PSK. It may break the limit of 32 bytes when using Session ID and able to transfer the whole SNI, but it may more distinguishable compare with using Session ID. In thi situation, Session ID is a \"signal\" that ECH is enabled, the real SNI is in PSK. ",
       "createdAt": "2024-02-18T02:17:18Z",
-      "updatedAt": "2024-02-21T02:54:15Z",
-      "closedAt": null,
+      "updatedAt": "2024-02-24T23:48:16Z",
+      "closedAt": "2024-02-24T23:48:16Z",
       "comments": [
         {
           "author": "ekr",
@@ -12719,6 +12719,34 @@
           "body": "As it is, ECH will still have a ton of distinguishers, like having crypto.cloudflare.com in the outer SNI anyway. It's also enough to block DoH to completely break ECH.\r\n\r\nThe real way to resist censorship here is to make ECH mandatory for a significant part of the internet, so that it becomes too big to block (although this does not always work sadly).\r\n\r\nAlso, we have an actual case where a big censorship target (Telegram) tried to hide behind CDNs. In the end, the CDNs (well, a couple million of Amazon/Azure IPs) ended up blocked in Russia for some time, and then almost all of them disabled domain fronting. I'm not sure whether anyone wants to go this route again, only this time with a more official implementation of the same domain fronting idea. ",
           "createdAt": "2024-02-21T02:46:11Z",
           "updatedAt": "2024-02-21T02:54:15Z"
+        },
+        {
+          "author": "Andrew-419",
+          "authorAssociation": "NONE",
+          "body": "> > > How about using \"early data\"? It's it possible to transfer encrypted client hello in \"early data\", and Session ID indicate that in fact it is a ECH.\r\n> > \r\n> > \r\n> > And what is the benefit of that?\r\n> \r\n> It will be helpful to bypass goverment's censorship, for example, some country, such as China may block ECH in the future, like how they treat ESNI (they have been block ESNI), so use somehing like PSK might more undectable.\r\n> \r\n> > What is it you are trying to do? Fit ECH into something smaller so the clientHello message doesn't grow much?\r\n> \r\n> See above.\r\n\r\nIIRC TLS 1.3 is blocked in China too, so this is much more complex than just trying to reduce the footprint of ECH.    ",
+          "createdAt": "2024-02-23T15:27:55Z",
+          "updatedAt": "2024-02-23T15:27:55Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I've heard this claim before but I'm pretty sure it's an urban legend, stemming from people conflating TLS 1.3 and early iterations of ESNI. Enough of the Internet now is TLS 1.3 that, if this were true, far far too many things would be broken that those of us who work professionally in the space would definitely have run into it by now. Remember that blocking TLS 1.3 does not mean you get TLS 1.2. It means the connection does not work.",
+          "createdAt": "2024-02-23T15:44:58Z",
+          "updatedAt": "2024-02-23T15:45:28Z"
+        },
+        {
+          "author": "Andrew-419",
+          "authorAssociation": "NONE",
+          "body": "You prompted me to check the original stories as it is a little while since this came up.  There's a helpful post from ISoc from August 2020 at https://www.internetsociety.org/news/statements/2020/internet-society-blocking-tls-1-3-in-china-makes-the-internet-less-secure/ that in turn references coverage of this in ZD-Net.  It seems that the Great Firewall was blocking traffic using TLS 1.3 in combination with eSNI.  [As an aside, I'm not convinced that overblocking was a major concern for the Great Firewall :-) ]",
+          "createdAt": "2024-02-23T16:04:41Z",
+          "updatedAt": "2024-02-23T16:04:41Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Not seeing any more support for this, so closing it.",
+          "createdAt": "2024-02-24T23:48:16Z",
+          "updatedAt": "2024-02-24T23:48:16Z"
         }
       ]
     }
@@ -54909,7 +54937,7 @@
       "id": "PR_kwDOB-yxNc5fgMU4",
       "title": "Proposed changes to the overview section to give better justice to ECH.",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/587",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "taddhar",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
@@ -54918,14 +54946,14 @@
       ],
       "body": "Currently the overview section is a sentence that is actually not giving an overview of the protocol. The sentence is simply the highlight for the topologies sub-section. But the topologies sub-section is not a protocol overview. ECH is much more than just a topology. \r\n\r\nThe proposal is to give justice to ECH and improve the overview section. \r\n\r\nAs I am both coming at a very late state of the development of this text and this is the first time I do this review I contemplate that there could be more options. \r\n\r\nFor example the first part of my text is a bit redundant with some of the text in the introduction, calling for whether my proposal should be moved to introductions or to rearrange the sections. \r\n\r\nYet, there is no where in the text a description on all the key design ideas and maybe my selection could be completed by more ideas, e.g. list DoH and DPRIVE too in this list, which will then be calling to overlaps with introduction section.\r\n\r\nAnyway, this is my current proposal because right now, the overview is not giving justice nor anywhere in the text to ECH.\r\n",
       "createdAt": "2023-11-15T10:21:35Z",
-      "updatedAt": "2024-02-17T18:13:01Z",
+      "updatedAt": "2024-02-25T00:04:51Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
       "headRepository": "taddhar/draft-ietf-tls-esni",
       "headRefName": "ech-improve-overview",
       "headRefOid": "26733de8130746f707f13ff13728344a190da47c",
-      "closedAt": null,
+      "closedAt": "2024-02-25T00:04:51Z",
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
@@ -54945,7 +54973,7 @@
       "id": "PR_kwDOB-yxNc5fgUi4",
       "title": "Ech proposed definitions",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/588",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "taddhar",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
@@ -54954,14 +54982,14 @@
       ],
       "body": "This is a first attempt to propose some definitions. \r\n\r\nThere are indeed a number of problems in the document. \r\n\r\n- Some terms are inconsistently used, e.g. 'provider', 'ECH-service provider', 'client-facing' server. So I tried to fix that a little bit in the text. I think that the concept of 'provider' is actually good and is so indirectly understood, I wonder if there shouldn't be a bit more text to develop this good concept.\r\n- Some terms are abused e.g. 'public name' and 'public_name'. In addition on this one if you come the first time to this text, the immediate thinking is 'public name of what?'. So I understand why this term in the context of this text and understand it would be heavy to precise the 'public name of the origin server client-facing role' but still. Would be happy to discuss how we can make it a bit more explicit if at all possible.\r\n\r\nI am wondering if there are other terms that we should define too here but let's propose this first change. ",
       "createdAt": "2023-11-15T10:44:17Z",
-      "updatedAt": "2024-02-17T17:17:17Z",
+      "updatedAt": "2024-02-25T00:04:52Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
       "headRepository": "taddhar/draft-ietf-tls-esni",
       "headRefName": "ech-proposed-definitions",
       "headRefOid": "67a063fb7bded671aee843eae6f1c1324126a968",
-      "closedAt": null,
+      "closedAt": "2024-02-25T00:04:51Z",
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
@@ -55145,7 +55173,7 @@
       "id": "PR_kwDOB-yxNc5fikZG",
       "title": "A first proposal to fix the no-sni section.",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/594",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "taddhar",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
@@ -55154,17 +55182,19 @@
       ],
       "body": "In this part of the text there would be a lot to say.\r\n\r\nFirst for non-English native speakers who are not familiar with the topic and in particular in operations or even to some degree in system architecture or network security domains, the text will be very difficult to read.\r\n\r\nIn fact think about someone in a Small and Medium Enterprises organization that has to ensure the security of its organization it will be close to impossible to connect the dots. How many dozen of millions of SMEs on the planet?\r\n\r\nAnyway, it is VERY hard to be more explicit in the context of this draft though I would be tempted to add examples and be more explicit on sub-contexts and on use cases e.g. put in hard BYOD will fail. but anyway this links to OUR Internet Draft on Deployment Considerations that suddenly makes a lot of sense as an expansion of this section from 1 page to 20+.\r\n\r\nOne could argue that there are many types of Middleboxes and they all will be affected by that (DPI, Firewalls, Proxies, etc.)\r\n\r\nHowever there is ONE section which is simply 1) wrong and 2) completely irrelevant is the last section which I removed. The only alternative would be to make a significant fix in that section and even if I fix it, it will add nothing to the fact that when a number of devices won't be able to access the SNI, they will break, period.\r\n\r\nSo I am happy to rework a section but the section will say that whilst in general the SNI is unreliable, in practice there are essential sub-context where is is not only VERY reliable but as well is a very valuable information for in-path actors who have many ways to check and validate and handle the unreliable part.",
       "createdAt": "2023-11-15T16:57:15Z",
-      "updatedAt": "2024-02-17T15:33:37Z",
+      "updatedAt": "2024-02-24T23:46:02Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
       "headRepository": "taddhar/draft-ietf-tls-esni",
       "headRefName": "ech-proposed-no-sni-3",
       "headRefOid": "1030cfb565bb6efc17fe38bf8f356c1b760135c1",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-02-24T23:46:02Z",
+      "mergedAt": "2024-02-24T23:46:02Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "9f5c3f122700ee83b6e6a25eff96b73dad187697"
+      },
       "comments": [
         {
           "author": "ekr",
@@ -55494,24 +55524,26 @@
       "id": "PR_kwDOB-yxNc5nL0ko",
       "title": "More explanatory text.. Fixes #587. Fixes #591",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/602",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Rewrite the overview section to be a bit clearer and clarified the misconfiguration pieces.\r\n\r\n* Added more narrative text around the topologies.\r\n* Moved much of misconfiguration piece up to overview so people have some signposting.\r\n* Expanded the misconfiguration pieces a bit.\r\n",
       "createdAt": "2024-02-17T18:12:09Z",
-      "updatedAt": "2024-02-19T06:31:05Z",
+      "updatedAt": "2024-02-25T00:04:30Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "overview_expansion",
       "baseRefOid": "89998fd98ea6a85c9bafcc126163ee22229b2295",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "overview_expansion",
-      "headRefOid": "80ec94401a582e5f44b01fc80d62e1443d4a8cf6",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "a34f66e6533dd10904e41332f08e91d3ccdee8eb",
+      "closedAt": "2024-02-25T00:04:29Z",
+      "mergedAt": "2024-02-25T00:04:29Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "4053b38e1bbe5ef70f0a85ec79d1cd19bf748e61"
+      },
       "comments": [
         {
           "author": "ekr",
@@ -55612,6 +55644,46 @@
               "updatedAt": "2024-02-19T06:31:05Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc5xOVTn",
+          "commit": {
+            "abbreviatedOid": "80ec944"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-02-25T00:02:10Z",
+          "updatedAt": "2024-02-25T00:02:11Z",
+          "comments": [
+            {
+              "originalPosition": 46,
+              "body": "```suggestion\r\n* The server does not have ECH configured but the client has a  ECH configuration\r\n```",
+              "createdAt": "2024-02-25T00:02:10Z",
+              "updatedAt": "2024-02-25T00:02:11Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc5xOVUW",
+          "commit": {
+            "abbreviatedOid": "80ec944"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-02-25T00:02:47Z",
+          "updatedAt": "2024-02-25T00:03:07Z",
+          "comments": [
+            {
+              "originalPosition": 132,
+              "body": "```suggestion\r\n```",
+              "createdAt": "2024-02-25T00:02:47Z",
+              "updatedAt": "2024-02-25T00:03:07Z"
+            }
+          ]
         }
       ]
     },
@@ -55620,24 +55692,26 @@
       "id": "PR_kwDOB-yxNc5nL5Gb",
       "title": "Clarify that you can fall back by providing no ECH in EE",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/603",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Clarification due to Elardus Erasmus",
       "createdAt": "2024-02-17T18:27:26Z",
-      "updatedAt": "2024-02-18T15:00:20Z",
+      "updatedAt": "2024-02-24T23:47:41Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "b5aed7b1680f8eb94b36456ee72c236e61ab10d5",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "no_ech_in_ee_means_retry",
       "headRefOid": "0054c8e0476a02490a6bb7456131af828f767a84",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-02-24T23:47:41Z",
+      "mergedAt": "2024-02-24T23:47:41Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "52048599a9af744a3c01bab68be7d6924fce74db"
+      },
       "comments": [
         {
           "author": "ekr",
