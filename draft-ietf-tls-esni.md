@@ -732,9 +732,13 @@ client MUST abort the handshake with an "illegal_parameter" alert.
 
 ### Recommended Padding Scheme {#padding}
 
-This section describes a deterministic padding mechanism based on the following
+If the ClientHelloInner is encrypted without padding, then the length of
+the `ClientHelloOuter.payload` can leak information about `ClientHelloInner`.
+In order to prevent this the `EncodedClientHelloInner` structure
+has a padding field. This section describes a deterministic mechanism for
+computing the required amount of padding based on the following
 observation: individual extensions can reveal sensitive information through
-their length. Thus, each extension in the inner ClientHello may require
+-their length. Thus, each extension in the inner ClientHello may require
 different amounts of padding. This padding may be fully determined by the
 client's configuration or may require server input.
 
@@ -957,25 +961,35 @@ MAY offer to resume sessions established without ECH.
 
 # Server Behavior {#server-behavior}
 
-Servers can play two roles, either as the client-facing server which
+As described in {#topologies}, servers can play two roles, either as
+the client-facing server or as the back-end server.
+Depending on the server role, the `ECHClientHello` will be different:
 
-
-
-Servers that support ECH play one of two roles, depending on the payload of the
-"encrypted_client_hello" extension in the initial ClientHello:
-
-* If `ECHClientHello.type` is `outer`, then the server acts as a client-facing
-  server and proceeds as described in {{client-facing-server}} to extract a
+* A client-facing server expects a `ECHClientHello.type` of `outer`,
+  proceeds as described in {{client-facing-server}} to extract a
   ClientHelloInner, if available.
+  
+* A backend server expects a `ECHClientHello.type` of `inner`, and
+  proceeds as described in {{backend-server}}.
 
-* If `ECHClientHello.type` is `inner`, then the server acts as a backend server
-  and proceeds as described in {{backend-server}}.
+In split mode, a client-facing server which receives a `ClientHello`
+with `ECHClientHello.type` of `inner` MUST abort with an
+"illegal_parameter" alert. Similarly, in split mode, a backend server
+which receives a `ClientHello` with `ECHClientHello.type` of `outer`
+MUST abort with an "illegal_parameter" alert.
 
-* Otherwise, if `ECHClientHello.type` is not a valid `ECHClientHelloType`, then
-  the server MUST abort with an "illegal_parameter" alert.
+In shared mode, a server plays both roles, first decrypting the
+`ClientHelloOuter` and then using the contents of the `ClientHelloInner`.
+A shared mode server which receives a `ClientHello` with `ECHClientHello.type` of `outer`
+MUST abort with an "illegal_parameter" alert, because such
+a `ClientHello` should never be received from the network.
+
+If `ECHClientHello.type` is not a valid `ECHClientHelloType`, then
+the server MUST abort with an "illegal_parameter" alert.               
 
 If the "encrypted_client_hello" is not present, then the server completes the
 handshake normally, as described in {{RFC8446}}.
+
 
 ## Client-Facing Server {#client-facing-server}
 
@@ -1222,6 +1236,13 @@ the public name, the client MUST NOT fall back to using unencrypted
 ClientHellos, as this allows a network attacker to disclose the contents of this
 ClientHello, including the SNI. It MAY attempt to use another server from the
 DNS results, if one is provided.
+
+In order to ensure that the retry mechanism works successfully servers
+SHOULD ensure that every endpoint which might receive a TLS connection
+is provisioned with an appropriate certificate for the public name.
+This is especially important during periods of server reconfiguration
+when different endpoints might have different configurations.
+
 
 ### Middleboxes
 
