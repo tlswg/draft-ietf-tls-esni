@@ -553,33 +553,17 @@ for this purpose.
 
 ## Authenticating the ClientHelloOuter {#authenticating-outer}
 
-To prevent a network attacker from modifying the reconstructed
-ClientHelloInner by modifying extensions in ClientHelloOuter that are
-referenced in ClientHelloInner (see
-{{flow-clienthello-malleability}}), ECH authenticates ClientHelloOuter
+To prevent a network attacker from modifying the `ClientHelloOuter`
+while keeping the same encrypted `ClientHelloInner`
+(see {{flow-clienthello-malleability}}), ECH authenticates ClientHelloOuter
 by passing ClientHelloOuterAAD as the associated data for HPKE sealing
 and opening operations. The ClientHelloOuterAAD is a serialized
 ClientHello structure, defined in {{Section 4.1.2 of RFC8446}}, which
-matches the ClientHelloOuter except the `payload` field of the
+matches the ClientHelloOuter except that the `payload` field of the
 "encrypted_client_hello" is replaced with a byte string of the same
 length but whose contents are zeros. This value does not include the
 four-byte header from the Handshake structure.
 
-The client follows the procedure in {{encrypting-clienthello}} to first
-construct ClientHelloOuterAAD with a placeholder `payload` field, then replace
-the field with the encrypted value to compute ClientHelloOuter.
-
-The server then receives ClientHelloOuter and computes ClientHelloOuterAAD by
-making a copy and replacing the portion corresponding to the `payload` field
-with zeros.
-
-The payload and the placeholder strings have the same length, so it is not
-necessary for either side to recompute length prefixes when applying the above
-transformations.
-
-The decompression process in {{encoding-inner}} forbids
-"encrypted_client_hello" in OuterExtensions. This ensures the unauthenticated
-portion of ClientHelloOuter is not incorporated into ClientHelloInner.
 
 # Client Behavior
 
@@ -700,6 +684,11 @@ It then computes the final payload as:
     final_payload = context.Seal(ClientHelloOuterAAD,
                                  EncodedClientHelloInner)
 ~~~
+
+Including `ClientHelloOuterAAD` as the HPKE AAD binds the `ClientHelloOuter`
+to the `ClientHelloInner`, this preventing attackers from modifying
+`ClientHelloOuter` while keeping the same `ClientHelloInner`, as described in
+{#flow-clienthello-malleability}.
 
 Finally, the client replaces `payload` with `final_payload` to obtain
 ClientHelloOuter. The two values have the same length, so it is not necessary
@@ -1793,7 +1782,11 @@ server name, such as ALPN preferences.
 ECH mitigates this attack by only negotiating TLS parameters from
 ClientHelloInner and authenticating all inputs to the ClientHelloInner
 (EncodedClientHelloInner and ClientHelloOuter) with the HPKE AEAD. See
-{{authenticating-outer}}. An earlier iteration of this specification only
+{{authenticating-outer}}. The decompression process in {{encoding-inner}}
+forbids "encrypted_client_hello" in OuterExtensions. This ensures the
+unauthenticated portion of ClientHelloOuter is not incorporated into
+ClientHelloInner.
+An earlier iteration of this specification only
 encrypted and authenticated the "server_name" extension, which left the overall
 ClientHello vulnerable to an analogue of this attack.
 
