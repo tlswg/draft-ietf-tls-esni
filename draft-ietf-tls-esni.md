@@ -414,7 +414,8 @@ The payload of the extension has the following structure:
 The outer extension uses the `outer` variant and the inner extension uses the
 `inner` variant. The inner extension has an empty payload, which is included
 because TLS servers are not allowed to provide extensions in ServerHello
-which were not included in ClientHello. The outer extension has the following fields:
+which were not included in ClientHello. The outer extension has the following
+fields:
 
 config_id
 : The ECHConfigContents.key_config.config_id for the chosen ECHConfig.
@@ -429,8 +430,8 @@ enc
 HelloRetryRequest.
 
 payload
-: The serialized and encrypted EncodedClientHelloInner structure, encrypted using HPKE
-as described in {{real-ech}}.
+: The serialized and encrypted EncodedClientHelloInner structure, encrypted
+using HPKE as described in {{real-ech}}.
 
 When a client offers the `outer` version of an "encrypted_client_hello"
 extension, the server MAY include an "encrypted_client_hello" extension in its
@@ -552,14 +553,17 @@ for this purpose.
 
 ## Authenticating the ClientHelloOuter {#authenticating-outer}
 
-To prevent a network attacker from modifying the reconstructed ClientHelloInner
-(see {{flow-clienthello-malleability}}), ECH authenticates ClientHelloOuter by
-passing ClientHelloOuterAAD as the associated data for HPKE sealing and opening
-operations. The ClientHelloOuterAAD is a serialized ClientHello structure,
-defined in {{Section 4.1.2 of RFC8446}}, which matches the ClientHelloOuter
-except the `payload` field of the "encrypted_client_hello" is replaced with a
-byte string of the same length but whose contents are zeros. This value does
-not include the four-byte header from the Handshake structure.
+To prevent a network attacker from modifying the reconstructed
+ClientHelloInner by modifying extensions in ClientHelloOuter that are
+referenced in ClientHelloInner (see
+{{flow-clienthello-malleability}}), ECH authenticates ClientHelloOuter
+by passing ClientHelloOuterAAD as the associated data for HPKE sealing
+and opening operations. The ClientHelloOuterAAD is a serialized
+ClientHello structure, defined in {{Section 4.1.2 of RFC8446}}, which
+matches the ClientHelloOuter except the `payload` field of the
+"encrypted_client_hello" is replaced with a byte string of the same
+length but whose contents are zeros. This value does not include the
+four-byte header from the Handshake structure.
 
 The client follows the procedure in {{encrypting-clienthello}} to first
 construct ClientHelloOuterAAD with a placeholder `payload` field, then replace
@@ -968,7 +972,7 @@ Depending on the server role, the `ECHClientHello` will be different:
 * A client-facing server expects a `ECHClientHello.type` of `outer`,
   proceeds as described in {{client-facing-server}} to extract a
   ClientHelloInner, if available.
-  
+
 * A backend server expects a `ECHClientHello.type` of `inner`, and
   proceeds as described in {{backend-server}}.
 
@@ -979,13 +983,14 @@ which receives a `ClientHello` with `ECHClientHello.type` of `outer`
 MUST abort with an "illegal_parameter" alert.
 
 In shared mode, a server plays both roles, first decrypting the
-`ClientHelloOuter` and then using the contents of the `ClientHelloInner`.
-A shared mode server which receives a `ClientHello` with `ECHClientHello.type` of `outer`
-MUST abort with an "illegal_parameter" alert, because such
-a `ClientHello` should never be received from the network.
+`ClientHelloOuter` and then using the contents of the
+`ClientHelloInner`.  A shared mode server which receives a
+`ClientHello` with `ECHClientHello.type` of `outer` MUST abort with an
+"illegal_parameter" alert, because such a `ClientHello` should never
+be received directly from the network.
 
 If `ECHClientHello.type` is not a valid `ECHClientHelloType`, then
-the server MUST abort with an "illegal_parameter" alert.               
+the server MUST abort with an "illegal_parameter" alert.
 
 If the "encrypted_client_hello" is not present, then the server completes the
 handshake normally, as described in {{RFC8446}}.
