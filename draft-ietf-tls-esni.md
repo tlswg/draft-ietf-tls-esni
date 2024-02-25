@@ -884,8 +884,8 @@ version was negotiated, the client can regard ECH as securely disabled
 by the server, and it SHOULD retry the handshake with a new transport
 connection and ECH disabled.
 
-Clients SHOULD NOT accept "retry_config" in response to 
-a connection initiated in response to a "retry_config". 
+Clients SHOULD NOT accept "retry_config" in response to
+a connection initiated in response to a "retry_config".
 If a client does not retry, it MUST report an error to the
 calling application.
 
