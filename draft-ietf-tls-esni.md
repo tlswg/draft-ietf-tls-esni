@@ -255,13 +255,13 @@ See {{goals}} for more details about the ECH security and privacy goals.
 It is possible for ECH advertisements and servers to become inconsistent. This
 may occur, for instance, from DNS misconfiguration, caching issues, or an
 incomplete rollout in a multi-server deployment. This may also occur if a server
-loses its ECH keys, or if a deployment of ECH must be rolled back on the server.
+loses its ECH keys, or if a deployment of ECH is rolled back on the server.
 Whatever the cause, there are two main consequences:
 
 * The server has ECH configured but the client has an ECH configuration with a
   key not known to the server.
 
-* The server has ECH configured but the client has a ECH configuration
+* The server does not have ECH configured but the client has a  ECH configuration
   and so is attempting ECH.
 
 In either case, the server will not be able to decrypt the
@@ -1283,7 +1283,7 @@ of extra round-trips due to a retry. Two specific scenarios are detailed below.
 The retry mechanism described in {{rejected-ech}} allows the server to
 recover from situations where it is not able to decrypt the ECH field,
 for instance if the client has a stale ECHConfig or the server has lost
-the keys. The security of this mechanism is rooted in the server having
+the keys. The security of this mechanism depends on the server having
 a certificate for the public name in the ECHConfig.
 
 Unless ECH is disabled as a result of successfully establishing a
@@ -1296,16 +1296,15 @@ the client may not be able to connect to the server at all, such as:
 - If TLS handshake completes using the ClientHelloOuter but with a certificate
   which is not valid for the public name.
 
-Falling back to unencrypted ClientHellos in any of these cases would
+Falling back to an unencrypted ClientHello in any of these cases would
 allow a network attacker to disclose the contents of this ClientHello,
 including the SNI. This restriction may mean that certain kinds of
 network misbehavior or misconfiguration (see {{middleboxes}} may make
-it impossible to complete an ECH connection where an ordinary TLS 1.3
+it impossible to complete an ECH connection where an ordinary TLS
 connection would work.
 
 Clients MAY attempt to use another server or ECHConfig value from the
 DNS results, if one is provided.
-
 
 ### Middleboxes
 
