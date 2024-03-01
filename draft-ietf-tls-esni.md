@@ -958,7 +958,7 @@ As described in {#topologies}, servers can play two roles, either as
 the client-facing server or as the back-end server.
 Depending on the server role, the `ECHClientHello` will be different:
 
-* A client-facing server expects a `ECHClientHello.type` of `outer`,
+* A client-facing server expects a `ECHClientHello.type` of `outer`, and
   proceeds as described in {{client-facing-server}} to extract a
   ClientHelloInner, if available.
 
