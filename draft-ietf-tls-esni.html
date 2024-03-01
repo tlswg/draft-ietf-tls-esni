@@ -1029,11 +1029,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">TLS Encrypted Client Hello</td>
-<td class="right">February 2024</td>
+<td class="right">March 2024</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Rescorla, et al.</td>
-<td class="center">Expires 27 August 2024</td>
+<td class="center">Expires 2 September 2024</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1046,12 +1046,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-tls-esni-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-02-24" class="published">24 February 2024</time>
+<time datetime="2024-03-01" class="published">1 March 2024</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2024-08-27">27 August 2024</time></dd>
+<dd class="expires"><time datetime="2024-09-02">2 September 2024</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1106,7 +1106,7 @@ encrypting a ClientHello message under a server public key.<a href="#section-abs
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 27 August 2024.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 2 September 2024.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1414,14 +1414,7 @@ learn private information about the connection. The plaintext Server Name
 Indication (SNI) extension in ClientHello messages, which leaks the target
 domain for a given connection, is perhaps the most sensitive, unencrypted
 information in TLS 1.3.<a href="#section-1-2" class="pilcrow">¶</a></p>
-<p id="section-1-3">The target domain may also be visible through other channels, such as plaintext
-client DNS queries or visible server IP addresses. However, DoH <span>[<a href="#RFC8484" class="cite xref">RFC8484</a>]</span>
-and DPRIVE <span>[<a href="#RFC7858" class="cite xref">RFC7858</a>]</span> <span>[<a href="#RFC8094" class="cite xref">RFC8094</a>]</span> provide mechanisms for clients to conceal
-DNS lookups from network inspection, and many TLS servers host multiple domains
-on the same IP address. Private origins may also be deployed behind a common
-provider, such as a reverse proxy. In such environments, the SNI remains the
-primary explicit signal used to determine the server's identity.<a href="#section-1-3" class="pilcrow">¶</a></p>
-<p id="section-1-4">This document specifies a new TLS extension, called Encrypted Client Hello
+<p id="section-1-3">This document specifies a new TLS extension, called Encrypted Client Hello
 (ECH), that allows clients to encrypt their ClientHello to such a deployment.
 This protects the SNI and other potentially sensitive fields, such as the ALPN
 list <span>[<a href="#RFC7301" class="cite xref">RFC7301</a>]</span>. Co-located servers with consistent externally visible TLS
@@ -1433,7 +1426,15 @@ different externally visible behavior, even for servers with consistent TLS
 configurations.) Usage of this mechanism reveals that a client is connecting
 to a particular service provider, but does not reveal which server from the
 anonymity set terminates the connection. Deployment implications of this
-feature are discussed in <a href="#deployment" class="auto internal xref">Section 8</a>.<a href="#section-1-4" class="pilcrow">¶</a></p>
+feature are discussed in <a href="#deployment" class="auto internal xref">Section 8</a>.<a href="#section-1-3" class="pilcrow">¶</a></p>
+<p id="section-1-4">ECH is not in itself sufficient to protect the identity of the server.
+The target domain may also be visible through other channels, such as plaintext
+client DNS queries or visible server IP addresses. However, DoH <span>[<a href="#RFC8484" class="cite xref">RFC8484</a>]</span>
+and DPRIVE <span>[<a href="#RFC7858" class="cite xref">RFC7858</a>]</span> <span>[<a href="#RFC8094" class="cite xref">RFC8094</a>]</span> provide mechanisms for clients to conceal
+DNS lookups from network inspection, and many TLS servers host multiple domains
+on the same IP address. Private origins may also be deployed behind a common
+provider, such as a reverse proxy. In such environments, the SNI remains the
+primary explicit signal used to determine the server's identity.<a href="#section-1-4" class="pilcrow">¶</a></p>
 <p id="section-1-5">ECH is supported in TLS 1.3 <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>, DTLS 1.3 <span>[<a href="#RFC9147" class="cite xref">RFC9147</a>]</span>, and
 newer versions of the TLS and DTLS protocols.<a href="#section-1-5" class="pilcrow">¶</a></p>
 </section>
@@ -1808,8 +1809,10 @@ ClientHelloInner.<a href="#section-5-1" class="pilcrow">¶</a></p>
 </pre><a href="#section-5-4" class="pilcrow">¶</a>
 </div>
 <p id="section-5-5">The outer extension uses the <code>outer</code> variant and the inner extension uses the
-<code>inner</code> variant. The inner extension has an empty payload. The outer
-extension has the following fields:<a href="#section-5-5" class="pilcrow">¶</a></p>
+<code>inner</code> variant. The inner extension has an empty payload, which is included
+because TLS servers are not allowed to provide extensions in ServerHello
+which were not included in ClientHello. The outer extension has the following
+fields:<a href="#section-5-5" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlParallel" id="section-5-6">
         <dt id="section-5-6.1">config_id</dt>
         <dd style="margin-left: 1.5em" id="section-5-6.2">
@@ -1831,8 +1834,8 @@ HelloRetryRequest.<a href="#section-5-6.6.1" class="pilcrow">¶</a></p>
         <dd class="break"></dd>
 <dt id="section-5-6.7">payload</dt>
         <dd style="margin-left: 1.5em" id="section-5-6.8">
-          <p id="section-5-6.8.1">The serialized and encrypted ClientHelloInner structure, encrypted using HPKE
-as described in <a href="#real-ech" class="auto internal xref">Section 6.1</a>.<a href="#section-5-6.8.1" class="pilcrow">¶</a></p>
+          <p id="section-5-6.8.1">The serialized and encrypted EncodedClientHelloInner structure, encrypted
+using HPKE as described in <a href="#real-ech" class="auto internal xref">Section 6.1</a>.<a href="#section-5-6.8.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
@@ -1951,9 +1954,9 @@ do not occur in the same order.<a href="#section-5.1-11.4.1" class="pilcrow">¶<
 <p id="section-5.1-12">These requirements prevent an attacker from performing a packet amplification
 attack, by crafting a ClientHelloOuter which decompresses to a much larger
 ClientHelloInner. This is discussed further in <a href="#decompression-amp" class="auto internal xref">Section 10.12.4</a>.<a href="#section-5.1-12" class="pilcrow">¶</a></p>
-<p id="section-5.1-13">Implementations SHOULD bound the time to compute a ClientHelloInner
-proportionally to the ClientHelloOuter size. If the cost is disproportionately
-large, a malicious client could exploit this in a denial of service attack.
+<p id="section-5.1-13">Implementations SHOULD construct the ClientHelloInner in linear
+time. Quadratic time implementations (such as may happen via naive
+copying) create a denial of service risk.
 <a href="#linear-outer-extensions" class="auto internal xref">Appendix B</a> describes a linear-time procedure that may be used
 for this purpose.<a href="#section-5.1-13" class="pilcrow">¶</a></p>
 </section>
@@ -1963,26 +1966,16 @@ for this purpose.<a href="#section-5.1-13" class="pilcrow">¶</a></p>
         <h3 id="name-authenticating-the-clienthe">
 <a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-authenticating-the-clienthe" class="section-name selfRef">Authenticating the ClientHelloOuter</a>
         </h3>
-<p id="section-5.2-1">To prevent a network attacker from modifying the reconstructed ClientHelloInner
-(see <a href="#flow-clienthello-malleability" class="auto internal xref">Section 10.12.3</a>), ECH authenticates ClientHelloOuter by
-passing ClientHelloOuterAAD as the associated data for HPKE sealing and opening
-operations. The ClientHelloOuterAAD is a serialized ClientHello structure,
-defined in <span><a href="https://rfc-editor.org/rfc/rfc8446#section-4.1.2" class="relref">Section 4.1.2</a> of [<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>, which matches the ClientHelloOuter
-except the <code>payload</code> field of the "encrypted_client_hello" is replaced with a
-byte string of the same length but whose contents are zeros. This value does
-not include the four-byte header from the Handshake structure.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
-<p id="section-5.2-2">The client follows the procedure in <a href="#encrypting-clienthello" class="auto internal xref">Section 6.1.1</a> to first
-construct ClientHelloOuterAAD with a placeholder <code>payload</code> field, then replace
-the field with the encrypted value to compute ClientHelloOuter.<a href="#section-5.2-2" class="pilcrow">¶</a></p>
-<p id="section-5.2-3">The server then receives ClientHelloOuter and computes ClientHelloOuterAAD by
-making a copy and replacing the portion corresponding to the <code>payload</code> field
-with zeros.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
-<p id="section-5.2-4">The payload and the placeholder strings have the same length, so it is not
-necessary for either side to recompute length prefixes when applying the above
-transformations.<a href="#section-5.2-4" class="pilcrow">¶</a></p>
-<p id="section-5.2-5">The decompression process in <a href="#encoding-inner" class="auto internal xref">Section 5.1</a> forbids
-"encrypted_client_hello" in OuterExtensions. This ensures the unauthenticated
-portion of ClientHelloOuter is not incorporated into ClientHelloInner.<a href="#section-5.2-5" class="pilcrow">¶</a></p>
+<p id="section-5.2-1">To prevent a network attacker from modifying the <code>ClientHelloOuter</code>
+while keeping the same encrypted <code>ClientHelloInner</code>
+(see <a href="#flow-clienthello-malleability" class="auto internal xref">Section 10.12.3</a>), ECH authenticates ClientHelloOuter
+by passing ClientHelloOuterAAD as the associated data for HPKE sealing
+and opening operations. The ClientHelloOuterAAD is a serialized
+ClientHello structure, defined in <span><a href="https://rfc-editor.org/rfc/rfc8446#section-4.1.2" class="relref">Section 4.1.2</a> of [<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>, which
+matches the ClientHelloOuter except that the <code>payload</code> field of the
+"encrypted_client_hello" is replaced with a byte string of the same
+length but whose contents are zeros. This value does not include the
+four-byte header from the Handshake structure.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2139,13 +2132,17 @@ It then computes the final payload as:<a href="#section-6.1.1-5" class="pilcrow"
                                  EncodedClientHelloInner)
 </pre><a href="#section-6.1.1-6" class="pilcrow">¶</a>
 </div>
-<p id="section-6.1.1-7">Finally, the client replaces <code>payload</code> with <code>final_payload</code> to obtain
+<p id="section-6.1.1-7">Including <code>ClientHelloOuterAAD</code> as the HPKE AAD binds the <code>ClientHelloOuter</code>
+to the <code>ClientHelloInner</code>, this preventing attackers from modifying
+<code>ClientHelloOuter</code> while keeping the same <code>ClientHelloInner</code>, as described in
+{#flow-clienthello-malleability}.<a href="#section-6.1.1-7" class="pilcrow">¶</a></p>
+<p id="section-6.1.1-8">Finally, the client replaces <code>payload</code> with <code>final_payload</code> to obtain
 ClientHelloOuter. The two values have the same length, so it is not necessary
-to recompute length prefixes in the serialized structure.<a href="#section-6.1.1-7" class="pilcrow">¶</a></p>
-<p id="section-6.1.1-8">Note this construction requires the "encrypted_client_hello" be computed after
+to recompute length prefixes in the serialized structure.<a href="#section-6.1.1-8" class="pilcrow">¶</a></p>
+<p id="section-6.1.1-9">Note this construction requires the "encrypted_client_hello" be computed after
 all other extensions. This is possible because the ClientHelloOuter's
 "pre_shared_key" extension is either omitted, or uses a random binder
-(<a href="#grease-psk" class="auto internal xref">Section 6.1.2</a>).<a href="#section-6.1.1-8" class="pilcrow">¶</a></p>
+(<a href="#grease-psk" class="auto internal xref">Section 6.1.2</a>).<a href="#section-6.1.1-9" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="grease-psk">
@@ -2179,9 +2176,13 @@ client MUST abort the handshake with an "illegal_parameter" alert.<a href="#sect
           <h4 id="name-recommended-padding-scheme">
 <a href="#section-6.1.3" class="section-number selfRef">6.1.3. </a><a href="#name-recommended-padding-scheme" class="section-name selfRef">Recommended Padding Scheme</a>
           </h4>
-<p id="section-6.1.3-1">This section describes a deterministic padding mechanism based on the following
+<p id="section-6.1.3-1">If the ClientHelloInner is encrypted without padding, then the length of
+the <code>ClientHelloOuter.payload</code> can leak information about <code>ClientHelloInner</code>.
+In order to prevent this the <code>EncodedClientHelloInner</code> structure
+has a padding field. This section describes a deterministic mechanism for
+computing the required amount of padding based on the following
 observation: individual extensions can reveal sensitive information through
-their length. Thus, each extension in the inner ClientHello may require
+-their length. Thus, each extension in the inner ClientHello may require
 different amounts of padding. This padding may be fully determined by the
 client's configuration or may require server input.<a href="#section-6.1.3-1" class="pilcrow">¶</a></p>
 <p id="section-6.1.3-2">By way of example, clients typically support a small number of application
@@ -2433,25 +2434,35 @@ MAY offer to resume sessions established without ECH.<a href="#section-6.2-5" cl
       <h2 id="name-server-behavior">
 <a href="#section-7" class="section-number selfRef">7. </a><a href="#name-server-behavior" class="section-name selfRef">Server Behavior</a>
       </h2>
-<p id="section-7-1">Servers that support ECH play one of two roles, depending on the payload of the
-"encrypted_client_hello" extension in the initial ClientHello:<a href="#section-7-1" class="pilcrow">¶</a></p>
+<p id="section-7-1">As described in {#topologies}, servers can play two roles, either as
+the client-facing server or as the back-end server.
+Depending on the server role, the <code>ECHClientHello</code> will be different:<a href="#section-7-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-7-2.1">
-          <p id="section-7-2.1.1">If <code>ECHClientHello.type</code> is <code>outer</code>, then the server acts as a client-facing
-server and proceeds as described in <a href="#client-facing-server" class="auto internal xref">Section 7.1</a> to extract a
+          <p id="section-7-2.1.1">A client-facing server expects a <code>ECHClientHello.type</code> of <code>outer</code>, and
+proceeds as described in <a href="#client-facing-server" class="auto internal xref">Section 7.1</a> to extract a
 ClientHelloInner, if available.<a href="#section-7-2.1.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-7-2.2">
-          <p id="section-7-2.2.1">If <code>ECHClientHello.type</code> is <code>inner</code>, then the server acts as a backend server
-and proceeds as described in <a href="#backend-server" class="auto internal xref">Section 7.2</a>.<a href="#section-7-2.2.1" class="pilcrow">¶</a></p>
-</li>
-        <li class="normal" id="section-7-2.3">
-          <p id="section-7-2.3.1">Otherwise, if <code>ECHClientHello.type</code> is not a valid <code>ECHClientHelloType</code>, then
-the server MUST abort with an "illegal_parameter" alert.<a href="#section-7-2.3.1" class="pilcrow">¶</a></p>
+          <p id="section-7-2.2.1">A backend server expects a <code>ECHClientHello.type</code> of <code>inner</code>, and
+proceeds as described in <a href="#backend-server" class="auto internal xref">Section 7.2</a>.<a href="#section-7-2.2.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-7-3">If the "encrypted_client_hello" is not present, then the server completes the
-handshake normally, as described in <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>.<a href="#section-7-3" class="pilcrow">¶</a></p>
+<p id="section-7-3">In split mode, a client-facing server which receives a <code>ClientHello</code>
+with <code>ECHClientHello.type</code> of <code>inner</code> MUST abort with an
+"illegal_parameter" alert. Similarly, in split mode, a backend server
+which receives a <code>ClientHello</code> with <code>ECHClientHello.type</code> of <code>outer</code>
+MUST abort with an "illegal_parameter" alert.<a href="#section-7-3" class="pilcrow">¶</a></p>
+<p id="section-7-4">In shared mode, a server plays both roles, first decrypting the
+<code>ClientHelloOuter</code> and then using the contents of the
+<code>ClientHelloInner</code>.  A shared mode server which receives a
+<code>ClientHello</code> with <code>ECHClientHello.type</code> of <code>outer</code> MUST abort with an
+"illegal_parameter" alert, because such a <code>ClientHello</code> should never
+be received directly from the network.<a href="#section-7-4" class="pilcrow">¶</a></p>
+<p id="section-7-5">If <code>ECHClientHello.type</code> is not a valid <code>ECHClientHelloType</code>, then
+the server MUST abort with an "illegal_parameter" alert.<a href="#section-7-5" class="pilcrow">¶</a></p>
+<p id="section-7-6">If the "encrypted_client_hello" is not present, then the server completes the
+handshake normally, as described in <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>.<a href="#section-7-6" class="pilcrow">¶</a></p>
 <div id="client-facing-server">
 <section id="section-7.1">
         <h3 id="name-client-facing-server">
@@ -2476,7 +2487,7 @@ below determining the final selection.<a href="#section-7.1-3.2.1" class="pilcro
         </ol>
 <p id="section-7.1-4">Some uses of ECH, such as local discovery mode, may randomize the
 ECHClientHello.config_id since it can be used as a tracking vector. In such
-cases, the second method should be used for matching the ECHClientHello to a
+cases, the second method SHOULD be used for matching the ECHClientHello to a
 known ECHConfig. See <a href="#ignored-configs" class="auto internal xref">Section 10.4</a>. Unless specified by the application
 profile or otherwise externally configured, implementations MUST use the first
 method.<a href="#section-7.1-4" class="pilcrow">¶</a></p>
@@ -2508,7 +2519,7 @@ in the ClientHelloOuter "server_name" extension matches the value of
 ECHConfig.contents.public_name, and abort with an "illegal_parameter" alert if
 these do not match. This optional check allows the server to limit ECH
 connections to only use the public SNI values advertised in its ECHConfigs.
-The server must be careful not to unnecessarily reject connections if the same
+The server MUST be careful not to unnecessarily reject connections if the same
 ECHConfig id or keypair is used in multiple ECHConfigs with distinct public
 names.<a href="#section-7.1-10" class="pilcrow">¶</a></p>
 <p id="section-7.1-11">Upon determining the ClientHelloInner, the client-facing server checks that the
@@ -2709,6 +2720,11 @@ the public name, the client MUST NOT fall back to using unencrypted
 ClientHellos, as this allows a network attacker to disclose the contents of this
 ClientHello, including the SNI. It MAY attempt to use another server from the
 DNS results, if one is provided.<a href="#section-8.1.1-3" class="pilcrow">¶</a></p>
+<p id="section-8.1.1-4">In order to ensure that the retry mechanism works successfully servers
+SHOULD ensure that every endpoint which might receive a TLS connection
+is provisioned with an appropriate certificate for the public name.
+This is especially important during periods of server reconfiguration
+when different endpoints might have different configurations.<a href="#section-8.1.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="middleboxes">
@@ -3383,7 +3399,11 @@ server name, such as ALPN preferences.<a href="#section-10.12.3-4" class="pilcro
 <p id="section-10.12.3-5">ECH mitigates this attack by only negotiating TLS parameters from
 ClientHelloInner and authenticating all inputs to the ClientHelloInner
 (EncodedClientHelloInner and ClientHelloOuter) with the HPKE AEAD. See
-<a href="#authenticating-outer" class="auto internal xref">Section 5.2</a>. An earlier iteration of this specification only
+<a href="#authenticating-outer" class="auto internal xref">Section 5.2</a>. The decompression process in <a href="#encoding-inner" class="auto internal xref">Section 5.1</a>
+forbids "encrypted_client_hello" in OuterExtensions. This ensures the
+unauthenticated portion of ClientHelloOuter is not incorporated into
+ClientHelloInner.
+An earlier iteration of this specification only
 encrypted and authenticated the "server_name" extension, which left the overall
 ClientHello vulnerable to an analogue of this attack.<a href="#section-10.12.3-5" class="pilcrow">¶</a></p>
 </section>
