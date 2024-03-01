@@ -84,14 +84,6 @@ Indication (SNI) extension in ClientHello messages, which leaks the target
 domain for a given connection, is perhaps the most sensitive, unencrypted
 information in TLS 1.3.
 
-The target domain may also be visible through other channels, such as plaintext
-client DNS queries or visible server IP addresses. However, DoH {{?RFC8484}}
-and DPRIVE {{?RFC7858}} {{?RFC8094}} provide mechanisms for clients to conceal
-DNS lookups from network inspection, and many TLS servers host multiple domains
-on the same IP address. Private origins may also be deployed behind a common
-provider, such as a reverse proxy. In such environments, the SNI remains the
-primary explicit signal used to determine the server's identity.
-
 This document specifies a new TLS extension, called Encrypted Client Hello
 (ECH), that allows clients to encrypt their ClientHello to such a deployment.
 This protects the SNI and other potentially sensitive fields, such as the ALPN
@@ -105,6 +97,15 @@ configurations.) Usage of this mechanism reveals that a client is connecting
 to a particular service provider, but does not reveal which server from the
 anonymity set terminates the connection. Deployment implications of this
 feature are discussed in {{deployment}}.
+
+ECH is not in itself sufficient to protect the identity of the server.
+The target domain may also be visible through other channels, such as plaintext
+client DNS queries or visible server IP addresses. However, DoH {{?RFC8484}}
+and DPRIVE {{?RFC7858}} {{?RFC8094}} provide mechanisms for clients to conceal
+DNS lookups from network inspection, and many TLS servers host multiple domains
+on the same IP address. Private origins may also be deployed behind a common
+provider, such as a reverse proxy. In such environments, the SNI remains the
+primary explicit signal used to determine the server's identity.
 
 ECH is supported in TLS 1.3 {{!RFC8446}}, DTLS 1.3 {{!RFC9147}}, and
 newer versions of the TLS and DTLS protocols.
@@ -411,8 +412,10 @@ The payload of the extension has the following structure:
 ~~~~
 
 The outer extension uses the `outer` variant and the inner extension uses the
-`inner` variant. The inner extension has an empty payload. The outer
-extension has the following fields:
+`inner` variant. The inner extension has an empty payload, which is included
+because TLS servers are not allowed to provide extensions in ServerHello
+which were not included in ClientHello. The outer extension has the following
+fields:
 
 config_id
 : The ECHConfigContents.key_config.config_id for the chosen ECHConfig.
@@ -427,8 +430,8 @@ enc
 HelloRetryRequest.
 
 payload
-: The serialized and encrypted ClientHelloInner structure, encrypted using HPKE
-as described in {{real-ech}}.
+: The serialized and encrypted EncodedClientHelloInner structure, encrypted
+using HPKE as described in {{real-ech}}.
 
 When a client offers the `outer` version of an "encrypted_client_hello"
 extension, the server MAY include an "encrypted_client_hello" extension in its
@@ -542,38 +545,25 @@ These requirements prevent an attacker from performing a packet amplification
 attack, by crafting a ClientHelloOuter which decompresses to a much larger
 ClientHelloInner. This is discussed further in {{decompression-amp}}.
 
-Implementations SHOULD bound the time to compute a ClientHelloInner
-proportionally to the ClientHelloOuter size. If the cost is disproportionately
-large, a malicious client could exploit this in a denial of service attack.
+Implementations SHOULD construct the ClientHelloInner in linear
+time. Quadratic time implementations (such as may happen via naive
+copying) create a denial of service risk.
 {{linear-outer-extensions}} describes a linear-time procedure that may be used
 for this purpose.
 
 ## Authenticating the ClientHelloOuter {#authenticating-outer}
 
-To prevent a network attacker from modifying the reconstructed ClientHelloInner
-(see {{flow-clienthello-malleability}}), ECH authenticates ClientHelloOuter by
-passing ClientHelloOuterAAD as the associated data for HPKE sealing and opening
-operations. The ClientHelloOuterAAD is a serialized ClientHello structure,
-defined in {{Section 4.1.2 of RFC8446}}, which matches the ClientHelloOuter
-except the `payload` field of the "encrypted_client_hello" is replaced with a
-byte string of the same length but whose contents are zeros. This value does
-not include the four-byte header from the Handshake structure.
+To prevent a network attacker from modifying the `ClientHelloOuter`
+while keeping the same encrypted `ClientHelloInner`
+(see {{flow-clienthello-malleability}}), ECH authenticates ClientHelloOuter
+by passing ClientHelloOuterAAD as the associated data for HPKE sealing
+and opening operations. The ClientHelloOuterAAD is a serialized
+ClientHello structure, defined in {{Section 4.1.2 of RFC8446}}, which
+matches the ClientHelloOuter except that the `payload` field of the
+"encrypted_client_hello" is replaced with a byte string of the same
+length but whose contents are zeros. This value does not include the
+four-byte header from the Handshake structure.
 
-The client follows the procedure in {{encrypting-clienthello}} to first
-construct ClientHelloOuterAAD with a placeholder `payload` field, then replace
-the field with the encrypted value to compute ClientHelloOuter.
-
-The server then receives ClientHelloOuter and computes ClientHelloOuterAAD by
-making a copy and replacing the portion corresponding to the `payload` field
-with zeros.
-
-The payload and the placeholder strings have the same length, so it is not
-necessary for either side to recompute length prefixes when applying the above
-transformations.
-
-The decompression process in {{encoding-inner}} forbids
-"encrypted_client_hello" in OuterExtensions. This ensures the unauthenticated
-portion of ClientHelloOuter is not incorporated into ClientHelloInner.
 
 # Client Behavior
 
@@ -695,6 +685,11 @@ It then computes the final payload as:
                                  EncodedClientHelloInner)
 ~~~
 
+Including `ClientHelloOuterAAD` as the HPKE AAD binds the `ClientHelloOuter`
+to the `ClientHelloInner`, this preventing attackers from modifying
+`ClientHelloOuter` while keeping the same `ClientHelloInner`, as described in
+{#flow-clienthello-malleability}.
+
 Finally, the client replaces `payload` with `final_payload` to obtain
 ClientHelloOuter. The two values have the same length, so it is not necessary
 to recompute length prefixes in the serialized structure.
@@ -730,9 +725,13 @@ client MUST abort the handshake with an "illegal_parameter" alert.
 
 ### Recommended Padding Scheme {#padding}
 
-This section describes a deterministic padding mechanism based on the following
+If the ClientHelloInner is encrypted without padding, then the length of
+the `ClientHelloOuter.payload` can leak information about `ClientHelloInner`.
+In order to prevent this the `EncodedClientHelloInner` structure
+has a padding field. This section describes a deterministic mechanism for
+computing the required amount of padding based on the following
 observation: individual extensions can reveal sensitive information through
-their length. Thus, each extension in the inner ClientHello may require
+-their length. Thus, each extension in the inner ClientHello may require
 different amounts of padding. This padding may be fully determined by the
 client's configuration or may require server input.
 
@@ -955,21 +954,36 @@ MAY offer to resume sessions established without ECH.
 
 # Server Behavior {#server-behavior}
 
-Servers that support ECH play one of two roles, depending on the payload of the
-"encrypted_client_hello" extension in the initial ClientHello:
+As described in {#topologies}, servers can play two roles, either as
+the client-facing server or as the back-end server.
+Depending on the server role, the `ECHClientHello` will be different:
 
-* If `ECHClientHello.type` is `outer`, then the server acts as a client-facing
-  server and proceeds as described in {{client-facing-server}} to extract a
+* A client-facing server expects a `ECHClientHello.type` of `outer`, and
+  proceeds as described in {{client-facing-server}} to extract a
   ClientHelloInner, if available.
 
-* If `ECHClientHello.type` is `inner`, then the server acts as a backend server
-  and proceeds as described in {{backend-server}}.
+* A backend server expects a `ECHClientHello.type` of `inner`, and
+  proceeds as described in {{backend-server}}.
 
-* Otherwise, if `ECHClientHello.type` is not a valid `ECHClientHelloType`, then
-  the server MUST abort with an "illegal_parameter" alert.
+In split mode, a client-facing server which receives a `ClientHello`
+with `ECHClientHello.type` of `inner` MUST abort with an
+"illegal_parameter" alert. Similarly, in split mode, a backend server
+which receives a `ClientHello` with `ECHClientHello.type` of `outer`
+MUST abort with an "illegal_parameter" alert.
+
+In shared mode, a server plays both roles, first decrypting the
+`ClientHelloOuter` and then using the contents of the
+`ClientHelloInner`.  A shared mode server which receives a
+`ClientHello` with `ECHClientHello.type` of `outer` MUST abort with an
+"illegal_parameter" alert, because such a `ClientHello` should never
+be received directly from the network.
+
+If `ECHClientHello.type` is not a valid `ECHClientHelloType`, then
+the server MUST abort with an "illegal_parameter" alert.
 
 If the "encrypted_client_hello" is not present, then the server completes the
 handshake normally, as described in {{RFC8446}}.
+
 
 ## Client-Facing Server {#client-facing-server}
 
@@ -989,7 +1003,7 @@ determined by one of the two following methods:
 
 Some uses of ECH, such as local discovery mode, may randomize the
 ECHClientHello.config_id since it can be used as a tracking vector. In such
-cases, the second method should be used for matching the ECHClientHello to a
+cases, the second method SHOULD be used for matching the ECHClientHello to a
 known ECHConfig. See {{ignored-configs}}. Unless specified by the application
 profile or otherwise externally configured, implementations MUST use the first
 method.
@@ -1025,7 +1039,7 @@ in the ClientHelloOuter "server_name" extension matches the value of
 ECHConfig.contents.public_name, and abort with an "illegal_parameter" alert if
 these do not match. This optional check allows the server to limit ECH
 connections to only use the public SNI values advertised in its ECHConfigs.
-The server must be careful not to unnecessarily reject connections if the same
+The server MUST be careful not to unnecessarily reject connections if the same
 ECHConfig id or keypair is used in multiple ECHConfigs with distinct public
 names.
 
@@ -1216,6 +1230,13 @@ the public name, the client MUST NOT fall back to using unencrypted
 ClientHellos, as this allows a network attacker to disclose the contents of this
 ClientHello, including the SNI. It MAY attempt to use another server from the
 DNS results, if one is provided.
+
+In order to ensure that the retry mechanism works successfully servers
+SHOULD ensure that every endpoint which might receive a TLS connection
+is provisioned with an appropriate certificate for the public name.
+This is especially important during periods of server reconfiguration
+when different endpoints might have different configurations.
+
 
 ### Middleboxes
 
@@ -1761,7 +1782,11 @@ server name, such as ALPN preferences.
 ECH mitigates this attack by only negotiating TLS parameters from
 ClientHelloInner and authenticating all inputs to the ClientHelloInner
 (EncodedClientHelloInner and ClientHelloOuter) with the HPKE AEAD. See
-{{authenticating-outer}}. An earlier iteration of this specification only
+{{authenticating-outer}}. The decompression process in {{encoding-inner}}
+forbids "encrypted_client_hello" in OuterExtensions. This ensures the
+unauthenticated portion of ClientHelloOuter is not incorporated into
+ClientHelloInner.
+An earlier iteration of this specification only
 encrypted and authenticated the "server_name" extension, which left the overall
 ClientHello vulnerable to an analogue of this attack.
 
