@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-02-29T01:01:59.979330+00:00",
+  "timestamp": "2024-03-03T01:05:57.830923+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12762,7 +12762,7 @@
       "labels": [],
       "body": "In Watson Ladd's review, he asks:\r\n\r\n  Should we use RFC 2119 language for the server as well? Right now we\r\n  only say what the client must do when the server violates the rules.\r\n\r\nWe do recommend greasing ECH. My sense is that this is on the bubble\r\nand we could leave it as-is, but I could be persuaded otherwise.\r\n\r\n@davidben  @dennisjackson @martinthomson \r\n \r\n",
       "createdAt": "2024-02-25T20:30:27Z",
-      "updatedAt": "2024-02-26T02:24:10Z",
+      "updatedAt": "2024-03-01T13:24:37Z",
       "closedAt": null,
       "comments": [
         {
@@ -12771,6 +12771,27 @@
           "body": "I just checked with NSS and we overwrite the outer values for PSK (identities and binders) with random data.  That seems fairly simple to do and it makes the handshake choice harder to distinguish.\r\n\r\nNote that we do not hide the length, which might be an issue for identity, but we're already exposed to the length leakage, so fixed-length identities are best in any case.",
           "createdAt": "2024-02-26T02:24:09Z",
           "updatedAt": "2024-02-26T02:24:09Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "So that's a vote for \"grease\"?",
+          "createdAt": "2024-03-01T00:48:39Z",
+          "updatedAt": "2024-03-01T00:48:39Z"
+        },
+        {
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Yeah, I'm happy with it.",
+          "createdAt": "2024-03-01T01:54:23Z",
+          "updatedAt": "2024-03-01T01:54:23Z"
+        },
+        {
+          "author": "dennisjackson",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "\ud83d\udc4d ",
+          "createdAt": "2024-03-01T13:24:35Z",
+          "updatedAt": "2024-03-01T13:24:35Z"
         }
       ]
     },
@@ -12779,15 +12800,15 @@
       "id": "I_kwDOB-yxNc6AU3mp",
       "title": "Can a retry ECHConfig change the public name?",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/608",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Suppose that I connect to a server with public name `example.com` and it gives me an ECHConfig with public name `example.org`. Is this OK?",
       "createdAt": "2024-02-25T21:43:56Z",
-      "updatedAt": "2024-02-25T23:15:58Z",
-      "closedAt": null,
+      "updatedAt": "2024-03-01T02:03:08Z",
+      "closedAt": "2024-03-01T02:03:07Z",
       "comments": [
         {
           "author": "sftcd",
@@ -12795,6 +12816,27 @@
           "body": "\r\n\r\nOn 25/02/2024 21:44, Eric Rescorla wrote:\r\n> Suppose that I connect to a server with public name `example.com` and\r\n> it gives me an ECHConfig with public name `example.org`. Is this OK?\r\n\r\nIf the same server certificate covers both, then I'd say\r\nthat's ok. But I'd have to add an extra check I think,\r\nif we figure a library ought enforce any related checks,\r\nso I'd likely be fine with other constraints or with no\r\nconstraint (at the library level).\r\n\r\nS.\r\n\r\n",
           "createdAt": "2024-02-25T23:15:57Z",
           "updatedAt": "2024-02-25T23:15:57Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@martinthomson @davidben?",
+          "createdAt": "2024-03-01T00:48:27Z",
+          "updatedAt": "2024-03-01T00:48:27Z"
+        },
+        {
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I can't see an attack that might arise from changing the public name.  It creates some interesting cross-provider interactions.",
+          "createdAt": "2024-03-01T01:54:05Z",
+          "updatedAt": "2024-03-01T01:54:05Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "OK, so I'm just going to close this with no change.",
+          "createdAt": "2024-03-01T02:03:07Z",
+          "updatedAt": "2024-03-01T02:03:07Z"
         }
       ]
     }
@@ -55790,24 +55832,26 @@
       "id": "PR_kwDOB-yxNc5n2ZHZ",
       "title": "Ladd review1",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/607",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "This addresses most of the comments in @wbl's review, except for (1) whether we should recommend grease-psk and (2) restructuring the text around ClientHelloOuterAAD.\r\n\r\n\r\n\r\n",
       "createdAt": "2024-02-25T21:10:05Z",
-      "updatedAt": "2024-02-25T21:29:32Z",
+      "updatedAt": "2024-03-01T01:05:57Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "52048599a9af744a3c01bab68be7d6924fce74db",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "ladd_review1",
-      "headRefOid": "c58f9994c9d713a1a1285fa32a0f337fb7cc54ed",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "c14e934e3011a1659f5fca362052e67633c33d3a",
+      "closedAt": "2024-03-01T01:05:57Z",
+      "mergedAt": "2024-03-01T01:05:56Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "1ed98b5891355bcc0e3da3a6168ff92c91745810"
+      },
       "comments": [
         {
           "author": "ekr",
@@ -55817,7 +55861,60 @@
           "updatedAt": "2024-02-25T21:29:31Z"
         }
       ],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc5xy7fd",
+          "commit": {
+            "abbreviatedOid": "c58f999"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-02-29T15:21:21Z",
+          "updatedAt": "2024-02-29T15:26:23Z",
+          "comments": [
+            {
+              "originalPosition": 147,
+              "body": "```suggestion\r\n* A client-facing server expects a `ECHClientHello.type` of `outer`, and\r\n```",
+              "createdAt": "2024-02-29T15:21:22Z",
+              "updatedAt": "2024-02-29T15:26:23Z"
+            },
+            {
+              "originalPosition": 203,
+              "body": "nit: \"ensure\" twice in one sentence\r\n```suggestion\r\nIn order to guarantee that the retry mechanism works successfully servers\r\n```",
+              "createdAt": "2024-02-29T15:24:52Z",
+              "updatedAt": "2024-02-29T15:26:23Z"
+            },
+            {
+              "originalPosition": 224,
+              "body": "Orthogonal: Do we want to add a note for the RFC editor to drop this text about \"an earlier version of this specification\"?",
+              "createdAt": "2024-02-29T15:26:19Z",
+              "updatedAt": "2024-02-29T15:26:23Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc5x2lH3",
+          "commit": {
+            "abbreviatedOid": "c58f999"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-03-01T01:01:50Z",
+          "updatedAt": "2024-03-01T01:01:51Z",
+          "comments": [
+            {
+              "originalPosition": 224,
+              "body": "No, I think this is helpful",
+              "createdAt": "2024-03-01T01:01:50Z",
+              "updatedAt": "2024-03-01T01:01:51Z"
+            }
+          ]
+        }
+      ]
     },
     {
       "number": 609,
@@ -55831,7 +55928,7 @@
       "labels": [],
       "body": "",
       "createdAt": "2024-02-25T21:56:55Z",
-      "updatedAt": "2024-02-26T00:54:12Z",
+      "updatedAt": "2024-03-01T17:38:44Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "52048599a9af744a3c01bab68be7d6924fce74db",
@@ -55849,6 +55946,20 @@
           "body": "@martinthomson ",
           "createdAt": "2024-02-25T21:57:02Z",
           "updatedAt": "2024-02-25T21:57:02Z"
+        },
+        {
+          "author": "dennisjackson",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Reading the discussion, are you sure the complexity of doing this is worth the gain? The principle mechanism server operators have for controlling ECH attempts is updating their DNS records. Presuming they can do that reasonably quickly, aren't most clients going to maintain an open connection for the relevant time period anyway? How long is the window in which we won't have an open usable connection (with ECH or not) but we'd be willing to remember the past ECH failure/retry-config for? \r\n\r\nI'd also point out that we also can't assume that ECHConfigs always come from DNS for the purposes of working out an expiration time. It could be that applications are configured by some other out of band mechanism, or even that they deliberately use a known-bad config and intend to rely on a provided retry-config.",
+          "createdAt": "2024-03-01T14:42:42Z",
+          "updatedAt": "2024-03-01T14:42:42Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "The complexity of specifying it or the complexity of implementing it? Right now I read the spec as just prohibiting it.\r\n\r\nWRT multiple connections, the case I am concerned about is HTTP connection sharding when you might have 4 or so concurrent connections. I suppose we can just say that this is a reason to use H2 or H3.\r\n\r\nWRT not-DNS, I think we could practically just limit this kind of memory to DNS.\r\n\r\nAnyway, i don't feel strongly about this, and we could always relax this restriction later, so if others aren't enthusiastic, we can just close this unchanged.\r\n",
+          "createdAt": "2024-03-01T16:43:43Z",
+          "updatedAt": "2024-03-01T16:43:43Z"
         }
       ],
       "reviews": [
@@ -55889,6 +56000,158 @@
               "body": "I don't think this is quite right. Suppose that we resolve `example.com`, retrieve HTTPS and it has:\r\n\r\n```\r\npublic_name = example.com\r\nkey = ABC\r\nIP = 192.0.2.1\r\n```\r\n\r\nWe connect to the server and it supplies:\r\n```\r\npublic_name = example.com\r\nkey = XYZ\r\nIP = 192.0.2.1\r\n```\r\n\r\nIt seems like it's safe to reuse this second ECHConfig.\r\n\r\nHowever, it's not safe if we resolve `example.com` and get an A record  for `192.0.2.2`.\r\n\r\nRelatedly, if we resolve `example.com` and get HTTPS of\r\n\r\n```\r\npublic_name = example.com\r\nkey = DEF\r\nIP = 192.0.2.2\r\n```\r\n\r\nWe don't *know* that it's safe to reuse the old key XYZ, right?\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
               "createdAt": "2024-02-26T00:54:12Z",
               "updatedAt": "2024-02-26T00:54:12Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc5x2iJM",
+          "commit": {
+            "abbreviatedOid": "ff23cac"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-03-01T00:47:57Z",
+          "updatedAt": "2024-03-01T00:47:58Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "@martinthomson  ping",
+              "createdAt": "2024-03-01T00:47:58Z",
+              "updatedAt": "2024-03-01T00:47:58Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc5x2xRk",
+          "commit": {
+            "abbreviatedOid": "ff23cac"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-03-01T01:53:20Z",
+          "updatedAt": "2024-03-01T01:53:20Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "There is no IP in the ECHConfig though, so I'm struggling to understand this.\r\n\r\nThe trick that I was suggesting was that a server that uses multiple providers could use public name rather than IP to separate those providers.  This is on the presumption that |the set of IP addresses for each provider| > 1 but the number of public names is under their direct control.",
+              "createdAt": "2024-03-01T01:53:20Z",
+              "updatedAt": "2024-03-01T01:53:20Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc5x21fo",
+          "commit": {
+            "abbreviatedOid": "ff23cac"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-03-01T02:09:13Z",
+          "updatedAt": "2024-03-01T02:09:13Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "I have to admit that I have kind of lost track of how the DNS pieces fit together, but...\r\n\r\nAs I remember, the basic design requirement for multi-CDN was that we had to ensure that there was no way that the client could get ECHConfig for CDN A and the IP address for CDN B, because that just won't work. When I had last checked, that was intended to be accomplished by having the IP address delivered alongside the ECHConfig, which I thought was done with ipv6hint. But maybe I've misremembered or things evolved.\r\n\r\n@tfpauly @bemasc?\r\n\r\n\r\n\r\n\r\n\r\n",
+              "createdAt": "2024-03-01T02:09:13Z",
+              "updatedAt": "2024-03-01T02:09:13Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc5x24h6",
+          "commit": {
+            "abbreviatedOid": "ff23cac"
+          },
+          "author": "tfpauly",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-03-01T02:28:35Z",
+          "updatedAt": "2024-03-01T02:28:35Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "The record can contain v4 and v6 hints, and also is associated with A and AAAA records for that specific service (which would be distinct from the IP addresses for other cdns, etc), that are queried after receiving the HTTPS record. ",
+              "createdAt": "2024-03-01T02:28:35Z",
+              "updatedAt": "2024-03-01T02:28:35Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc5x25Pm",
+          "commit": {
+            "abbreviatedOid": "ff23cac"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-03-01T02:32:41Z",
+          "updatedAt": "2024-03-01T02:32:41Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "Can you elaborate on how that second process works? By dereferencing the TargetName?",
+              "createdAt": "2024-03-01T02:32:41Z",
+              "updatedAt": "2024-03-01T02:32:42Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc5x25xY",
+          "commit": {
+            "abbreviatedOid": "ff23cac"
+          },
+          "author": "tfpauly",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-03-01T02:36:01Z",
+          "updatedAt": "2024-03-01T02:36:01Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "Yes, from the target name. See both of these:\n\nhttps://www.rfc-editor.org/rfc/rfc9460.html#section-7.3\n\nhttps://www.rfc-editor.org/rfc/rfc9460.html#section-3",
+              "createdAt": "2024-03-01T02:36:01Z",
+              "updatedAt": "2024-03-01T02:36:01Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc5x8Wxj",
+          "commit": {
+            "abbreviatedOid": "ff23cac"
+          },
+          "author": "bemasc",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-03-01T17:11:17Z",
+          "updatedAt": "2024-03-01T17:38:44Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "In SVCB, ECH is a property of the \"endpoint\", which is represented by one ServiceMode record (out of an RRset that might contain several).  An endpoint also specifies a pool of IP addresses (by the A+AAAA records on the TargetName, or by IP hints in the SvcParams).  As far as SVCB is concerned, ECH can keep state within the scope of a single endpoint, but that state must not leak across to other endpoints of the same \"service\" (i.e. origin).\r\n\r\nThis draft doesn't have the concept of an \"endpoint\", but I think we can define a close enough notion here (without requiring DNS, which is not required for ECH!): call it an \"ECHConfig source\".\r\n\r\n```suggestion\r\nAny persisted information MUST be associated with the ECHConfig source used\r\nto bootstrap the connection, such as DNS SVCB ServiceMode record {{ECH-IN-DNS}}.\r\nClients MUST limit any sharing of persisted ECH-related state to connections that use\r\nthe same ECHConfig source. Otherwise, it might become possible for the client to have\r\n```\r\n\r\nNote that \"matching ECHConfig\" is arguably too broad a scope: if I have two ServiceMode records pointing at separate server pools that initially have the same ECHConfig, I should be able to update one pool without changing the connection behaviors observed by the other one.",
+              "createdAt": "2024-03-01T17:11:17Z",
+              "updatedAt": "2024-03-01T17:38:44Z"
+            },
+            {
+              "originalPosition": 37,
+              "body": "I really can't tell what this is trying to say.\r\n\r\n```suggestion\r\nIn general, the safest way for clients to minimize ECH retries is to\r\ncomply with any freshness rules (e.g., DNS TTLs) imposed by the\r\nECHConfig source. This makes it most likely that the client will\r\n```",
+              "createdAt": "2024-03-01T17:14:27Z",
+              "updatedAt": "2024-03-01T17:38:44Z"
+            },
+            {
+              "originalPosition": 32,
+              "body": "```suggestion\r\nvector. Clients SHOULD impose the same lifetime and scope restrictions\r\nthat they apply to other server-based\r\n```",
+              "createdAt": "2024-03-01T17:37:14Z",
+              "updatedAt": "2024-03-01T17:38:44Z"
             }
           ]
         }
