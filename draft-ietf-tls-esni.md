@@ -707,8 +707,9 @@ in the ClientHelloInner. In this case, when resuming a session with the client,
 the backend server sends a "pre_shared_key" extension in its ServerHello. This
 would appear to a network observer as if the server were sending this
 extension without solicitation, which would violate the extension rules
-described in {{RFC8446}}. Sending a GREASE "pre_shared_key" extension in the
-ClientHelloOuter makes it appear to the network as if the extension were
+described in {{RFC8446}}. When offering a PSK in ClientHelloInner,
+Clients SHOULD sending a GREASE "pre_shared_key" extension in the
+ClientHelloOuter to make it appear to the network as if the extension were
 negotiated properly.
 
 The client generates the extension payload by constructing an `OfferedPsks`
