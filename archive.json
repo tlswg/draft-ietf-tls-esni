@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-03-03T01:05:57.830923+00:00",
+  "timestamp": "2024-03-05T01:02:23.766143+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12755,15 +12755,15 @@
       "id": "I_kwDOB-yxNc6AUxSM",
       "title": "Recommend greasing PSK?",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/606",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "In Watson Ladd's review, he asks:\r\n\r\n  Should we use RFC 2119 language for the server as well? Right now we\r\n  only say what the client must do when the server violates the rules.\r\n\r\nWe do recommend greasing ECH. My sense is that this is on the bubble\r\nand we could leave it as-is, but I could be persuaded otherwise.\r\n\r\n@davidben  @dennisjackson @martinthomson \r\n \r\n",
       "createdAt": "2024-02-25T20:30:27Z",
-      "updatedAt": "2024-03-01T13:24:37Z",
-      "closedAt": null,
+      "updatedAt": "2024-03-04T16:00:00Z",
+      "closedAt": "2024-03-04T16:00:00Z",
       "comments": [
         {
           "author": "martinthomson",
@@ -55928,7 +55928,7 @@
       "labels": [],
       "body": "",
       "createdAt": "2024-02-25T21:56:55Z",
-      "updatedAt": "2024-03-01T17:38:44Z",
+      "updatedAt": "2024-03-04T02:29:16Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "52048599a9af744a3c01bab68be7d6924fce74db",
@@ -55960,6 +55960,20 @@
           "body": "The complexity of specifying it or the complexity of implementing it? Right now I read the spec as just prohibiting it.\r\n\r\nWRT multiple connections, the case I am concerned about is HTTP connection sharding when you might have 4 or so concurrent connections. I suppose we can just say that this is a reason to use H2 or H3.\r\n\r\nWRT not-DNS, I think we could practically just limit this kind of memory to DNS.\r\n\r\nAnyway, i don't feel strongly about this, and we could always relax this restriction later, so if others aren't enthusiastic, we can just close this unchanged.\r\n",
           "createdAt": "2024-03-01T16:43:43Z",
           "updatedAt": "2024-03-01T16:43:43Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I think this may need a little more bake time. I'm going to ship the next version without it and hopefully we can refine over the next few weeks, or alternately decide we don't need it.",
+          "createdAt": "2024-03-04T02:18:29Z",
+          "updatedAt": "2024-03-04T02:18:29Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "\r\n\r\nOn 04/03/2024 02:18, Eric Rescorla wrote:\r\n> I'm going to ship the next version\r\n\r\nYes, shipping a version good enough for WGLC and then IETF LC\r\nis the right plan. There'll be plenty of chances for fixing\r\nwording at those stages.\r\n\r\nS.\r\n",
+          "createdAt": "2024-03-04T02:29:14Z",
+          "updatedAt": "2024-03-04T02:29:14Z"
         }
       ],
       "reviews": [
@@ -56137,9 +56151,9 @@
           "comments": [
             {
               "originalPosition": 28,
-              "body": "In SVCB, ECH is a property of the \"endpoint\", which is represented by one ServiceMode record (out of an RRset that might contain several).  An endpoint also specifies a pool of IP addresses (by the A+AAAA records on the TargetName, or by IP hints in the SvcParams).  As far as SVCB is concerned, ECH can keep state within the scope of a single endpoint, but that state must not leak across to other endpoints of the same \"service\" (i.e. origin).\r\n\r\nThis draft doesn't have the concept of an \"endpoint\", but I think we can define a close enough notion here (without requiring DNS, which is not required for ECH!): call it an \"ECHConfig source\".\r\n\r\n```suggestion\r\nAny persisted information MUST be associated with the ECHConfig source used\r\nto bootstrap the connection, such as DNS SVCB ServiceMode record {{ECH-IN-DNS}}.\r\nClients MUST limit any sharing of persisted ECH-related state to connections that use\r\nthe same ECHConfig source. Otherwise, it might become possible for the client to have\r\n```\r\n\r\nNote that \"matching ECHConfig\" is arguably too broad a scope: if I have two ServiceMode records pointing at separate server pools that initially have the same ECHConfig, I should be able to update one pool without changing the connection behaviors observed by the other one.",
+              "body": "In SVCB, ECH is a property of the \"endpoint\", which is represented by one ServiceMode record (out of an RRset that might contain several).  An endpoint also specifies a pool of IP addresses (by the A+AAAA records on the TargetName, or by IP hints in the SvcParams).  As far as SVCB is concerned, ECH can keep state within the scope of a single endpoint, but that state must not leak across to other endpoints of the same \"service\" (i.e. origin).\r\n\r\nThis draft doesn't have the concept of an \"endpoint\", but I think we can define a close enough notion here (without requiring DNS, which is not required for ECH!): call it an \"ECHConfig source\".\r\n\r\n```suggestion\r\nAny persisted information MUST be associated with the ECHConfig source used\r\nto bootstrap the connection, such as a DNS SVCB ServiceMode record {{ECH-IN-DNS}}.\r\nClients MUST limit any sharing of persisted ECH-related state to connections that use\r\nthe same ECHConfig source. Otherwise, it might become possible for the client to have\r\n```\r\n\r\nNote that \"matching ECHConfig\" is arguably too broad a scope: if I have two ServiceMode records pointing at separate server pools that initially have the same ECHConfig, I should be able to update one pool without changing the connection behaviors observed by the other one.",
               "createdAt": "2024-03-01T17:11:17Z",
-              "updatedAt": "2024-03-01T17:38:44Z"
+              "updatedAt": "2024-03-04T14:50:54Z"
             },
             {
               "originalPosition": 37,
@@ -56156,6 +56170,49 @@
           ]
         }
       ]
+    },
+    {
+      "number": 610,
+      "id": "PR_kwDOB-yxNc5oiFB4",
+      "title": "Encourage greasing PSK. Fixes #606",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/610",
+      "state": "MERGED",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2024-03-04T02:17:12Z",
+      "updatedAt": "2024-03-04T15:59:59Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "1ed98b5891355bcc0e3da3a6168ff92c91745810",
+      "headRepository": "ekr/draft-ietf-tls-esni",
+      "headRefName": "encourage_greasing_psk",
+      "headRefOid": "0abc258cd5005e652b02493c1ec2576f1102ad63",
+      "closedAt": "2024-03-04T15:59:59Z",
+      "mergedAt": "2024-03-04T15:59:59Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "dca0d9e236e301542000df25f3e9124f4ce22959"
+      },
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@martinthomson @dennisjackson ",
+          "createdAt": "2024-03-04T02:17:19Z",
+          "updatedAt": "2024-03-04T02:17:19Z"
+        },
+        {
+          "author": "dennisjackson",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "LGTM",
+          "createdAt": "2024-03-04T14:57:48Z",
+          "updatedAt": "2024-03-04T14:57:48Z"
+        }
+      ],
+      "reviews": []
     }
   ]
 }
