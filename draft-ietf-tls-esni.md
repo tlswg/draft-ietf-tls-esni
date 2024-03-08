@@ -178,7 +178,7 @@ A client-facing server enables ECH by publishing an ECH configuration, which
 is an encryption public key and associated metadata. The server must publish
 this for all the domains it serves via Shared or Split Mode. This document
 defines the ECH configuration's format, but delegates DNS publication details
-to {{!HTTPS-RR=I-D.ietf-dnsop-svcb-https}}. See
+to {{!RFC9460}}. See
 {{!ECH-IN-DNS=I-D.ietf-tls-svcb-ech}} for specifics about how ECH
 configurations are advertised in HTTPS records. Other delivery mechanisms are
 also possible. For example, the client may have the ECH configuration
