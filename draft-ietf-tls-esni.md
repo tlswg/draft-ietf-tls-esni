@@ -884,9 +884,9 @@ version was negotiated, the client can regard ECH as securely disabled
 by the server, and it SHOULD retry the handshake with a new transport
 connection and ECH disabled.
 
-Clients SHOULD implement a limit on retries caused by receipt of "retry_configs"
-or servers which do not acknowledge the "encrypted_client_hello" extension. If
-the client does not retry in either scenario, it MUST report an error to the
+Clients SHOULD NOT accept "retry_config" in response to
+a connection initiated in response to a "retry_config".
+If a client does not retry, it MUST report an error to the
 calling application.
 
 ### Authenticating for the Public Name {#auth-public-name}
@@ -915,6 +915,30 @@ successful to the application. It additionally MUST ignore all session tickets
 and session IDs presented by the server. These connections are only used to
 trigger retries, as described in {{rejected-ech}}. This may be implemented, for
 instance, by reporting a failed connection with a dedicated error code.
+
+
+### Impact of Retry on Future Connections
+
+Clients MAY use information learned from a rejected ECH for future
+connections to avoid repeatedly connecting to the same server and
+being forced to retry. However, they MUST handle ECH rejection for
+those connections as if it were a fresh connection, rather than
+enforcing the single retry limit from {{rejected-ech}}.
+
+Clients MUST NOT use ECHConfigs with IP addresses other than
+associated with the DNS queries for the original
+connection. Otherwise, it might become possible for the client to have
+the wrong public name for the server, thus making recovery impossible.
+
+ECHConfigs learned from ECH rejection can be used as a tracking
+vector. Clients SHOULD give them the same lifetime as other server-based
+tracking vectors such as PSKs.
+
+In general, it is safest to try to retrieve a new ECHConfig unless
+a subsequent connection is made shortly after the connection where
+ECH was rejected. This makes it most likely that the client will
+have up to date information.
+
 
 ## GREASE ECH {#grease-ech}
 
