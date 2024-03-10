@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-03-07T00:52:25.624270+00:00",
+  "timestamp": "2024-03-10T01:06:56.905628+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -56212,6 +56212,34 @@
           "updatedAt": "2024-03-04T14:57:48Z"
         }
       ],
+      "reviews": []
+    },
+    {
+      "number": 611,
+      "id": "PR_kwDOB-yxNc5pIQOx",
+      "title": "I-D.ietf-dnsop-svcb-https is now RFC9460",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/611",
+      "state": "MERGED",
+      "author": "davidben",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2024-03-08T23:12:54Z",
+      "updatedAt": "2024-03-08T23:21:50Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "dca0d9e236e301542000df25f3e9124f4ce22959",
+      "headRepository": "davidben/draft-ietf-tls-esni",
+      "headRefName": "rfc9460",
+      "headRefOid": "14d242ee7b89a0369a2743c8a0aab4ba23eefa31",
+      "closedAt": "2024-03-08T23:21:50Z",
+      "mergedAt": "2024-03-08T23:21:50Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "063b8add41a2ee808824b75fb64805f1d9d016c4"
+      },
+      "comments": [],
       "reviews": []
     }
   ]
