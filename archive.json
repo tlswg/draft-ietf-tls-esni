@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-03-12T01:02:31.137057+00:00",
+  "timestamp": "2024-03-14T01:02:50.719234+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12839,6 +12839,22 @@
           "updatedAt": "2024-03-01T02:03:07Z"
         }
       ]
+    },
+    {
+      "number": 612,
+      "id": "I_kwDOB-yxNc6CKMgx",
+      "title": "Mention that the server identity may be revealed by ServerHellp",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/612",
+      "state": "OPEN",
+      "author": "emanjon",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "https://mailarchive.ietf.org/arch/msg/tls/5oKWlf---OqjQf37giXVVzIbPHw/\r\n\r\n>    \"ECH is not in itself sufficient to protect the identity of the\r\n>    server.  The target domain may also be visible through other\r\n>    channels, such as plaintext client DNS queries or visible server IP\r\n>    addresses.  However, DoH [RFC8484] and DPRIVE [RFC7858] [RFC8094]\r\n>    provide mechanisms for clients to conceal DNS lookups from network\r\n>    inspection, and many TLS servers host multiple domains on the same IP\r\n>    address.  Private origins may also be deployed behind a common\r\n>    provider, such as a reverse proxy.  In such environments, the SNI\r\n>    remains the primary explicit signal used to determine the server's\r\n>    identity.\"\r\n \r\nThis text only discusses that the identity of the server may be revealed by\r\n\"other channels\". I strongly think the document needs to mention that the\r\nidentity of the server may also be reveled by the unencrypted information\r\nin the ServerHello. In particular a reused KeyShare is problematic.\r\n \r\nSuggested addition:\r\n \r\nThe identity of the server may also be reveled by the unencrypted information\r\nin the ServerHello. Most of the current information in ServerHello is not unique.\r\nThe exception is KeyShare, which if reused provides a unique identifier of the server.\r\n \r\nCheers,\r\nJohn Preu\u00df Mattsson",
+      "createdAt": "2024-03-13T11:02:47Z",
+      "updatedAt": "2024-03-13T11:02:47Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
