@@ -50,6 +50,7 @@ informative:
    date: May 2021
   ECH-Analysis:
     title: "A Symbolic Analysis of Privacy for TLS 1.3 with Encrypted Client Hello"
+    target: https://www.cs.ox.ac.uk/people/vincent.cheval/publis/BCW-ccs22.pdf
     date: November 2022
     authors:
       -
