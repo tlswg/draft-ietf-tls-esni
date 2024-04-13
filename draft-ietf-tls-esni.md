@@ -335,7 +335,7 @@ The client-facing server advertises a sequence of ECH configurations to clients,
 serialized as follows.
 
 ~~~~
-    ECHConfig ECHConfigList<1..2^16-1>;
+    ECHConfig ECHConfigList<4..2^16-1>;
 ~~~~
 
 The `ECHConfigList` structure contains one or more `ECHConfig` structures in
