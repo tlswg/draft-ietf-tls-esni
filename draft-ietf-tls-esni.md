@@ -1343,7 +1343,9 @@ on the ECHClientHello.config_id value. This also means public information in a
 TLS handshake should be consistent across hosts. For example, if a
 client-facing server services many backend origin hosts, only one of which
 supports some cipher suite, it may be possible to identify that host based on
-the contents of unencrypted handshake messages.
+the contents of unencrypted handshake message. Similarly, if a backend
+origin reuses KeyShare values, then that provides a unique identifier for
+that server.
 
 Beyond these primary security and privacy goals, ECH also aims to hide, to some
 extent, the fact that it is being used at all. Specifically, the GREASE ECH
