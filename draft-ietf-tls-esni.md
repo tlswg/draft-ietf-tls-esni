@@ -885,10 +885,13 @@ version was negotiated, the client can regard ECH as securely disabled
 by the server, and it SHOULD retry the handshake with a new transport
 connection and ECH disabled.
 
-Clients SHOULD NOT accept "retry_config" in response to
-a connection initiated in response to a "retry_config".
-If a client does not retry, it MUST report an error to the
-calling application.
+Clients SHOULD NOT accept "retry_config" in response to a connection
+initiated in response to a "retry_config".  Sending a "retry_config"
+in this situation is a signal that the server is misconfigured, e.g.,
+the server might have multiple inconsistent configurations so that the
+client reached a node with configuration A in the first connection and
+a node with configuration B in the second. If a client does not retry,
+it MUST report an error to the calling application.
 
 ### Authenticating for the Public Name {#auth-public-name}
 
