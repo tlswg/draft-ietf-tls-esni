@@ -885,9 +885,9 @@ version was negotiated, the client can regard ECH as securely disabled
 by the server, and it SHOULD retry the handshake with a new transport
 connection and ECH disabled.
 
-Clients SHOULD implement a limit on retries caused by receipt of "retry_configs"
-or servers which do not acknowledge the "encrypted_client_hello" extension. If
-the client does not retry in either scenario, it MUST report an error to the
+Clients SHOULD NOT accept "retry_config" in response to
+a connection initiated in response to a "retry_config".
+If a client does not retry, it MUST report an error to the
 calling application.
 
 ### Authenticating for the Public Name {#auth-public-name}
