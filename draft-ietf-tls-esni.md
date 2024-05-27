@@ -927,13 +927,20 @@ Clients MAY use information learned from a rejected ECH for future
 connections to avoid repeatedly connecting to the same server and
 being forced to retry. However, they MUST handle ECH rejection for
 those connections as if it were a fresh connection, rather than
-enforcing the single retry limit from {{rejected-ech}}.
+enforcing the single retry limit from {{rejected-ech}}. The reason
+for this requirement is that if the server sends a "retry_config"
+and then immediately rejects the resulting connection, it is
+most likely misconfigured. However, if the server sends a "retry_config"
+and then the client tries to use that to connect some time
+later, it is possible that the server has been forced to
+change its configuration again and is now trying to recover.
 
-Any persisted information MUST be associated with the ECHConfig source used
-to bootstrap the connection, such as a DNS SVCB ServiceMode record {{ECH-IN-DNS}}.
-Clients MUST limit any sharing of persisted ECH-related state to connections that use
-the same ECHConfig source. Otherwise, it might become possible for the client to have
-the wrong public name for the server, thus making recovery impossible.
+Any persisted information MUST be associated with the ECHConfig source
+used to bootstrap the connection, such as a DNS SVCB ServiceMode record
+{{ECH-IN-DNS}}. Clients MUST limit any sharing of persisted ECH-related
+state to connections that use the same ECHConfig source. Otherwise, it
+might become possible for the client to have the wrong public name for
+the server, thus making recovery impossible.
 
 ECHConfigs learned from ECH rejection can be used as a tracking
 vector. Clients SHOULD impose the same lifetime and scope restrictions
@@ -942,7 +949,6 @@ tracking vectors such as PSKs.
 
 In general, the safest way for clients to minimize ECH retries is to
 comply with any freshness rules (e.g., DNS TTLs) imposed by the
-ECHConfig source. This makes it most likely that the client will
 have up to date information.
 
 
