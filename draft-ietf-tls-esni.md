@@ -889,6 +889,7 @@ client reached a node with configuration A in the first connection and
 a node with configuration B in the second. If a client does not retry,
 it MUST report an error to the calling application.
 
+
 ### Authenticating for the Public Name {#auth-public-name}
 
 When the server rejects ECH, it continues with the handshake using the plaintext
