@@ -956,7 +956,7 @@ MAY offer to resume sessions established without ECH.
 
 # Server Behavior {#server-behavior}
 
-As described in {#topologies}, servers can play two roles, either as
+As described in {{topologies}}, servers can play two roles, either as
 the client-facing server or as the back-end server.
 Depending on the server role, the `ECHClientHello` will be different:
 
