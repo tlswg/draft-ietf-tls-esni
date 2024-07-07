@@ -689,7 +689,7 @@ It then computes the final payload as:
 Including `ClientHelloOuterAAD` as the HPKE AAD binds the `ClientHelloOuter`
 to the `ClientHelloInner`, this preventing attackers from modifying
 `ClientHelloOuter` while keeping the same `ClientHelloInner`, as described in
-{#flow-clienthello-malleability}.
+{{flow-clienthello-malleability}}.
 
 Finally, the client replaces `payload` with `final_payload` to obtain
 ClientHelloOuter. The two values have the same length, so it is not necessary
@@ -956,7 +956,7 @@ MAY offer to resume sessions established without ECH.
 
 # Server Behavior {#server-behavior}
 
-As described in {#topologies}, servers can play two roles, either as
+As described in {{topologies}}, servers can play two roles, either as
 the client-facing server or as the back-end server.
 Depending on the server role, the `ECHClientHello` will be different:
 
