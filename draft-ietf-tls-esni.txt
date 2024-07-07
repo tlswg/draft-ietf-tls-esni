@@ -5,12 +5,12 @@
 tls                                                          E. Rescorla
 Internet-Draft                                   Windy Hill Systems, LLC
 Intended status: Standards Track                                  K. Oku
-Expires: 28 November 2024                                         Fastly
+Expires: 8 January 2025                                           Fastly
                                                              N. Sullivan
                                              Cryptography Consulting LLC
                                                               C. A. Wood
                                                               Cloudflare
-                                                             27 May 2024
+                                                             7 July 2024
 
 
                        TLS Encrypted Client Hello
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 28 November 2024.
+   This Internet-Draft will expire on 8 January 2025.
 
 Copyright Notice
 
@@ -774,7 +774,7 @@ Table of Contents
    Including ClientHelloOuterAAD as the HPKE AAD binds the
    ClientHelloOuter to the ClientHelloInner, this preventing attackers
    from modifying ClientHelloOuter while keeping the same
-   ClientHelloInner, as described in {#flow-clienthello-malleability}.
+   ClientHelloInner, as described in Section 10.12.3.
 
    Finally, the client replaces payload with final_payload to obtain
    ClientHelloOuter.  The two values have the same length, so it is not
@@ -1069,7 +1069,7 @@ Table of Contents
 
 7.  Server Behavior
 
-   As described in {#topologies}, servers can play two roles, either as
+   As described in Section 3.1, servers can play two roles, either as
    the client-facing server or as the back-end server.  Depending on the
    server role, the ECHClientHello will be different:
 
