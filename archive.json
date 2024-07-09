@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-07-07T01:18:01.780969+00:00",
+  "timestamp": "2024-07-09T01:13:01.600444+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -2182,7 +2182,7 @@
         },
         {
           "author": "MikeBishop",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "Stretching the bounds of my DNS knowledge here, but I *think* this makes divergence between the A/AAAA and ESNIKeys records much less likely.  That is, when www.example.com is served by both CDN A and CDN B, the DNS will return `www.example.com CNAME www.example.com.cdnalpha.com` or `www.example.com CNAME www.example.com.cdnbeta.com`.  If both things are record types on the same hostname, then the divergence only happens when the queries happen on opposite sides of a cached CNAME record expiring and getting the opposite answer the next time around.\r\n\r\nBut if they're separate hostnames, as in the current doc, it's entirely possible to get opposite CNAME records cached, and you've diverged for all clients of the caching resolver for the TTL of the shorter CNAME record.  That's a far worse probability of divergence.",
           "createdAt": "2019-03-01T23:06:17Z",
           "updatedAt": "2019-03-01T23:06:17Z"
@@ -3244,7 +3244,7 @@
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/143",
       "state": "CLOSED",
       "author": "MikeBishop",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "The Editor's Copy link leads to a version of the document from July 4, 2018, and there have been no commits to the gh-pages branch since then.  The document is obviously in active development, which suggests that CI is broken / not configured on this repo.",
@@ -6044,7 +6044,7 @@
         },
         {
           "author": "MikeBishop",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "@bemasc, given that servers can respond with rejection even without actual ECH support, would your concern be alleviated if some servers started rejecting the GREASE ECH extensions in the near future?",
           "createdAt": "2020-08-18T14:24:43Z",
           "updatedAt": "2020-08-18T14:24:43Z"
@@ -6840,7 +6840,7 @@
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/284",
       "state": "CLOSED",
       "author": "MikeBishop",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "Purely editorial, but the layout of the TOC is a bit confusing....\r\n\r\n> 1.  Introduction\r\n> 2.  Conventions and Definitions\r\n> 3.  Overview\r\n> 3.1.  Topologies\r\n> 3.2.  Encrypted ClientHello (ECH)\r\n> 4.  Encrypted ClientHello Configuration\r\n> 4.1.  Configuration Extensions\r\n> 5.  The \"encrypted_client_hello\" extension\r\n> 6.  The \"ech_nonce\" extension\r\n> 6.1.  Incorporating Outer Extensions\r\n\r\nI think all the confusing things about this would be resolved by moving \"encrypted_client_hello\" and \"ech_nonce\" to be subsections of 4.1, instead of top-level sections in their own right.  This would make 6.1 become 4.2, and \"Incorporating Outer Extensions\" does seem like a reasonable sub-section of \"Encrypted ClientHello Configuration\".",
@@ -6857,7 +6857,7 @@
         },
         {
           "author": "MikeBishop",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "That's probably workable.",
           "createdAt": "2020-09-23T20:36:37Z",
           "updatedAt": "2020-09-23T20:36:37Z"
@@ -12863,7 +12863,7 @@
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/618",
       "state": "OPEN",
       "author": "MikeBishop",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "In section 6.1.4, this note is found:\r\n\r\n> [[OPEN ISSUE: Depending on what we do for issue#450, it may be appropriate to change the client behavior if the HRR extension is present but with the wrong value.]]\r\n\r\n#450 is closed, but the text is still present and I didn't see a corresponding issue. Is there anything that needs to be done here, or should the note be removed?",
@@ -18800,7 +18800,7 @@
             "abbreviatedOid": "293f61c"
           },
           "author": "MikeBishop",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "state": "COMMENTED",
           "body": "This is a substantial step in the right direction, but the fact that A/AAAA records are basically ignored makes me uneasy.  The fact that A/AAAA results are essentially fully embedded would imply that all logic involved in selectively returning those responses has to be duplicated for ESNIKeys, which is also sub-optimal.",
           "createdAt": "2019-02-27T23:57:27Z",
@@ -18908,7 +18908,7 @@
             "abbreviatedOid": "7adfa01"
           },
           "author": "MikeBishop",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "state": "APPROVED",
           "body": "Despite the additional complexity, I think this takes us to a better place than #136.  In particular, it enables the generation of ESNIKeys to be simpler (outlining a block of addresses and a recovery path) and leaves the complexity in the A/AAAA where it already exists.\r\n\r\nThere's some wording issues, but technically I like this direction.",
           "createdAt": "2019-02-28T00:13:16Z",
@@ -19006,7 +19006,7 @@
             "abbreviatedOid": "7adfa01"
           },
           "author": "MikeBishop",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "state": "COMMENTED",
           "body": "",
           "createdAt": "2019-03-01T22:15:55Z",
@@ -23494,7 +23494,7 @@
       "comments": [
         {
           "author": "MikeBishop",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "This looks fine, though I'll note that since an HTTPSSVC record is public and the outer ClientHello record is public, it's not unreasonable to pull values from there to put in the public fields since the observer already knows (or can get) them.  Restricting them to come only from the ECHOConfig seems unnecessary.\r\n\r\nI think the key observation in this PR is that the outer ClientHello isn't _really_ offering to establish a TLS connection -- it's a not-crazy-looking wrapper for the actual ClientHello inside the ECHO extension, and the vehicle for the recovery flow.  The only things a server can legitimately do are respond to the inner ClientHello or do a recovery handshake.  Thus, most of the things you might set on the outer ClientHello are irrelevant; they can be chosen to look innocuous, chosen at random, or copied from the inner ClientHello as the implementation chooses.",
           "createdAt": "2020-05-04T18:55:14Z",
           "updatedAt": "2020-05-04T18:55:14Z"
@@ -28108,7 +28108,7 @@
         },
         {
           "author": "MikeBishop",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "I share Ben's curiosity -- it seems like the exporter provides no value here beyond what a PRNG would.  The client is differentiating between an echo of the value it provided in CHInner or a randomly-generated value supplied by the server in response to an empty value.  The same could be achieved by simply generating a random nonce and looking for an echo or not.",
           "createdAt": "2020-08-21T01:30:09Z",
           "updatedAt": "2020-08-21T01:30:09Z"
@@ -28136,7 +28136,7 @@
         },
         {
           "author": "MikeBishop",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "> What's the value of giving the implementer a choice here? It seems to me that we should _either_ use the PRNG _or_ use the HPKE context. Since usage of \"ech_confirm\" implies usage of \"ech\", I think it's fine to go with the latter.\r\n\r\nThe reverse argument is equally valid.  There's apparently no value in specifying how the client gets this number, only the properties that it needs to have (i.e. that an observer can't predict it).  If an implementation wants to use an exporter as a source of entropy, that breaks nothing, but any source of entropy will do.\r\n\r\nThe exporter seems primarily useful in the case where one side generates the value and the other side verifies it, which is another way to spell this approach.  It makes the server implementation marginally more complex, though, and I think the echo-or-random spelling is fine.\r\n\r\n> > My preference would be to give it a non-ECH-related name (e.g. \"client_hello_id\"), and require that servers not validate the contents. I think that would be more conducive to wide deployment, including any future use cases where the applicable ClientHello is unclear.\r\n> \r\n> Usage of \"ech_confirm\" implies usage of \"ech\", so I think there needs to be a clear association between the extensions' names. A name like \"client_hello_id\" removes this association. Perhaps it would be more appropriate to have the confirmation request be a field of the existing \"ech\" extension, rather than define a brand new extension for this purpose?\r\n\r\nI think @bemasc is looking to a future where either non-ECH clients include this extension to help ECH stand out less, or where the same mechanism could be used to disambiguate under other circumstances.  In other words, this doesn't inherently need to be an ECH-specific extension, merely one that ECH leverages, so perhaps it shouldn't be.\r\n\r\nOn both questions, I think my response is the same:  Let's not build in constraints that aren't actually accomplishing anything.",
           "createdAt": "2020-08-21T18:31:36Z",
           "updatedAt": "2020-08-21T18:31:36Z"
@@ -28451,7 +28451,7 @@
             "abbreviatedOid": "9afc2dd"
           },
           "author": "MikeBishop",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "state": "COMMENTED",
           "body": "So just so we're clear, this extension now has three possible forms in four locations:\r\n\r\n- ClientECH in ClientHelloOuter\r\n- ECHNonce in ClientHelloInner and ServerHello\r\n- ServerECH in EncryptedExtensions\r\n\r\nIt might be nice to explicitly introduce the extension by saying it has three forms and spell them out.  They're all there, but it's a little confusing to read a definition followed by an exception followed by an exception to the exception.",
           "createdAt": "2020-08-25T19:49:42Z",
@@ -28663,7 +28663,7 @@
         },
         {
           "author": "MikeBishop",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "For that matter, you could replay the ClientHello several times and check whether the interesting bytes of the server's keyshare or the extension remain constant for any of these designs, assuming the server doesn't have more general defenses against a replayed ClientHello.  As long as it's a simple echo, I think that criticism is fair against all of these proposals.  Which means either complexity or accepting that such detection is inevitable anyway.",
           "createdAt": "2020-09-03T18:45:16Z",
           "updatedAt": "2020-09-03T18:45:16Z"
@@ -28961,7 +28961,7 @@
             "abbreviatedOid": "a2672d2"
           },
           "author": "MikeBishop",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "state": "APPROVED",
           "body": "",
           "createdAt": "2020-09-03T15:50:18Z",
@@ -29001,7 +29001,7 @@
             "abbreviatedOid": "a2672d2"
           },
           "author": "MikeBishop",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "state": "COMMENTED",
           "body": "",
           "createdAt": "2020-09-03T17:27:52Z",
@@ -55960,7 +55960,7 @@
       "labels": [],
       "body": "",
       "createdAt": "2024-02-25T21:56:55Z",
-      "updatedAt": "2024-05-29T04:03:46Z",
+      "updatedAt": "2024-07-07T13:25:04Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "c5c7baab39f837b0fe4d240b09746d82ef5e097b",
@@ -56307,6 +56307,46 @@
               "updatedAt": "2024-05-29T04:22:06Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6A2hLa",
+          "commit": {
+            "abbreviatedOid": "ba7aadb"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-07T02:47:14Z",
+          "updatedAt": "2024-07-07T02:47:15Z",
+          "comments": [
+            {
+              "originalPosition": 25,
+              "body": "If it's indefinitely, then the DNS records will time out. I think probably a SHOULD is too strong.",
+              "createdAt": "2024-07-07T02:47:14Z",
+              "updatedAt": "2024-07-07T02:47:15Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6A21-u",
+          "commit": {
+            "abbreviatedOid": "ba7aadb"
+          },
+          "author": "bemasc",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-07T13:25:03Z",
+          "updatedAt": "2024-07-07T13:25:04Z",
+          "comments": [
+            {
+              "originalPosition": 42,
+              "body": "```suggestion\r\nthe server, making recovery impossible.\r\n```",
+              "createdAt": "2024-07-07T13:25:04Z",
+              "updatedAt": "2024-07-07T13:25:04Z"
+            }
+          ]
         }
       ]
     },
@@ -56596,24 +56636,26 @@
       "id": "PR_kwDOB-yxNc5x_ESr",
       "title": "Fix two broken internal references",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/617",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "MikeBishop",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2024-06-10T14:22:57Z",
-      "updatedAt": "2024-06-10T14:22:57Z",
+      "updatedAt": "2024-07-07T02:45:49Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "c5c7baab39f837b0fe4d240b09746d82ef5e097b",
       "headRepository": "MikeBishop/draft-ietf-tls-esni",
       "headRefName": "mbishop-ref-fix",
       "headRefOid": "5c6bfed4088b254bf10b0336e17298a89e08649c",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-07-07T02:45:49Z",
+      "mergedAt": "2024-07-07T02:45:49Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "8a439af1ca1751d19696f34820af72d86d491ac8"
+      },
       "comments": [],
       "reviews": []
     }
