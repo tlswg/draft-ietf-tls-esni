@@ -885,10 +885,13 @@ version was negotiated, the client can regard ECH as securely disabled
 by the server, and it SHOULD retry the handshake with a new transport
 connection and ECH disabled.
 
-Clients SHOULD implement a limit on retries caused by receipt of "retry_configs"
-or servers which do not acknowledge the "encrypted_client_hello" extension. If
-the client does not retry in either scenario, it MUST report an error to the
-calling application.
+Clients SHOULD NOT accept "retry_config" in response to a connection
+initiated in response to a "retry_config".  Sending a "retry_config"
+in this situation is a signal that the server is misconfigured, e.g.,
+the server might have multiple inconsistent configurations so that the
+client reached a node with configuration A in the first connection and
+a node with configuration B in the second. If a client does not retry,
+it MUST report an error to the calling application.
 
 ### Authenticating for the Public Name {#auth-public-name}
 
@@ -916,6 +919,37 @@ successful to the application. It additionally MUST ignore all session tickets
 and session IDs presented by the server. These connections are only used to
 trigger retries, as described in {{rejected-ech}}. This may be implemented, for
 instance, by reporting a failed connection with a dedicated error code.
+
+
+### Impact of Retry on Future Connections
+
+Clients MAY use information learned from a rejected ECH for future
+connections to avoid repeatedly connecting to the same server and
+being forced to retry. However, they MUST handle ECH rejection for
+those connections as if it were a fresh connection, rather than
+enforcing the single retry limit from {{rejected-ech}}. The reason
+for this requirement is that if the server sends a "retry_config"
+and then immediately rejects the resulting connection, it is
+most likely misconfigured. However, if the server sends a "retry_config"
+and then the client tries to use that to connect some time
+later, it is possible that the server has been forced to
+change its configuration again and is now trying to recover.
+
+Any persisted information MUST be associated with the ECHConfig source
+used to bootstrap the connection, such as a DNS SVCB ServiceMode record
+{{ECH-IN-DNS}}. Clients MUST limit any sharing of persisted ECH-related
+state to connections that use the same ECHConfig source. Otherwise, it
+might become possible for the client to have the wrong public name for
+the server, making recovery impossible.
+
+ECHConfigs learned from ECH rejection can be used as a tracking
+vector. Clients SHOULD impose the same lifetime and scope restrictions
+that they apply to other server-based
+tracking vectors such as PSKs.
+
+In general, the safest way for clients to minimize ECH retries is to
+comply with any freshness rules (e.g., DNS TTLs) imposed by the ECH configuration.
+
 
 ## GREASE ECH {#grease-ech}
 
