@@ -940,7 +940,7 @@ used to bootstrap the connection, such as a DNS SVCB ServiceMode record
 {{ECH-IN-DNS}}. Clients MUST limit any sharing of persisted ECH-related
 state to connections that use the same ECHConfig source. Otherwise, it
 might become possible for the client to have the wrong public name for
-the server, thus making recovery impossible.
+the server, making recovery impossible.
 
 ECHConfigs learned from ECH rejection can be used as a tracking
 vector. Clients SHOULD impose the same lifetime and scope restrictions
