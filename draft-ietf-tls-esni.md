@@ -948,7 +948,8 @@ that they apply to other server-based
 tracking vectors such as PSKs.
 
 In general, the safest way for clients to minimize ECH retries is to
-comply with any freshness rules (e.g., DNS TTLs) imposed by the ECH configuration.
+comply with any freshness rules (e.g., DNS TTLs) imposed by the ECH
+configuration.
 
 
 ## GREASE ECH {#grease-ech}
