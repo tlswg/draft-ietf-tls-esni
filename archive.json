@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-07-25T01:13:46.285151+00:00",
+  "timestamp": "2024-07-28T01:19:18.997128+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12602,15 +12602,15 @@
       "id": "I_kwDOB-yxNc5_lKDj",
       "title": "Memory for ECH rejection",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/604",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "In https://mailarchive.ietf.org/arch/msg/tls/bvvWbtxJAiMfilfy32EvdaCszQ4/, Elardus Erasmus suggests that the suggestion to limit retries for servers which have rejected ECH is too broad, and we should have different guidance for key/config changes than for just disabling ECH. He also suggests a \"holdoff period\" when connections were disabled.  I do think that this gets at something real, but I'm not sure of the proposed resolution. \r\n\r\nISTM that there are two issues:\r\n\r\n\r\n# Limiting Retries\r\n\r\nIf the server securely disables ECH, then the client should expect a subsequent connection to succeed and there is no way for the server to ask for a retry. So I don't think we need a limit here.\r\n\r\nHowever, if the server supplies a new key, it's possible to get into some kind of loop, for instance, if there are two servers with different keys and the client bounces between them. Rather than suggesting that there be an unspecified limit, I think it would be better just to forbid a connection initiated from a retry_config from itself causing a new connection. That means that if servers are so misconfigured that they offer a retry_config that then doesn't work that they will just fail, but that should be rare, and in any case, you're in deep trouble in that case.\r\n\r\n\r\n# Remembering Retry\r\n\r\nUnless I've misread the text, it implies but doesn't say that the retry_configs and secure disablement are for this connection only and that the client should not use them even for a connection which is initiated immediately after the one where it retries (as in multiple HTTP 1.1 connections). As Erasmus indicates, this increases load on the server as well as latency and has to be balanced with the observation that the retry_configs are a tracking vector (as noted in the text). He suggests a \"holdoff\" where you don't retry ECH if it was securely disabled, but no change in cases where a valid retry_config was provided.\r\n\r\nI wonder if we should be a bit more expansive about this, given that we have other TLS-related tracking vectors that clients already need to mitigate (e.g., resumption) and there are already mechanisms to handle this. With that in mind, how about:\r\n\r\n- Clients should remember updated configuration or disabled ECH for up to the lifetime of the ECHConfig (this also gives some content to \"holdoff\").\r\n- Clients should partition retry_configs in both time and space the same way they would for resumption PSKs (this is something browsers already do).\r\n\r\nAm I missing something important?\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
       "createdAt": "2024-02-17T18:47:13Z",
-      "updatedAt": "2024-02-19T06:35:34Z",
-      "closedAt": null,
+      "updatedAt": "2024-07-27T22:13:33Z",
+      "closedAt": "2024-07-27T22:13:33Z",
       "comments": [
         {
           "author": "davidben",
@@ -55953,24 +55953,26 @@
       "id": "PR_kwDOB-yxNc5n2cYv",
       "title": "Explain when clients can remember rejected ECH. Fixes #604",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/609",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2024-02-25T21:56:55Z",
-      "updatedAt": "2024-07-07T13:25:04Z",
+      "updatedAt": "2024-07-27T22:13:32Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "c5c7baab39f837b0fe4d240b09746d82ef5e097b",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "retry_memory",
-      "headRefOid": "ba7aadbb667bba9dee960e19eb732004e74ffb50",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "0402c071f0420c88a888e5e4516d23e4a8aac24e",
+      "closedAt": "2024-07-27T22:13:32Z",
+      "mergedAt": "2024-07-27T22:13:32Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "0595be075ab902191af0e7e07e9d84376af2b385"
+      },
       "comments": [
         {
           "author": "ekr",
