@@ -792,10 +792,6 @@ with a "decode_error" alert. Otherwise, the client computes
 matches the extension payload, the server has accepted ECH. Otherwise, it has
 rejected ECH.
 
-[[OPEN ISSUE: Depending on what we do for issue#450, it may be appropriate to
-change the client behavior if the HRR extension is present but with the wrong
-value.]]
-
 If the server accepts ECH, the client handshakes with ClientHelloInner as
 described in {{accepted-ech}}. Otherwise, the client handshakes with
 ClientHelloOuter as described in {{rejected-ech}}.
