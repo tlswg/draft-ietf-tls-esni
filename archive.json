@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-07-30T01:13:59.963708+00:00",
+  "timestamp": "2024-08-01T01:20:20.035511+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -56658,6 +56658,32 @@
       "mergeCommit": {
         "oid": "8a439af1ca1751d19696f34820af72d86d491ac8"
       },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 620,
+      "id": "PR_kwDOB-yxNc525-ix",
+      "title": "remove left over open issue text ",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/620",
+      "state": "OPEN",
+      "author": "jsalowey",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "resolves isssue #618 ",
+      "createdAt": "2024-07-30T17:53:04Z",
+      "updatedAt": "2024-07-30T17:53:05Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "58ffb7ad283721cf75c94664a0c03cf368fdb72d",
+      "headRepository": "tlswg/draft-ietf-tls-esni",
+      "headRefName": "rem-open-issue",
+      "headRefOid": "a8d2d043ad8bcf74fb2f82e00c2b2a5da238fa85",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
       "comments": [],
       "reviews": []
     }
