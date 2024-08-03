@@ -5,12 +5,12 @@
 tls                                                          E. Rescorla
 Internet-Draft                                   Windy Hill Systems, LLC
 Intended status: Standards Track                                  K. Oku
-Expires: 28 January 2025                                          Fastly
+Expires: 4 February 2025                                          Fastly
                                                              N. Sullivan
                                              Cryptography Consulting LLC
                                                               C. A. Wood
                                                               Cloudflare
-                                                            27 July 2024
+                                                           3 August 2024
 
 
                        TLS Encrypted Client Hello
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 28 January 2025.
+   This Internet-Draft will expire on 4 February 2025.
 
 Copyright Notice
 
@@ -887,10 +887,6 @@ Table of Contents
    client computes hrr_accept_confirmation as described in
    Section 7.2.1.  If this value matches the extension payload, the
    server has accepted ECH.  Otherwise, it has rejected ECH.
-
-   [[OPEN ISSUE: Depending on what we do for issue#450, it may be
-   appropriate to change the client behavior if the HRR extension is
-   present but with the wrong value.]]
 
    If the server accepts ECH, the client handshakes with
    ClientHelloInner as described in Section 6.1.5.  Otherwise, the
