@@ -886,8 +886,14 @@ initiated in response to a "retry_config".  Sending a "retry_config"
 in this situation is a signal that the server is misconfigured, e.g.,
 the server might have multiple inconsistent configurations so that the
 client reached a node with configuration A in the first connection and
-a node with configuration B in the second. If a client does not retry,
-it MUST report an error to the calling application.
+a node with configuration B in the second. Note that this guidance does not apply
+the server does not supply a "retry_config", thus disabling ECH,
+as the client reconnecting in this case will not elicit another
+"retry_config"; clients SHOULD follow the guidance in the previous
+paragraph. 
+
+If a client does not retry, it MUST report an error to the calling
+application.
 
 ### Authenticating for the Public Name {#auth-public-name}
 
