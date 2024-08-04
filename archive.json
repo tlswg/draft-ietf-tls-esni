@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-08-01T01:20:20.035511+00:00",
+  "timestamp": "2024-08-04T01:19:39.853582+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -56570,13 +56570,13 @@
       "labels": [],
       "body": "This was split off from PR#609. Hopefully this is uncontroversial.",
       "createdAt": "2024-05-27T15:02:08Z",
-      "updatedAt": "2024-05-29T03:34:19Z",
+      "updatedAt": "2024-08-03T19:12:30Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "22199f66e8fcffd9b24238d8d8c5d33679474dee",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "retry_once",
-      "headRefOid": "28786bd66ffaf1b1a96d18e343bb916168f035da",
+      "headRefOid": "726c655cc430a0f4080818e97ce833f4a41739fb",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -56588,6 +56588,13 @@
           "body": "I added some text.",
           "createdAt": "2024-05-27T18:44:01Z",
           "updatedAt": "2024-05-27T18:44:01Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@martinthomson?",
+          "createdAt": "2024-08-03T19:10:46Z",
+          "updatedAt": "2024-08-03T19:10:46Z"
         }
       ],
       "reviews": [
@@ -56630,6 +56637,26 @@
               "updatedAt": "2024-05-29T03:34:19Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6EJ1jO",
+          "commit": {
+            "abbreviatedOid": "28786bd"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-08-03T19:10:35Z",
+          "updatedAt": "2024-08-03T19:10:35Z",
+          "comments": [
+            {
+              "originalPosition": 13,
+              "body": "I think this is a reasonable question. Updated the text.\r\n\r\nNote that I also broke out the requirement to report the error separately as I think it applies to both cases.",
+              "createdAt": "2024-08-03T19:10:35Z",
+              "updatedAt": "2024-08-03T19:10:35Z"
+            }
+          ]
         }
       ]
     },
@@ -56666,24 +56693,26 @@
       "id": "PR_kwDOB-yxNc525-ix",
       "title": "remove left over open issue text ",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/620",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "jsalowey",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "resolves isssue #618 ",
       "createdAt": "2024-07-30T17:53:04Z",
-      "updatedAt": "2024-07-30T17:53:05Z",
+      "updatedAt": "2024-08-03T18:45:41Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "58ffb7ad283721cf75c94664a0c03cf368fdb72d",
       "headRepository": "tlswg/draft-ietf-tls-esni",
       "headRefName": "rem-open-issue",
       "headRefOid": "a8d2d043ad8bcf74fb2f82e00c2b2a5da238fa85",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-08-03T18:25:11Z",
+      "mergedAt": "2024-08-03T18:25:11Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "b7e217f823a53d856869ad0b4ed523df7578def0"
+      },
       "comments": [],
       "reviews": []
     }
