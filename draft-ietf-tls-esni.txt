@@ -3,7 +3,7 @@
 
 
 tls                                                          E. Rescorla
-Internet-Draft                                   Windy Hill Systems, LLC
+Internet-Draft                                               Independent
 Intended status: Standards Track                                  K. Oku
 Expires: 6 February 2025                                          Fastly
                                                              N. Sullivan
@@ -2360,7 +2360,7 @@ D.8.  Since draft-ietf-tls-esni-09
 Authors' Addresses
 
    Eric Rescorla
-   Windy Hill Systems, LLC
+   Independent
    Email: ekr@rtfm.com
 
 
