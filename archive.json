@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-08-04T01:19:39.853582+00:00",
+  "timestamp": "2024-08-06T01:14:23.021940+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12861,16 +12861,24 @@
       "id": "I_kwDOB-yxNc6Lt6YC",
       "title": "Client behavior on wrong value in HRR extension",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/618",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "MikeBishop",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "In section 6.1.4, this note is found:\r\n\r\n> [[OPEN ISSUE: Depending on what we do for issue#450, it may be appropriate to change the client behavior if the HRR extension is present but with the wrong value.]]\r\n\r\n#450 is closed, but the text is still present and I didn't see a corresponding issue. Is there anything that needs to be done here, or should the note be removed?",
       "createdAt": "2024-06-10T14:26:30Z",
-      "updatedAt": "2024-06-10T14:26:30Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2024-08-05T00:28:39Z",
+      "closedAt": "2024-08-05T00:28:38Z",
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Fixed.",
+          "createdAt": "2024-08-05T00:28:38Z",
+          "updatedAt": "2024-08-05T00:28:38Z"
+        }
+      ]
     }
   ],
   "pulls": [
@@ -56563,24 +56571,26 @@
       "id": "PR_kwDOB-yxNc5wrLcs",
       "title": "Don't retry from retry",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/616",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "This was split off from PR#609. Hopefully this is uncontroversial.",
       "createdAt": "2024-05-27T15:02:08Z",
-      "updatedAt": "2024-08-03T19:12:30Z",
+      "updatedAt": "2024-08-05T00:27:33Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
-      "baseRefOid": "22199f66e8fcffd9b24238d8d8c5d33679474dee",
+      "baseRefOid": "b7e217f823a53d856869ad0b4ed523df7578def0",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "retry_once",
-      "headRefOid": "726c655cc430a0f4080818e97ce833f4a41739fb",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "5c78be39dccd9bcfbb27ac721d6d90cfa6669c3c",
+      "closedAt": "2024-08-05T00:27:33Z",
+      "mergedAt": "2024-08-05T00:27:32Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "ba609f61969d927f292679b8d3a7774c7d4f776f"
+      },
       "comments": [
         {
           "author": "ekr",
@@ -56595,6 +56605,13 @@
           "body": "@martinthomson?",
           "createdAt": "2024-08-03T19:10:46Z",
           "updatedAt": "2024-08-03T19:10:46Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I had two retry change PRs off the same place and the first one merged.",
+          "createdAt": "2024-08-05T00:27:15Z",
+          "updatedAt": "2024-08-05T00:27:15Z"
         }
       ],
       "reviews": [
@@ -56657,6 +56674,19 @@
               "updatedAt": "2024-08-03T19:10:35Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6EMaQx",
+          "commit": {
+            "abbreviatedOid": "726c655"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "What is the merge conflict?",
+          "createdAt": "2024-08-05T00:13:08Z",
+          "updatedAt": "2024-08-05T00:13:08Z",
+          "comments": []
         }
       ]
     },
