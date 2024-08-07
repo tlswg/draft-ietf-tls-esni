@@ -709,7 +709,7 @@ the backend server sends a "pre_shared_key" extension in its ServerHello. This
 would appear to a network observer as if the server were sending this
 extension without solicitation, which would violate the extension rules
 described in {{RFC8446}}. When offering a PSK in ClientHelloInner,
-Clients SHOULD sending a GREASE "pre_shared_key" extension in the
+clients SHOULD send a GREASE "pre_shared_key" extension in the
 ClientHelloOuter to make it appear to the network as if the extension were
 negotiated properly.
 
