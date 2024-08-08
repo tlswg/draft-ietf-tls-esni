@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-08-06T01:14:23.021940+00:00",
+  "timestamp": "2024-08-08T01:14:49.847171+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -56745,6 +56745,48 @@
       },
       "comments": [],
       "reviews": []
+    },
+    {
+      "number": 621,
+      "id": "PR_kwDOB-yxNc53mt_y",
+      "title": "nit \"Clients SHOULD sending\" -> \"clients SHOULD send\"",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/621",
+      "state": "MERGED",
+      "author": "Neimhin",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2024-08-06T18:59:52Z",
+      "updatedAt": "2024-08-07T00:14:58Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "b103125ec06275be03e18499391c5bd0ff79f7a6",
+      "headRepository": "Neimhin/draft-ietf-tls-esni",
+      "headRefName": "master",
+      "headRefOid": "0d076797fef520f885db7758dc5f2db815838fb0",
+      "closedAt": "2024-08-07T00:14:58Z",
+      "mergedAt": "2024-08-07T00:14:58Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "c1f955b04fa728105336de01907828c6c324363a"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6Eciij",
+          "commit": {
+            "abbreviatedOid": "0d07679"
+          },
+          "author": "dconnolly",
+          "authorAssociation": "NONE",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-08-06T19:24:27Z",
+          "updatedAt": "2024-08-06T19:24:27Z",
+          "comments": []
+        }
+      ]
     }
   ]
 }
