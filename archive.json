@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-08-08T01:14:49.847171+00:00",
+  "timestamp": "2024-08-11T01:20:52.642762+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -56787,6 +56787,32 @@
           "comments": []
         }
       ]
+    },
+    {
+      "number": 622,
+      "id": "PR_kwDOB-yxNc53_8wN",
+      "title": "Intro: Tweak grammar to improve flow",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/622",
+      "state": "OPEN",
+      "author": "ZLima12",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2024-08-10T04:24:26Z",
+      "updatedAt": "2024-08-10T04:24:27Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "c1f955b04fa728105336de01907828c6c324363a",
+      "headRepository": "ZLima12/draft-ietf-tls-esni",
+      "headRefName": "grammar",
+      "headRefOid": "d7865b3a5a316f21a60a8de82a77de4f0b44a2a8",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
     }
   ]
 }
