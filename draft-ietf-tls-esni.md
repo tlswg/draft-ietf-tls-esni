@@ -260,8 +260,8 @@ The ECH configuration is defined by the following `ECHConfig` structure.
 The structure contains the following fields:
 
 version
-: The version of ECH for which this configuration is used. Beginning with
-draft-08, the version is the same as the code point for the
+: The version of ECH for which this configuration is used. The version
+is the same as the code point for the
 "encrypted_client_hello" extension. Clients MUST ignore any `ECHConfig`
 structure with a version they do not support.
 
