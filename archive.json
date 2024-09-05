@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-09-03T01:17:39.655667+00:00",
+  "timestamp": "2024-09-05T01:18:57.288372+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12877,6 +12877,30 @@
           "body": "Fixed.",
           "createdAt": "2024-08-05T00:28:38Z",
           "updatedAt": "2024-08-05T00:28:38Z"
+        }
+      ]
+    },
+    {
+      "number": 626,
+      "id": "I_kwDOB-yxNc6VJB2-",
+      "title": "Proxy Mode",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/626",
+      "state": "OPEN",
+      "author": "taoso",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Hi,\r\n\r\nI am investigating to detect whether is it possible to implement a SNI proxy using the ECH.\r\n\r\nHere is the overview idea.\r\n\r\nInstead of using the split mode of ECH, we could implement a specific client-facing server,\r\nwhich does not require the the original server implement the backend server logic of ECH.\r\n\r\nIn other word, I suppose to let the client-facing server proxy any TLS traffic according by\r\nthe SNI to the normal original server.\r\n\r\nHowever, after some deep digging, I found it is impossible in the current draft. Because\r\nthe current draft requires that up on the original backend server accept the ECH handshake,\r\nit will modify the last 8 byte of the random bytes of ServerHello message.\r\n\r\nGiven we want to implement SNI proxy to original server which will not offer the ECH accept_confirmation,\r\nour client-facing cannot rewrite the server hello random on behalf of backend server since\r\nit will be used to derive the pre-master bytes.\r\n\r\nSo is it possible to change the mechanism  to transfer the ECH accept_confirmation?\r\n\r\nI am wondering if it is appropriate to transfer the ECH accept_confirmation bytes into some\r\nplaintext ServerHello extensions like [Key Share](https://datatracker.ietf.org/doc/html/rfc8446#section-4.2.8)\r\nother than the ServerHello random.\r\n\r\nIf it is possible, we can let the client-facing proxy the ECH TLS traffic to all the current existing\r\nnon-ECH-aware TLS server, which will promote the deployment of ECH as much as possible.",
+      "createdAt": "2024-09-03T07:52:19Z",
+      "updatedAt": "2024-09-03T11:46:27Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "richsalz",
+          "authorAssociation": "NONE",
+          "body": "> Instead of using the split mode of ECH, we could implement a specific client-facing server,\r\n> which does not require the the original server implement the backend server logic of ECH.\r\n\r\n> In other word, I suppose to let the client-facing server proxy any TLS traffic according by\r\n> the SNI to the normal original server.\r\n\r\nYou will probably get more responses if you email the TLS group list, tls@ietf mailing list.\r\n\r\nDoes the client get the certificate from your proxy, and verify it?  If so, why does this need ECH, what benefit does that give?\r\n",
+          "createdAt": "2024-09-03T11:44:40Z",
+          "updatedAt": "2024-09-03T11:46:27Z"
         }
       ]
     }
