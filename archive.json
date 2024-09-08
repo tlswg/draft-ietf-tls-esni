@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-09-05T01:18:57.288372+00:00",
+  "timestamp": "2024-09-08T01:24:50.809641+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -56902,13 +56902,13 @@
       "labels": [],
       "body": "Seems like this is an old reference to a different registry name",
       "createdAt": "2024-08-15T18:05:40Z",
-      "updatedAt": "2024-08-15T18:05:41Z",
+      "updatedAt": "2024-09-07T22:49:00Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "c1f955b04fa728105336de01907828c6c324363a",
       "headRepository": "tlswg/draft-ietf-tls-esni",
       "headRefName": "iana-remove-reg",
-      "headRefOid": "13a260b8485733cd72c1e81053effd13ba7da5c2",
+      "headRefOid": "257b1f7fb783af0437978832d423f85cce7d0707",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
