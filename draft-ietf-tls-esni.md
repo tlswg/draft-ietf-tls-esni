@@ -77,8 +77,8 @@ Although TLS 1.3 {{!RFC8446}} encrypts most of the handshake, including the
 server certificate, there are several ways in which an on-path attacker can
 learn private information about the connection. The plaintext Server Name
 Indication (SNI) extension in ClientHello messages, which leaks the target
-domain for a given connection, is perhaps the most sensitive, unencrypted
-information in TLS 1.3.
+domain for a given connection, is perhaps the most sensitive information
+left unencrypted in TLS 1.3.
 
 This document specifies a new TLS extension, called Encrypted Client Hello
 (ECH), that allows clients to encrypt their ClientHello to such a deployment.
