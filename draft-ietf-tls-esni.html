@@ -13,11 +13,11 @@
        This document describes a mechanism in Transport Layer Security (TLS) for
 encrypting a ClientHello message under a server public key. 
     " name="description">
-<meta content="xml2rfc 3.22.0" name="generator">
+<meta content="xml2rfc 3.23.0" name="generator">
 <meta content="Internet-Draft" name="keyword">
 <meta content="draft-ietf-tls-esni-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.22.0
+  xml2rfc 3.23.0
     Python 3.12.3
     ConfigArgParse 1.7
     google-i18n-address 3.1.0
@@ -28,7 +28,7 @@ encrypting a ClientHello message under a server public key.
     pycountry 22.3.5
     PyYAML 6.0.1
     requests 2.32.3
-    setuptools 69.5.1
+    setuptools 70.3.0
     wcwidth 0.2.13
 -->
 <link href="draft-ietf-tls-esni.xml" rel="alternate" type="application/rfc+xml">
@@ -1028,11 +1028,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">TLS Encrypted Client Hello</td>
-<td class="right">August 2024</td>
+<td class="right">September 2024</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Rescorla, et al.</td>
-<td class="center">Expires 8 February 2025</td>
+<td class="center">Expires 18 March 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1045,12 +1045,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-tls-esni-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-08-07" class="published">7 August 2024</time>
+<time datetime="2024-09-14" class="published">14 September 2024</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-02-08">8 February 2025</time></dd>
+<dd class="expires"><time datetime="2025-03-18">18 March 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1105,7 +1105,7 @@ encrypting a ClientHello message under a server public key.<a href="#section-abs
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 8 February 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 18 March 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1406,17 +1406,13 @@ encrypting a ClientHello message under a server public key.<a href="#section-abs
       <h2 id="name-introduction">
 <a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
-<p id="section-1-1">DISCLAIMER: This draft is work-in-progress and has not yet seen significant (or
-really any) security analysis. It should not be used as a basis for building
-production systems. This published version of the draft has been designated
-an "implementation draft" for testing and interop purposes.<a href="#section-1-1" class="pilcrow">¶</a></p>
-<p id="section-1-2">Although TLS 1.3 <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span> encrypts most of the handshake, including the
+<p id="section-1-1">Although TLS 1.3 <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span> encrypts most of the handshake, including the
 server certificate, there are several ways in which an on-path attacker can
 learn private information about the connection. The plaintext Server Name
 Indication (SNI) extension in ClientHello messages, which leaks the target
-domain for a given connection, is perhaps the most sensitive, unencrypted
-information in TLS 1.3.<a href="#section-1-2" class="pilcrow">¶</a></p>
-<p id="section-1-3">This document specifies a new TLS extension, called Encrypted Client Hello
+domain for a given connection, is perhaps the most sensitive information
+left unencrypted in TLS 1.3.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">This document specifies a new TLS extension, called Encrypted Client Hello
 (ECH), that allows clients to encrypt their ClientHello to such a deployment.
 This protects the SNI and other potentially sensitive fields, such as the ALPN
 list <span>[<a href="#RFC7301" class="cite xref">RFC7301</a>]</span>. Co-located servers with consistent externally visible TLS
@@ -1428,17 +1424,17 @@ different externally visible behavior, even for servers with consistent TLS
 configurations.) Usage of this mechanism reveals that a client is connecting
 to a particular service provider, but does not reveal which server from the
 anonymity set terminates the connection. Deployment implications of this
-feature are discussed in <a href="#deployment" class="auto internal xref">Section 8</a>.<a href="#section-1-3" class="pilcrow">¶</a></p>
-<p id="section-1-4">ECH is not in itself sufficient to protect the identity of the server.
+feature are discussed in <a href="#deployment" class="auto internal xref">Section 8</a>.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-3">ECH is not in itself sufficient to protect the identity of the server.
 The target domain may also be visible through other channels, such as plaintext
 client DNS queries or visible server IP addresses. However, DoH <span>[<a href="#RFC8484" class="cite xref">RFC8484</a>]</span>
 and DPRIVE <span>[<a href="#RFC7858" class="cite xref">RFC7858</a>]</span> <span>[<a href="#RFC8094" class="cite xref">RFC8094</a>]</span> provide mechanisms for clients to conceal
 DNS lookups from network inspection, and many TLS servers host multiple domains
 on the same IP address. Private origins may also be deployed behind a common
 provider, such as a reverse proxy. In such environments, the SNI remains the
-primary explicit signal used to determine the server's identity.<a href="#section-1-4" class="pilcrow">¶</a></p>
-<p id="section-1-5">ECH is supported in TLS 1.3 <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>, DTLS 1.3 <span>[<a href="#RFC9147" class="cite xref">RFC9147</a>]</span>, and
-newer versions of the TLS and DTLS protocols.<a href="#section-1-5" class="pilcrow">¶</a></p>
+primary explicit signal used to determine the server's identity.<a href="#section-1-3" class="pilcrow">¶</a></p>
+<p id="section-1-4">ECH is supported in TLS 1.3 <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>, DTLS 1.3 <span>[<a href="#RFC9147" class="cite xref">RFC9147</a>]</span>, and
+newer versions of the TLS and DTLS protocols.<a href="#section-1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="conventions-and-definitions">
@@ -1620,8 +1616,8 @@ The ECH configuration is defined by the following <code>ECHConfig</code> structu
 <span class="break"></span><dl class="dlParallel" id="section-4-4">
         <dt id="section-4-4.1">version</dt>
         <dd style="margin-left: 1.5em" id="section-4-4.2">
-          <p id="section-4-4.2.1">The version of ECH for which this configuration is used. Beginning with
-draft-08, the version is the same as the code point for the
+          <p id="section-4-4.2.1">The version of ECH for which this configuration is used. The version
+is the same as the code point for the
 "encrypted_client_hello" extension. Clients MUST ignore any <code>ECHConfig</code>
 structure with a version they do not support.<a href="#section-4-4.2.1" class="pilcrow">¶</a></p>
 </dd>
@@ -3558,49 +3554,47 @@ Action <span>[<a href="#RFC8126" class="cite xref">RFC8126</a>]</span>.<a href="
 </dd>
         <dd class="break"></dd>
 </dl>
-<p id="section-11.3-3">New entries in this registry are subject to the Specification Required
-registration policy (<span>[<a href="#RFC8126" class="cite xref">RFC8126</a>], <a href="https://rfc-editor.org/rfc/rfc8126#section-4.6" class="relref">Section 4.6</a></span>).<a href="#section-11.3-3" class="pilcrow">¶</a></p>
-<p id="section-11.3-4">The registration policy for for the "ECHConfig Extension Type" registry
-is Specification Required <span>[<a href="#RFC8126" class="cite xref">RFC8126</a>]</span>.<a href="#section-11.3-4" class="pilcrow">¶</a></p>
-<p id="section-11.3-5">This document defines several Reserved values for ECH configuration extensions.
+<p id="section-11.3-3">New entries in the "ECHConfig Extension" registry are subject to the
+Specification Required registration policy (<span>[<a href="#RFC8126" class="cite xref">RFC8126</a>], <a href="https://rfc-editor.org/rfc/rfc8126#section-4.6" class="relref">Section 4.6</a></span>).<a href="#section-11.3-3" class="pilcrow">¶</a></p>
+<p id="section-11.3-4">This document defines several Reserved values for ECH configuration extensions.
 These can be used by servers to "grease" the contents of the
 ECH configuration, as inspired by <span>[<a href="#RFC8701" class="cite xref">RFC8701</a>]</span>. This helps ensure clients
 process ECH extensions correctly. When constructing ECH configurations,
 servers SHOULD randomly select from reserved values with the high-order
-bit clear. Correctly-implemented client will ignore those extensions.<a href="#section-11.3-5" class="pilcrow">¶</a></p>
-<p id="section-11.3-6">The reserved values with the high-order bit set are mandatory, as defined
+bit clear. Correctly-implemented client will ignore those extensions.<a href="#section-11.3-4" class="pilcrow">¶</a></p>
+<p id="section-11.3-5">The reserved values with the high-order bit set are mandatory, as defined
 in <a href="#config-extensions" class="auto internal xref">Section 4.2</a>. Servers SHOULD randomly select from these
 values and include them in extraneous ECH configurations. These
 extraneous ECH configurations SHOULD have invalid keys, and public
 names which the server does not respond to. Correctly-implemented
-clients will ignore these configurations.<a href="#section-11.3-6" class="pilcrow">¶</a></p>
-<p id="section-11.3-7">The initial contents for this registry consists of multiple reserved values,
-with the following attributes, which are repeated for each registration:<a href="#section-11.3-7" class="pilcrow">¶</a></p>
-<span class="break"></span><dl class="dlCompact dlParallel" id="section-11.3-8">
-          <dt id="section-11.3-8.1">Value:</dt>
-          <dd style="margin-left: 1.5em" id="section-11.3-8.2">
-            <p id="section-11.3-8.2.1">0x0000, 0x1A1A, 0x2A2A, 0x3A3A, 0x4A4A, 0x5A5A, 0x6A6A, 0x7A7A, 0x8A8A,
-0x9A9A, 0xAAAA, 0xBABA, 0xCACA, 0xDADA, 0xEAEA, 0xFAFA<a href="#section-11.3-8.2.1" class="pilcrow">¶</a></p>
+clients will ignore these configurations.<a href="#section-11.3-5" class="pilcrow">¶</a></p>
+<p id="section-11.3-6">The initial contents for this registry consists of multiple reserved values,
+with the following attributes, which are repeated for each registration:<a href="#section-11.3-6" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlCompact dlParallel" id="section-11.3-7">
+          <dt id="section-11.3-7.1">Value:</dt>
+          <dd style="margin-left: 1.5em" id="section-11.3-7.2">
+            <p id="section-11.3-7.2.1">0x0000, 0x1A1A, 0x2A2A, 0x3A3A, 0x4A4A, 0x5A5A, 0x6A6A, 0x7A7A, 0x8A8A,
+0x9A9A, 0xAAAA, 0xBABA, 0xCACA, 0xDADA, 0xEAEA, 0xFAFA<a href="#section-11.3-7.2.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-11.3-8.3">Extension Name:</dt>
-          <dd style="margin-left: 1.5em" id="section-11.3-8.4">
-            <p id="section-11.3-8.4.1">RESERVED<a href="#section-11.3-8.4.1" class="pilcrow">¶</a></p>
+<dt id="section-11.3-7.3">Extension Name:</dt>
+          <dd style="margin-left: 1.5em" id="section-11.3-7.4">
+            <p id="section-11.3-7.4.1">RESERVED<a href="#section-11.3-7.4.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-11.3-8.5">Recommended:</dt>
-          <dd style="margin-left: 1.5em" id="section-11.3-8.6">
-            <p id="section-11.3-8.6.1">Y<a href="#section-11.3-8.6.1" class="pilcrow">¶</a></p>
+<dt id="section-11.3-7.5">Recommended:</dt>
+          <dd style="margin-left: 1.5em" id="section-11.3-7.6">
+            <p id="section-11.3-7.6.1">Y<a href="#section-11.3-7.6.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-11.3-8.7">Reference:</dt>
-          <dd style="margin-left: 1.5em" id="section-11.3-8.8">
-            <p id="section-11.3-8.8.1">This document<a href="#section-11.3-8.8.1" class="pilcrow">¶</a></p>
+<dt id="section-11.3-7.7">Reference:</dt>
+          <dd style="margin-left: 1.5em" id="section-11.3-7.8">
+            <p id="section-11.3-7.8.1">This document<a href="#section-11.3-7.8.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-11.3-8.9">Notes:</dt>
-          <dd style="margin-left: 1.5em" id="section-11.3-8.10">
-            <p id="section-11.3-8.10.1">None<a href="#section-11.3-8.10.1" class="pilcrow">¶</a></p>
+<dt id="section-11.3-7.9">Notes:</dt>
+          <dd style="margin-left: 1.5em" id="section-11.3-7.10">
+            <p id="section-11.3-7.10.1">None<a href="#section-11.3-7.10.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
@@ -3621,7 +3615,7 @@ with the following attributes, which are repeated for each registration:<a href=
 <dl class="references">
 <dt id="ECH-IN-DNS">[ECH-IN-DNS]</dt>
         <dd>
-<span class="refAuthor">Schwartz, B. M.</span>, <span class="refAuthor">Bishop, M.</span>, and <span class="refAuthor">E. Nygren</span>, <span class="refTitle">"Bootstrapping TLS Encrypted ClientHello with DNS Service Bindings"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-tls-svcb-ech-03</span>, <time datetime="2024-07-23" class="refDate">23 July 2024</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-tls-svcb-ech-03">https://datatracker.ietf.org/doc/html/draft-ietf-tls-svcb-ech-03</a>&gt;</span>. </dd>
+<span class="refAuthor">Schwartz, B. M.</span>, <span class="refAuthor">Bishop, M.</span>, and <span class="refAuthor">E. Nygren</span>, <span class="refTitle">"Bootstrapping TLS Encrypted ClientHello with DNS Service Bindings"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-tls-svcb-ech-05</span>, <time datetime="2024-09-03" class="refDate">3 September 2024</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-tls-svcb-ech-05">https://datatracker.ietf.org/doc/html/draft-ietf-tls-svcb-ech-05</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="HPKE">[HPKE]</dt>
         <dd>
