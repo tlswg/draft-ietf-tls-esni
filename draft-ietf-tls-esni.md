@@ -1896,7 +1896,18 @@ Notes:
 {: spacing="compact"}
 
 New entries in the "ECHConfig Extension" registry are subject to the
-Specification Required registration policy ({{!RFC8126, Section 4.6}}).
+Specification Required registration policy ({{!RFC8126, Section
+4.6}}), with the policies described in {{!RFC8447, Section 17}}. IANA
+[shall add/has added] the following note to the TLS ECHConfig Extension
+registry:
+
+   Note:  The role of the designated expert is described in RFC 8447.
+      The designated expert [RFC8126] ensures that the specification is
+      publicly available.  It is sufficient to have an Internet-Draft
+      (that is posted and never published as an RFC) or a document from
+      another standards body, industry consortium, university site, etc.
+      The expert may provide more in depth reviews, but their approval
+      should not be taken as an endorsement of the extension.
 
 This document defines several Reserved values for ECH configuration extensions.
 These can be used by servers to "grease" the contents of the
