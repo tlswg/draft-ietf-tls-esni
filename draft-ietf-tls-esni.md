@@ -1895,11 +1895,8 @@ Notes:
 : Any notes associated with the entry
 {: spacing="compact"}
 
-New entries in this registry are subject to the Specification Required
-registration policy ({{!RFC8126, Section 4.6}}).
-
-The registration policy for for the "ECHConfig Extension Type" registry
-is Specification Required {{!RFC8126}}.
+New entries in the "ECHConfig Extension" registry are subject to the
+Specification Required registration policy ({{!RFC8126, Section 4.6}}).
 
 This document defines several Reserved values for ECH configuration extensions.
 These can be used by servers to "grease" the contents of the
