@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-09-12T01:19:21.246375+00:00",
+  "timestamp": "2024-09-15T01:34:21.563039+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -56817,50 +56817,68 @@
       "id": "PR_kwDOB-yxNc53_8wN",
       "title": "Intro: Tweak grammar to improve flow",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/622",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ZLima12",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2024-08-10T04:24:26Z",
-      "updatedAt": "2024-08-10T04:24:27Z",
+      "updatedAt": "2024-09-14T20:19:41Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "c1f955b04fa728105336de01907828c6c324363a",
       "headRepository": "ZLima12/draft-ietf-tls-esni",
       "headRefName": "grammar",
       "headRefOid": "d7865b3a5a316f21a60a8de82a77de4f0b44a2a8",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-09-14T20:19:41Z",
+      "mergedAt": "2024-09-14T20:19:41Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "9a636dc66d75c6d4c2b6b86f9d1cdd6f3205dd28"
+      },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6JZoG9",
+          "commit": {
+            "abbreviatedOid": "d7865b3"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-09-14T20:19:37Z",
+          "updatedAt": "2024-09-14T20:19:37Z",
+          "comments": []
+        }
+      ]
     },
     {
       "number": 623,
       "id": "PR_kwDOB-yxNc54fmsT",
       "title": "remove disclaimer",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/623",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "jsalowey",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "Since there has been security review and modeling of ECH it seems it would be appropriate to remove this disclaimer. ",
       "createdAt": "2024-08-15T17:52:58Z",
-      "updatedAt": "2024-08-15T17:52:58Z",
+      "updatedAt": "2024-09-14T20:19:02Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "c1f955b04fa728105336de01907828c6c324363a",
       "headRepository": "tlswg/draft-ietf-tls-esni",
       "headRefName": "remove-disclaimer",
       "headRefOid": "fd74899b2ed91f4a3ce63d25554c026cfa6259a0",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-09-14T20:19:01Z",
+      "mergedAt": "2024-09-14T20:19:01Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "e48db4b2ffcf29c3cc15427ac0e7cb98aa327797"
+      },
       "comments": [],
       "reviews": []
     },
@@ -56869,46 +56887,98 @@
       "id": "PR_kwDOB-yxNc54fotx",
       "title": "remove reference to draft 8",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/624",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "jsalowey",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "It seems like the reference to the draft is not relavent here. ",
       "createdAt": "2024-08-15T17:59:20Z",
-      "updatedAt": "2024-08-15T17:59:21Z",
+      "updatedAt": "2024-09-14T20:18:25Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "c1f955b04fa728105336de01907828c6c324363a",
       "headRepository": "tlswg/draft-ietf-tls-esni",
       "headRefName": "remove-draft-ref",
       "headRefOid": "01b6df6a6191b6f0faf236f3b76367b5032253b1",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-09-14T20:18:25Z",
+      "mergedAt": "2024-09-14T20:18:24Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "3a1bdb6c002bacd3be074533cbcbf20796e72449"
+      },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6JZnlO",
+          "commit": {
+            "abbreviatedOid": "01b6df6"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-09-14T20:18:20Z",
+          "updatedAt": "2024-09-14T20:18:20Z",
+          "comments": []
+        }
+      ]
     },
     {
       "number": 625,
       "id": "PR_kwDOB-yxNc54fqsZ",
       "title": "Remove extraneous registry reference",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/625",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "jsalowey",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "Seems like this is an old reference to a different registry name",
       "createdAt": "2024-08-15T18:05:40Z",
-      "updatedAt": "2024-09-07T22:49:00Z",
+      "updatedAt": "2024-09-14T20:21:52Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "c1f955b04fa728105336de01907828c6c324363a",
       "headRepository": "tlswg/draft-ietf-tls-esni",
       "headRefName": "iana-remove-reg",
       "headRefOid": "257b1f7fb783af0437978832d423f85cce7d0707",
+      "closedAt": "2024-09-14T20:21:52Z",
+      "mergedAt": "2024-09-14T20:21:52Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "222c5790753c59719d4c26c16c3528689430b328"
+      },
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I think we actually want to make this match the rest of 8447 and allow an I-D. @jsalowey @seanturner what say you about the process?",
+          "createdAt": "2024-09-14T20:17:48Z",
+          "updatedAt": "2024-09-14T20:17:48Z"
+        }
+      ],
+      "reviews": []
+    },
+    {
+      "number": 627,
+      "id": "PR_kwDOB-yxNc57hx3e",
+      "title": "Update the IANA considerations text to match our other TLS policies.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/627",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "@seanturner  @jsalowey how would you like to handle this.",
+      "createdAt": "2024-09-14T20:34:19Z",
+      "updatedAt": "2024-09-14T20:34:20Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "9f6ac2dae255668fe2b851ae30003013dcccc4e6",
+      "headRepository": "ekr/draft-ietf-tls-esni",
+      "headRefName": "specification_required",
+      "headRefOid": "1c1b98cebb9455d33d41b42fecd7ef5dfb5d7948",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
