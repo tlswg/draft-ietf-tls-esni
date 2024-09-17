@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-09-15T01:34:21.563039+00:00",
+  "timestamp": "2024-09-17T01:06:44.057460+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -56965,26 +56965,50 @@
       "id": "PR_kwDOB-yxNc57hx3e",
       "title": "Update the IANA considerations text to match our other TLS policies.",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/627",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "@seanturner  @jsalowey how would you like to handle this.",
       "createdAt": "2024-09-14T20:34:19Z",
-      "updatedAt": "2024-09-14T20:34:20Z",
+      "updatedAt": "2024-09-15T17:44:14Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "9f6ac2dae255668fe2b851ae30003013dcccc4e6",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "specification_required",
       "headRefOid": "1c1b98cebb9455d33d41b42fecd7ef5dfb5d7948",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
-      "comments": [],
-      "reviews": []
+      "closedAt": "2024-09-15T17:44:14Z",
+      "mergedAt": "2024-09-15T17:44:14Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "dedc72115c9092e63204239dff182c6218bd767a"
+      },
+      "comments": [
+        {
+          "author": "jsalowey",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I think this is consistent with other TLS registries and should be merged. ",
+          "createdAt": "2024-09-15T17:27:50Z",
+          "updatedAt": "2024-09-15T17:27:50Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6JamRK",
+          "commit": {
+            "abbreviatedOid": "1c1b98c"
+          },
+          "author": "jsalowey",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-09-15T17:25:14Z",
+          "updatedAt": "2024-09-15T17:25:14Z",
+          "comments": []
+        }
+      ]
     }
   ]
 }
