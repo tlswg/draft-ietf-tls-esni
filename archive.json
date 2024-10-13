@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-10-10T01:22:42.655886+00:00",
+  "timestamp": "2024-10-13T01:35:21.797108+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12903,6 +12903,78 @@
           "updatedAt": "2024-09-03T11:46:27Z"
         }
       ]
+    },
+    {
+      "number": 628,
+      "id": "I_kwDOB-yxNc6Z67nZ",
+      "title": "DNS issues from AD review.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/628",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Tagging @bemasc on these.\r\n\r\nSection 4\r\n\r\n        Clients MUST ignore any ECHConfig structure whose public_name\r\n        is not parsable as a dot-separated sequence of LDH labels, as\r\n        defined in [RFC5890], Section 2.3.1 or which begins or end with\r\n        an ASCII dot.\r\n\r\nWouldn't this prevent the root zone from ever running ECH? It might not matter,\r\nbut why not allow it :P\r\n\r\n        Clients additionally SHOULD ignore the structure if the final LDH\r\n        label either consists of all ASCII digits (i.e. '0' through '9')\r\n        or is \"0x\" or \"0X\" followed by some, possibly empty, sequence\r\n        of ASCII hexadecimal digits (i.e. '0' through '9', 'a' through\r\n        'f', and 'A' through 'F').\r\n\r\nThis would not allow ECH to work for \"00.com\", \"0x01.com\" or \"0x07.com\", which are\r\nall currently operational domains.\r\n\r\nI don't think this document should try to define what a legal DNS name is. Perhaps\r\nrefer to \"Host name\" in RFC 8499 (or BCP219) and only state \"leave out any potential\r\ntrailing dot\" ? Maybe just separately say \"SNI's cannot be in the textual form of an\r\nIP address, as connections to IP addresses omit the SNI entirely\" ?\r\n\r\nIt is a bit sad that ECH currently does not work with a URI that points to an IP\r\naddress. Especially for the split-mode. But I understand that would be a little\r\nmore than just ECH/encrypted-SNI.\r\n\r\n\r\n        Additionally, clients MAY ignore the ECHConfig if the length of\r\n        any label in the DNS name is longer than 63 octets, as this is\r\n        the maximum length of a DNS label.\r\n\r\nWhy is this a MAY? Why not a MUST or SHOULD?\r\n\r\n",
+      "createdAt": "2024-10-12T00:14:00Z",
+      "updatedAt": "2024-10-12T00:14:01Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 629,
+      "id": "I_kwDOB-yxNc6Z686G",
+      "title": "Should we recommend how often to rotate keys?",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/629",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "From AD review.\r\n\r\nSee Section 10.10.5, which just says \"frequently\".\r\n\r\n\r\n",
+      "createdAt": "2024-10-12T00:25:03Z",
+      "updatedAt": "2024-10-12T00:25:03Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 630,
+      "id": "I_kwDOB-yxNc6Z69ZW",
+      "title": "Extraneous configurations MUST have invalid DNS names?",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/630",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Suggested in AD review.",
+      "createdAt": "2024-10-12T00:29:17Z",
+      "updatedAt": "2024-10-12T00:30:19Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Also, should we provide guidance on how to select these names. Paul writes:\r\n> Should it use known-invalid DNS names, eg \"invalid:com\", or some randomized\r\n> long valid but unlikely DNS name? Guidaance would be useful.\r\n",
+          "createdAt": "2024-10-12T00:30:18Z",
+          "updatedAt": "2024-10-12T00:30:18Z"
+        }
+      ]
+    },
+    {
+      "number": 631,
+      "id": "I_kwDOB-yxNc6Z69kA",
+      "title": "Move guidance on greasing out of IANA considerations",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/631",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Reminder from AD review.",
+      "createdAt": "2024-10-12T00:30:38Z",
+      "updatedAt": "2024-10-12T00:30:38Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
@@ -57009,6 +57081,32 @@
           "comments": []
         }
       ]
+    },
+    {
+      "number": 632,
+      "id": "PR_kwDOB-yxNc5-Y5Cw",
+      "title": "Comments from AD review.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/632",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2024-10-12T00:40:34Z",
+      "updatedAt": "2024-10-12T00:40:35Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "dedc72115c9092e63204239dff182c6218bd767a",
+      "headRepository": "ekr/draft-ietf-tls-esni",
+      "headRefName": "wouters_review",
+      "headRefOid": "b9b723cd108a96a9218abb34bbc74f4f998900f1",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
     }
   ]
 }
