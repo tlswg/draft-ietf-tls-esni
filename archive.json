@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-10-13T01:35:21.797108+00:00",
+  "timestamp": "2024-10-15T01:24:12.965449+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12885,15 +12885,15 @@
       "id": "I_kwDOB-yxNc6VJB2-",
       "title": "Proxy Mode",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/626",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "taoso",
       "authorAssociation": "NONE",
       "assignees": [],
       "labels": [],
       "body": "Hi,\r\n\r\nI am investigating to detect whether is it possible to implement a SNI proxy using the ECH.\r\n\r\nHere is the overview idea.\r\n\r\nInstead of using the split mode of ECH, we could implement a specific client-facing server,\r\nwhich does not require the the original server implement the backend server logic of ECH.\r\n\r\nIn other word, I suppose to let the client-facing server proxy any TLS traffic according by\r\nthe SNI to the normal original server.\r\n\r\nHowever, after some deep digging, I found it is impossible in the current draft. Because\r\nthe current draft requires that up on the original backend server accept the ECH handshake,\r\nit will modify the last 8 byte of the random bytes of ServerHello message.\r\n\r\nGiven we want to implement SNI proxy to original server which will not offer the ECH accept_confirmation,\r\nour client-facing cannot rewrite the server hello random on behalf of backend server since\r\nit will be used to derive the pre-master bytes.\r\n\r\nSo is it possible to change the mechanism  to transfer the ECH accept_confirmation?\r\n\r\nI am wondering if it is appropriate to transfer the ECH accept_confirmation bytes into some\r\nplaintext ServerHello extensions like [Key Share](https://datatracker.ietf.org/doc/html/rfc8446#section-4.2.8)\r\nother than the ServerHello random.\r\n\r\nIf it is possible, we can let the client-facing proxy the ECH TLS traffic to all the current existing\r\nnon-ECH-aware TLS server, which will promote the deployment of ECH as much as possible.",
       "createdAt": "2024-09-03T07:52:19Z",
-      "updatedAt": "2024-09-03T11:46:27Z",
-      "closedAt": null,
+      "updatedAt": "2024-10-14T21:04:24Z",
+      "closedAt": "2024-10-14T21:04:24Z",
       "comments": [
         {
           "author": "richsalz",
@@ -12901,6 +12901,13 @@
           "body": "> Instead of using the split mode of ECH, we could implement a specific client-facing server,\r\n> which does not require the the original server implement the backend server logic of ECH.\r\n\r\n> In other word, I suppose to let the client-facing server proxy any TLS traffic according by\r\n> the SNI to the normal original server.\r\n\r\nYou will probably get more responses if you email the TLS group list, tls@ietf mailing list.\r\n\r\nDoes the client get the certificate from your proxy, and verify it?  If so, why does this need ECH, what benefit does that give?\r\n",
           "createdAt": "2024-09-03T11:44:40Z",
           "updatedAt": "2024-09-03T11:46:27Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Not seeing any interest in this and we are now in AD review, so closing,",
+          "createdAt": "2024-10-14T21:04:24Z",
+          "updatedAt": "2024-10-14T21:04:24Z"
         }
       ]
     },
@@ -12916,9 +12923,31 @@
       "labels": [],
       "body": "Tagging @bemasc on these.\r\n\r\nSection 4\r\n\r\n        Clients MUST ignore any ECHConfig structure whose public_name\r\n        is not parsable as a dot-separated sequence of LDH labels, as\r\n        defined in [RFC5890], Section 2.3.1 or which begins or end with\r\n        an ASCII dot.\r\n\r\nWouldn't this prevent the root zone from ever running ECH? It might not matter,\r\nbut why not allow it :P\r\n\r\n        Clients additionally SHOULD ignore the structure if the final LDH\r\n        label either consists of all ASCII digits (i.e. '0' through '9')\r\n        or is \"0x\" or \"0X\" followed by some, possibly empty, sequence\r\n        of ASCII hexadecimal digits (i.e. '0' through '9', 'a' through\r\n        'f', and 'A' through 'F').\r\n\r\nThis would not allow ECH to work for \"00.com\", \"0x01.com\" or \"0x07.com\", which are\r\nall currently operational domains.\r\n\r\nI don't think this document should try to define what a legal DNS name is. Perhaps\r\nrefer to \"Host name\" in RFC 8499 (or BCP219) and only state \"leave out any potential\r\ntrailing dot\" ? Maybe just separately say \"SNI's cannot be in the textual form of an\r\nIP address, as connections to IP addresses omit the SNI entirely\" ?\r\n\r\nIt is a bit sad that ECH currently does not work with a URI that points to an IP\r\naddress. Especially for the split-mode. But I understand that would be a little\r\nmore than just ECH/encrypted-SNI.\r\n\r\n\r\n        Additionally, clients MAY ignore the ECHConfig if the length of\r\n        any label in the DNS name is longer than 63 octets, as this is\r\n        the maximum length of a DNS label.\r\n\r\nWhy is this a MAY? Why not a MUST or SHOULD?\r\n\r\n",
       "createdAt": "2024-10-12T00:14:00Z",
-      "updatedAt": "2024-10-12T00:14:01Z",
+      "updatedAt": "2024-10-14T23:12:01Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "bemasc",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> ```\r\n>     Clients MUST ignore any ECHConfig structure whose public_name\r\n>     is not parsable as a dot-separated sequence of LDH labels, as\r\n>     defined in [RFC5890], Section 2.3.1 or which begins or end with\r\n>     an ASCII dot.\r\n> ```\r\n> \r\n> Wouldn't this prevent the root zone from ever running ECH?\r\n\r\nECHConfig is versioned, so nothing here is \"forever\".\r\n\r\nThe only purpose of `public_name` is to support the fallback flow on key mismatch.  This requires the server to prove ownership of `public_name`, presumably via an X.509 certificate or TLSA record for the root.  As both of those seem extremely unlikely, I don't think we need to worry about it.\r\n\r\n> It might not matter, but why not allow it :P\r\n\r\nECH is designed to be easy to integrate for existing applications that use common TLS libraries and work with URIs and URLs.  In these systems, the final \".\" is omitted, leaving the root as an empty string.  Treating an empty `public_name` as meaning \"the DNS root\" would never work, would increase the difficulty of integration with systems that don't accept empty hostnames, and would increase confusion for debugging.\r\n\r\n> ```\r\n>     Clients additionally SHOULD ignore the structure if the final LDH\r\n>     label either consists of all ASCII digits (i.e. '0' through '9')\r\n>     or is \"0x\" or \"0X\" followed by some, possibly empty, sequence\r\n>     of ASCII hexadecimal digits (i.e. '0' through '9', 'a' through\r\n>     'f', and 'A' through 'F').\r\n> ```\r\n> \r\n> This would not allow ECH to work for \"00.com\", \"0x01.com\" or \"0x07.com\", which are all currently operational domains.\r\n\r\n\"final\" here means \"rightmost in textual format\", i.e. TLD.\r\n\r\n> I don't think this document should try to define what a legal DNS name is. Perhaps refer to \"Host name\" in RFC 8499 (or BCP219) and only state \"leave out any potential trailing dot\" ? Maybe just separately say \"SNI's cannot be in the textual form of an IP address, as connections to IP addresses omit the SNI entirely\" ?\r\n\r\nThe challenge here is that textual IPv4 addresses are valid hostnames, but there is no good reference for the textual representation syntax of an IPv4 address (https://github.com/tlswg/draft-ietf-tls-esni/commit/2660209e03b2d7f9c6db9cc9a70c65978914da0d).  This creates a high likelihood that some clients will decide that `public_name` is not an IP address and pass it into a subsystem that interprets it as an IP address, resulting in a recovery request with no SNI and strange failure modes.  For the sake of consistency in debugging, the authors felt it was preferable to write a simple rule that could be enforced universally.\r\n\r\n> It is a bit sad that ECH currently does not work with a URI that points to an IP address. Especially for the split-mode. But I understand that would be a little more than just ECH/encrypted-SNI.\r\n\r\nTo be clear, that is largely unrelated to the `public_name` question.  If you have a mechanism to associate an ECHConfig with an IP-authenticated TLS connection request, ECH will work fine, although it doesn't seem very useful.  What doesn't work is using an IP certificate in the fallback/recovery flow, since `public_name` cannot be an IP address.\r\n\r\n> ```\r\n>     Additionally, clients MAY ignore the ECHConfig if the length of\r\n>     any label in the DNS name is longer than 63 octets, as this is\r\n>     the maximum length of a DNS label.\r\n> ```\r\n> \r\n> Why is this a MAY? Why not a MUST or SHOULD?\r\n\r\n\"Failing open\" in this way trades reliability risk for privacy risk, in the event of affected misconfigurations.  Given the low risk of confusion in these cases, the authors decided to leave this choice to the client.",
+          "createdAt": "2024-10-14T13:56:46Z",
+          "updatedAt": "2024-10-14T13:57:16Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@letoams I think this addresses your questions. Any objection to closing these issues?",
+          "createdAt": "2024-10-14T21:03:31Z",
+          "updatedAt": "2024-10-14T21:03:31Z"
+        },
+        {
+          "author": "paulwouters",
+          "authorAssociation": "NONE",
+          "body": "I am still uncomfortable with this document basically having its own version of what is a valid DNS name. I would still prefer that it omits these definitions and instead just mention the issue implementers should avoid. That could be something as simple as \"public_names that are textual representation of an IPv4 address MUST be treated as invalid\", without talking about what a valid LDH is for DNS.",
+          "createdAt": "2024-10-14T23:12:00Z",
+          "updatedAt": "2024-10-14T23:12:00Z"
+        }
+      ]
     },
     {
       "number": 629,
@@ -57094,7 +57123,7 @@
       "labels": [],
       "body": "",
       "createdAt": "2024-10-12T00:40:34Z",
-      "updatedAt": "2024-10-12T00:40:35Z",
+      "updatedAt": "2024-10-14T23:18:32Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "dedc72115c9092e63204239dff182c6218bd767a",
@@ -57106,7 +57135,48 @@
       "mergedBy": null,
       "mergeCommit": null,
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6NIbtc",
+          "commit": {
+            "abbreviatedOid": "b9b723c"
+          },
+          "author": "paulwouters",
+          "authorAssociation": "NONE",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-10-14T23:15:20Z",
+          "updatedAt": "2024-10-14T23:16:31Z",
+          "comments": [
+            {
+              "originalPosition": 67,
+              "body": "typo introduced",
+              "createdAt": "2024-10-14T23:15:20Z",
+              "updatedAt": "2024-10-14T23:16:31Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6NIci9",
+          "commit": {
+            "abbreviatedOid": "b9b723c"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-10-14T23:18:31Z",
+          "updatedAt": "2024-10-14T23:18:32Z",
+          "comments": [
+            {
+              "originalPosition": 67,
+              "body": "```suggestion\r\n{{encoding-inner}}. However, note that the payload length reveals information\r\n```",
+              "createdAt": "2024-10-14T23:18:32Z",
+              "updatedAt": "2024-10-14T23:18:32Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
