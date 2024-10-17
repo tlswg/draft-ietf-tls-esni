@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-10-15T01:24:12.965449+00:00",
+  "timestamp": "2024-10-17T01:23:29.690449+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12923,7 +12923,7 @@
       "labels": [],
       "body": "Tagging @bemasc on these.\r\n\r\nSection 4\r\n\r\n        Clients MUST ignore any ECHConfig structure whose public_name\r\n        is not parsable as a dot-separated sequence of LDH labels, as\r\n        defined in [RFC5890], Section 2.3.1 or which begins or end with\r\n        an ASCII dot.\r\n\r\nWouldn't this prevent the root zone from ever running ECH? It might not matter,\r\nbut why not allow it :P\r\n\r\n        Clients additionally SHOULD ignore the structure if the final LDH\r\n        label either consists of all ASCII digits (i.e. '0' through '9')\r\n        or is \"0x\" or \"0X\" followed by some, possibly empty, sequence\r\n        of ASCII hexadecimal digits (i.e. '0' through '9', 'a' through\r\n        'f', and 'A' through 'F').\r\n\r\nThis would not allow ECH to work for \"00.com\", \"0x01.com\" or \"0x07.com\", which are\r\nall currently operational domains.\r\n\r\nI don't think this document should try to define what a legal DNS name is. Perhaps\r\nrefer to \"Host name\" in RFC 8499 (or BCP219) and only state \"leave out any potential\r\ntrailing dot\" ? Maybe just separately say \"SNI's cannot be in the textual form of an\r\nIP address, as connections to IP addresses omit the SNI entirely\" ?\r\n\r\nIt is a bit sad that ECH currently does not work with a URI that points to an IP\r\naddress. Especially for the split-mode. But I understand that would be a little\r\nmore than just ECH/encrypted-SNI.\r\n\r\n\r\n        Additionally, clients MAY ignore the ECHConfig if the length of\r\n        any label in the DNS name is longer than 63 octets, as this is\r\n        the maximum length of a DNS label.\r\n\r\nWhy is this a MAY? Why not a MUST or SHOULD?\r\n\r\n",
       "createdAt": "2024-10-12T00:14:00Z",
-      "updatedAt": "2024-10-14T23:12:01Z",
+      "updatedAt": "2024-10-15T15:10:56Z",
       "closedAt": null,
       "comments": [
         {
@@ -12946,6 +12946,13 @@
           "body": "I am still uncomfortable with this document basically having its own version of what is a valid DNS name. I would still prefer that it omits these definitions and instead just mention the issue implementers should avoid. That could be something as simple as \"public_names that are textual representation of an IPv4 address MUST be treated as invalid\", without talking about what a valid LDH is for DNS.",
           "createdAt": "2024-10-14T23:12:00Z",
           "updatedAt": "2024-10-14T23:12:00Z"
+        },
+        {
+          "author": "bemasc",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "cc @davidben ",
+          "createdAt": "2024-10-15T15:10:55Z",
+          "updatedAt": "2024-10-15T15:10:55Z"
         }
       ]
     },
