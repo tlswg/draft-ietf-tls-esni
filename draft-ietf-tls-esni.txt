@@ -5,12 +5,12 @@
 tls                                                          E. Rescorla
 Internet-Draft                                               Independent
 Intended status: Standards Track                                  K. Oku
-Expires: 19 March 2025                                            Fastly
+Expires: 30 April 2025                                            Fastly
                                                              N. Sullivan
                                              Cryptography Consulting LLC
                                                               C. A. Wood
                                                               Cloudflare
-                                                       15 September 2024
+                                                         27 October 2024
 
 
                        TLS Encrypted Client Hello
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 19 March 2025.
+   This Internet-Draft will expire on 30 April 2025.
 
 Copyright Notice
 
@@ -108,7 +108,7 @@ Table of Contents
      10.10. Comparison Against Criteria
        10.10.1.  Mitigate Cut-and-Paste Attacks
        10.10.2.  Avoid Widely Shared Secrets
-       10.10.3.  Prevent SNI-Based Denial-of-Service Attacks
+       10.10.3.  SNI-Based Denial-of-Service Attacks
        10.10.4.  Do Not Stick Out
        10.10.5.  Maintain Forward Secrecy
        10.10.6.  Enable Multi-party Security Contexts
@@ -150,8 +150,8 @@ Table of Contents
    perhaps the most sensitive information left unencrypted in TLS 1.3.
 
    This document specifies a new TLS extension, called Encrypted Client
-   Hello (ECH), that allows clients to encrypt their ClientHello to such
-   a deployment.  This protects the SNI and other potentially sensitive
+   Hello (ECH), that allows clients to encrypt their ClientHello to the
+   TLS server.  This protects the SNI and other potentially sensitive
    fields, such as the ALPN list [RFC7301].  Co-located servers with
    consistent externally visible TLS configurations and behavior,
    including supported versions and cipher suites and how they respond
@@ -168,13 +168,13 @@ Table of Contents
    ECH is not in itself sufficient to protect the identity of the
    server.  The target domain may also be visible through other
    channels, such as plaintext client DNS queries or visible server IP
-   addresses.  However, DoH [RFC8484] and DPRIVE [RFC7858] [RFC8094]
-   provide mechanisms for clients to conceal DNS lookups from network
-   inspection, and many TLS servers host multiple domains on the same IP
-   address.  Private origins may also be deployed behind a common
-   provider, such as a reverse proxy.  In such environments, the SNI
-   remains the primary explicit signal used to determine the server's
-   identity.
+   addresses.  However, DNS over HTTPS [RFC8484] and DNS over TLS/DTLS
+   [RFC7858] [RFC8094] provide mechanisms for clients to conceal DNS
+   lookups from network inspection, and many TLS servers host multiple
+   domains on the same IP address.  Private origins may also be deployed
+   behind a common provider, such as a reverse proxy.  In such
+   environments, the SNI remains the primary explicit signal used to
+   determine the server's identity.
 
    ECH is supported in TLS 1.3 [RFC8446], DTLS 1.3 [RFC9147], and newer
    versions of the TLS and DTLS protocols.
@@ -246,13 +246,13 @@ Table of Contents
 
    A client-facing server enables ECH by publishing an ECH
    configuration, which is an encryption public key and associated
-   metadata.  The server must publish this for all the domains it serves
-   via Shared or Split Mode.  This document defines the ECH
-   configuration's format, but delegates DNS publication details to
-   [RFC9460].  See [ECH-IN-DNS] for specifics about how ECH
-   configurations are advertised in HTTPS records.  Other delivery
-   mechanisms are also possible.  For example, the client may have the
-   ECH configuration preconfigured.
+   metadata.  Domains which wish to use ECH must publish this
+   configuration, using the key associated with the client-facing
+   server.  This document defines the ECH configuration's format, but
+   delegates DNS publication details to [RFC9460].  See [ECH-IN-DNS] for
+   specifics about how ECH configurations are advertised in HTTPS
+   records.  Other delivery mechanisms are also possible.  For example,
+   the client may have the ECH configuration preconfigured.
 
    When a client wants to establish a TLS session with some backend
    server, it constructs a private ClientHello, referred to as the
@@ -1541,11 +1541,11 @@ Table of Contents
    significantly worse.
 
    Clearly, DNSSEC (if the client validates and hard fails) is a defense
-   against this form of attack, but DoH/DPRIVE are also defenses against
-   DNS attacks by attackers on the local network, which is a common case
-   where ClientHello and SNI encryption are desired.  Moreover, as noted
-   in the introduction, SNI encryption is less useful without encryption
-   of DNS queries in transit via DoH or DPRIVE mechanisms.
+   against this form of attack, but encrypted DNS transport is also a
+   defenses against DNS attacks by attackers on the local network, which
+   is a common case where ClientHello and SNI encryption are desired.
+   Moreover, as noted in the introduction, SNI encryption is less useful
+   without encryption of DNS queries in transit mechanisms.
 
 10.3.  Client Tracking
 
@@ -1598,9 +1598,9 @@ Table of Contents
    It MAY send such values in the ClientHelloInner.
 
    A client may also use different preferences in different contexts.
-   For example, it may send a different ALPN lists to different servers
-   or in different application contexts.  A client that treats this
-   context as sensitive SHOULD NOT send context-specific values in
+   For example, it may send different ALPN lists to different servers or
+   in different application contexts.  A client that treats this context
+   as sensitive SHOULD NOT send context-specific values in
    ClientHelloOuter.
 
    Values which are independent of the true server name, or other
@@ -1729,7 +1729,7 @@ Table of Contents
    by publishing different DNS records containing ECHConfig values with
    different keys using a short TTL.
 
-10.10.3.  Prevent SNI-Based Denial-of-Service Attacks
+10.10.3.  SNI-Based Denial-of-Service Attacks
 
    This design requires servers to decrypt ClientHello messages with
    ECHClientHello extensions carrying valid digests.  Thus, it is
@@ -1754,7 +1754,7 @@ Table of Contents
    properties of the handshake.  The underlying theory is that if GREASE
    ECH is deployable without triggering middlebox misbehavior, and real
    ECH looks enough like GREASE ECH, then ECH should be deployable as
-   well.  Thus, our strategy for mitigating network ossification is to
+   well.  Thus, the strategy for mitigating network ossification is to
    deploy GREASE ECH widely enough to disincentivize differential
    treatment of the real ECH protocol by the network.
 
@@ -1804,16 +1804,19 @@ Table of Contents
 
 10.10.5.  Maintain Forward Secrecy
 
-   This design is not forward secret because the server's ECH key is
-   static.  However, the window of exposure is bound by the key
-   lifetime.  It is RECOMMENDED that servers rotate keys frequently.
+   This design does not provide forward secrecy for the inner
+   ClientHello because the server's ECH key is static.  However, the
+   window of exposure is bound by the key lifetime.  It is RECOMMENDED
+   that servers rotate keys frequently.
 
 10.10.6.  Enable Multi-party Security Contexts
 
    This design permits servers operating in Split Mode to forward
    connections directly to backend origin servers.  The client
    authenticates the identity of the backend origin server, thereby
-   avoiding unnecessary MiTM attacks.
+   allowing the backend origin server to hide behind the client-facing
+   server without the client-facing server decrypting and reencrypting
+   the connection.
 
    Conversely, assuming ECH records retrieved from DNS are
    authenticated, e.g., via DNSSEC or fetched from a trusted Recursive
@@ -2109,7 +2112,7 @@ Table of Contents
    Extension Name:  RESERVED
    Recommended:  Y
    Reference:  This document
-   Notes:  None
+   Notes:  Grease entries.
 
 12.  References
 
@@ -2118,9 +2121,9 @@ Table of Contents
    [ECH-IN-DNS]
               Schwartz, B. M., Bishop, M., and E. Nygren, "Bootstrapping
               TLS Encrypted ClientHello with DNS Service Bindings", Work
-              in Progress, Internet-Draft, draft-ietf-tls-svcb-ech-05, 3
-              September 2024, <https://datatracker.ietf.org/doc/html/
-              draft-ietf-tls-svcb-ech-05>.
+              in Progress, Internet-Draft, draft-ietf-tls-svcb-ech-06,
+              21 October 2024, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-tls-svcb-ech-06>.
 
    [HPKE]     Barnes, R., Bhargavan, K., Lipp, B., and C. Wood, "Hybrid
               Public Key Encryption", RFC 9180, DOI 10.17487/RFC9180,
