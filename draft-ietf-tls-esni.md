@@ -1460,7 +1460,7 @@ send context-specific values in ClientHelloOuter.
 Values which are independent of the true server name, or other information the
 client wishes to protect, MAY be included in ClientHelloOuter. If they match
 the corresponding ClientHelloInner, they MAY be compressed as described in
-{{encoding-inner}}. However, note that the paylod length reveals information
+{{encoding-inner}}. However, note that the payload length reveals information
 about which extensions are compressed, so inner extensions which only sometimes
 match the corresponding outer extension SHOULD NOT be compressed.
 
