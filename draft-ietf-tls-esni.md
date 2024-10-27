@@ -81,7 +81,7 @@ domain for a given connection, is perhaps the most sensitive information
 left unencrypted in TLS 1.3.
 
 This document specifies a new TLS extension, called Encrypted Client Hello
-(ECH), that allows clients to encrypt their ClientHello to such a deployment.
+(ECH), that allows clients to encrypt their ClientHello to the TLS server.
 This protects the SNI and other potentially sensitive fields, such as the ALPN
 list {{?RFC7301}}. Co-located servers with consistent externally visible TLS
 configurations and behavior, including supported versions and cipher suites and
@@ -95,9 +95,10 @@ anonymity set terminates the connection. Deployment implications of this
 feature are discussed in {{deployment}}.
 
 ECH is not in itself sufficient to protect the identity of the server.
-The target domain may also be visible through other channels, such as plaintext
-client DNS queries or visible server IP addresses. However, DoH {{?RFC8484}}
-and DPRIVE {{?RFC7858}} {{?RFC8094}} provide mechanisms for clients to conceal
+The target domain may also be visible through other channels, such as
+plaintext client DNS queries or visible server IP addresses. However,
+DNS over HTTPS {{?RFC8484}} and DNS over TLS/DTLS {{?RFC7858}}
+{{?RFC8094}} provide mechanisms for clients to conceal
 DNS lookups from network inspection, and many TLS servers host multiple domains
 on the same IP address. Private origins may also be deployed behind a common
 provider, such as a reverse proxy. In such environments, the SNI remains the
@@ -171,8 +172,9 @@ and how it relates to the client, client-facing server, and backend server.
 ## Encrypted ClientHello (ECH)
 
 A client-facing server enables ECH by publishing an ECH configuration, which
-is an encryption public key and associated metadata. The server must publish
-this for all the domains it serves via Shared or Split Mode. This document
+is an encryption public key and associated metadata. Domains which wish to
+use ECH must publish this configuration, using the key associated
+with the client-facing server. This document
 defines the ECH configuration's format, but delegates DNS publication details
 to {{!RFC9460}}. See
 {{!ECH-IN-DNS=I-D.ietf-tls-svcb-ech}} for specifics about how ECH
@@ -1398,12 +1400,12 @@ unique IP address which is 1:1 with the DNS name that was looked up (modulo DNS
 wildcards). Thus, allowing the ECH records in the clear does not make the
 situation significantly worse.
 
-Clearly, DNSSEC (if the client validates and hard fails) is a defense against
-this form of attack, but DoH/DPRIVE are also defenses against DNS attacks by
-attackers on the local network, which is a common case where ClientHello and SNI
-encryption are desired. Moreover, as noted in the introduction, SNI encryption
-is less useful without encryption of DNS queries in transit via DoH or DPRIVE
-mechanisms.
+Clearly, DNSSEC (if the client validates and hard fails) is a defense
+against this form of attack, but encrypted DNS transport is also a
+defenses against DNS attacks by attackers on the local network, which
+is a common case where ClientHello and SNI encryption are
+desired. Moreover, as noted in the introduction, SNI encryption is
+less useful without encryption of DNS queries in transit mechanisms.
 
 ## Client Tracking
 
@@ -1451,7 +1453,7 @@ The client SHOULD NOT send values associated with the true server name in the
 ClientHelloOuter. It MAY send such values in the ClientHelloInner.
 
 A client may also use different preferences in different contexts. For example,
-it may send a different ALPN lists to different servers or in different
+it may send different ALPN lists to different servers or in different
 application contexts. A client that treats this context as sensitive SHOULD NOT
 send context-specific values in ClientHelloOuter.
 
@@ -1568,7 +1570,7 @@ bound by the number of hosts that share an IP address. Server operators may
 further limit sharing by publishing different DNS records containing ECHConfig
 values with different keys using a short TTL.
 
-### Prevent SNI-Based Denial-of-Service Attacks
+### SNI-Based Denial-of-Service Attacks
 
 This design requires servers to decrypt ClientHello messages with ECHClientHello
 extensions carrying valid digests. Thus, it is possible for an attacker to force
@@ -1590,7 +1592,7 @@ evaluate the deployability of ECH. It is designed to mimic the real ECH protocol
 ({{real-ech}}) without changing the security properties of the handshake. The
 underlying theory is that if GREASE ECH is deployable without triggering
 middlebox misbehavior, and real ECH looks enough like GREASE ECH, then ECH
-should be deployable as well. Thus, our strategy for mitigating network
+should be deployable as well. Thus, the strategy for mitigating network
 ossification is to deploy GREASE ECH widely enough to disincentivize
 differential treatment of the real ECH protocol by the network.
 
@@ -1630,15 +1632,18 @@ out-of-scope for this specification.
 
 ### Maintain Forward Secrecy
 
-This design is not forward secret because the server's ECH key is static.
-However, the window of exposure is bound by the key lifetime. It is RECOMMENDED
-that servers rotate keys frequently.
+This design does not provide forward secrecy for the inner ClientHello
+because the server's ECH key is static.  However, the window of
+exposure is bound by the key lifetime. It is RECOMMENDED that servers
+rotate keys frequently.
 
 ### Enable Multi-party Security Contexts
 
 This design permits servers operating in Split Mode to forward connections
 directly to backend origin servers. The client authenticates the identity of
-the backend origin server, thereby avoiding unnecessary MiTM attacks.
+the backend origin server, thereby allowing the backend origin server
+to hide behind the client-facing server without the client-facing
+server decrypting and reencrypting the connection.
 
 Conversely, assuming ECH records retrieved from DNS are authenticated, e.g.,
 via DNSSEC or fetched from a trusted Recursive Resolver, spoofing a
@@ -1940,7 +1945,7 @@ Reference:
 : This document
 
 Notes:
-: None
+: Grease entries.
 {: spacing="compact"}
 
 --- back
