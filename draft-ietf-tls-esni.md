@@ -1008,7 +1008,7 @@ MUST abort with an "illegal_parameter" alert.
 In shared mode, a server plays both roles, first decrypting the
 `ClientHelloOuter` and then using the contents of the
 `ClientHelloInner`.  A shared mode server which receives a
-`ClientHello` with `ECHClientHello.type` of `outer` MUST abort with an
+`ClientHello` with `ECHClientHello.type` of `inner` MUST abort with an
 "illegal_parameter" alert, because such a `ClientHello` should never
 be received directly from the network.
 
