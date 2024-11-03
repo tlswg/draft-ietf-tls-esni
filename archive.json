@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-10-31T01:25:11.429487+00:00",
+  "timestamp": "2024-11-03T01:36:19.698233+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -57200,6 +57200,32 @@
           ]
         }
       ]
+    },
+    {
+      "number": 633,
+      "id": "PR_kwDOB-yxNc6Af-Be",
+      "title": "Fix typo in \"Server Behavior\" section",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/633",
+      "state": "OPEN",
+      "author": "rolandshoemaker",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "A shared mode server should never recieve a \"inner\" type ECHClientHello.type ClientHello, rather than an \"outer\" type, not the inverse.\r\n\r\nSee https://mailarchive.ietf.org/arch/msg/tls/d00rdlmaVbnfDsvVnF_6pWobQQQ/.",
+      "createdAt": "2024-10-31T09:23:40Z",
+      "updatedAt": "2024-10-31T09:23:41Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "cab06563987c4f688b0ef2f7d9695f3ac3ed3c38",
+      "headRepository": "rolandshoemaker/draft-ietf-tls-esni",
+      "headRefName": "typo-fix",
+      "headRefOid": "deef183b6eb08c2dcec03a5041866fb5d205fe9f",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
     }
   ]
 }
