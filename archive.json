@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-11-07T01:22:22.005940+00:00",
+  "timestamp": "2024-11-10T01:27:00.645146+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12923,7 +12923,7 @@
       "labels": [],
       "body": "Tagging @bemasc on these.\r\n\r\nSection 4\r\n\r\n        Clients MUST ignore any ECHConfig structure whose public_name\r\n        is not parsable as a dot-separated sequence of LDH labels, as\r\n        defined in [RFC5890], Section 2.3.1 or which begins or end with\r\n        an ASCII dot.\r\n\r\nWouldn't this prevent the root zone from ever running ECH? It might not matter,\r\nbut why not allow it :P\r\n\r\n        Clients additionally SHOULD ignore the structure if the final LDH\r\n        label either consists of all ASCII digits (i.e. '0' through '9')\r\n        or is \"0x\" or \"0X\" followed by some, possibly empty, sequence\r\n        of ASCII hexadecimal digits (i.e. '0' through '9', 'a' through\r\n        'f', and 'A' through 'F').\r\n\r\nThis would not allow ECH to work for \"00.com\", \"0x01.com\" or \"0x07.com\", which are\r\nall currently operational domains.\r\n\r\nI don't think this document should try to define what a legal DNS name is. Perhaps\r\nrefer to \"Host name\" in RFC 8499 (or BCP219) and only state \"leave out any potential\r\ntrailing dot\" ? Maybe just separately say \"SNI's cannot be in the textual form of an\r\nIP address, as connections to IP addresses omit the SNI entirely\" ?\r\n\r\nIt is a bit sad that ECH currently does not work with a URI that points to an IP\r\naddress. Especially for the split-mode. But I understand that would be a little\r\nmore than just ECH/encrypted-SNI.\r\n\r\n\r\n        Additionally, clients MAY ignore the ECHConfig if the length of\r\n        any label in the DNS name is longer than 63 octets, as this is\r\n        the maximum length of a DNS label.\r\n\r\nWhy is this a MAY? Why not a MUST or SHOULD?\r\n\r\n",
       "createdAt": "2024-10-12T00:14:00Z",
-      "updatedAt": "2024-10-15T15:10:56Z",
+      "updatedAt": "2024-11-08T13:30:07Z",
       "closedAt": null,
       "comments": [
         {
@@ -12953,6 +12953,13 @@
           "body": "cc @davidben ",
           "createdAt": "2024-10-15T15:10:55Z",
           "updatedAt": "2024-10-15T15:10:55Z"
+        },
+        {
+          "author": "seanturner",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "AT IETF 121, @paulwouters agreed to provide text.\r\n\r\nChange this to MUST:\r\n\r\n     Additionally, clients MAY ignore the ECHConfig if the length of\r\n    any label in the DNS name is longer than 63 octets, as this is\r\n    the maximum length of a DNS label.",
+          "createdAt": "2024-11-08T13:30:05Z",
+          "updatedAt": "2024-11-08T13:30:05Z"
         }
       ]
     },
@@ -12968,9 +12975,24 @@
       "labels": [],
       "body": "From AD review.\r\n\r\nSee Section 10.10.5, which just says \"frequently\".\r\n\r\n\r\n",
       "createdAt": "2024-10-12T00:25:03Z",
-      "updatedAt": "2024-10-12T00:25:03Z",
+      "updatedAt": "2024-11-08T13:45:52Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "seanturner",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "At IETF 121, we decided to change \"frequently\" to \"regularly\".",
+          "createdAt": "2024-11-08T13:41:19Z",
+          "updatedAt": "2024-11-08T13:41:19Z"
+        },
+        {
+          "author": "enygren",
+          "authorAssociation": "NONE",
+          "body": "Also highlighted in the chat was that we may wish to add security considerations on this:  too frequently reduces anonymity set, not frequently enough increases the amount of data that would be compromised in case of a private key compromise.",
+          "createdAt": "2024-11-08T13:45:50Z",
+          "updatedAt": "2024-11-08T13:45:50Z"
+        }
+      ]
     },
     {
       "number": 630,
@@ -12984,7 +13006,7 @@
       "labels": [],
       "body": "Suggested in AD review.",
       "createdAt": "2024-10-12T00:29:17Z",
-      "updatedAt": "2024-10-28T14:22:36Z",
+      "updatedAt": "2024-11-08T13:32:53Z",
       "closedAt": null,
       "comments": [
         {
@@ -13007,6 +13029,13 @@
           "body": "This text is from @davidben here: https://github.com/tlswg/draft-ietf-tls-esni/pull/569#discussion_r1363949063\r\n\r\nThe goal of this recommendation is to catch clients who are not respecting the \"mandatory\" bit and force them to fail hard.  To do this, the server provides an ECHConfig that is syntactically well-formed but unusable (due to a reserved mandatory extension).\r\n\r\nUsing a syntactically invalid domain name would defeat the purpose, because clients would discard the ECHConfig without inspecting the extensions.  Instead, the server should choose a public_name that is syntactically valid but for which it is not authoritative.\r\n\r\n@davidben notes that a name under `.invalid` would work.  This would be a fine choice so long as clients don't carry special logic to detect and reject these names.",
           "createdAt": "2024-10-28T14:22:34Z",
           "updatedAt": "2024-10-28T14:22:34Z"
+        },
+        {
+          "author": "seanturner",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "At IETF 121, decided to use .invalid.",
+          "createdAt": "2024-11-08T13:32:52Z",
+          "updatedAt": "2024-11-08T13:32:52Z"
         }
       ]
     },
