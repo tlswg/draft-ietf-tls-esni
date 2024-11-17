@@ -1402,7 +1402,7 @@ situation significantly worse.
 
 Clearly, DNSSEC (if the client validates and hard fails) is a defense
 against this form of attack, but encrypted DNS transport is also a
-defenses against DNS attacks by attackers on the local network, which
+defense against DNS attacks by attackers on the local network, which
 is a common case where ClientHello and SNI encryption are
 desired. Moreover, as noted in the introduction, SNI encryption is
 less useful without encryption of DNS queries in transit mechanisms.
