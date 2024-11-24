@@ -1415,7 +1415,7 @@ less useful without encryption of DNS queries in transit mechanisms.
 A malicious client-facing server could distribute unique, per-client ECHConfig
 structures as a way of tracking clients across subsequent connections. On-path
 adversaries which know about these unique keys could also track clients in this
-way by observing TLS connection attempts. 
+way by observing TLS connection attempts.
 
 The cost of this type of attack scales linearly with the desired number of
 target clients. Moreover, DNS caching behavior makes targeting individual users
