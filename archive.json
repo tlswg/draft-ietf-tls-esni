@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-11-21T01:26:50.259721+00:00",
+  "timestamp": "2024-11-24T01:40:05.674285+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12923,7 +12923,7 @@
       "labels": [],
       "body": "Tagging @bemasc on these.\r\n\r\nSection 4\r\n\r\n        Clients MUST ignore any ECHConfig structure whose public_name\r\n        is not parsable as a dot-separated sequence of LDH labels, as\r\n        defined in [RFC5890], Section 2.3.1 or which begins or end with\r\n        an ASCII dot.\r\n\r\nWouldn't this prevent the root zone from ever running ECH? It might not matter,\r\nbut why not allow it :P\r\n\r\n        Clients additionally SHOULD ignore the structure if the final LDH\r\n        label either consists of all ASCII digits (i.e. '0' through '9')\r\n        or is \"0x\" or \"0X\" followed by some, possibly empty, sequence\r\n        of ASCII hexadecimal digits (i.e. '0' through '9', 'a' through\r\n        'f', and 'A' through 'F').\r\n\r\nThis would not allow ECH to work for \"00.com\", \"0x01.com\" or \"0x07.com\", which are\r\nall currently operational domains.\r\n\r\nI don't think this document should try to define what a legal DNS name is. Perhaps\r\nrefer to \"Host name\" in RFC 8499 (or BCP219) and only state \"leave out any potential\r\ntrailing dot\" ? Maybe just separately say \"SNI's cannot be in the textual form of an\r\nIP address, as connections to IP addresses omit the SNI entirely\" ?\r\n\r\nIt is a bit sad that ECH currently does not work with a URI that points to an IP\r\naddress. Especially for the split-mode. But I understand that would be a little\r\nmore than just ECH/encrypted-SNI.\r\n\r\n\r\n        Additionally, clients MAY ignore the ECHConfig if the length of\r\n        any label in the DNS name is longer than 63 octets, as this is\r\n        the maximum length of a DNS label.\r\n\r\nWhy is this a MAY? Why not a MUST or SHOULD?\r\n\r\n",
       "createdAt": "2024-10-12T00:14:00Z",
-      "updatedAt": "2024-11-08T13:30:07Z",
+      "updatedAt": "2024-11-24T01:21:24Z",
       "closedAt": null,
       "comments": [
         {
@@ -12960,6 +12960,13 @@
           "body": "AT IETF 121, @paulwouters agreed to provide text.\r\n\r\nChange this to MUST:\r\n\r\n     Additionally, clients MAY ignore the ECHConfig if the length of\r\n    any label in the DNS name is longer than 63 octets, as this is\r\n    the maximum length of a DNS label.",
           "createdAt": "2024-11-08T13:30:05Z",
           "updatedAt": "2024-11-08T13:30:05Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@paulwouters  I think we are waiting on you for some text here.",
+          "createdAt": "2024-11-24T01:21:23Z",
+          "updatedAt": "2024-11-24T01:21:23Z"
         }
       ]
     },
@@ -12972,10 +12979,12 @@
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "pr available"
+      ],
       "body": "From AD review.\r\n\r\nSee Section 10.10.5, which just says \"frequently\".\r\n\r\n\r\n",
       "createdAt": "2024-10-12T00:25:03Z",
-      "updatedAt": "2024-11-08T13:45:52Z",
+      "updatedAt": "2024-11-24T01:06:32Z",
       "closedAt": null,
       "comments": [
         {
@@ -13003,10 +13012,12 @@
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "pr available"
+      ],
       "body": "Suggested in AD review.",
       "createdAt": "2024-10-12T00:29:17Z",
-      "updatedAt": "2024-11-08T13:32:53Z",
+      "updatedAt": "2024-11-24T01:13:40Z",
       "closedAt": null,
       "comments": [
         {
@@ -13048,10 +13059,12 @@
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "pr available"
+      ],
       "body": "Reminder from AD review.",
       "createdAt": "2024-10-12T00:30:38Z",
-      "updatedAt": "2024-10-12T00:30:38Z",
+      "updatedAt": "2024-11-24T01:20:30Z",
       "closedAt": null,
       "comments": []
     }
@@ -57235,24 +57248,26 @@
       "id": "PR_kwDOB-yxNc6Af-Be",
       "title": "Fix typo in \"Server Behavior\" section",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/633",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "rolandshoemaker",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "A shared mode server should never recieve a \"inner\" type ECHClientHello.type ClientHello, rather than an \"outer\" type, not the inverse.\r\n\r\nSee https://mailarchive.ietf.org/arch/msg/tls/d00rdlmaVbnfDsvVnF_6pWobQQQ/.",
       "createdAt": "2024-10-31T09:23:40Z",
-      "updatedAt": "2024-10-31T09:23:41Z",
+      "updatedAt": "2024-11-24T00:55:57Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "cab06563987c4f688b0ef2f7d9695f3ac3ed3c38",
       "headRepository": "rolandshoemaker/draft-ietf-tls-esni",
       "headRefName": "typo-fix",
       "headRefOid": "deef183b6eb08c2dcec03a5041866fb5d205fe9f",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-11-24T00:55:57Z",
+      "mergedAt": "2024-11-24T00:55:57Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "dc3a007ca2d41a743a0f7807782006fbd127456a"
+      },
       "comments": [],
       "reviews": []
     },
@@ -57261,25 +57276,87 @@
       "id": "PR_kwDOB-yxNc6CLMrl",
       "title": "Fix typo",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/634",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "martinthomson",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2024-11-17T23:41:58Z",
-      "updatedAt": "2024-11-17T23:41:58Z",
+      "updatedAt": "2024-11-24T00:55:39Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "cab06563987c4f688b0ef2f7d9695f3ac3ed3c38",
       "headRepository": "martinthomson/draft-ietf-tls-esni",
       "headRefName": "defense-s",
       "headRefOid": "9fe200f87c40dc5b857a0acff7a1eb38ab2ade55",
+      "closedAt": "2024-11-24T00:55:39Z",
+      "mergedAt": "2024-11-24T00:55:39Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "b7fb015878adab0614220e6f49bedf5071b1932b"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 635,
+      "id": "PR_kwDOB-yxNc6C66yg",
+      "title": "Update the key rotation text. Fixes #629",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/635",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2024-11-24T01:06:11Z",
+      "updatedAt": "2024-11-24T01:06:12Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "dc3a007ca2d41a743a0f7807782006fbd127456a",
+      "headRepository": "ekr/draft-ietf-tls-esni",
+      "headRefName": "issue629_key_rotation",
+      "headRefOid": "0eff03e784cb6cc7376c04675e493c08a71f77e0",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
       "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 636,
+      "id": "PR_kwDOB-yxNc6C67MH",
+      "title": "Invalid names end in .invalid. Fixes #630",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/636",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "@bemasc ",
+      "createdAt": "2024-11-24T01:12:47Z",
+      "updatedAt": "2024-11-24T01:20:19Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "dc3a007ca2d41a743a0f7807782006fbd127456a",
+      "headRepository": "ekr/draft-ietf-tls-esni",
+      "headRefName": "issue630_extraneous_configurations",
+      "headRefOid": "770a91f4f9addd2e7f20f315d701f26e709dfa77",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@letoams",
+          "createdAt": "2024-11-24T01:13:25Z",
+          "updatedAt": "2024-11-24T01:13:25Z"
+        }
+      ],
       "reviews": []
     }
   ]
