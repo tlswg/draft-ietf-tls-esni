@@ -1371,13 +1371,15 @@ has size k = 1. Client-facing servers SHOULD deploy ECH in such a way so as to
 maximize the size of the anonymity set where possible. This means client-facing
 servers should use the same ECHConfig for as many hosts as possible. An
 attacker can distinguish two hosts that have different ECHConfig values based
-on the ECHClientHello.config_id value. This also means public information in a
-TLS handshake should be consistent across hosts. For example, if a
-client-facing server services many backend origin hosts, only one of which
-supports some cipher suite, it may be possible to identify that host based on
-the contents of unencrypted handshake message. Similarly, if a backend
-origin reuses KeyShare values, then that provides a unique identifier for
-that server.
+on the ECHClientHello.config_id value. 
+
+This also means public information in a TLS handshake should be
+consistent across hosts. For example, if a client-facing server
+services many backend origin hosts, only one of which supports some
+cipher suite, it may be possible to identify that host based on the
+contents of unencrypted handshake message. Similarly, if a backend
+origin reuses KeyShare values, then that provides a unique identifier
+for that server.
 
 Beyond these primary security and privacy goals, ECH also aims to hide, to some
 extent, the fact that it is being used at all. Specifically, the GREASE ECH
@@ -1385,6 +1387,7 @@ extension described in {{grease-ech}} does not change the security properties of
 the TLS handshake at all. Its goal is to provide "cover" for the real ECH
 protocol ({{real-ech}}), as a means of addressing the "do not stick out"
 requirements of {{?RFC8744}}. See {{dont-stick-out}} for details.
+
 
 ## Unauthenticated and Plaintext DNS {#plaintext-dns}
 
@@ -1419,6 +1422,13 @@ target clients. Moreover, DNS caching behavior makes targeting individual users
 for extended periods of time, e.g., using per-client ECHConfig structures
 delivered via HTTPS RRs with high TTLs, challenging. Clients can help mitigate
 this problem by flushing any DNS or ECHConfig state upon changing networks.
+
+ECHConfig rotation rate is also an issue for non-malicious servers,
+which may want to rotate keys frequently to limit exposure if the key
+is compromised. Rotating too frequently limits the client anonymity
+set. In practice, servers with high load are the best candidates
+to be client-facing servers and so anonymity sets will typically
+be large even with fairly fast rotation intervals.
 
 ## Ignored Configuration Identifiers and Trial Decryption {#ignored-configs}
 
@@ -1635,7 +1645,7 @@ out-of-scope for this specification.
 This design does not provide forward secrecy for the inner ClientHello
 because the server's ECH key is static.  However, the window of
 exposure is bound by the key lifetime. It is RECOMMENDED that servers
-rotate keys frequently.
+rotate keys regularly.
 
 ### Enable Multi-party Security Contexts
 
