@@ -2507,7 +2507,7 @@ MUST abort with an "illegal_parameter" alert.<a href="#section-7-3" class="pilcr
 <p id="section-7-4">In shared mode, a server plays both roles, first decrypting the
 <code>ClientHelloOuter</code> and then using the contents of the
 <code>ClientHelloInner</code>.  A shared mode server which receives a
-<code>ClientHello</code> with <code>ECHClientHello.type</code> of <code>inner</code> MUST abort with an
+<code>ClientHello</code> with <code>ECHClientHello.type</code> of <code>outer</code> MUST abort with an
 "illegal_parameter" alert, because such a <code>ClientHello</code> should never
 be received directly from the network.<a href="#section-7-4" class="pilcrow">¶</a></p>
 <p id="section-7-5">If <code>ECHClientHello.type</code> is not a valid <code>ECHClientHelloType</code>, then
