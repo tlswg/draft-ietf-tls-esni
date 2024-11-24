@@ -5,12 +5,12 @@
 tls                                                          E. Rescorla
 Internet-Draft                                               Independent
 Intended status: Standards Track                                  K. Oku
-Expires: 30 April 2025                                            Fastly
+Expires: 28 May 2025                                              Fastly
                                                              N. Sullivan
                                              Cryptography Consulting LLC
                                                               C. A. Wood
                                                               Cloudflare
-                                                         27 October 2024
+                                                        24 November 2024
 
 
                        TLS Encrypted Client Hello
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 April 2025.
+   This Internet-Draft will expire on 28 May 2025.
 
 Copyright Notice
 
@@ -1118,7 +1118,7 @@ Table of Contents
    In shared mode, a server plays both roles, first decrypting the
    ClientHelloOuter and then using the contents of the ClientHelloInner.
    A shared mode server which receives a ClientHello with
-   ECHClientHello.type of outer MUST abort with an "illegal_parameter"
+   ECHClientHello.type of inner MUST abort with an "illegal_parameter"
    alert, because such a ClientHello should never be received directly
    from the network.
 
@@ -1542,7 +1542,7 @@ Table of Contents
 
    Clearly, DNSSEC (if the client validates and hard fails) is a defense
    against this form of attack, but encrypted DNS transport is also a
-   defenses against DNS attacks by attackers on the local network, which
+   defense against DNS attacks by attackers on the local network, which
    is a common case where ClientHello and SNI encryption are desired.
    Moreover, as noted in the introduction, SNI encryption is less useful
    without encryption of DNS queries in transit mechanisms.
