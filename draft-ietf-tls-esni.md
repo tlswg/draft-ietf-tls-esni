@@ -1923,10 +1923,12 @@ bit clear. Correctly-implemented client will ignore those extensions.
 
 The reserved values with the high-order bit set are mandatory, as defined
 in {{config-extensions}}. Servers SHOULD randomly select from these
-values and include them in extraneous ECH configurations. These
-extraneous ECH configurations SHOULD have invalid keys, and public
-names which the server does not respond to. Correctly-implemented
-clients will ignore these configurations.
+values and include them in extraneous ECH configurations.
+Correctly-implemented clients will ignore these configurations
+because they do not recognize the mandatory extension.
+These extraneous ECH configurations SHOULD have invalid keys, and invalid
+public names, ending in ".invalid" (see {{?RFC2606}}).
+
 
 The initial contents for this registry consists of multiple reserved values,
 with the following attributes, which are repeated for each registration:
