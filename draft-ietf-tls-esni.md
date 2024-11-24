@@ -951,6 +951,8 @@ configuration.
 
 ## GREASE ECH {#grease-ech}
 
+### Client Greasing
+
 If the client attempts to connect to a server and does not have an ECHConfig
 structure available for the server, it SHOULD send a GREASE {{?RFC8701}}
 "encrypted_client_hello" extension in the first ClientHello as follows:
@@ -985,6 +987,24 @@ invalid. It otherwise ignores the extension. It MUST NOT save the
 Offering a GREASE extension is not considered offering an encrypted ClientHello
 for purposes of requirements in {{real-ech}}. In particular, the client
 MAY offer to resume sessions established without ECH.
+
+### Server Greasing
+
+{{config-extensions-iana}} describes a set of Reserved extensions
+which will never be registered. These can be used by servers to
+"grease" the contents of the ECH configuration, as inspired by
+{{?RFC8701}}. This helps ensure clients process ECH extensions
+correctly. When constructing ECH configurations, servers SHOULD
+randomly select from reserved values with the high-order bit
+clear. Correctly-implemented client will ignore those extensions.
+
+The reserved values with the high-order bit set are mandatory, as
+defined in {{config-extensions}}. Servers SHOULD randomly select from
+these values and include them in extraneous ECH configurations.
+Correctly-implemented clients will ignore these configurations because
+they do not recognize the mandatory extension.  These extraneous ECH
+configurations SHOULD have invalid keys, and invalid public names,
+ending in ".invalid" (see {{?RFC2606}}).
 
 # Server Behavior {#server-behavior}
 
@@ -1914,21 +1934,8 @@ registry:
       The expert may provide more in depth reviews, but their approval
       should not be taken as an endorsement of the extension.
 
-This document defines several Reserved values for ECH configuration extensions.
-These can be used by servers to "grease" the contents of the
-ECH configuration, as inspired by {{?RFC8701}}. This helps ensure clients
-process ECH extensions correctly. When constructing ECH configurations,
-servers SHOULD randomly select from reserved values with the high-order
-bit clear. Correctly-implemented client will ignore those extensions.
-
-The reserved values with the high-order bit set are mandatory, as defined
-in {{config-extensions}}. Servers SHOULD randomly select from these
-values and include them in extraneous ECH configurations.
-Correctly-implemented clients will ignore these configurations
-because they do not recognize the mandatory extension.
-These extraneous ECH configurations SHOULD have invalid keys, and invalid
-public names, ending in ".invalid" (see {{?RFC2606}}).
-
+This document defines several Reserved values for ECH configuration extensions
+to be used for "greasing" as described in {{server-greasing}}.
 
 The initial contents for this registry consists of multiple reserved values,
 with the following attributes, which are repeated for each registration:
