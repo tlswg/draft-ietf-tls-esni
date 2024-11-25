@@ -291,13 +291,14 @@ as described in {{rejected-ech}}.
 
 : Clients MUST ignore any `ECHConfig` structure whose public_name is not
 parsable as a dot-separated sequence of LDH labels, as defined in
-{{!RFC5890, Section 2.3.1}} or which begins or end with an ASCII dot. 
-Clients additionally SHOULD ignore the structure if it represents an IPv4 address {{!RFC791}}
-in textual or hexadecimal form (IPv6 addresses are invalid DNS names
-due to the presence of the ":" character, and thus are excluded by
-the previous requirement). Additionally, clients MUST ignore the
-`ECHConfig` if the length of any label in the DNS name is longer than 63
-octets, as this is the maximum length of a DNS label.
+{{!RFC5890, Section 2.3.1}} or which begins or end with an ASCII dot.
+Clients additionally SHOULD ignore the structure if it represents an
+IPv4 address {{!RFC791}} in textual or hexadecimal form (IPv6
+addresses are invalid DNS names due to the presence of the ":"
+character, and thus are excluded by the previous
+requirement). Additionally, clients MUST ignore the `ECHConfig` if the
+length of any label in the DNS name is longer than 63 octets, as this
+is the maximum length of a DNS label.
 
 : See {{auth-public-name}} for how the client interprets and validates the
 public_name.
@@ -1370,7 +1371,7 @@ has size k = 1. Client-facing servers SHOULD deploy ECH in such a way so as to
 maximize the size of the anonymity set where possible. This means client-facing
 servers should use the same ECHConfig for as many hosts as possible. An
 attacker can distinguish two hosts that have different ECHConfig values based
-on the ECHClientHello.config_id value. 
+on the ECHClientHello.config_id value.
 
 This also means public information in a TLS handshake should be
 consistent across hosts. For example, if a client-facing server
