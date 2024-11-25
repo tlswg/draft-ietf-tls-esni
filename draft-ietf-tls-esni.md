@@ -291,12 +291,11 @@ as described in {{rejected-ech}}.
 
 : Clients MUST ignore any `ECHConfig` structure whose public_name is not
 parsable as a dot-separated sequence of LDH labels, as defined in
-{{!RFC5890, Section 2.3.1}} or which begins or end with an ASCII dot. Clients
-additionally SHOULD ignore the structure if the final LDH label either consists
-of all ASCII digits (i.e. '0' through '9') or is "0x" or "0X" followed by some,
-possibly empty, sequence of ASCII hexadecimal digits (i.e. '0' through '9', 'a'
-through 'f', and 'A' through 'F'). This avoids public_name values that may be
-interpreted as IPv4 literals. Additionally, clients MAY ignore the
+{{!RFC5890, Section 2.3.1}} or which begins or end with an ASCII dot. 
+Clients additionally SHOULD ignore the structure if it represents an IPv4 address {{!RFC791}}
+in textual or hexadecimal form (IPv6 addresses are invalid DNS names
+due to the presence of the ":" character, and thus are excluded by
+the previous requirement). Additionally, clients MUST ignore the
 `ECHConfig` if the length of any label in the DNS name is longer than 63
 octets, as this is the maximum length of a DNS label.
 
