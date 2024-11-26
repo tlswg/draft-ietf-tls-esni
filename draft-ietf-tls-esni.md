@@ -908,7 +908,7 @@ instance, by reporting a failed connection with a dedicated error code.
 
 Prior to attempting a connection, a client SHOULD validate the `ECHConfig` to
 ensure that the public_name can be authenticated.  Clients SHOULD ignore any
-`ECHConfig` structure with a public_name that is not a vaild host name in
+`ECHConfig` structure with a public_name that is not a valid host name in
 preferred name syntax (see {{Section 2 of ?DNS-TERMS=RFC8499}}).  That is, to be
 valid, the public_name needs to be a dot-separated sequence of LDH labels, as
 defined in {{Section 2.3.1 of !RFC5890}}, where:
