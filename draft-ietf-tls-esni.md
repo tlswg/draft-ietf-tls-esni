@@ -289,17 +289,6 @@ public_name
 to update the ECH configuration. This is used to correct misconfigured clients,
 as described in {{rejected-ech}}.
 
-: Clients MUST ignore any `ECHConfig` structure whose public_name is not
-parsable as a dot-separated sequence of LDH labels, as defined in
-{{!RFC5890, Section 2.3.1}} or which begins or end with an ASCII dot. Clients
-additionally SHOULD ignore the structure if the final LDH label either consists
-of all ASCII digits (i.e. '0' through '9') or is "0x" or "0X" followed by some,
-possibly empty, sequence of ASCII hexadecimal digits (i.e. '0' through '9', 'a'
-through 'f', and 'A' through 'F'). This avoids public_name values that may be
-interpreted as IPv4 literals. Additionally, clients MAY ignore the
-`ECHConfig` if the length of any label in the DNS name is longer than 63
-octets, as this is the maximum length of a DNS label.
-
 : See {{auth-public-name}} for how the client interprets and validates the
 public_name.
 
@@ -917,6 +906,18 @@ and session IDs presented by the server. These connections are only used to
 trigger retries, as described in {{rejected-ech}}. This may be implemented, for
 instance, by reporting a failed connection with a dedicated error code.
 
+Prior to attempting a connection, a client SHOULD validate the `ECHConfig` to
+ensure that the public_name can be authenticated.  Clients SHOULD ignore any
+`ECHConfig` structure with a public_name that is not a vaild host name in
+preferred name syntax (see {{Section 2 of ?DNS-TERMS=RFC8499}}).  That is, to be
+valid, the public_name needs to be a dot-separated sequence of LDH labels, as
+defined in {{!RFC5890, Section 2.3.1}}, where:
+
+* the sequence does not begin or end with an ASCII dot;
+* all labels are no more than 63 octets; and
+* the sequence does not parse as an IPv4 address {{!RFC0790}} in textual form,
+  including a hexadecimal form that starts with "0x".
+
 
 ### Impact of Retry on Future Connections
 
@@ -1371,7 +1372,7 @@ has size k = 1. Client-facing servers SHOULD deploy ECH in such a way so as to
 maximize the size of the anonymity set where possible. This means client-facing
 servers should use the same ECHConfig for as many hosts as possible. An
 attacker can distinguish two hosts that have different ECHConfig values based
-on the ECHClientHello.config_id value. 
+on the ECHClientHello.config_id value.
 
 This also means public information in a TLS handshake should be
 consistent across hosts. For example, if a client-facing server
