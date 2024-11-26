@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-11-24T01:40:05.674285+00:00",
+  "timestamp": "2024-11-26T01:36:09.709198+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12920,10 +12920,12 @@
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "pr available"
+      ],
       "body": "Tagging @bemasc on these.\r\n\r\nSection 4\r\n\r\n        Clients MUST ignore any ECHConfig structure whose public_name\r\n        is not parsable as a dot-separated sequence of LDH labels, as\r\n        defined in [RFC5890], Section 2.3.1 or which begins or end with\r\n        an ASCII dot.\r\n\r\nWouldn't this prevent the root zone from ever running ECH? It might not matter,\r\nbut why not allow it :P\r\n\r\n        Clients additionally SHOULD ignore the structure if the final LDH\r\n        label either consists of all ASCII digits (i.e. '0' through '9')\r\n        or is \"0x\" or \"0X\" followed by some, possibly empty, sequence\r\n        of ASCII hexadecimal digits (i.e. '0' through '9', 'a' through\r\n        'f', and 'A' through 'F').\r\n\r\nThis would not allow ECH to work for \"00.com\", \"0x01.com\" or \"0x07.com\", which are\r\nall currently operational domains.\r\n\r\nI don't think this document should try to define what a legal DNS name is. Perhaps\r\nrefer to \"Host name\" in RFC 8499 (or BCP219) and only state \"leave out any potential\r\ntrailing dot\" ? Maybe just separately say \"SNI's cannot be in the textual form of an\r\nIP address, as connections to IP addresses omit the SNI entirely\" ?\r\n\r\nIt is a bit sad that ECH currently does not work with a URI that points to an IP\r\naddress. Especially for the split-mode. But I understand that would be a little\r\nmore than just ECH/encrypted-SNI.\r\n\r\n\r\n        Additionally, clients MAY ignore the ECHConfig if the length of\r\n        any label in the DNS name is longer than 63 octets, as this is\r\n        the maximum length of a DNS label.\r\n\r\nWhy is this a MAY? Why not a MUST or SHOULD?\r\n\r\n",
       "createdAt": "2024-10-12T00:14:00Z",
-      "updatedAt": "2024-11-24T01:21:24Z",
+      "updatedAt": "2024-11-25T17:02:02Z",
       "closedAt": null,
       "comments": [
         {
@@ -12967,6 +12969,41 @@
           "body": "@paulwouters  I think we are waiting on you for some text here.",
           "createdAt": "2024-11-24T01:21:23Z",
           "updatedAt": "2024-11-24T01:21:23Z"
+        },
+        {
+          "author": "paulwouters",
+          "authorAssociation": "NONE",
+          "body": "how about:\r\n\r\nOLD:\r\n```\r\nClients additionally SHOULD ignore the structure if the final LDH\r\n    label either consists of all ASCII digits (i.e. '0' through '9')\r\n    or is \"0x\" or \"0X\" followed by some, possibly empty, sequence\r\n    of ASCII hexadecimal digits (i.e. '0' through '9', 'a' through\r\n    'f', and 'A' through 'F').\r\n```\r\n\r\nNEW:\r\n```\r\nClients additionally SHOULD ignore the structure if it represents an IP address\r\nin textual or hexadecimal form\"\r\n```\r\n\r\nWith this, and the above confirmed MAY to MUST, I would be good.\r\n",
+          "createdAt": "2024-11-24T22:59:15Z",
+          "updatedAt": "2024-11-24T22:59:15Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "We'll probably need a citation here.  I expect it's:\r\nIPv4: Maybe 1123?\r\nIPv6: https://datatracker.ietf.org/doc/html/rfc4291#section-2.2 (though as a practical matter, no valid IPv6 address can be a valid domain name, I believe.\r\n\r\n\r\n",
+          "createdAt": "2024-11-24T23:13:22Z",
+          "updatedAt": "2024-11-24T23:13:22Z"
+        },
+        {
+          "author": "letoams",
+          "authorAssociation": "NONE",
+          "body": "Yes, \u201c:\u201d is not a valid dns character ",
+          "createdAt": "2024-11-25T00:51:33Z",
+          "updatedAt": "2024-11-25T00:51:33Z"
+        },
+        {
+          "author": "enygren",
+          "authorAssociation": "NONE",
+          "body": "Is there an RFC we can reference?  I thought \":\" technically is allowed within a DNS label, so arguably an IPv6 address could be a valid TLD (or a form like 2001:db8::1.2.3.44 could be a name under .44)?  It's not a valid hostname ([a-z0-9.]{0,63} for labels), but there is ambiguity in what is allowed in DNS binary string labels (rfc4343 , rfc1035, rfc2181section 11).  Agreed that this is not the right place to try and clarify that ambiguity.\r\n\r\nCould we require a valid hostname rather than a valid DNS name?  That would preclude underscore-prefixed though (would that be a problem for DANE)?\r\n\r\n",
+          "createdAt": "2024-11-25T16:39:59Z",
+          "updatedAt": "2024-11-25T16:39:59Z"
+        },
+        {
+          "author": "paulwouters",
+          "authorAssociation": "NONE",
+          "body": "https://www.rfc-editor.org/rfc/rfc8499\r\n```\r\nHost name:  This term and its equivalent, \"hostname\", have been\r\n      widely used but are not defined in [[RFC1034](https://www.rfc-editor.org/rfc/rfc1034)], [[RFC1035](https://www.rfc-editor.org/rfc/rfc1035)],\r\n      [[RFC1123](https://www.rfc-editor.org/rfc/rfc1123)], or [[RFC2181](https://www.rfc-editor.org/rfc/rfc2181)].  The DNS was originally deployed into the\r\n      Host Tables environment as outlined in [[RFC952](https://www.rfc-editor.org/rfc/rfc952)], and it is likely\r\n      that the term followed informally from the definition there.  Over\r\n      time, the definition seems to have shifted.  \"Host name\" is often\r\n      meant to be a domain name that follows the rules in Section 3.5 of\r\n      [RFC1034], which is also called the \"preferred name syntax\".  (In\r\n      that syntax, every character in each label is a letter, a digit,\r\n      or a hyphen).  Note that any label in a domain name can contain\r\n      any octet value; hostnames are generally considered to be domain\r\n      names where every label follows the rules in the \"preferred name\r\n      syntax\", with the amendment that labels can start with ASCII\r\n      digits (this amendment comes from [Section 2.1 of [RFC1123]](https://www.rfc-editor.org/rfc/rfc1123#section-2.1)).\r\n\r\n      People also sometimes use the term \"hostname\" to refer to just the\r\n      first label of an FQDN, such as \"printer\" in\r\n      \"printer.admin.example.com\".  (Sometimes this is formalized in\r\n      configuration in operating systems.)  In addition, people\r\n      sometimes use this term to describe any name that refers to a\r\n      machine, and those might include labels that do not conform to the\r\n      \"preferred name syntax\".\r\n```",
+          "createdAt": "2024-11-25T17:02:01Z",
+          "updatedAt": "2024-11-25T17:02:01Z"
         }
       ]
     },
@@ -12975,7 +13012,7 @@
       "id": "I_kwDOB-yxNc6Z686G",
       "title": "Should we recommend how often to rotate keys?",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/629",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -12984,8 +13021,8 @@
       ],
       "body": "From AD review.\r\n\r\nSee Section 10.10.5, which just says \"frequently\".\r\n\r\n\r\n",
       "createdAt": "2024-10-12T00:25:03Z",
-      "updatedAt": "2024-11-24T01:06:32Z",
-      "closedAt": null,
+      "updatedAt": "2024-11-24T23:13:52Z",
+      "closedAt": "2024-11-24T23:13:52Z",
       "comments": [
         {
           "author": "seanturner",
@@ -57304,26 +57341,49 @@
       "id": "PR_kwDOB-yxNc6C66yg",
       "title": "Update the key rotation text. Fixes #629",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/635",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2024-11-24T01:06:11Z",
-      "updatedAt": "2024-11-24T01:06:12Z",
+      "updatedAt": "2024-11-24T23:13:51Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "dc3a007ca2d41a743a0f7807782006fbd127456a",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "issue629_key_rotation",
-      "headRefOid": "0eff03e784cb6cc7376c04675e493c08a71f77e0",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "c796c1a766bf55c3c4d241b0a37288230d5c4bc2",
+      "closedAt": "2024-11-24T23:13:51Z",
+      "mergedAt": "2024-11-24T23:13:51Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "d2e60197f3f1b70a5c11c875da2c826736bded51"
+      },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6Sb9Q-",
+          "commit": {
+            "abbreviatedOid": "0eff03e"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-11-24T21:31:41Z",
+          "updatedAt": "2024-11-24T21:33:19Z",
+          "comments": [
+            {
+              "originalPosition": 36,
+              "body": "```suggestion\r\nway by observing TLS connection attempts.\r\n```",
+              "createdAt": "2024-11-24T21:31:41Z",
+              "updatedAt": "2024-11-24T21:33:19Z"
+            }
+          ]
+        }
+      ]
     },
     {
       "number": 636,
@@ -57337,7 +57397,7 @@
       "labels": [],
       "body": "@bemasc ",
       "createdAt": "2024-11-24T01:12:47Z",
-      "updatedAt": "2024-11-24T01:20:19Z",
+      "updatedAt": "2024-11-26T00:23:51Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "dc3a007ca2d41a743a0f7807782006fbd127456a",
@@ -57355,9 +57415,238 @@
           "body": "@letoams",
           "createdAt": "2024-11-24T01:13:25Z",
           "updatedAt": "2024-11-24T01:13:25Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@paulwouters: PTAL",
+          "createdAt": "2024-11-25T01:33:11Z",
+          "updatedAt": "2024-11-25T01:33:11Z"
         }
       ],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6SclxS",
+          "commit": {
+            "abbreviatedOid": "770a91f"
+          },
+          "author": "paulwouters",
+          "authorAssociation": "NONE",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-11-25T02:09:06Z",
+          "updatedAt": "2024-11-25T02:09:06Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6Scyus",
+          "commit": {
+            "abbreviatedOid": "770a91f"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-11-25T03:09:35Z",
+          "updatedAt": "2024-11-25T03:09:45Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "```suggestion\r\nconfigurations can have invalid keys, and invalid public names,\r\n```\r\n\r\nI can't think of an argument for not allowing configurations that are otherwise syntactically valid.  They shouldn't be used, which might mean that they might not go anywhere, but I don't see why you need multiple layers of signaling.",
+              "createdAt": "2024-11-25T03:09:35Z",
+              "updatedAt": "2024-11-25T03:09:45Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6Sczs2",
+          "commit": {
+            "abbreviatedOid": "770a91f"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-11-25T03:15:36Z",
+          "updatedAt": "2024-11-25T03:15:36Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "See my comment on #637 for why I am not enthusiastic about this general direction.  I've suggested a different structure there.",
+              "createdAt": "2024-11-25T03:15:36Z",
+              "updatedAt": "2024-11-25T03:15:36Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6Sc8Rt",
+          "commit": {
+            "abbreviatedOid": "770a91f"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-11-25T03:53:22Z",
+          "updatedAt": "2024-11-25T03:53:22Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "I don't have a strong opinion about the substance here; the part about invalid keys was in the previous text.",
+              "createdAt": "2024-11-25T03:53:22Z",
+              "updatedAt": "2024-11-25T03:53:46Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6SkK8A",
+          "commit": {
+            "abbreviatedOid": "770a91f"
+          },
+          "author": "bemasc",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-11-25T16:35:57Z",
+          "updatedAt": "2024-11-25T17:32:12Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "@martinthomson \r\n\r\nThe point here is that if server grease (as described here) is coupled with a valid key and public_name, then the grease doesn't work.  Misbehaving clients will still connect successfully.\r\n\r\nSimilarly, if the public_name is syntactically invalid, grease may still fail, if the client rejects the ECHConfig due to a syntax error.\r\n\r\nFor grease to work, the key must be wrong and the public_name must be syntactically valid but also wrong.  This text is recommending a specific way to be wrong, because the obvious alternative (setting the public_name to some random stranger's domain) seems pretty weird/insecure.",
+              "createdAt": "2024-11-25T16:35:58Z",
+              "updatedAt": "2024-11-25T17:32:12Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6SnW9H",
+          "commit": {
+            "abbreviatedOid": "770a91f"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-11-25T22:51:30Z",
+          "updatedAt": "2024-11-25T22:51:30Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "Yeah, I don't think that any of those arguments hold.\r\n\r\nFor a connection to be established, the server needs to hold the corresponding private key and be willing to use it.  The client needs to use the public name and (somehow) validate it successfully.  The client also needs to ignore the greased codepoint, despite not understanding it and knowing that it means that the entire config should be ignored.  Sure, the client doesn't know that the key pair is or isn't good, but it has multiple cues to go from.\r\n\r\nWe owe clients that are beyond incompetent no such affordance in specifications.\r\n\r\nTo take a step back, you only need one clear and unambiguous way to signal that a config should be ignored.  That's the presence of a mandatory, unknown extension.  Adding in name checks a) complicates the validation process and b) prevents me from doing my new, totally awesome thing that might rely on invalid names.  Which I realize that I'm going to have to share now.  Here, it's incomplete, but it might at least make sense: https://github.com/martinthomson/ech-pnmasq",
+              "createdAt": "2024-11-25T22:51:30Z",
+              "updatedAt": "2024-11-25T22:51:30Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6Sns3R",
+          "commit": {
+            "abbreviatedOid": "770a91f"
+          },
+          "author": "sftcd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-11-26T00:23:50Z",
+          "updatedAt": "2024-11-26T00:23:51Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "I scanned Martin's document and it seems quite complex. I do agree we ought revisit the problem, but *not until after the ECH RFC has issued* so can we rather try get this thing out the door?",
+              "createdAt": "2024-11-26T00:23:50Z",
+              "updatedAt": "2024-11-26T00:23:51Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 637,
+      "id": "PR_kwDOB-yxNc6C9aS0",
+      "title": "Issue628 dns names",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/637",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2024-11-25T01:32:41Z",
+      "updatedAt": "2024-11-25T16:30:20Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "d2e60197f3f1b70a5c11c875da2c826736bded51",
+      "headRepository": "ekr/draft-ietf-tls-esni",
+      "headRefName": "issue628_dns_names",
+      "headRefOid": "1d36649ee3b9242a0925ad38425800b7efd1379e",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@paulwouters: PTAL\r\n",
+          "createdAt": "2024-11-25T01:32:57Z",
+          "updatedAt": "2024-11-25T01:32:57Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6ScmGC",
+          "commit": {
+            "abbreviatedOid": "1d36649"
+          },
+          "author": "paulwouters",
+          "authorAssociation": "NONE",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-11-25T02:10:30Z",
+          "updatedAt": "2024-11-25T02:10:30Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6Scy-o",
+          "commit": {
+            "abbreviatedOid": "1d36649"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "I'm not a fan of the MUST here.  I have a proposal (unpublished) that points out that the public_name field can be any value as long as the client has a means of validating it.\r\n\r\nThat means that as long as the client needs to follow the validation rules in this document, then it will need to validate the public name on the basis of it being valid.  But that's just one way to perform that validation (and a particularly expensive one as it happens).  It is entirely possible to define other validation methods that do not require that the name be valid for DNS.\r\n\r\nIf I may, can I suggest instead that these requirements be moved to `{{auth-public-name}}` with a note there that says that clients MAY ignore ECH configs for which validation is obviously impossible.  Then you would list *there* things like the IP address matching and name construction as examples of things for which it is impossible to obtain a valid DNS-backed certificate.",
+          "createdAt": "2024-11-25T03:11:07Z",
+          "updatedAt": "2024-11-25T03:14:32Z",
+          "comments": [
+            {
+              "originalPosition": 19,
+              "body": "How many would properly ignore such an ECH config?",
+              "createdAt": "2024-11-25T03:11:07Z",
+              "updatedAt": "2024-11-25T03:14:32Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6SkHzs",
+          "commit": {
+            "abbreviatedOid": "1d36649"
+          },
+          "author": "bemasc",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-11-25T16:30:20Z",
+          "updatedAt": "2024-11-25T16:30:20Z",
+          "comments": [
+            {
+              "originalPosition": 17,
+              "body": "The concept of a \"valid DNS name\" is not well-defined.  In general, DNS \"labels\" can contain any sequence of up to 63 octets.  There is no uniform standard for representing DNS names as strings.\r\n\r\nIPv6 addresses are not valid _hostnames_, nor are they permissible FQDNs under ICANN rules, but that is not the same thing.\r\n\r\nI don't think we need the parenthetical anyway though.\r\n\r\n```suggestion\r\nIPv4 address {{!RFC791}} in textual or hexadecimal form.\r\nAdditionally, clients MUST ignore the `ECHConfig` if the\r\n```",
+              "createdAt": "2024-11-25T16:30:20Z",
+              "updatedAt": "2024-11-25T16:30:21Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
