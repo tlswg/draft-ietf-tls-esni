@@ -911,10 +911,10 @@ ensure that the public_name can be authenticated.  Clients SHOULD ignore any
 `ECHConfig` structure with a public_name that is not a vaild host name in
 preferred name syntax (see {{Section 2 of ?DNS-TERMS=RFC8499}}).  That is, to be
 valid, the public_name needs to be a dot-separated sequence of LDH labels, as
-defined in {{!RFC5890, Section 2.3.1}}, where:
+defined in {{Section 2.3.1 of !RFC5890}}, where:
 
 * the sequence does not begin or end with an ASCII dot;
-* all labels are no more than 63 octets; and
+* all labels are at most 63 octets; and
 * the sequence does not parse as an IPv4 address {{!RFC0790}} in textual form,
   including a hexadecimal form that starts with "0x".
 
