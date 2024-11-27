@@ -1373,7 +1373,7 @@ has size k = 1. Client-facing servers SHOULD deploy ECH in such a way so as to
 maximize the size of the anonymity set where possible. This means client-facing
 servers should use the same ECHConfig for as many hosts as possible. An
 attacker can distinguish two hosts that have different ECHConfig values based
-on the ECHClientHello.config_id value. 
+on the ECHClientHello.config_id value.
 
 This also means public information in a TLS handshake should be
 consistent across hosts. For example, if a client-facing server
