@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-11-26T01:36:09.709198+00:00",
+  "timestamp": "2024-11-28T01:37:14.447315+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -13104,6 +13104,121 @@
       "updatedAt": "2024-11-24T01:20:30Z",
       "closedAt": null,
       "comments": []
+    },
+    {
+      "number": 639,
+      "id": "I_kwDOB-yxNc6gxNTe",
+      "title": "Clarify interaction with DTLS 1.3",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/639",
+      "state": "OPEN",
+      "author": "davidben",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "The draft claims to work with DTLS, but it's slightly ambiguous. We use `ClientHello` structures directly in ECH structures, but `ClientHello` is one of the structures that DTLS changes. Do we use the DTLS version or the TLS version? The differences are:\r\n\r\n1. The `legacy_version` field is hardcoded to a different value.\r\n2. There is a goofy `legacy_cookie` field.\r\n\r\nThe goofy `legacy_cookie` field is interesting. In principle, it should really should get the same treatment as `legacy_session_id` and be copied over, because there's nothing to hide there. But I think it's actually always empty, since HelloVerifyRequest is banned in DTLS 1.3. But then we probably need to answer dumb questions like:\r\n\r\n1. What happens if a client sends an ECH-ful ClientHello and gets HelloVerifyRequest back?\r\n2. What happens if a server receives an ECH-ful ClientHello but the legacy_cookie field isn't empty?\r\n3. Do we have injectivity problems allowing the two ClientHellos in there? I think we're fine, because `legacy_version` distinguishes the two ClientHellos but, ugh, why oh why did we do this in DTLS??\r\n\r\nNot terribly difficult, but it's ambiguous enough that I think we need to say something here. My inclination is to say that we use the DTLS ClientHello, and pick the least annoying answers for (1) and (2). But I think we do need to write them down somewhere.",
+      "createdAt": "2024-11-27T06:11:47Z",
+      "updatedAt": "2024-11-27T21:43:31Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "sftcd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Urgh (I've not looked at ECH for DTLS at all). Could some or most of this be deferred to the upcoming work on a DTLS bis RFC?",
+          "createdAt": "2024-11-27T16:22:28Z",
+          "updatedAt": "2024-11-27T16:22:28Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I think we need to do _something_ here, because the draft as-is says DTLS works. Whether that's a minimal fix, or temporarily saying that this is TLS- and QUIC-only, and fixing it in another document, I have no opinion.",
+          "createdAt": "2024-11-27T16:26:52Z",
+          "updatedAt": "2024-11-27T16:26:52Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "This was, of course, brought to you by \"oh yeah, I tried turning more of our DTLS tests on now that we're nearly done with our DTLS 1.3 implementation and noticed it was off\". \ud83d\ude04",
+          "createdAt": "2024-11-27T16:28:34Z",
+          "updatedAt": "2024-11-27T16:28:34Z"
+        },
+        {
+          "author": "richsalz",
+          "authorAssociation": "NONE",
+          "body": "Yes, please clarify that this is TLS 1.3-only\r\n",
+          "createdAt": "2024-11-27T16:29:38Z",
+          "updatedAt": "2024-11-27T16:29:38Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> Yes, please clarify that this is TLS 1.3-only\r\n\r\nThat'd work for me fwiw. ECH for QUIC/DTLS is a fine thing for 2025:-)",
+          "createdAt": "2024-11-27T16:34:07Z",
+          "updatedAt": "2024-11-27T16:34:07Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Correction: ECH for QUIC already works just fine and is already implemented. (If it didn't, HTTPS could not use it. If we force deployments to pick between ECH and QUIC, people are not going to pick ECH. It's important to let them pick both.)",
+          "createdAt": "2024-11-27T16:39:34Z",
+          "updatedAt": "2024-11-27T16:39:34Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@martinthomson did you all make it work in DTLS 1.3 when you implemented ECH? If we wanted to just fix it here, I suspect it would only take like 3-4 sentences. Ours doesn't work yet, but it'll probably just be like a days worth of fiddling to get it to work.",
+          "createdAt": "2024-11-27T16:45:13Z",
+          "updatedAt": "2024-11-27T16:45:13Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Thinking about this some more, I think there are natural answers here:\r\n\r\n> Do we use the DTLS version or the TLS version?\r\n\r\nGiven the TLS version has `ProtocolVersion legacy_version = 0x0303;` in it, I think the DTLS version is more straightforward? But I could go either way.\r\n\r\nThis does need some text, but just like one sentence saying which one we picked.\r\n\r\n> What happens if a client sends an ECH-ful ClientHello and gets HelloVerifyRequest back?\r\n\r\nSo there's a few questions to answer here:\r\na. _How does a split mode server deal with a backend server sending it?_ I mean, this should not happen and the connection will blow up, same as a TLS 1.2 ServerHello, but I think [this text](https://tlswg.org/draft-ietf-tls-esni/draft-ietf-tls-esni.html#section-7.1-12) is fine as-is.\r\nb. _How does the client reply? Does it recompute the ECH extension?_ This is the same as the [PSK binders problem](https://mailarchive.ietf.org/arch/msg/tls/HSTgV2voS9tn03oasGmBAdwazWA/). I think we can probably just leave this strategically ambiguous until 9147bis fixes it properly.\r\nc. _How does the client complete the handshake?_ No text needed, it's just the same as any other TLS 1.2 handshake; client completes the handshake with ClientHelloOuter and does its thing.\r\n\r\n> What happens if a server receives an ECH-ful ClientHello but the legacy_cookie field isn't empty?\r\n\r\nNothing special, no text needed. Same thing that happens if the server receives an ECH-ful ClientHello where `legacy_compression_methods` contains random stuff. If it's in ClientHelloOuter, I guess we'll bind it into AAD but otherwise probably ignore it. If it's in ClientHelloInner, the ECH processing code will not care, but the actual handshaking code will then reject it.\r\n\r\n---\r\n\r\nGiven that, I would suggest, if we can answer the first question in like O(days), let's just do that and avoid the fuss. Since it doesn't really matter either way, I think we can just pick one, informed by what existing implementations, if any (NSS is probably the only possible implementor), might have done. Otherwise punt it to later.",
+          "createdAt": "2024-11-27T17:00:59Z",
+          "updatedAt": "2024-11-27T17:00:59Z"
+        },
+        {
+          "author": "richsalz",
+          "authorAssociation": "NONE",
+          "body": "I am fine with TLS1.3+QUIC only. Unless we can show that adding DTLS doesn't delay the doc.",
+          "createdAt": "2024-11-27T17:10:47Z",
+          "updatedAt": "2024-11-27T17:10:47Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "+1 for not delaying. That said I've not looked at OpenSSL DTLS code, so am almost certainly ok with any resolution of the issues above (so long as that doesn't take time).",
+          "createdAt": "2024-11-27T17:37:56Z",
+          "updatedAt": "2024-11-27T17:37:56Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Here's some draft spec text for what I suspect is the straightforward fix: https://github.com/tlswg/draft-ietf-tls-esni/pull/640",
+          "createdAt": "2024-11-27T18:36:32Z",
+          "updatedAt": "2024-11-27T18:36:32Z"
+        },
+        {
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "The rules for DTLS are pretty simple:\r\n\r\n1. If you get a HelloVerifyRequest then you don't have DTLS 1.3.  HelloRetryRequest works just like TLS.\r\n2. legacy_cookie is included in the handshake, but it is left empty always, as defined in DTLS 1.3.  If non-empty and DTLS 1.3 is present, then the handshake fails, as defined in DTLS 1.3 (with [illegal_parameter](https://tlswg.org/dtls13-spec/draft-ietf-tls-rfc9147bis.html#section-5.3-3.8.1) in case you were wondering).\r\n3. The transcript is ugly, but that's ECH for you.  I don't understand this concern.",
+          "createdAt": "2024-11-27T21:29:00Z",
+          "updatedAt": "2024-11-27T21:29:00Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Oh, I'm thinking of a deployment that uses the same keys for DTLS and TLS ECH and whether we have cross-protocol problems between the two ClientHello syntaxes. But I think it's broadly fine because of those first two bytes. (Possibly we should eventually say that TLS and DTLS enforce the high bit to be really sure but whatever.)",
+          "createdAt": "2024-11-27T21:35:35Z",
+          "updatedAt": "2024-11-27T21:35:35Z"
+        },
+        {
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I see.  As long as the protocols have different versions, that helps.  Though the addition of fields (legacy_cookie) makes any analysis along those lines fraught.  I think that it helps that the value is fixed (it's a zero byte always), but I'm not really capable of reasoning that through right now.",
+          "createdAt": "2024-11-27T21:43:29Z",
+          "updatedAt": "2024-11-27T21:43:29Z"
+        }
+      ]
     }
   ],
   "pulls": [
@@ -57397,7 +57512,7 @@
       "labels": [],
       "body": "@bemasc ",
       "createdAt": "2024-11-24T01:12:47Z",
-      "updatedAt": "2024-11-26T00:23:51Z",
+      "updatedAt": "2024-11-26T14:03:19Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "dc3a007ca2d41a743a0f7807782006fbd127456a",
@@ -57422,6 +57537,13 @@
           "body": "@paulwouters: PTAL",
           "createdAt": "2024-11-25T01:33:11Z",
           "updatedAt": "2024-11-25T01:33:11Z"
+        },
+        {
+          "author": "paulwouters",
+          "authorAssociation": "NONE",
+          "body": "It seems Martin's raised point is a new issue. I am fine if we go that way and omit the specifics like how to formulate an invalid hostname. If text will remain about hostnames, it would still be good to suggest using .invalid as an example, without any 2119 enforcement.",
+          "createdAt": "2024-11-26T03:49:30Z",
+          "updatedAt": "2024-11-26T03:49:30Z"
         }
       ],
       "reviews": [
@@ -57557,6 +57679,26 @@
               "updatedAt": "2024-11-26T00:23:51Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6SuZbH",
+          "commit": {
+            "abbreviatedOid": "770a91f"
+          },
+          "author": "bemasc",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-11-26T14:03:19Z",
+          "updatedAt": "2024-11-26T14:03:19Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "> Adding in name checks a) complicates the validation process and b) prevents me from doing my new, totally awesome thing ...\r\n\r\nThe text here is not attempting to add name checks.  In fact, this text assumes that clients do _not_ perform any name checks (beyond syntax).  If client applies special treatment to \".invalid\" names, the client has \"special-cased the grease\" and the procedure is broken.\r\n\r\nWould you be happier with an additional sentence like \"Clients MUST NOT apply special treatment to names based on the \".invalid\" TLD.\"?",
+              "createdAt": "2024-11-26T14:03:19Z",
+              "updatedAt": "2024-11-26T14:03:20Z"
+            }
+          ]
         }
       ]
     },
@@ -57645,6 +57787,160 @@
               "updatedAt": "2024-11-25T16:30:21Z"
             }
           ]
+        }
+      ]
+    },
+    {
+      "number": 638,
+      "id": "PR_kwDOB-yxNc6DIIZ2",
+      "title": "Move name validation to the authentication section",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/638",
+      "state": "OPEN",
+      "author": "martinthomson",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This is partly motivated by my interests in doing something evil, but mostly this is because coupling name validity to ECH config validity is a layering violation.  It's fine to invoke some name validation, but that should be dictated by the needs of the thing that ends up relying on that name.\r\n\r\nThis corrects both problems.\r\n\r\nIn doing this, I realized that RFC 791 says nothing about the IP address textual format.  That's problematic, but I couldn't come up with anything better in short notice.\r\n\r\nCloses #628.\r\nCloses #637.",
+      "createdAt": "2024-11-26T04:33:57Z",
+      "updatedAt": "2024-11-26T22:33:13Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "d2e60197f3f1b70a5c11c875da2c826736bded51",
+      "headRepository": "martinthomson/draft-ietf-tls-esni",
+      "headRefName": "move-name-validation",
+      "headRefOid": "f6b6111769c7342ebc3e0ff7d83e5f89856c0bda",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6SpMLr",
+          "commit": {
+            "abbreviatedOid": "39723d5"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-11-26T04:34:11Z",
+          "updatedAt": "2024-11-26T04:34:24Z",
+          "comments": [
+            {
+              "originalPosition": 27,
+              "body": "```suggestion\r\ndefined in {{Section 2.3.1 of !RFC5890}}, where:\r\n```",
+              "createdAt": "2024-11-26T04:34:11Z",
+              "updatedAt": "2024-11-26T04:34:24Z"
+            },
+            {
+              "originalPosition": 30,
+              "body": "```suggestion\r\n* all labels are at most 63 octets; and\r\n```",
+              "createdAt": "2024-11-26T04:34:20Z",
+              "updatedAt": "2024-11-26T04:34:24Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6Swea-",
+          "commit": {
+            "abbreviatedOid": "aacf20e"
+          },
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-11-26T16:59:38Z",
+          "updatedAt": "2024-11-26T17:13:30Z",
+          "comments": [
+            {
+              "originalPosition": 24,
+              "body": "```suggestion\r\n`ECHConfig` structure with a public_name that is not a valid host name in\r\n```",
+              "createdAt": "2024-11-26T16:59:38Z",
+              "updatedAt": "2024-11-26T17:13:48Z"
+            },
+            {
+              "originalPosition": 32,
+              "body": "This is a behavior change from what's currently in the draft.\r\n\r\nThis is a bit of a mess. So, it used to be that WHATWG URLs followed this rule. But it leads to weird behaviors like:\r\n\r\n* `1.2` is an IP address\r\n* `a.1.2` is a DNS name\r\n* The eTLD+1 of `a.1.2` is `1.2`, which is not a DNS name\r\n\r\nTo avoid this chaos, the WHATWG rule changed to only key on the final component. If the final component is [numeric](https://url.spec.whatwg.org/#ipv4-number-parser), it is an IP address (or an error). If the final component is non-numeric, it is a DNS name. This is a much better rule as it preserves the invariant that suffixes of DNS names are still DNS names, and avoids having to account for really weird things like...\r\n\r\n* `1.0xffffff` is an IP address (it's `1.255.255.255`)\r\n* `1.0xffffffff` is a DNS name (the last component is too big to stand in for the missing components)\r\n\r\nAlso this rule is still compatible with the IETF URL definition; the goal is to never produce a DNS name that someone else thinks is an IP address.\r\n\r\n(Why, oh why, did people make IP addresses and DNS names overlap? That was such a foolish decision! The original rule that LDH labels cannot begin with a digit was great.)\r\n\r\n**Alternative option**\r\n\r\nIf we want to avoid this mess, here's another option: don't do it at the ECHConfig rejection layer, and do it at public name verification. We say:\r\n\r\n* When you send the ClientHello, just put the `public_name` in there without thinking about it very much.\r\n* When you validate the certificate against the public name, you MUST treat it as a DNS name. If your verifier is unwilling to treat that input string as a DNS name (e.g. because it's URL-based and thinks that string is an IP address), you MUST fail verification\r\n\r\nThe downside here is that now an attacker can induce the client to put an arbitrary string into the `server_name` field, which the client would otherwise never be willing to send. If we *completely* do not validate the public name, this is a truly arbitrary string, which might be unwise. For example, if you put a NUL in the public name, you might upset some systems that assumed they could stick SNIs into NUL-terminated C strings.\r\n\r\nI'm not sure what the consequences of that are. I think we went with the validating option because there's no real reason to put in so garbage of a string in the public name, and it's tidier to just remove this possible mischief avenue.\r\n\r\nThe other downside is that publishing an ECHConfig with a garbled public name shoots yourself in the foot because the client will use the ECHConfig but refuse you the recovery flow. But so does publishing an ECHConfig with a syntactically valid public name that you don't control, so I'm not super concerned about this one.",
+              "createdAt": "2024-11-26T17:12:01Z",
+              "updatedAt": "2024-11-26T17:13:30Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6Sy0az",
+          "commit": {
+            "abbreviatedOid": "aacf20e"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-11-26T22:33:13Z",
+          "updatedAt": "2024-11-26T22:33:13Z",
+          "comments": [
+            {
+              "originalPosition": 32,
+              "body": "FWIW, this alternative is more or less the approach that I'm angling towards, just as incrementally as I can manage.  Your point about name validity and how it has changed over time is well taken; this could be improved further, but maybe we should deal with the macro-level question first: is this general direction sensible?\r\n\r\nThere's some value in catching mistakes earlier in terms of not expending resources chasing down an obviously unfruitful path, but leave the layering violation to those who want to optimize that way.",
+              "createdAt": "2024-11-26T22:33:13Z",
+              "updatedAt": "2024-11-26T22:33:13Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 640,
+      "id": "PR_kwDOB-yxNc6DX4vT",
+      "title": "Use the DTLS ClientHello structure in ECH with DTLS",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/640",
+      "state": "OPEN",
+      "author": "davidben",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This PR implements the option if we decide to use DTLS's ClientHello as the payload and AAD, rather than somehow fit TLS's in there.\r\n\r\nFixes #639.\r\n\r\nI haven't yet gotten this working for BoringSSL (probably will finish that after the holiday), but I suspect this is the more straightforward option for us. @martinthomson what has NSS implemented / would be more convenient for NSS?",
+      "createdAt": "2024-11-27T18:36:12Z",
+      "updatedAt": "2024-11-28T00:23:11Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "d2e60197f3f1b70a5c11c875da2c826736bded51",
+      "headRepository": "davidben/draft-ietf-tls-esni",
+      "headRefName": "clarify-dtls",
+      "headRefOid": "1779fe6bb04b0cda0049e5f15fcd35c4051b429e",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "NB: This option means needing to reason about injectivity. But the first two bytes of a DTLS ClientHello are different, so I think we're alright on that front? (Although nothing is stopping someone from sending 0xfefd in the legacy version of a TLS ClientHello, so... \ud83e\udd37 ",
+          "createdAt": "2024-11-27T18:38:14Z",
+          "updatedAt": "2024-11-27T18:38:14Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> I haven't yet gotten this working for BoringSSL\r\n\r\nI can now report that there is at least one implementation. \ud83d\ude42 Possibly two if NSS had already done it before all this. Also our Go testing stack if you count that one, but that stack is weird.\r\n\r\nIt was a lot of chasing down of the TLS vs DTLS header (our DTLS stack carries the old style header around because it was the way you spelled it in 1.2), and making sure all the ClientHello processing bits picked up the right now. But nothing fundamentally hard. Just more ways that we pay for DTLS 1.2's sins.",
+          "createdAt": "2024-11-28T00:23:10Z",
+          "updatedAt": "2024-11-28T00:23:10Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6S-9N-",
+          "commit": {
+            "abbreviatedOid": "1779fe6"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "This seems right.",
+          "createdAt": "2024-11-27T21:30:11Z",
+          "updatedAt": "2024-11-27T21:30:11Z",
+          "comments": []
         }
       ]
     }
