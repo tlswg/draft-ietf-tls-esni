@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-12-05T01:39:15.306029+00:00",
+  "timestamp": "2024-12-08T01:45:01.061800+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -57816,7 +57816,7 @@
       "labels": [],
       "body": "This is partly motivated by my interests in doing something evil, but mostly this is because coupling name validity to ECH config validity is a layering violation.  It's fine to invoke some name validation, but that should be dictated by the needs of the thing that ends up relying on that name.\r\n\r\nThis corrects both problems.\r\n\r\nIn doing this, I realized that RFC 791 says nothing about the IP address textual format.  That's problematic, but I couldn't come up with anything better in short notice.\r\n\r\nCloses #628.\r\nCloses #637.",
       "createdAt": "2024-11-26T04:33:57Z",
-      "updatedAt": "2024-11-26T22:33:13Z",
+      "updatedAt": "2024-12-06T12:58:10Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "d2e60197f3f1b70a5c11c875da2c826736bded51",
@@ -57898,6 +57898,46 @@
               "body": "FWIW, this alternative is more or less the approach that I'm angling towards, just as incrementally as I can manage.  Your point about name validity and how it has changed over time is well taken; this could be improved further, but maybe we should deal with the macro-level question first: is this general direction sensible?\r\n\r\nThere's some value in catching mistakes earlier in terms of not expending resources chasing down an obviously unfruitful path, but leave the layering violation to those who want to optimize that way.",
               "createdAt": "2024-11-26T22:33:13Z",
               "updatedAt": "2024-11-26T22:33:13Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6T-6Ms",
+          "commit": {
+            "abbreviatedOid": "f6b6111"
+          },
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-12-05T20:02:07Z",
+          "updatedAt": "2024-12-05T20:02:07Z",
+          "comments": [
+            {
+              "originalPosition": 32,
+              "body": "I'm not sure what \"this general direction\" is. :)\r\n\r\nThis PR still encourages checking for IPs before acting on an ECHConfig, but it now changes the criteria from the previous consensus to a different and more complex criteria (checking if something is a valid IPv4 address is... a lot), and one which leads to a notion of DNS name which fails basic suffix invariants. (The WHATWG URL change was prompted by a real world implementation issue found by a fuzzer. Turns out lots of things break when this invariant fails.)",
+              "createdAt": "2024-12-05T20:02:07Z",
+              "updatedAt": "2024-12-05T20:02:45Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6UGqpK",
+          "commit": {
+            "abbreviatedOid": "aacf20e"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-12-06T12:58:10Z",
+          "updatedAt": "2024-12-06T12:58:10Z",
+          "comments": [
+            {
+              "originalPosition": 32,
+              "body": "The \"general direction\" is toward your alternative.  That is, I would have written up a change that implements what you suggested, except that I think it would require more text changes.  If you think that doing so is the right thing to do, I am happy to take another go at it.  That said, it's going to take me some time.\r\n\r\nThe IP checks are orthogonal.  There is no simple test that applies here, which leads me to think that maybe we do just need to say \"it's a name, even if it looks like an IP\".  That's possible in this case, because public names ultimately only need to match against a dNSName in subjectAltName.",
+              "createdAt": "2024-12-06T12:58:10Z",
+              "updatedAt": "2024-12-06T12:58:10Z"
             }
           ]
         }
@@ -57984,7 +58024,7 @@
       "labels": [],
       "body": "(I made this into a separate PR from #640 just because I realized the ambiguity later and it seemed rude to change #640 after folks have already looked at it.)\r\n\r\nWe've made a mess of things and now every extension that cites HKDF-Expand-Label needs to clarify this. This seems like a mistake.\r\n\r\nWorse, if a future TLS 1.4 change the \"tls13\" prefix to \"tls14\", every extension will now become ambiguous! I've left that alone in this document, but we may need to contend with this later.\r\n\r\nIn hindsight, we should have excluded the implicit \"tls13 \" prefix from the HKDF-Expand-Label function. Instead, the version-dependent labels could have been incorporated into individual labels as needed. (In particular, I don't think this label actually needed to be version-dependent.)\r\n\r\nInstead we seem to have implicitly decided that HKDF-Expand-Label is part of the \"interface\" that TLS exposes to its extensions, without remembering to say so clearly.\r\n\r\nAnyway, this PR does the minimal thing to paper over this mess.",
       "createdAt": "2024-12-02T15:44:06Z",
-      "updatedAt": "2024-12-02T15:44:07Z",
+      "updatedAt": "2024-12-06T18:31:19Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "d2e60197f3f1b70a5c11c875da2c826736bded51",
@@ -57995,8 +58035,44 @@
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
-      "reviews": []
+      "comments": [
+        {
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "@ekr,\r\n\r\n> we seem to have implicitly decided that HKDF-Expand-Label is part of the \"interface\" that TLS exposes to its extensions\r\n\r\n@davidben is completely right here.  That's something we've more or less assumed about TLS in QUIC.  RFC 8446bis seems to be open still.  Is this feasibly something we could fix there?  (It's in AD evaluation, which is hardly so far gone as to make this sort of thing impossible.)",
+          "createdAt": "2024-12-05T20:45:28Z",
+          "updatedAt": "2024-12-05T20:45:28Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Yes, I think we could make this change as long as @paulwouters is OK with that.",
+          "createdAt": "2024-12-06T00:36:45Z",
+          "updatedAt": "2024-12-06T00:36:45Z"
+        },
+        {
+          "author": "paulwouters",
+          "authorAssociation": "NONE",
+          "body": "It's fine with me, but please send a message to the TLS list with the change and reasoning quoted from this PR as an audit log to the IETF process.",
+          "createdAt": "2024-12-06T18:31:18Z",
+          "updatedAt": "2024-12-06T18:31:18Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6T_LfO",
+          "commit": {
+            "abbreviatedOid": "9a378de"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-12-05T20:42:45Z",
+          "updatedAt": "2024-12-05T20:42:45Z",
+          "comments": []
+        }
+      ]
     }
   ]
 }
