@@ -1184,7 +1184,8 @@ ServerHello.random with the following string:
 
 where HKDF-Expand-Label is defined in {{RFC8446, Section 7.1}}, "0" indicates a
 string of Hash.length bytes set to zero, and Hash is the hash function used to
-compute the transcript hash.
+compute the transcript hash. In DTLS, the modified version of HKDF-Expand-Label
+defined in {{RFC9147, Section 5.9}} is used instead.
 
 The backend server MUST NOT perform this operation if it negotiated TLS 1.2 or
 below. Note that doing so would overwrite the downgrade signal for TLS 1.3 (see
