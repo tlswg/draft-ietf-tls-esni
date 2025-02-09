@@ -915,9 +915,13 @@ defined in {{Section 2.3.1 of !RFC5890}}, where:
 
 * the sequence does not begin or end with an ASCII dot;
 * all labels are at most 63 octets; and
-* the sequence does not parse as an IPv4 address {{!RFC0790}} in textual form,
-  including a hexadecimal form that starts with "0x".
 
+Clients additionally SHOULD ignore the structure if the final LDH
+label either consists of all ASCII digits (i.e. '0' through '9') or is
+"0x" or "0X" followed by some, possibly empty, sequence of ASCII
+hexadecimal digits (i.e. '0' through '9', 'a' through 'f', and 'A'
+through 'F'). This avoids public_name values that may be interpreted
+as IPv4 literals.
 
 ### Impact of Retry on Future Connections
 
