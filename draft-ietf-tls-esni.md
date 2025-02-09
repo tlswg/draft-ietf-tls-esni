@@ -481,10 +481,12 @@ into a EncodedClientHelloInner structure, defined below:
 ~~~
 
 The `client_hello` field is computed by first making a copy of ClientHelloInner
-and setting the `legacy_session_id` field to the empty string. Note this field
-uses the ClientHello structure, defined in {{Section 4.1.2 of RFC8446}} which
-does not include the Handshake structure's four byte header. The `zeros` field
-MUST be all zeroes.
+and setting the `legacy_session_id` field to the empty string. In TLS, this
+field uses the ClientHello structure defined in {{Section 4.1.2 of RFC8446}}.
+In DTLS, it uses the ClientHello structured defined in
+{{Section 5.3 of RFC9147}}. This does not include Handshake structure's
+four-byte header in TLS, nor twelve-byte header in DTLS. The `zeros` field MUST
+be all zeroes.
 
 Repeating large extensions, such as "key_share" with post-quantum algorithms,
 between ClientHelloInner and ClientHelloOuter can lead to excessive size. To
@@ -556,12 +558,12 @@ while keeping the same encrypted `ClientHelloInner`
 (see {{flow-clienthello-malleability}}), ECH authenticates ClientHelloOuter
 by passing ClientHelloOuterAAD as the associated data for HPKE sealing
 and opening operations. The ClientHelloOuterAAD is a serialized
-ClientHello structure, defined in {{Section 4.1.2 of RFC8446}}, which
-matches the ClientHelloOuter except that the `payload` field of the
-"encrypted_client_hello" is replaced with a byte string of the same
-length but whose contents are zeros. This value does not include the
-four-byte header from the Handshake structure.
-
+ClientHello structure, defined in {{Section 4.1.2 of RFC8446}} for TLS and
+{{Section 5.3 of RFC9147}} for DTLS, which matches the ClientHelloOuter except
+that the `payload` field of the "encrypted_client_hello" is replaced with a byte
+string of the same length but whose contents are zeros. This value does not
+include Handshake structure's four-byte header in TLS, nor twelve-byte header in
+DTLS.
 
 # Client Behavior
 
@@ -1372,7 +1374,7 @@ has size k = 1. Client-facing servers SHOULD deploy ECH in such a way so as to
 maximize the size of the anonymity set where possible. This means client-facing
 servers should use the same ECHConfig for as many hosts as possible. An
 attacker can distinguish two hosts that have different ECHConfig values based
-on the ECHClientHello.config_id value. 
+on the ECHClientHello.config_id value.
 
 This also means public information in a TLS handshake should be
 consistent across hosts. For example, if a client-facing server
