@@ -13,20 +13,20 @@
        This document describes a mechanism in Transport Layer Security (TLS) for
 encrypting a ClientHello message under a server public key. 
     " name="description">
-<meta content="xml2rfc 3.24.0" name="generator">
+<meta content="xml2rfc 3.26.0" name="generator">
 <meta content="Internet-Draft" name="keyword">
 <meta content="draft-ietf-tls-esni-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.24.0
-    Python 3.12.7
+  xml2rfc 3.26.0
+    Python 3.12.8
     ConfigArgParse 1.7
     google-i18n-address 3.1.1
     intervaltree 3.1.0
-    Jinja2 3.1.4
+    Jinja2 3.1.5
     lxml 5.3.0
     platformdirs 4.3.6
-    pycountry 22.3.5
-    PyYAML 6.0.1
+    pycountry 24.6.1
+    PyYAML 6.0.2
     requests 2.32.3
     setuptools 70.3.0
     wcwidth 0.2.13
@@ -538,7 +538,11 @@ figcaption, caption {
   }
   pre, svg {
     display: inline-block;
-    overflow-x: auto;
+    /* In the horizontal direction, sometimes people make over-sized figures.
+       Scrollbars for those is therefore necessary: auto adds them as necessary..
+       In the vertical direction, the line-height can combine with the font
+       asender/descender height to produce scrollbars: hidden avoids that. */
+    overflow: auto hidden;
   }
   pre {
     max-width: 100%;
@@ -1044,11 +1048,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">TLS Encrypted Client Hello</td>
-<td class="right">November 2024</td>
+<td class="right">February 2025</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Rescorla, et al.</td>
-<td class="center">Expires 28 May 2025</td>
+<td class="center">Expires 13 August 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1061,12 +1065,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-tls-esni-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-11-24" class="published">24 November 2024</time>
+<time datetime="2025-02-09" class="published">9 February 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-05-28">28 May 2025</time></dd>
+<dd class="expires"><time datetime="2025-08-13">13 August 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1121,7 +1125,7 @@ encrypting a ClientHello message under a server public key.<a href="#section-abs
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 28 May 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 13 August 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1130,7 +1134,7 @@ encrypting a ClientHello message under a server public key.<a href="#section-abs
 <a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
         </h2>
 <p id="section-boilerplate.2-1">
-            Copyright (c) 2024 IETF Trust and the persons identified as the
+            Copyright (c) 2025 IETF Trust and the persons identified as the
             document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.2-2">
             This document is subject to BCP 78 and the IETF Trust's Legal
@@ -1909,10 +1913,12 @@ into a EncodedClientHelloInner structure, defined below:<a href="#section-5.1-1"
 </pre><a href="#section-5.1-2" class="pilcrow">¶</a>
 </div>
 <p id="section-5.1-3">The <code>client_hello</code> field is computed by first making a copy of ClientHelloInner
-and setting the <code>legacy_session_id</code> field to the empty string. Note this field
-uses the ClientHello structure, defined in <span><a href="https://rfc-editor.org/rfc/rfc8446#section-4.1.2" class="relref">Section 4.1.2</a> of [<a href="#RFC8446" class="cite xref">RFC8446</a>]</span> which
-does not include the Handshake structure's four byte header. The <code>zeros</code> field
-MUST be all zeroes.<a href="#section-5.1-3" class="pilcrow">¶</a></p>
+and setting the <code>legacy_session_id</code> field to the empty string. In TLS, this
+field uses the ClientHello structure defined in <span><a href="https://rfc-editor.org/rfc/rfc8446#section-4.1.2" class="relref">Section 4.1.2</a> of [<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>.
+In DTLS, it uses the ClientHello structured defined in
+<span><a href="https://rfc-editor.org/rfc/rfc9147#section-5.3" class="relref">Section 5.3</a> of [<a href="#RFC9147" class="cite xref">RFC9147</a>]</span>. This does not include Handshake structure's
+four-byte header in TLS, nor twelve-byte header in DTLS. The <code>zeros</code> field MUST
+be all zeroes.<a href="#section-5.1-3" class="pilcrow">¶</a></p>
 <p id="section-5.1-4">Repeating large extensions, such as "key_share" with post-quantum algorithms,
 between ClientHelloInner and ClientHelloOuter can lead to excessive size. To
 reduce the size impact, the client MAY substitute extensions which it knows
@@ -1987,11 +1993,12 @@ while keeping the same encrypted <code>ClientHelloInner</code>
 (see <a href="#flow-clienthello-malleability" class="auto internal xref">Section 10.12.3</a>), ECH authenticates ClientHelloOuter
 by passing ClientHelloOuterAAD as the associated data for HPKE sealing
 and opening operations. The ClientHelloOuterAAD is a serialized
-ClientHello structure, defined in <span><a href="https://rfc-editor.org/rfc/rfc8446#section-4.1.2" class="relref">Section 4.1.2</a> of [<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>, which
-matches the ClientHelloOuter except that the <code>payload</code> field of the
-"encrypted_client_hello" is replaced with a byte string of the same
-length but whose contents are zeros. This value does not include the
-four-byte header from the Handshake structure.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+ClientHello structure, defined in <span><a href="https://rfc-editor.org/rfc/rfc8446#section-4.1.2" class="relref">Section 4.1.2</a> of [<a href="#RFC8446" class="cite xref">RFC8446</a>]</span> for TLS and
+<span><a href="https://rfc-editor.org/rfc/rfc9147#section-5.3" class="relref">Section 5.3</a> of [<a href="#RFC9147" class="cite xref">RFC9147</a>]</span> for DTLS, which matches the ClientHelloOuter except
+that the <code>payload</code> field of the "encrypted_client_hello" is replaced with a byte
+string of the same length but whose contents are zeros. This value does not
+include Handshake structure's four-byte header in TLS, nor twelve-byte header in
+DTLS.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2507,7 +2514,7 @@ MUST abort with an "illegal_parameter" alert.<a href="#section-7-3" class="pilcr
 <p id="section-7-4">In shared mode, a server plays both roles, first decrypting the
 <code>ClientHelloOuter</code> and then using the contents of the
 <code>ClientHelloInner</code>.  A shared mode server which receives a
-<code>ClientHello</code> with <code>ECHClientHello.type</code> of <code>outer</code> MUST abort with an
+<code>ClientHello</code> with <code>ECHClientHello.type</code> of <code>inner</code> MUST abort with an
 "illegal_parameter" alert, because such a <code>ClientHello</code> should never
 be received directly from the network.<a href="#section-7-4" class="pilcrow">¶</a></p>
 <p id="section-7-5">If <code>ECHClientHello.type</code> is not a valid <code>ECHClientHelloType</code>, then
@@ -2683,7 +2690,8 @@ ServerHello.random with the following string:<a href="#section-7.2-2" class="pil
 </div>
 <p id="section-7.2-4">where HKDF-Expand-Label is defined in <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>], <a href="https://rfc-editor.org/rfc/rfc8446#section-7.1" class="relref">Section 7.1</a></span>, "0" indicates a
 string of Hash.length bytes set to zero, and Hash is the hash function used to
-compute the transcript hash.<a href="#section-7.2-4" class="pilcrow">¶</a></p>
+compute the transcript hash. In DTLS, the modified version of HKDF-Expand-Label
+defined in <span>[<a href="#RFC9147" class="cite xref">RFC9147</a>], <a href="https://rfc-editor.org/rfc/rfc9147#section-5.9" class="relref">Section 5.9</a></span> is used instead.<a href="#section-7.2-4" class="pilcrow">¶</a></p>
 <p id="section-7.2-5">The backend server MUST NOT perform this operation if it negotiated TLS 1.2 or
 below. Note that doing so would overwrite the downgrade signal for TLS 1.3 (see
 <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>], <a href="https://rfc-editor.org/rfc/rfc8446#section-4.1.3" class="relref">Section 4.1.3</a></span>).<a href="#section-7.2-5" class="pilcrow">¶</a></p>
@@ -2909,19 +2917,20 @@ has size k = 1. Client-facing servers SHOULD deploy ECH in such a way so as to
 maximize the size of the anonymity set where possible. This means client-facing
 servers should use the same ECHConfig for as many hosts as possible. An
 attacker can distinguish two hosts that have different ECHConfig values based
-on the ECHClientHello.config_id value. This also means public information in a
-TLS handshake should be consistent across hosts. For example, if a
-client-facing server services many backend origin hosts, only one of which
-supports some cipher suite, it may be possible to identify that host based on
-the contents of unencrypted handshake message. Similarly, if a backend
-origin reuses KeyShare values, then that provides a unique identifier for
-that server.<a href="#section-10.1-7" class="pilcrow">¶</a></p>
-<p id="section-10.1-8">Beyond these primary security and privacy goals, ECH also aims to hide, to some
+on the ECHClientHello.config_id value.<a href="#section-10.1-7" class="pilcrow">¶</a></p>
+<p id="section-10.1-8">This also means public information in a TLS handshake should be
+consistent across hosts. For example, if a client-facing server
+services many backend origin hosts, only one of which supports some
+cipher suite, it may be possible to identify that host based on the
+contents of unencrypted handshake message. Similarly, if a backend
+origin reuses KeyShare values, then that provides a unique identifier
+for that server.<a href="#section-10.1-8" class="pilcrow">¶</a></p>
+<p id="section-10.1-9">Beyond these primary security and privacy goals, ECH also aims to hide, to some
 extent, the fact that it is being used at all. Specifically, the GREASE ECH
 extension described in <a href="#grease-ech" class="auto internal xref">Section 6.2</a> does not change the security properties of
 the TLS handshake at all. Its goal is to provide "cover" for the real ECH
 protocol (<a href="#real-ech" class="auto internal xref">Section 6.1</a>), as a means of addressing the "do not stick out"
-requirements of <span>[<a href="#RFC8744" class="cite xref">RFC8744</a>]</span>. See <a href="#dont-stick-out" class="auto internal xref">Section 10.10.4</a> for details.<a href="#section-10.1-8" class="pilcrow">¶</a></p>
+requirements of <span>[<a href="#RFC8744" class="cite xref">RFC8744</a>]</span>. See <a href="#dont-stick-out" class="auto internal xref">Section 10.10.4</a> for details.<a href="#section-10.1-9" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="plaintext-dns">
@@ -2962,6 +2971,12 @@ target clients. Moreover, DNS caching behavior makes targeting individual users
 for extended periods of time, e.g., using per-client ECHConfig structures
 delivered via HTTPS RRs with high TTLs, challenging. Clients can help mitigate
 this problem by flushing any DNS or ECHConfig state upon changing networks.<a href="#section-10.3-2" class="pilcrow">¶</a></p>
+<p id="section-10.3-3">ECHConfig rotation rate is also an issue for non-malicious servers,
+which may want to rotate keys frequently to limit exposure if the key
+is compromised. Rotating too frequently limits the client anonymity
+set. In practice, servers with high load are the best candidates
+to be client-facing servers and so anonymity sets will typically
+be large even with fairly fast rotation intervals.<a href="#section-10.3-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="ignored-configs">
@@ -3231,7 +3246,7 @@ out-of-scope for this specification.<a href="#section-10.10.4-9" class="pilcrow"
 <p id="section-10.10.5-1">This design does not provide forward secrecy for the inner ClientHello
 because the server's ECH key is static.  However, the window of
 exposure is bound by the key lifetime. It is RECOMMENDED that servers
-rotate keys frequently.<a href="#section-10.10.5-1" class="pilcrow">¶</a></p>
+rotate keys regularly.<a href="#section-10.10.5-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="enable-multi-party-security-contexts">

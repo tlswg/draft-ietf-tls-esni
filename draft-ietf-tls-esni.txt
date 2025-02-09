@@ -5,12 +5,12 @@
 tls                                                          E. Rescorla
 Internet-Draft                                               Independent
 Intended status: Standards Track                                  K. Oku
-Expires: 28 May 2025                                              Fastly
+Expires: 13 August 2025                                           Fastly
                                                              N. Sullivan
                                              Cryptography Consulting LLC
                                                               C. A. Wood
                                                               Cloudflare
-                                                        24 November 2024
+                                                         9 February 2025
 
 
                        TLS Encrypted Client Hello
@@ -44,11 +44,11 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 28 May 2025.
+   This Internet-Draft will expire on 13 August 2025.
 
 Copyright Notice
 
-   Copyright (c) 2024 IETF Trust and the persons identified as the
+   Copyright (c) 2025 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -545,9 +545,11 @@ Table of Contents
 
    The client_hello field is computed by first making a copy of
    ClientHelloInner and setting the legacy_session_id field to the empty
-   string.  Note this field uses the ClientHello structure, defined in
-   Section 4.1.2 of [RFC8446] which does not include the Handshake
-   structure's four byte header.  The zeros field MUST be all zeroes.
+   string.  In TLS, this field uses the ClientHello structure defined in
+   Section 4.1.2 of [RFC8446].  In DTLS, it uses the ClientHello
+   structured defined in Section 5.3 of [RFC9147].  This does not
+   include Handshake structure's four-byte header in TLS, nor twelve-
+   byte header in DTLS.  The zeros field MUST be all zeroes.
 
    Repeating large extensions, such as "key_share" with post-quantum
    algorithms, between ClientHelloInner and ClientHelloOuter can lead to
@@ -621,11 +623,13 @@ Table of Contents
    Section 10.12.3), ECH authenticates ClientHelloOuter by passing
    ClientHelloOuterAAD as the associated data for HPKE sealing and
    opening operations.  The ClientHelloOuterAAD is a serialized
-   ClientHello structure, defined in Section 4.1.2 of [RFC8446], which
-   matches the ClientHelloOuter except that the payload field of the
+   ClientHello structure, defined in Section 4.1.2 of [RFC8446] for TLS
+   and Section 5.3 of [RFC9147] for DTLS, which matches the
+   ClientHelloOuter except that the payload field of the
    "encrypted_client_hello" is replaced with a byte string of the same
-   length but whose contents are zeros.  This value does not include the
-   four-byte header from the Handshake structure.
+   length but whose contents are zeros.  This value does not include
+   Handshake structure's four-byte header in TLS, nor twelve-byte header
+   in DTLS.
 
 6.  Client Behavior
 
@@ -1011,7 +1015,7 @@ Table of Contents
    In verifying the client-facing server certificate, the client MUST
    interpret the public name as a DNS-based reference identity.  Clients
    that incorporate DNS names and IP addresses into the same syntax
-   (e.g.  [RFC3986], Section 7.4 and [WHATWG-IPV4]) MUST reject names
+   (e.g. [RFC3986], Section 7.4 and [WHATWG-IPV4]) MUST reject names
    that would be interpreted as IPv4 addresses.  Clients that enforce
    this by checking ECHConfig.contents.public_name do not need to repeat
    the check at this layer.
@@ -1118,7 +1122,7 @@ Table of Contents
    In shared mode, a server plays both roles, first decrypting the
    ClientHelloOuter and then using the contents of the ClientHelloInner.
    A shared mode server which receives a ClientHello with
-   ECHClientHello.type of outer MUST abort with an "illegal_parameter"
+   ECHClientHello.type of inner MUST abort with an "illegal_parameter"
    alert, because such a ClientHello should never be received directly
    from the network.
 
@@ -1300,7 +1304,9 @@ Table of Contents
 
    where HKDF-Expand-Label is defined in [RFC8446], Section 7.1, "0"
    indicates a string of Hash.length bytes set to zero, and Hash is the
-   hash function used to compute the transcript hash.
+   hash function used to compute the transcript hash.  In DTLS, the
+   modified version of HKDF-Expand-Label defined in [RFC9147],
+   Section 5.9 is used instead.
 
    The backend server MUST NOT perform this operation if it negotiated
    TLS 1.2 or below.  Note that doing so would overwrite the downgrade
@@ -1508,13 +1514,15 @@ Table of Contents
    where possible.  This means client-facing servers should use the same
    ECHConfig for as many hosts as possible.  An attacker can distinguish
    two hosts that have different ECHConfig values based on the
-   ECHClientHello.config_id value.  This also means public information
-   in a TLS handshake should be consistent across hosts.  For example,
-   if a client-facing server services many backend origin hosts, only
-   one of which supports some cipher suite, it may be possible to
-   identify that host based on the contents of unencrypted handshake
-   message.  Similarly, if a backend origin reuses KeyShare values, then
-   that provides a unique identifier for that server.
+   ECHClientHello.config_id value.
+
+   This also means public information in a TLS handshake should be
+   consistent across hosts.  For example, if a client-facing server
+   services many backend origin hosts, only one of which supports some
+   cipher suite, it may be possible to identify that host based on the
+   contents of unencrypted handshake message.  Similarly, if a backend
+   origin reuses KeyShare values, then that provides a unique identifier
+   for that server.
 
    Beyond these primary security and privacy goals, ECH also aims to
    hide, to some extent, the fact that it is being used at all.
@@ -1561,6 +1569,13 @@ Table of Contents
    per-client ECHConfig structures delivered via HTTPS RRs with high
    TTLs, challenging.  Clients can help mitigate this problem by
    flushing any DNS or ECHConfig state upon changing networks.
+
+   ECHConfig rotation rate is also an issue for non-malicious servers,
+   which may want to rotate keys frequently to limit exposure if the key
+   is compromised.  Rotating too frequently limits the client anonymity
+   set.  In practice, servers with high load are the best candidates to
+   be client-facing servers and so anonymity sets will typically be
+   large even with fairly fast rotation intervals.
 
 10.4.  Ignored Configuration Identifiers and Trial Decryption
 
@@ -1807,7 +1822,7 @@ Table of Contents
    This design does not provide forward secrecy for the inner
    ClientHello because the server's ECH key is static.  However, the
    window of exposure is bound by the key lifetime.  It is RECOMMENDED
-   that servers rotate keys frequently.
+   that servers rotate keys regularly.
 
 10.10.6.  Enable Multi-party Security Contexts
 
