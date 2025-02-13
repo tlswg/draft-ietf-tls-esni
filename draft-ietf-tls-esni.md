@@ -913,8 +913,8 @@ preferred name syntax (see {{Section 2 of ?DNS-TERMS=RFC8499}}).  That is, to be
 valid, the public_name needs to be a dot-separated sequence of LDH labels, as
 defined in {{Section 2.3.1 of !RFC5890}}, where:
 
-* the sequence does not begin or end with an ASCII dot;
-* all labels are at most 63 octets; and
+* the sequence does not begin or end with an ASCII dot, and
+* all labels are at most 63 octets.
 
 Clients additionally SHOULD ignore the structure if the final LDH
 label either consists of all ASCII digits (i.e. '0' through '9') or is
