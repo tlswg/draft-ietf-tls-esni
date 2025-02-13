@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-02-11T01:22:45.651063+00:00",
+  "timestamp": "2025-02-13T01:23:29.301799+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -57526,7 +57526,7 @@
       "labels": [],
       "body": "@bemasc ",
       "createdAt": "2024-11-24T01:12:47Z",
-      "updatedAt": "2025-02-10T23:14:27Z",
+      "updatedAt": "2025-02-11T21:56:40Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "dc3a007ca2d41a743a0f7807782006fbd127456a",
@@ -57786,6 +57786,152 @@
               "body": "I'm still stuck on the \"SHOULD\" and this notion that we need to concern ourselves with incorrectly implemented clients.",
               "createdAt": "2025-02-10T23:14:27Z",
               "updatedAt": "2025-02-10T23:14:27Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6bbCa8",
+          "commit": {
+            "abbreviatedOid": "770a91f"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2025-02-11T02:24:12Z",
+          "updatedAt": "2025-02-11T02:24:12Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "Isn't the entire purpose of this piece of greasing to detect incorrectly implemented clients?",
+              "createdAt": "2025-02-11T02:24:12Z",
+              "updatedAt": "2025-02-11T02:24:12Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6bbP78",
+          "commit": {
+            "abbreviatedOid": "770a91f"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2025-02-11T03:25:21Z",
+          "updatedAt": "2025-02-11T03:25:21Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "So let them connect and collect their IP addresses?\r\n\r\nI guess that I'm struggling with the use of 2119 language here.  Grease is discretionary and serves no direct interoperability purpose.  I don't see why you would so forcibly recommend action like this when this could be a simple \"we reserved some codepoints and other stuff, which you can use this way if you are interested\".",
+              "createdAt": "2025-02-11T03:25:21Z",
+              "updatedAt": "2025-02-11T03:25:21Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6bbQEK",
+          "commit": {
+            "abbreviatedOid": "770a91f"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2025-02-11T03:26:10Z",
+          "updatedAt": "2025-02-11T03:26:10Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "I should have said, the greased ECH ClientHello extension serves a purpose that depends on it being used, but this one doesn't.",
+              "createdAt": "2025-02-11T03:26:10Z",
+              "updatedAt": "2025-02-11T03:26:10Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6bbUV9",
+          "commit": {
+            "abbreviatedOid": "770a91f"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2025-02-11T03:52:59Z",
+          "updatedAt": "2025-02-11T03:52:59Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "> So let them connect and collect their IP addresses?\r\n\r\nThe reasoning here is as follows:\r\n\r\n- You provide an ECHConfig with a mandatory unknown extension which should cause a compliant client to skip the ECHConfig\r\n- The ECHConfig is otherwise invalid (but in a way that is not readily apparent), so if it doesn't skip it, it will experience a connection failure.\r\n- The user will report the connection failure and that will help get the client fixed.\r\n\r\n\r\n> I guess that I'm struggling with the use of 2119 language here. Grease is discretionary and serves no direct interoperability purpose. I don't see why you would so forcibly recommend action like this when this could be a simple \"we reserved some codepoints and other stuff, which you can use this way if you are interested\".\r\n\r\nI don't have a strong opinion either way about the SHOULD, but I do think we should explain the logic above. Perhaps:\r\n\r\n> The reserved values with the high-order bit set are mandatory, as\r\ndefined in {{config-extensions}}. In order to GREASE correct client\r\nbehavior in ignoring these values, servers can randomly select from these values and include them in extraneous ECH configurations which have invalid keys, and invalid public names,\r\nCorrectly-implemented clients will ignore these configurations because\r\nthey do not recognize the mandatory extension. Incorrectly implemented\r\nclients which skip the extension will attempt to connect to the server\r\nusing the ECHConfig, but fail to connect because the server will not\r\nbe able to decrypt the encrypted ClientHello or perform the recovery\r\nflow, thus causing a failure on the client.\r\n\r\n\r\n\r\n",
+              "createdAt": "2025-02-11T03:52:59Z",
+              "updatedAt": "2025-02-11T03:52:59Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6bbd33",
+          "commit": {
+            "abbreviatedOid": "770a91f"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2025-02-11T04:45:50Z",
+          "updatedAt": "2025-02-11T04:45:50Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "Why not invalid IP addresses?  There's no place like 127.0.0.1.\r\n\r\nMy point here is that you don't have a good measure for exactly how stupid the implementation needs to be to be caught out this way.  A perfectly valid approach would include a completely valid configuration, aside from the mandatory extension that no one can support.  Then, if a connection attempt is made, the server can log everything, including the inner ClientHello.  I don't know what you /do/ with that information, but it's a trap for a very particular profile of stupid.\r\n\r\nYou can make the config more and more obviously silly, but who then are you planning to trap?  For instance, I don't see why you couldn't connect with \"foo.invalid\" and expect it to work, aside from any retry.",
+              "createdAt": "2025-02-11T04:45:50Z",
+              "updatedAt": "2025-02-11T04:45:50Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6bf95k",
+          "commit": {
+            "abbreviatedOid": "770a91f"
+          },
+          "author": "bemasc",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2025-02-11T14:01:40Z",
+          "updatedAt": "2025-02-11T14:06:05Z",
+          "comments": [
+            {
+              "originalPosition": 30,
+              "body": "@martinthomson Here's another try:\r\n\r\n```suggestion\r\nthey do not recognize the mandatory extension.  Servers SHOULD ensure\r\nthat any client using these configurations encounters a warning or error\r\nmessage.  This can be accomplished by giving the extraneous configurations\r\ndistinctive config IDs or public names, and rejecting the TLS connection or\r\ninserting an application-level warning message when these are observed.\r\n```",
+              "createdAt": "2025-02-11T14:01:40Z",
+              "updatedAt": "2025-02-11T14:06:05Z"
+            },
+            {
+              "originalPosition": 28,
+              "body": "I think we are talking past each other slightly (the text assumes that clients MUST NOT special-case .invalid!), but I also think @martinthomson is onto something here.  We don't have to rely on \"natural\" failure modes (as in the current text).  The server can explicitly recognize the GREASE configs and inject failures.  This allows better GREASE (the config can be otherwise valid) and richer failure modes (e.g. injecting a warning message into webpage content).\r\n\r\nI've added a suggestion below.",
+              "createdAt": "2025-02-11T14:06:00Z",
+              "updatedAt": "2025-02-11T14:06:05Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6bk6Qb",
+          "commit": {
+            "abbreviatedOid": "770a91f"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2025-02-11T21:56:39Z",
+          "updatedAt": "2025-02-11T21:56:40Z",
+          "comments": [
+            {
+              "originalPosition": 30,
+              "body": "I really like this one.  I do think that your list could include making the configuration broken as well (not with a SHOULD, but listed with your \"cam be accomplished\" phrasing or similar), but this new stuff works for me.",
+              "createdAt": "2025-02-11T21:56:40Z",
+              "updatedAt": "2025-02-11T21:56:40Z"
             }
           ]
         }
@@ -58200,7 +58346,7 @@
       "labels": [],
       "body": "This keeps MT's move but adopts the IP address rejection rule from before. From #638 ",
       "createdAt": "2025-02-09T20:37:14Z",
-      "updatedAt": "2025-02-09T22:10:00Z",
+      "updatedAt": "2025-02-11T13:44:22Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "1a16dff51f9206d51b747070aeca0492585c8581",
@@ -58211,7 +58357,15 @@
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@bemasc any objections?",
+          "createdAt": "2025-02-11T04:37:03Z",
+          "updatedAt": "2025-02-11T04:37:03Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOB-yxNc6bPRDu",
@@ -58225,6 +58379,26 @@
           "createdAt": "2025-02-09T22:10:00Z",
           "updatedAt": "2025-02-09T22:10:00Z",
           "comments": []
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6bfwxW",
+          "commit": {
+            "abbreviatedOid": "23b61ad"
+          },
+          "author": "bemasc",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "No objection.",
+          "createdAt": "2025-02-11T13:43:11Z",
+          "updatedAt": "2025-02-11T13:44:22Z",
+          "comments": [
+            {
+              "originalPosition": 30,
+              "body": "Trailing \"and\"?\r\n\r\n```suggestion\r\n* the sequence does not begin or end with an ASCII dot, and\r\n* all labels are at most 63 octets.\r\n```",
+              "createdAt": "2025-02-11T13:43:12Z",
+              "updatedAt": "2025-02-11T13:44:22Z"
+            }
+          ]
         }
       ]
     }
