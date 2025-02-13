@@ -1004,9 +1004,18 @@ these values and include them in extraneous ECH configurations.
 Correctly-implemented clients will ignore these configurations because
 they do not recognize the mandatory extension.  Servers SHOULD ensure
 that any client using these configurations encounters a warning or error
-message.  This can be accomplished by giving the extraneous configurations
-distinctive config IDs or public names, and rejecting the TLS connection or
-inserting an application-level warning message when these are observed.
+message.  This can be accomplished in several ways, including:
+
+* By giving the extraneous configurations distinctive config IDs or
+  public names, and rejecting the TLS connection or inserting an
+  application-level warning message when these are observed.
+
+* By giving the extraneous configurations an invalid public
+  key and a public name not associated with the server, so that
+  the initial ClientHelloOuter will not be decryptable and
+  the server cannot perform the recovery flow described
+  in {{rejected-ech}}.
+
 # Server Behavior {#server-behavior}
 
 As described in {{topologies}}, servers can play two roles, either as
