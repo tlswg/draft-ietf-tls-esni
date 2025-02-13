@@ -1002,10 +1002,11 @@ The reserved values with the high-order bit set are mandatory, as
 defined in {{config-extensions}}. Servers SHOULD randomly select from
 these values and include them in extraneous ECH configurations.
 Correctly-implemented clients will ignore these configurations because
-they do not recognize the mandatory extension.  These extraneous ECH
-configurations SHOULD have invalid keys, and invalid public names,
-ending in ".invalid" (see {{?RFC2606}}).
-
+they do not recognize the mandatory extension.  Servers SHOULD ensure
+that any client using these configurations encounters a warning or error
+message.  This can be accomplished by giving the extraneous configurations
+distinctive config IDs or public names, and rejecting the TLS connection or
+inserting an application-level warning message when these are observed.
 # Server Behavior {#server-behavior}
 
 As described in {{topologies}}, servers can play two roles, either as
