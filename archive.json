@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-02-13T01:23:29.301799+00:00",
+  "timestamp": "2025-02-16T01:36:44.037666+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -57526,13 +57526,13 @@
       "labels": [],
       "body": "@bemasc ",
       "createdAt": "2024-11-24T01:12:47Z",
-      "updatedAt": "2025-02-11T21:56:40Z",
+      "updatedAt": "2025-02-13T13:52:44Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "dc3a007ca2d41a743a0f7807782006fbd127456a",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "issue630_extraneous_configurations",
-      "headRefOid": "770a91f4f9addd2e7f20f315d701f26e709dfa77",
+      "headRefOid": "149e68a0f490444f32231b0af909759f6cfe976c",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -57593,6 +57593,13 @@
           "body": "> I'm objecting to this:\r\n> \r\n> > These extraneous ECH configurations SHOULD have invalid keys, and invalid public names,\r\n\r\nAs far as I can tell, the Server Greasing section that this is part of is completely irrelevant to client implementations and is purely a recommendation on how to construct a grease ECH config on the server side. I think \u201cinvalid public names\u201d just means names that if used would not result in a successful connection, not that the client should attempt to detect and reject configs with \u201cinvalid\u201d names. I don\u2019t see how the client _could_ do so, since it cannot know if the server would accept a name before trying it.",
           "createdAt": "2025-02-10T08:10:48Z",
           "updatedAt": "2025-02-10T08:10:48Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@martinthomson  @bemasc how does this look?",
+          "createdAt": "2025-02-13T04:34:57Z",
+          "updatedAt": "2025-02-13T04:34:57Z"
         }
       ],
       "reviews": [
@@ -57934,6 +57941,32 @@
               "updatedAt": "2025-02-11T21:56:40Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6by82R",
+          "commit": {
+            "abbreviatedOid": "149e68a"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2025-02-13T04:42:51Z",
+          "updatedAt": "2025-02-13T04:42:51Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6b3qmW",
+          "commit": {
+            "abbreviatedOid": "149e68a"
+          },
+          "author": "bemasc",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2025-02-13T13:52:44Z",
+          "updatedAt": "2025-02-13T13:52:44Z",
+          "comments": []
         }
       ]
     },
@@ -58346,13 +58379,13 @@
       "labels": [],
       "body": "This keeps MT's move but adopts the IP address rejection rule from before. From #638 ",
       "createdAt": "2025-02-09T20:37:14Z",
-      "updatedAt": "2025-02-11T13:44:22Z",
+      "updatedAt": "2025-02-13T04:16:22Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "1a16dff51f9206d51b747070aeca0492585c8581",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "move-name-validation",
-      "headRefOid": "23b61ad4e604a69e24776758e6c1af1ded2b07a1",
+      "headRefOid": "1838d8e631a2f4e9e4be0bf4f5d21ca72864bb9d",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
