@@ -1227,6 +1227,14 @@ encrypting a ClientHello message under a server public key.<a href="#section-abs
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
                 <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-grease-ech" class="internal xref">GREASE ECH</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2.2.1">
+                    <p id="section-toc.1-1.6.2.2.2.1.1"><a href="#section-6.2.1" class="auto internal xref">6.2.1</a>.  <a href="#name-client-greasing" class="internal xref">Client Greasing</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2.2.2">
+                    <p id="section-toc.1-1.6.2.2.2.2.1"><a href="#section-6.2.2" class="auto internal xref">6.2.2</a>.  <a href="#name-server-greasing" class="internal xref">Server Greasing</a></p>
+</li>
+                </ul>
 </li>
             </ul>
 </li>
@@ -2452,43 +2460,85 @@ configuration.<a href="#section-6.1.8-4" class="pilcrow">¶</a></p>
         <h3 id="name-grease-ech">
 <a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-grease-ech" class="section-name selfRef">GREASE ECH</a>
         </h3>
-<p id="section-6.2-1">If the client attempts to connect to a server and does not have an ECHConfig
+<div id="client-greasing">
+<section id="section-6.2.1">
+          <h4 id="name-client-greasing">
+<a href="#section-6.2.1" class="section-number selfRef">6.2.1. </a><a href="#name-client-greasing" class="section-name selfRef">Client Greasing</a>
+          </h4>
+<p id="section-6.2.1-1">If the client attempts to connect to a server and does not have an ECHConfig
 structure available for the server, it SHOULD send a GREASE <span>[<a href="#RFC8701" class="cite xref">RFC8701</a>]</span>
-"encrypted_client_hello" extension in the first ClientHello as follows:<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+"encrypted_client_hello" extension in the first ClientHello as follows:<a href="#section-6.2.1-1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-6.2-2.1">
-            <p id="section-6.2-2.1.1">Set the <code>config_id</code> field to a random byte.<a href="#section-6.2-2.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-6.2.1-2.1">
+              <p id="section-6.2.1-2.1.1">Set the <code>config_id</code> field to a random byte.<a href="#section-6.2.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-6.2-2.2">
-            <p id="section-6.2-2.2.1">Set the <code>cipher_suite</code> field to a supported HpkeSymmetricCipherSuite. The
+            <li class="normal" id="section-6.2.1-2.2">
+              <p id="section-6.2.1-2.2.1">Set the <code>cipher_suite</code> field to a supported HpkeSymmetricCipherSuite. The
 selection SHOULD vary to exercise all supported configurations, but MAY be
 held constant for successive connections to the same server in the same
-session.<a href="#section-6.2-2.2.1" class="pilcrow">¶</a></p>
+session.<a href="#section-6.2.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-6.2-2.3">
-            <p id="section-6.2-2.3.1">Set the <code>enc</code> field to a randomly-generated valid encapsulated public key
-output by the HPKE KEM.<a href="#section-6.2-2.3.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-6.2.1-2.3">
+              <p id="section-6.2.1-2.3.1">Set the <code>enc</code> field to a randomly-generated valid encapsulated public key
+output by the HPKE KEM.<a href="#section-6.2.1-2.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-6.2-2.4">
-            <p id="section-6.2-2.4.1">Set the <code>payload</code> field to a randomly-generated string of L+C bytes, where C
+            <li class="normal" id="section-6.2.1-2.4">
+              <p id="section-6.2.1-2.4.1">Set the <code>payload</code> field to a randomly-generated string of L+C bytes, where C
 is the ciphertext expansion of the selected AEAD scheme and L is the size of
 the EncodedClientHelloInner the client would compute when offering ECH, padded
-according to <a href="#padding" class="auto internal xref">Section 6.1.3</a>.<a href="#section-6.2-2.4.1" class="pilcrow">¶</a></p>
+according to <a href="#padding" class="auto internal xref">Section 6.1.3</a>.<a href="#section-6.2.1-2.4.1" class="pilcrow">¶</a></p>
 </li>
-        </ul>
-<p id="section-6.2-3">If sending a second ClientHello in response to a HelloRetryRequest, the
+          </ul>
+<p id="section-6.2.1-3">If sending a second ClientHello in response to a HelloRetryRequest, the
 client copies the entire "encrypted_client_hello" extension from the first
 ClientHello. The identical value will reveal to an observer that the value of
 "encrypted_client_hello" was fake, but this only occurs if there is a
-HelloRetryRequest.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
-<p id="section-6.2-4">If the server sends an "encrypted_client_hello" extension in either
+HelloRetryRequest.<a href="#section-6.2.1-3" class="pilcrow">¶</a></p>
+<p id="section-6.2.1-4">If the server sends an "encrypted_client_hello" extension in either
 HelloRetryRequest or EncryptedExtensions, the client MUST check the extension
 syntactically and abort the connection with a "decode_error" alert if it is
 invalid. It otherwise ignores the extension. It MUST NOT save the
-"retry_configs" value in EncryptedExtensions.<a href="#section-6.2-4" class="pilcrow">¶</a></p>
-<p id="section-6.2-5">Offering a GREASE extension is not considered offering an encrypted ClientHello
+"retry_configs" value in EncryptedExtensions.<a href="#section-6.2.1-4" class="pilcrow">¶</a></p>
+<p id="section-6.2.1-5">Offering a GREASE extension is not considered offering an encrypted ClientHello
 for purposes of requirements in <a href="#real-ech" class="auto internal xref">Section 6.1</a>. In particular, the client
-MAY offer to resume sessions established without ECH.<a href="#section-6.2-5" class="pilcrow">¶</a></p>
+MAY offer to resume sessions established without ECH.<a href="#section-6.2.1-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="server-greasing">
+<section id="section-6.2.2">
+          <h4 id="name-server-greasing">
+<a href="#section-6.2.2" class="section-number selfRef">6.2.2. </a><a href="#name-server-greasing" class="section-name selfRef">Server Greasing</a>
+          </h4>
+<p id="section-6.2.2-1"><a href="#config-extensions-iana" class="auto internal xref">Section 11.3</a> describes a set of Reserved extensions
+which will never be registered. These can be used by servers to
+"grease" the contents of the ECH configuration, as inspired by
+<span>[<a href="#RFC8701" class="cite xref">RFC8701</a>]</span>. This helps ensure clients process ECH extensions
+correctly. When constructing ECH configurations, servers SHOULD
+randomly select from reserved values with the high-order bit
+clear. Correctly-implemented client will ignore those extensions.<a href="#section-6.2.2-1" class="pilcrow">¶</a></p>
+<p id="section-6.2.2-2">The reserved values with the high-order bit set are mandatory, as
+defined in <a href="#config-extensions" class="auto internal xref">Section 4.2</a>. Servers SHOULD randomly select from
+these values and include them in extraneous ECH configurations.
+Correctly-implemented clients will ignore these configurations because
+they do not recognize the mandatory extension.  Servers SHOULD ensure
+that any client using these configurations encounters a warning or error
+message.  This can be accomplished in several ways, including:<a href="#section-6.2.2-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6.2.2-3.1">
+              <p id="section-6.2.2-3.1.1">By giving the extraneous configurations distinctive config IDs or
+public names, and rejecting the TLS connection or inserting an
+application-level warning message when these are observed.<a href="#section-6.2.2-3.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-6.2.2-3.2">
+              <p id="section-6.2.2-3.2.1">By giving the extraneous configurations an invalid public
+key and a public name not associated with the server, so that
+the initial ClientHelloOuter will not be decryptable and
+the server cannot perform the recovery flow described
+in <a href="#rejected-ech" class="auto internal xref">Section 6.1.6</a>.<a href="#section-6.2.2-3.2.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+</section>
+</div>
 </section>
 </div>
 </section>
@@ -3607,45 +3657,35 @@ registry:<a href="#section-11.3-3" class="pilcrow">¶</a></p>
       another standards body, industry consortium, university site, etc.
       The expert may provide more in depth reviews, but their approval
       should not be taken as an endorsement of the extension.<a href="#section-11.3-4" class="pilcrow">¶</a></p>
-<p id="section-11.3-5">This document defines several Reserved values for ECH configuration extensions.
-These can be used by servers to "grease" the contents of the
-ECH configuration, as inspired by <span>[<a href="#RFC8701" class="cite xref">RFC8701</a>]</span>. This helps ensure clients
-process ECH extensions correctly. When constructing ECH configurations,
-servers SHOULD randomly select from reserved values with the high-order
-bit clear. Correctly-implemented client will ignore those extensions.<a href="#section-11.3-5" class="pilcrow">¶</a></p>
-<p id="section-11.3-6">The reserved values with the high-order bit set are mandatory, as defined
-in <a href="#config-extensions" class="auto internal xref">Section 4.2</a>. Servers SHOULD randomly select from these
-values and include them in extraneous ECH configurations. These
-extraneous ECH configurations SHOULD have invalid keys, and public
-names which the server does not respond to. Correctly-implemented
-clients will ignore these configurations.<a href="#section-11.3-6" class="pilcrow">¶</a></p>
-<p id="section-11.3-7">The initial contents for this registry consists of multiple reserved values,
-with the following attributes, which are repeated for each registration:<a href="#section-11.3-7" class="pilcrow">¶</a></p>
-<span class="break"></span><dl class="dlCompact dlParallel" id="section-11.3-8">
-          <dt id="section-11.3-8.1">Value:</dt>
-          <dd style="margin-left: 1.5em" id="section-11.3-8.2">
-            <p id="section-11.3-8.2.1">0x0000, 0x1A1A, 0x2A2A, 0x3A3A, 0x4A4A, 0x5A5A, 0x6A6A, 0x7A7A, 0x8A8A,
-0x9A9A, 0xAAAA, 0xBABA, 0xCACA, 0xDADA, 0xEAEA, 0xFAFA<a href="#section-11.3-8.2.1" class="pilcrow">¶</a></p>
+<p id="section-11.3-5">This document defines several Reserved values for ECH configuration extensions
+to be used for "greasing" as described in <a href="#server-greasing" class="auto internal xref">Section 6.2.2</a>.<a href="#section-11.3-5" class="pilcrow">¶</a></p>
+<p id="section-11.3-6">The initial contents for this registry consists of multiple reserved values,
+with the following attributes, which are repeated for each registration:<a href="#section-11.3-6" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlCompact dlParallel" id="section-11.3-7">
+          <dt id="section-11.3-7.1">Value:</dt>
+          <dd style="margin-left: 1.5em" id="section-11.3-7.2">
+            <p id="section-11.3-7.2.1">0x0000, 0x1A1A, 0x2A2A, 0x3A3A, 0x4A4A, 0x5A5A, 0x6A6A, 0x7A7A, 0x8A8A,
+0x9A9A, 0xAAAA, 0xBABA, 0xCACA, 0xDADA, 0xEAEA, 0xFAFA<a href="#section-11.3-7.2.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-11.3-8.3">Extension Name:</dt>
-          <dd style="margin-left: 1.5em" id="section-11.3-8.4">
-            <p id="section-11.3-8.4.1">RESERVED<a href="#section-11.3-8.4.1" class="pilcrow">¶</a></p>
+<dt id="section-11.3-7.3">Extension Name:</dt>
+          <dd style="margin-left: 1.5em" id="section-11.3-7.4">
+            <p id="section-11.3-7.4.1">RESERVED<a href="#section-11.3-7.4.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-11.3-8.5">Recommended:</dt>
-          <dd style="margin-left: 1.5em" id="section-11.3-8.6">
-            <p id="section-11.3-8.6.1">Y<a href="#section-11.3-8.6.1" class="pilcrow">¶</a></p>
+<dt id="section-11.3-7.5">Recommended:</dt>
+          <dd style="margin-left: 1.5em" id="section-11.3-7.6">
+            <p id="section-11.3-7.6.1">Y<a href="#section-11.3-7.6.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-11.3-8.7">Reference:</dt>
-          <dd style="margin-left: 1.5em" id="section-11.3-8.8">
-            <p id="section-11.3-8.8.1">This document<a href="#section-11.3-8.8.1" class="pilcrow">¶</a></p>
+<dt id="section-11.3-7.7">Reference:</dt>
+          <dd style="margin-left: 1.5em" id="section-11.3-7.8">
+            <p id="section-11.3-7.8.1">This document<a href="#section-11.3-7.8.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-11.3-8.9">Notes:</dt>
-          <dd style="margin-left: 1.5em" id="section-11.3-8.10">
-            <p id="section-11.3-8.10.1">Grease entries.<a href="#section-11.3-8.10.1" class="pilcrow">¶</a></p>
+<dt id="section-11.3-7.9">Notes:</dt>
+          <dd style="margin-left: 1.5em" id="section-11.3-7.10">
+            <p id="section-11.3-7.10.1">Grease entries.<a href="#section-11.3-7.10.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>

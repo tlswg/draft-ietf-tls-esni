@@ -84,6 +84,8 @@ Table of Contents
        6.1.7.  Authenticating for the Public Name
        6.1.8.  Impact of Retry on Future Connections
      6.2.  GREASE ECH
+       6.2.1.  Client Greasing
+       6.2.2.  Server Greasing
    7.  Server Behavior
      7.1.  Client-Facing Server
        7.1.1.  Sending HelloRetryRequest
@@ -1068,6 +1070,8 @@ Table of Contents
 
 6.2.  GREASE ECH
 
+6.2.1.  Client Greasing
+
    If the client attempts to connect to a server and does not have an
    ECHConfig structure available for the server, it SHOULD send a GREASE
    [RFC8701] "encrypted_client_hello" extension in the first ClientHello
@@ -1105,6 +1109,33 @@ Table of Contents
    ClientHello for purposes of requirements in Section 6.1.  In
    particular, the client MAY offer to resume sessions established
    without ECH.
+
+6.2.2.  Server Greasing
+
+   Section 11.3 describes a set of Reserved extensions which will never
+   be registered.  These can be used by servers to "grease" the contents
+   of the ECH configuration, as inspired by [RFC8701].  This helps
+   ensure clients process ECH extensions correctly.  When constructing
+   ECH configurations, servers SHOULD randomly select from reserved
+   values with the high-order bit clear.  Correctly-implemented client
+   will ignore those extensions.
+
+   The reserved values with the high-order bit set are mandatory, as
+   defined in Section 4.2.  Servers SHOULD randomly select from these
+   values and include them in extraneous ECH configurations.  Correctly-
+   implemented clients will ignore these configurations because they do
+   not recognize the mandatory extension.  Servers SHOULD ensure that
+   any client using these configurations encounters a warning or error
+   message.  This can be accomplished in several ways, including:
+
+   *  By giving the extraneous configurations distinctive config IDs or
+      public names, and rejecting the TLS connection or inserting an
+      application-level warning message when these are observed.
+
+   *  By giving the extraneous configurations an invalid public key and
+      a public name not associated with the server, so that the initial
+      ClientHelloOuter will not be decryptable and the server cannot
+      perform the recovery flow described in Section 6.1.6.
 
 7.  Server Behavior
 
@@ -2109,19 +2140,7 @@ Table of Contents
    not be taken as an endorsement of the extension.
 
    This document defines several Reserved values for ECH configuration
-   extensions.  These can be used by servers to "grease" the contents of
-   the ECH configuration, as inspired by [RFC8701].  This helps ensure
-   clients process ECH extensions correctly.  When constructing ECH
-   configurations, servers SHOULD randomly select from reserved values
-   with the high-order bit clear.  Correctly-implemented client will
-   ignore those extensions.
-
-   The reserved values with the high-order bit set are mandatory, as
-   defined in Section 4.2.  Servers SHOULD randomly select from these
-   values and include them in extraneous ECH configurations.  These
-   extraneous ECH configurations SHOULD have invalid keys, and public
-   names which the server does not respond to.  Correctly-implemented
-   clients will ignore these configurations.
+   extensions to be used for "greasing" as described in Section 6.2.2.
 
    The initial contents for this registry consists of multiple reserved
    values, with the following attributes, which are repeated for each
