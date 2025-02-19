@@ -289,17 +289,6 @@ public_name
 to update the ECH configuration. This is used to correct misconfigured clients,
 as described in {{rejected-ech}}.
 
-: Clients MUST ignore any `ECHConfig` structure whose public_name is not
-parsable as a dot-separated sequence of LDH labels, as defined in
-{{!RFC5890, Section 2.3.1}} or which begins or end with an ASCII dot. Clients
-additionally SHOULD ignore the structure if the final LDH label either consists
-of all ASCII digits (i.e. '0' through '9') or is "0x" or "0X" followed by some,
-possibly empty, sequence of ASCII hexadecimal digits (i.e. '0' through '9', 'a'
-through 'f', and 'A' through 'F'). This avoids public_name values that may be
-interpreted as IPv4 literals. Additionally, clients MAY ignore the
-`ECHConfig` if the length of any label in the DNS name is longer than 63
-octets, as this is the maximum length of a DNS label.
-
 : See {{auth-public-name}} for how the client interprets and validates the
 public_name.
 
@@ -919,6 +908,22 @@ and session IDs presented by the server. These connections are only used to
 trigger retries, as described in {{rejected-ech}}. This may be implemented, for
 instance, by reporting a failed connection with a dedicated error code.
 
+Prior to attempting a connection, a client SHOULD validate the `ECHConfig` to
+ensure that the public_name can be authenticated.  Clients SHOULD ignore any
+`ECHConfig` structure with a public_name that is not a valid host name in
+preferred name syntax (see {{Section 2 of ?DNS-TERMS=RFC8499}}).  That is, to be
+valid, the public_name needs to be a dot-separated sequence of LDH labels, as
+defined in {{Section 2.3.1 of !RFC5890}}, where:
+
+* the sequence does not begin or end with an ASCII dot, and
+* all labels are at most 63 octets.
+
+Clients additionally SHOULD ignore the structure if the final LDH
+label either consists of all ASCII digits (i.e. '0' through '9') or is
+"0x" or "0X" followed by some, possibly empty, sequence of ASCII
+hexadecimal digits (i.e. '0' through '9', 'a' through 'f', and 'A'
+through 'F'). This avoids public_name values that may be interpreted
+as IPv4 literals.
 
 ### Impact of Retry on Future Connections
 
