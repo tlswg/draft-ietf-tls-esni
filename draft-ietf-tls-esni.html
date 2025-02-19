@@ -13,12 +13,12 @@
        This document describes a mechanism in Transport Layer Security (TLS) for
 encrypting a ClientHello message under a server public key. 
     " name="description">
-<meta content="xml2rfc 3.26.0" name="generator">
+<meta content="xml2rfc 3.27.0" name="generator">
 <meta content="Internet-Draft" name="keyword">
 <meta content="draft-ietf-tls-esni-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.26.0
-    Python 3.12.8
+  xml2rfc 3.27.0
+    Python 3.12.9
     ConfigArgParse 1.7
     google-i18n-address 3.1.1
     intervaltree 3.1.0
@@ -439,7 +439,7 @@ dl {
     margin-bottom: 0;
   }
 }
-dl > dt {
+dl:not(.dlNewline) > dt {
   float: left;
   margin-right: 2ch;
   min-width: 8ch;
@@ -1052,7 +1052,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Rescorla, et al.</td>
-<td class="center">Expires 13 August 2025</td>
+<td class="center">Expires 23 August 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1065,12 +1065,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-tls-esni-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-02-09" class="published">9 February 2025</time>
+<time datetime="2025-02-19" class="published">19 February 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-08-13">13 August 2025</time></dd>
+<dd class="expires"><time datetime="2025-08-23">23 August 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1125,7 +1125,7 @@ encrypting a ClientHello message under a server public key.<a href="#section-abs
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 13 August 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 23 August 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1684,31 +1684,17 @@ as described in <a href="#rejected-ech" class="auto internal xref">Section 6.1.6
         <dd class="break"></dd>
 <dt id="section-4-6.7"></dt>
         <dd style="margin-left: 1.5em" id="section-4-6.8">
-          <p id="section-4-6.8.1">Clients MUST ignore any <code>ECHConfig</code> structure whose public_name is not
-parsable as a dot-separated sequence of LDH labels, as defined in
-<span>[<a href="#RFC5890" class="cite xref">RFC5890</a>], <a href="https://rfc-editor.org/rfc/rfc5890#section-2.3.1" class="relref">Section 2.3.1</a></span> or which begins or end with an ASCII dot. Clients
-additionally SHOULD ignore the structure if the final LDH label either consists
-of all ASCII digits (i.e. '0' through '9') or is "0x" or "0X" followed by some,
-possibly empty, sequence of ASCII hexadecimal digits (i.e. '0' through '9', 'a'
-through 'f', and 'A' through 'F'). This avoids public_name values that may be
-interpreted as IPv4 literals. Additionally, clients MAY ignore the
-<code>ECHConfig</code> if the length of any label in the DNS name is longer than 63
-octets, as this is the maximum length of a DNS label.<a href="#section-4-6.8.1" class="pilcrow">¶</a></p>
+          <p id="section-4-6.8.1">See <a href="#auth-public-name" class="auto internal xref">Section 6.1.7</a> for how the client interprets and validates the
+public_name.<a href="#section-4-6.8.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-4-6.9"></dt>
+<dt id="section-4-6.9">extensions</dt>
         <dd style="margin-left: 1.5em" id="section-4-6.10">
-          <p id="section-4-6.10.1">See <a href="#auth-public-name" class="auto internal xref">Section 6.1.7</a> for how the client interprets and validates the
-public_name.<a href="#section-4-6.10.1" class="pilcrow">¶</a></p>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-4-6.11">extensions</dt>
-        <dd style="margin-left: 1.5em" id="section-4-6.12">
-          <p id="section-4-6.12.1">A list of ECHConfigExtension values that the client must take into
+          <p id="section-4-6.10.1">A list of ECHConfigExtension values that the client must take into
 consideration when generating a ClientHello message. Each ECHConfigExtension
 has a 2-octet type and opaque data value, where the data value is encoded
 with a 2-octet integer representing the length of the data, in network byte
-order. ECHConfigExtension values are described below (<a href="#config-extensions" class="auto internal xref">Section 4.2</a>).<a href="#section-4-6.12.1" class="pilcrow">¶</a></p>
+order. ECHConfigExtension values are described below (<a href="#config-extensions" class="auto internal xref">Section 4.2</a>).<a href="#section-4-6.10.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
@@ -2406,6 +2392,26 @@ successful to the application. It additionally MUST ignore all session tickets
 and session IDs presented by the server. These connections are only used to
 trigger retries, as described in <a href="#rejected-ech" class="auto internal xref">Section 6.1.6</a>. This may be implemented, for
 instance, by reporting a failed connection with a dedicated error code.<a href="#section-6.1.7-4" class="pilcrow">¶</a></p>
+<p id="section-6.1.7-5">Prior to attempting a connection, a client SHOULD validate the <code>ECHConfig</code> to
+ensure that the public_name can be authenticated.  Clients SHOULD ignore any
+<code>ECHConfig</code> structure with a public_name that is not a valid host name in
+preferred name syntax (see <span><a href="https://rfc-editor.org/rfc/rfc8499#section-2" class="relref">Section 2</a> of [<a href="#DNS-TERMS" class="cite xref">DNS-TERMS</a>]</span>).  That is, to be
+valid, the public_name needs to be a dot-separated sequence of LDH labels, as
+defined in <span><a href="https://rfc-editor.org/rfc/rfc5890#section-2.3.1" class="relref">Section 2.3.1</a> of [<a href="#RFC5890" class="cite xref">RFC5890</a>]</span>, where:<a href="#section-6.1.7-5" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6.1.7-6.1">
+              <p id="section-6.1.7-6.1.1">the sequence does not begin or end with an ASCII dot, and<a href="#section-6.1.7-6.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-6.1.7-6.2">
+              <p id="section-6.1.7-6.2.1">all labels are at most 63 octets.<a href="#section-6.1.7-6.2.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+<p id="section-6.1.7-7">Clients additionally SHOULD ignore the structure if the final LDH
+label either consists of all ASCII digits (i.e. '0' through '9') or is
+"0x" or "0X" followed by some, possibly empty, sequence of ASCII
+hexadecimal digits (i.e. '0' through '9', 'a' through 'f', and 'A'
+through 'F'). This avoids public_name values that may be interpreted
+as IPv4 literals.<a href="#section-6.1.7-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="impact-of-retry-on-future-connections">
@@ -3660,7 +3666,7 @@ with the following attributes, which are repeated for each registration:<a href=
 <dl class="references">
 <dt id="ECH-IN-DNS">[ECH-IN-DNS]</dt>
         <dd>
-<span class="refAuthor">Schwartz, B. M.</span>, <span class="refAuthor">Bishop, M.</span>, and <span class="refAuthor">E. Nygren</span>, <span class="refTitle">"Bootstrapping TLS Encrypted ClientHello with DNS Service Bindings"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-tls-svcb-ech-06</span>, <time datetime="2024-10-21" class="refDate">21 October 2024</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-tls-svcb-ech-06">https://datatracker.ietf.org/doc/html/draft-ietf-tls-svcb-ech-06</a>&gt;</span>. </dd>
+<span class="refAuthor">Schwartz, B. M.</span>, <span class="refAuthor">Bishop, M.</span>, and <span class="refAuthor">E. Nygren</span>, <span class="refTitle">"Bootstrapping TLS Encrypted ClientHello with DNS Service Bindings"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-tls-svcb-ech-07</span>, <time datetime="2025-02-12" class="refDate">12 February 2025</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-tls-svcb-ech-07">https://datatracker.ietf.org/doc/html/draft-ietf-tls-svcb-ech-07</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="HPKE">[HPKE]</dt>
         <dd>
@@ -3711,6 +3717,10 @@ with the following attributes, which are repeated for each registration:<a href=
 <a href="#section-12.2" class="section-number selfRef">12.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
         </h3>
 <dl class="references">
+<dt id="DNS-TERMS">[DNS-TERMS]</dt>
+        <dd>
+<span class="refAuthor">Hoffman, P.</span>, <span class="refAuthor">Sullivan, A.</span>, and <span class="refAuthor">K. Fujiwara</span>, <span class="refTitle">"DNS Terminology"</span>, <span class="seriesInfo">RFC 8499</span>, <span class="seriesInfo">DOI 10.17487/RFC8499</span>, <time datetime="2019-01" class="refDate">January 2019</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8499">https://www.rfc-editor.org/rfc/rfc8499</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 <dt id="ECH-Analysis">[ECH-Analysis]</dt>
         <dd>
 <span class="refTitle">"A Symbolic Analysis of Privacy for TLS 1.3 with Encrypted Client Hello"</span>, <time datetime="2022-11" class="refDate">November 2022</time>, <span>&lt;<a href="https://www.cs.ox.ac.uk/people/vincent.cheval/publis/BCW-ccs22.pdf">https://www.cs.ox.ac.uk/people/vincent.cheval/publis/BCW-ccs22.pdf</a>&gt;</span>. </dd>
