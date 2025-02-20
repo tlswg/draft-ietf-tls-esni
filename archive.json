@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-02-18T01:23:16.050514+00:00",
+  "timestamp": "2025-02-20T01:24:02.966201+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12916,7 +12916,7 @@
       "id": "I_kwDOB-yxNc6Z67nZ",
       "title": "DNS issues from AD review.",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/628",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -12925,8 +12925,8 @@
       ],
       "body": "Tagging @bemasc on these.\r\n\r\nSection 4\r\n\r\n        Clients MUST ignore any ECHConfig structure whose public_name\r\n        is not parsable as a dot-separated sequence of LDH labels, as\r\n        defined in [RFC5890], Section 2.3.1 or which begins or end with\r\n        an ASCII dot.\r\n\r\nWouldn't this prevent the root zone from ever running ECH? It might not matter,\r\nbut why not allow it :P\r\n\r\n        Clients additionally SHOULD ignore the structure if the final LDH\r\n        label either consists of all ASCII digits (i.e. '0' through '9')\r\n        or is \"0x\" or \"0X\" followed by some, possibly empty, sequence\r\n        of ASCII hexadecimal digits (i.e. '0' through '9', 'a' through\r\n        'f', and 'A' through 'F').\r\n\r\nThis would not allow ECH to work for \"00.com\", \"0x01.com\" or \"0x07.com\", which are\r\nall currently operational domains.\r\n\r\nI don't think this document should try to define what a legal DNS name is. Perhaps\r\nrefer to \"Host name\" in RFC 8499 (or BCP219) and only state \"leave out any potential\r\ntrailing dot\" ? Maybe just separately say \"SNI's cannot be in the textual form of an\r\nIP address, as connections to IP addresses omit the SNI entirely\" ?\r\n\r\nIt is a bit sad that ECH currently does not work with a URI that points to an IP\r\naddress. Especially for the split-mode. But I understand that would be a little\r\nmore than just ECH/encrypted-SNI.\r\n\r\n\r\n        Additionally, clients MAY ignore the ECHConfig if the length of\r\n        any label in the DNS name is longer than 63 octets, as this is\r\n        the maximum length of a DNS label.\r\n\r\nWhy is this a MAY? Why not a MUST or SHOULD?\r\n\r\n",
       "createdAt": "2024-10-12T00:14:00Z",
-      "updatedAt": "2024-11-25T17:02:02Z",
-      "closedAt": null,
+      "updatedAt": "2025-02-19T12:41:34Z",
+      "closedAt": "2025-02-19T12:41:32Z",
       "comments": [
         {
           "author": "bemasc",
@@ -13004,6 +13004,13 @@
           "body": "https://www.rfc-editor.org/rfc/rfc8499\r\n```\r\nHost name:  This term and its equivalent, \"hostname\", have been\r\n      widely used but are not defined in [[RFC1034](https://www.rfc-editor.org/rfc/rfc1034)], [[RFC1035](https://www.rfc-editor.org/rfc/rfc1035)],\r\n      [[RFC1123](https://www.rfc-editor.org/rfc/rfc1123)], or [[RFC2181](https://www.rfc-editor.org/rfc/rfc2181)].  The DNS was originally deployed into the\r\n      Host Tables environment as outlined in [[RFC952](https://www.rfc-editor.org/rfc/rfc952)], and it is likely\r\n      that the term followed informally from the definition there.  Over\r\n      time, the definition seems to have shifted.  \"Host name\" is often\r\n      meant to be a domain name that follows the rules in Section 3.5 of\r\n      [RFC1034], which is also called the \"preferred name syntax\".  (In\r\n      that syntax, every character in each label is a letter, a digit,\r\n      or a hyphen).  Note that any label in a domain name can contain\r\n      any octet value; hostnames are generally considered to be domain\r\n      names where every label follows the rules in the \"preferred name\r\n      syntax\", with the amendment that labels can start with ASCII\r\n      digits (this amendment comes from [Section 2.1 of [RFC1123]](https://www.rfc-editor.org/rfc/rfc1123#section-2.1)).\r\n\r\n      People also sometimes use the term \"hostname\" to refer to just the\r\n      first label of an FQDN, such as \"printer\" in\r\n      \"printer.admin.example.com\".  (Sometimes this is formalized in\r\n      configuration in operating systems.)  In addition, people\r\n      sometimes use this term to describe any name that refers to a\r\n      machine, and those might include labels that do not conform to the\r\n      \"preferred name syntax\".\r\n```",
           "createdAt": "2024-11-25T17:02:01Z",
           "updatedAt": "2024-11-25T17:02:01Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Resolved",
+          "createdAt": "2025-02-19T12:41:32Z",
+          "updatedAt": "2025-02-19T12:41:32Z"
         }
       ]
     },
@@ -13045,7 +13052,7 @@
       "id": "I_kwDOB-yxNc6Z69ZW",
       "title": "Extraneous configurations MUST have invalid DNS names?",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/630",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -13054,8 +13061,8 @@
       ],
       "body": "Suggested in AD review.",
       "createdAt": "2024-10-12T00:29:17Z",
-      "updatedAt": "2024-11-24T01:13:40Z",
-      "closedAt": null,
+      "updatedAt": "2025-02-19T12:41:01Z",
+      "closedAt": "2025-02-19T12:41:01Z",
       "comments": [
         {
           "author": "ekr",
@@ -13233,6 +13240,22 @@
           "updatedAt": "2024-12-02T15:45:18Z"
         }
       ]
+    },
+    {
+      "number": 643,
+      "id": "I_kwDOB-yxNc6qrhXv",
+      "title": "Meaning of \"authenticated\" in name validation section",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/643",
+      "state": "OPEN",
+      "author": "ckcr4lyf",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "First off, apologies for this issue right after #642 was merged. I thought I had left a comment there but apparently the feature in Github I used left a \"Pending\" comment that doesn't gets submitted till I complete my review. \n\nIn essence though, the change I wanted to ask about is:\n\nhttps://github.com/tlswg/draft-ietf-tls-esni/blob/29fe76cebd1b216d4f8c0bd16b8dc5e7ccdef9b8/draft-ietf-tls-esni.md?plain=1#L911-L912\n\nwhat does \"ensure that the public_name can be authenticated\" mean in this context? ",
+      "createdAt": "2025-02-19T14:31:40Z",
+      "updatedAt": "2025-02-19T14:31:40Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
@@ -57519,24 +57542,26 @@
       "id": "PR_kwDOB-yxNc6C67MH",
       "title": "Invalid names end in .invalid. Fixes #630",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/636",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "@bemasc ",
       "createdAt": "2024-11-24T01:12:47Z",
-      "updatedAt": "2025-02-13T13:52:44Z",
+      "updatedAt": "2025-02-19T12:41:00Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "dc3a007ca2d41a743a0f7807782006fbd127456a",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "issue630_extraneous_configurations",
       "headRefOid": "149e68a0f490444f32231b0af909759f6cfe976c",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2025-02-19T12:40:59Z",
+      "mergedAt": "2025-02-19T12:40:59Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "29fe76cebd1b216d4f8c0bd16b8dc5e7ccdef9b8"
+      },
       "comments": [
         {
           "author": "ekr",
@@ -57975,21 +58000,21 @@
       "id": "PR_kwDOB-yxNc6C9aS0",
       "title": "Issue628 dns names",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/637",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2024-11-25T01:32:41Z",
-      "updatedAt": "2025-02-09T20:42:32Z",
+      "updatedAt": "2025-02-19T12:41:19Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "d2e60197f3f1b70a5c11c875da2c826736bded51",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "issue628_dns_names",
       "headRefOid": "1d36649ee3b9242a0925ad38425800b7efd1379e",
-      "closedAt": null,
+      "closedAt": "2025-02-19T12:41:19Z",
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
@@ -58007,6 +58032,13 @@
           "body": "I think this version is now OBE.",
           "createdAt": "2025-02-09T20:42:31Z",
           "updatedAt": "2025-02-09T20:42:31Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "This should now be resolved.",
+          "createdAt": "2025-02-19T12:41:16Z",
+          "updatedAt": "2025-02-19T12:41:16Z"
         }
       ],
       "reviews": [
@@ -58070,21 +58102,21 @@
       "id": "PR_kwDOB-yxNc6DIIZ2",
       "title": "Move name validation to the authentication section",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/638",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "martinthomson",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "This is partly motivated by my interests in doing something evil, but mostly this is because coupling name validity to ECH config validity is a layering violation.  It's fine to invoke some name validation, but that should be dictated by the needs of the thing that ends up relying on that name.\r\n\r\nThis corrects both problems.\r\n\r\nIn doing this, I realized that RFC 791 says nothing about the IP address textual format.  That's problematic, but I couldn't come up with anything better in short notice.\r\n\r\nCloses #628.\r\nCloses #637.",
       "createdAt": "2024-11-26T04:33:57Z",
-      "updatedAt": "2025-02-09T20:37:43Z",
+      "updatedAt": "2025-02-19T12:39:47Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "d2e60197f3f1b70a5c11c875da2c826736bded51",
       "headRepository": "martinthomson/draft-ietf-tls-esni",
       "headRefName": "move-name-validation",
       "headRefOid": "f6b6111769c7342ebc3e0ff7d83e5f89856c0bda",
-      "closedAt": null,
+      "closedAt": "2025-02-19T12:39:47Z",
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
@@ -58372,24 +58404,26 @@
       "id": "PR_kwDOB-yxNc6KkMHE",
       "title": "Move name validation",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/642",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "This keeps MT's move but adopts the IP address rejection rule from before. From #638 ",
       "createdAt": "2025-02-09T20:37:14Z",
-      "updatedAt": "2025-02-13T04:16:22Z",
+      "updatedAt": "2025-02-19T19:24:18Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "1a16dff51f9206d51b747070aeca0492585c8581",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "move-name-validation",
       "headRefOid": "1838d8e631a2f4e9e4be0bf4f5d21ca72864bb9d",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2025-02-19T12:39:37Z",
+      "mergedAt": "2025-02-19T12:39:37Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "01a6cdbe9728684382de8060587a15d1b01ebf79"
+      },
       "comments": [
         {
           "author": "ekr",
@@ -58430,6 +58464,66 @@
               "body": "Trailing \"and\"?\r\n\r\n```suggestion\r\n* the sequence does not begin or end with an ASCII dot, and\r\n* all labels are at most 63 octets.\r\n```",
               "createdAt": "2025-02-11T13:43:12Z",
               "updatedAt": "2025-02-11T13:44:22Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6b9iya",
+          "commit": {
+            "abbreviatedOid": "1838d8e"
+          },
+          "author": "ckcr4lyf",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "Sorry for late review. just officially submitting it in this diff, opened a new issue as #643 though.",
+          "createdAt": "2025-02-14T02:04:33Z",
+          "updatedAt": "2025-02-19T14:32:36Z",
+          "comments": [
+            {
+              "originalPosition": 23,
+              "body": "One change I see compared to the earlier text is \"ensure that the public_name can be authenticated\".\r\n\r\nWhat does \"authenticated\" mean exactly in this context?",
+              "createdAt": "2025-02-14T02:04:33Z",
+              "updatedAt": "2025-02-19T14:32:37Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6cm0vJ",
+          "commit": {
+            "abbreviatedOid": "1838d8e"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2025-02-19T16:51:25Z",
+          "updatedAt": "2025-02-19T16:51:25Z",
+          "comments": [
+            {
+              "originalPosition": 23,
+              "body": "That it can be bound to a valid WebPKI certificate. With that said, I agree that this text is confusing, because the \"to ensure\" is actually the purpose of the validation, rather than a separate requirement, so I propose to just remove \"to ensure...\" and following. @bemasc any objections?",
+              "createdAt": "2025-02-19T16:51:25Z",
+              "updatedAt": "2025-02-19T16:51:26Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6coJHp",
+          "commit": {
+            "abbreviatedOid": "1838d8e"
+          },
+          "author": "bemasc",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2025-02-19T19:24:17Z",
+          "updatedAt": "2025-02-19T19:24:18Z",
+          "comments": [
+            {
+              "originalPosition": 23,
+              "body": "I think it would be clearer to remove this whole sentence.  It seems to be redundant with the next sentence (which is also repeated by the sentence after that!), and asking clients to \"validate\" without explaining what that entails seems odd.",
+              "createdAt": "2025-02-19T19:24:17Z",
+              "updatedAt": "2025-02-19T19:24:18Z"
             }
           ]
         }
