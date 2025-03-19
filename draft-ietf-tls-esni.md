@@ -98,8 +98,9 @@ feature are discussed in {{deployment}}.
 ECH is not in itself sufficient to protect the identity of the server.
 The target domain may also be visible through other channels, such as
 plaintext client DNS queries or visible server IP addresses. However,
-DNS over HTTPS {{?RFC8484}}, DNS over TLS/DTLS {{? {{?RFC8094}} and
-DNS over QUIC {{?RFC9250}} 
+encrypted DNS mechanisms such as
+DNS over HTTPS {{?RFC8484}}, DNS over TLS/DTLS {{?RFC7858}} {{?RFC8094}} and
+DNS over QUIC {{?RFC9250}}
 provide mechanisms for clients to conceal
 DNS lookups from network inspection, and many TLS servers host multiple domains
 on the same IP address. Private origins may also be deployed behind a common
@@ -1295,8 +1296,9 @@ incomplete rollout in a multi-server deployment. This may also occur if a server
 loses its ECH keys, or if a deployment of ECH must be rolled back on the server.
 
 The retry mechanism repairs inconsistencies, provided the TLS server
-has a certificate for the public name. If server and advertised keys mismatch, the
-server will reject ECH and respond with "retry_configs". If the server does
+has a certificate for the public name. If server and advertised keys
+mismatch, the server will reject ECH and respond with
+"retry_configs". If the server does
 not understand
 the "encrypted_client_hello" extension at all, it will ignore it as required by
 {{Section 4.1.2 of RFC8446}}. Provided the server can present a certificate
@@ -1437,16 +1439,17 @@ requirements of {{?RFC8744}}. See {{dont-stick-out}} for details.
 ## Unauthenticated and Plaintext DNS {#plaintext-dns}
 
 In comparison to {{?I-D.kazuho-protected-sni}}, wherein DNS RRs are
-signed via a server private key, HTTPS records have no authenticity or provenance
-information. This means that any attacker which can inject DNS responses or
-poison DNS caches, which is a common scenario in client access networks, can
-supply clients with fake HTTPS records (so that the client encrypts data to them)
-or strip the ECH record from the response. However, in the face of an attacker
-that controls DNS, no encryption scheme can work because the attacker can
-replace the IP address, thus blocking client connections, or substitute a
-unique IP address for each DNS name that was looked up.
-Thus, allowing the HTTPS records in the clear does not make the
-situation significantly worse.
+signed via a server private key, HTTPS records have no authenticity or
+provenance information. This means that any attacker which can inject
+DNS responses or poison DNS caches, which is a common scenario in
+client access networks, can supply clients with fake HTTPS records (so
+that the client encrypts data to them) or strip the ECH record from
+the response. However, in the face of an attacker that controls DNS,
+no encryption scheme can work because the attacker can replace the IP
+address, thus blocking client connections, or substitute a unique IP
+address for each DNS name that was looked up.  Thus, allowing the
+HTTPS records in the clear does not make the situation significantly
+worse.
 
 Clearly, DNSSEC (if the client validates and hard fails) is a defense
 against this form of attack, but encrypted DNS transport is also a
