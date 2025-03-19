@@ -82,7 +82,8 @@ left unencrypted in TLS 1.3.
 
 This document specifies a new TLS extension, called Encrypted Client Hello
 (ECH), that allows clients to encrypt their ClientHello to the TLS server.
-This protects the SNI and other potentially sensitive fields, such as the ALPN
+This protects the SNI and other potentially sensitive fields, such as the 
+Application Layer Protocol Negotiation (ALPN)
 list {{?RFC7301}}. Co-located servers with consistent externally visible TLS
 configurations and behavior, including supported versions and cipher suites and
 how they respond to incoming client connections, form an anonymity set. (Note
@@ -557,7 +558,8 @@ DTLS.
 # Client Behavior
 
 Clients that implement the ECH extension behave in one of two ways: either they
-offer a real ECH extension, as described in {{real-ech}}; or they send a GREASE
+offer a real ECH extension, as described in {{real-ech}}; or they send a 
+Generate Random Extensions And Sustain Extensibility (GREASE) {{?RFC8701}}
 ECH extension, as described in {{grease-ech}}. Clients of the latter type do not
 negotiate ECH. Instead, they generate a dummy ECH extension that is ignored by
 the server. (See {{dont-stick-out}} for an explanation.) The client offers ECH
@@ -911,7 +913,7 @@ instance, by reporting a failed connection with a dedicated error code.
 Prior to attempting a connection, a client SHOULD validate the `ECHConfig` to
 ensure that the public_name can be authenticated.  Clients SHOULD ignore any
 `ECHConfig` structure with a public_name that is not a valid host name in
-preferred name syntax (see {{Section 2 of ?DNS-TERMS=RFC8499}}).  That is, to be
+preferred name syntax (see {{Section 2 of ?DNS-TERMS=RFC9499}}).  That is, to be
 valid, the public_name needs to be a dot-separated sequence of LDH labels, as
 defined in {{Section 2.3.1 of !RFC5890}}, where:
 
