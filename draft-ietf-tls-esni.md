@@ -98,13 +98,14 @@ feature are discussed in {{deployment}}.
 ECH is not in itself sufficient to protect the identity of the server.
 The target domain may also be visible through other channels, such as
 plaintext client DNS queries or visible server IP addresses. However,
-DNS over HTTPS {{?RFC8484}} and DNS over TLS/DTLS {{?RFC7858}}
-{{?RFC8094}} provide mechanisms for clients to conceal DNS lookups
-from network inspection, and many TLS servers host multiple domains on
-the same IP address. Private origins may also be deployed behind a
-common provider, such as a reverse proxy. In such environments, the
-SNI remains the primary explicit signal available to observers to
-determine the server's identity.
+DNS over HTTPS {{?RFC8484}}, DNS over TLS/DTLS {{? {{?RFC8094}} and
+DNS over QUIC {{?RFC9250}} 
+provide mechanisms for clients to conceal
+DNS lookups from network inspection, and many TLS servers host multiple domains
+on the same IP address. Private origins may also be deployed behind a common
+provider, such as a reverse proxy. In such environments, the SNI remains the
+primary explicit signal available to observers to determine the
+server's identity.
 
 ECH is supported in TLS 1.3 {{!RFC8446}}, DTLS 1.3 {{!RFC9147}}, and
 newer versions of the TLS and DTLS protocols.
@@ -1293,8 +1294,8 @@ may occur, for instance, from DNS misconfiguration, caching issues, or an
 incomplete rollout in a multi-server deployment. This may also occur if a server
 loses its ECH keys, or if a deployment of ECH must be rolled back on the server.
 
-The retry mechanism repairs inconsistencies, provided the server is
-authoritative for the public name. If server and advertised keys mismatch, the
+The retry mechanism repairs inconsistencies, provided the TLS server
+has a certificate for the public name. If server and advertised keys mismatch, the
 server will reject ECH and respond with "retry_configs". If the server does
 not understand
 the "encrypted_client_hello" extension at all, it will ignore it as required by
@@ -1435,16 +1436,16 @@ requirements of {{?RFC8744}}. See {{dont-stick-out}} for details.
 
 ## Unauthenticated and Plaintext DNS {#plaintext-dns}
 
-In comparison to {{?I-D.kazuho-protected-sni}}, wherein DNS Resource Records are
-signed via a server private key, ECH records have no authenticity or provenance
+In comparison to {{?I-D.kazuho-protected-sni}}, wherein DNS RRs are
+signed via a server private key, HTTPS records have no authenticity or provenance
 information. This means that any attacker which can inject DNS responses or
 poison DNS caches, which is a common scenario in client access networks, can
-supply clients with fake ECH records (so that the client encrypts data to them)
+supply clients with fake HTTPS records (so that the client encrypts data to them)
 or strip the ECH record from the response. However, in the face of an attacker
 that controls DNS, no encryption scheme can work because the attacker can
 replace the IP address, thus blocking client connections, or substitute a
-unique IP address which is 1:1 with the DNS name that was looked up (modulo DNS
-wildcards). Thus, allowing the ECH records in the clear does not make the
+unique IP address for each DNS name that was looked up.
+Thus, allowing the HTTPS records in the clear does not make the
 situation significantly worse.
 
 Clearly, DNSSEC (if the client validates and hard fails) is a defense
@@ -1465,7 +1466,9 @@ The cost of this type of attack scales linearly with the desired number of
 target clients. Moreover, DNS caching behavior makes targeting individual users
 for extended periods of time, e.g., using per-client ECHConfig structures
 delivered via HTTPS RRs with high TTLs, challenging. Clients can help mitigate
-this problem by flushing any DNS or ECHConfig state upon changing networks.
+this problem by flushing any DNS or ECHConfig state upon changing networks
+(this may not be possible if clients use the operating system resolver
+rather than doing their own resolution).
 
 ECHConfig rotation rate is also an issue for non-malicious servers,
 which may want to rotate keys frequently to limit exposure if the key
@@ -1618,12 +1621,13 @@ ClientHelloInner.
 ### Avoid Widely Shared Secrets
 
 This design depends upon DNS as a vehicle for semi-static public key
-distribution. Server operators may partition their private keys however they
-see fit provided each server behind an IP address has the corresponding private
-key to decrypt a key. Thus, when one ECH key is provided, sharing is optimally
-bound by the number of hosts that share an IP address. Server operators may
-further limit sharing by publishing different DNS records containing ECHConfig
-values with different keys using a short TTL.
+distribution. Server operators may partition their private keys
+however they see fit provided each server behind an IP address has the
+corresponding private key to decrypt a key. Thus, when one ECH key is
+provided, sharing is optimally bound by the number of hosts that share
+an IP address. Server operators may further limit sharing of private
+keys by publishing different DNS records containing ECHConfig values
+with different public keys using a short TTL.
 
 ### SNI-Based Denial-of-Service Attacks
 
@@ -1700,10 +1704,11 @@ the backend origin server, thereby allowing the backend origin server
 to hide behind the client-facing server without the client-facing
 server decrypting and reencrypting the connection.
 
-Conversely, assuming ECH records retrieved from DNS are authenticated, e.g.,
-via DNSSEC or fetched from a trusted Recursive Resolver, spoofing a
-client-facing server operating in Split Mode is not possible. See
-{{plaintext-dns}} for more details regarding plaintext DNS.
+Conversely, assuming HTTPS records retrieved from DNS are
+authenticated, e.g., via DNSSECo,
+spoofing a client-facing server operating in Split Mode is not
+possible. See {{plaintext-dns}} for more details regarding plaintext
+DNS.
 
 Authenticating the ECHConfig structure naturally authenticates the included
 public name. This also authenticates any retry signals from the client-facing
