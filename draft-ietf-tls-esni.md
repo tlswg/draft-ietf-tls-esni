@@ -181,8 +181,8 @@ use ECH must publish this configuration, using the key associated
 with the client-facing server. This document
 defines the ECH configuration's format, but delegates DNS publication details
 to {{!RFC9460}}. See
-{{!ECH-IN-DNS=I-D.ietf-tls-svcb-ech}} for specifics about how ECH
-configurations are advertised in HTTPS records. Other delivery mechanisms are
+{{!ECH-IN-DNS=I-D.ietf-tls-svcb-ech}} for specifics about how ECH configurations
+are advertised in SVCB and HTTPS records. Other delivery mechanisms are
 also possible. For example, the client may have the ECH configuration
 preconfigured.
 
@@ -1438,17 +1438,17 @@ requirements of {{?RFC8744}}. See {{dont-stick-out}} for details.
 
 ## Unauthenticated and Plaintext DNS {#plaintext-dns}
 
-In comparison to {{?I-D.kazuho-protected-sni}}, wherein DNS RRs are
-signed via a server private key, HTTPS records have no authenticity or
-provenance information. This means that any attacker which can inject
+ECH supports delivery of configurations through the DNS using SVCB or HTTPS
+records, without requiring any verifiable authenticity or provenance
+information {{ECH-IN-DNS}}. This means that any attacker which can inject
 DNS responses or poison DNS caches, which is a common scenario in
-client access networks, can supply clients with fake HTTPS records (so
-that the client encrypts data to them) or strip the ECH record from
+client access networks, can supply clients with fake ECH configurations (so
+that the client encrypts data to them) or strip the ECH configurations from
 the response. However, in the face of an attacker that controls DNS,
 no encryption scheme can work because the attacker can replace the IP
 address, thus blocking client connections, or substitute a unique IP
-address for each DNS name that was looked up.  Thus, allowing the
-HTTPS records in the clear does not make the situation significantly
+address for each DNS name that was looked up.  Thus, using DNS records
+without additional authentication does not make the situation significantly
 worse.
 
 Clearly, DNSSEC (if the client validates and hard fails) is a defense
@@ -1456,7 +1456,7 @@ against this form of attack, but encrypted DNS transport is also a
 defense against DNS attacks by attackers on the local network, which
 is a common case where ClientHello and SNI encryption are
 desired. Moreover, as noted in the introduction, SNI encryption is
-less useful without encryption of DNS queries in transit mechanisms.
+less useful without encryption of DNS queries in transit.
 
 ## Client Tracking
 
@@ -1707,7 +1707,7 @@ the backend origin server, thereby allowing the backend origin server
 to hide behind the client-facing server without the client-facing
 server decrypting and reencrypting the connection.
 
-Conversely, assuming HTTPS records retrieved from DNS are
+Conversely, if the DNS records used for configuration are
 authenticated, e.g., via DNSSEC,
 spoofing a client-facing server operating in Split Mode is not
 possible. See {{plaintext-dns}} for more details regarding plaintext
