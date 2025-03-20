@@ -1457,11 +1457,12 @@ feature are discussed in <a href="#deployment" class="auto internal xref">Sectio
 The target domain may also be visible through other channels, such as
 plaintext client DNS queries or visible server IP addresses. However,
 DNS over HTTPS <span>[<a href="#RFC8484" class="cite xref">RFC8484</a>]</span> and DNS over TLS/DTLS <span>[<a href="#RFC7858" class="cite xref">RFC7858</a>]</span>
-        <span>[<a href="#RFC8094" class="cite xref">RFC8094</a>]</span> provide mechanisms for clients to conceal
-DNS lookups from network inspection, and many TLS servers host multiple domains
-on the same IP address. Private origins may also be deployed behind a common
-provider, such as a reverse proxy. In such environments, the SNI remains the
-primary explicit signal used to determine the server's identity.<a href="#section-1-3" class="pilcrow">¶</a></p>
+        <span>[<a href="#RFC8094" class="cite xref">RFC8094</a>]</span> provide mechanisms for clients to conceal DNS lookups
+from network inspection, and many TLS servers host multiple domains on
+the same IP address. Private origins may also be deployed behind a
+common provider, such as a reverse proxy. In such environments, the
+SNI remains the primary explicit signal available to observers to
+determine the server's identity.<a href="#section-1-3" class="pilcrow">¶</a></p>
 <p id="section-1-4">ECH is supported in TLS 1.3 <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>, DTLS 1.3 <span>[<a href="#RFC9147" class="cite xref">RFC9147</a>]</span>, and
 newer versions of the TLS and DTLS protocols.<a href="#section-1-4" class="pilcrow">¶</a></p>
 </section>
@@ -1523,7 +1524,7 @@ provider.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
            |                    |     |                     |
            |   2001:DB8::1111   |     |   2001:DB8::EEEE    |
 Client &lt;-----------------------------&gt;|                     |
-           | public.example.com |     | private.example.com |
+           | public.example.com |     | private.example.org |
            |                    |     |                     |
            +--------------------+     +---------------------+
             Client-Facing Server            Backend Server
@@ -1670,9 +1671,10 @@ specification, the contents are an <code>ECHConfigContents</code> structure.<a h
 <span class="break"></span><dl class="dlParallel" id="section-4-6">
         <dt id="section-4-6.1">key_config</dt>
         <dd style="margin-left: 1.5em" id="section-4-6.2">
-          <p id="section-4-6.2.1">A <code>HpkeKeyConfig</code> structure carrying the configuration information associated
-with the HPKE public key. Note that this structure contains the <code>config_id</code>
-field, which applies to the entire ECHConfigContents.<a href="#section-4-6.2.1" class="pilcrow">¶</a></p>
+          <p id="section-4-6.2.1">A <code>HpkeKeyConfig</code> structure carrying the configuration information
+associated with the HPKE public key (an "ECH key"). Note that this
+structure contains the <code>config_id</code> field, which applies to the entire
+ECHConfigContents.<a href="#section-4-6.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="section-4-6.3">maximum_name_length</dt>
@@ -1912,7 +1914,7 @@ field uses the ClientHello structure defined in <span><a href="https://rfc-edito
 In DTLS, it uses the ClientHello structured defined in
 <span><a href="https://rfc-editor.org/rfc/rfc9147#section-5.3" class="relref">Section 5.3</a> of [<a href="#RFC9147" class="cite xref">RFC9147</a>]</span>. This does not include Handshake structure's
 four-byte header in TLS, nor twelve-byte header in DTLS. The <code>zeros</code> field MUST
-be all zeroes.<a href="#section-5.1-3" class="pilcrow">¶</a></p>
+be all zeroes of length <code>length_of_padding</code> (see <a href="#padding" class="auto internal xref">Section 6.1.3</a>).<a href="#section-5.1-3" class="pilcrow">¶</a></p>
 <p id="section-5.1-4">Repeating large extensions, such as "key_share" with post-quantum algorithms,
 between ClientHelloInner and ClientHelloOuter can lead to excessive size. To
 reduce the size impact, the client MAY substitute extensions which it knows
@@ -1991,7 +1993,7 @@ ClientHello structure, defined in <span><a href="https://rfc-editor.org/rfc/rfc8
 <span><a href="https://rfc-editor.org/rfc/rfc9147#section-5.3" class="relref">Section 5.3</a> of [<a href="#RFC9147" class="cite xref">RFC9147</a>]</span> for DTLS, which matches the ClientHelloOuter except
 that the <code>payload</code> field of the "encrypted_client_hello" is replaced with a byte
 string of the same length but whose contents are zeros. This value does not
-include Handshake structure's four-byte header in TLS, nor twelve-byte header in
+include Handshake structure's four-byte header in TLS nor twelve-byte header in
 DTLS.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -2069,7 +2071,7 @@ additionally MUST be in the same relative order as in ClientHelloInner.<a href="
           <li id="section-6.1-7.3">
             <p id="section-6.1-7.3.1">It MUST copy the legacy_session_id field from ClientHelloInner. This
 allows the server to echo the correct session ID for TLS 1.3's compatibility
-mode (see Appendix D.4 of <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>) when ECH is negotiated.<a href="#section-6.1-7.3.1" class="pilcrow">¶</a></p>
+mode (see <span><a href="https://rfc-editor.org/rfc/rfc8446#appendix-D.4" class="relref">Appendix D.4</a> of [<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>) when ECH is negotiated.<a href="#section-6.1-7.3.1" class="pilcrow">¶</a></p>
 </li>
           <li id="section-6.1-7.4">
             <p id="section-6.1-7.4.1">It MAY copy any other field from the ClientHelloInner except
@@ -2137,10 +2139,10 @@ variant of ECHClientHello with the following fields:<a href="#section-6.1.1-2" c
               <p id="section-6.1.1-3.4.1"><code>payload</code>, a placeholder byte string containing L zeros.<a href="#section-6.1.1-3.4.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-6.1.1-4">If configuration identifiers (see <a href="#ignored-configs" class="auto internal xref">Section 10.4</a>) are to be ignored,
-<code>config_id</code> SHOULD be set to a randomly generated byte in the first
-ClientHelloOuter and, in the event of HRR, MUST be left unchanged for
-the second ClientHelloOuter.<a href="#section-6.1.1-4" class="pilcrow">¶</a></p>
+<p id="section-6.1.1-4">If configuration identifiers (see <a href="#ignored-configs" class="auto internal xref">Section 10.4</a>) are to be
+ignored, <code>config_id</code> SHOULD be set to a randomly generated byte in the
+first ClientHelloOuter and, in the event of a HelloRetryRequest (HRR),
+MUST be left unchanged for the second ClientHelloOuter.<a href="#section-6.1.1-4" class="pilcrow">¶</a></p>
 <p id="section-6.1.1-5">The client serializes this structure to construct the ClientHelloOuterAAD.
 It then computes the final payload as:<a href="#section-6.1.1-5" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-6.1.1-6">
@@ -2150,7 +2152,7 @@ It then computes the final payload as:<a href="#section-6.1.1-5" class="pilcrow"
 </pre><a href="#section-6.1.1-6" class="pilcrow">¶</a>
 </div>
 <p id="section-6.1.1-7">Including <code>ClientHelloOuterAAD</code> as the HPKE AAD binds the <code>ClientHelloOuter</code>
-to the <code>ClientHelloInner</code>, this preventing attackers from modifying
+to the <code>ClientHelloInner</code>, thus preventing attackers from modifying
 <code>ClientHelloOuter</code> while keeping the same <code>ClientHelloInner</code>, as described in
 <a href="#flow-clienthello-malleability" class="auto internal xref">Section 10.12.3</a>.<a href="#section-6.1.1-7" class="pilcrow">¶</a></p>
 <p id="section-6.1.1-8">Finally, the client replaces <code>payload</code> with <code>final_payload</code> to obtain
@@ -2200,7 +2202,7 @@ In order to prevent this the <code>EncodedClientHelloInner</code> structure
 has a padding field. This section describes a deterministic mechanism for
 computing the required amount of padding based on the following
 observation: individual extensions can reveal sensitive information through
--their length. Thus, each extension in the inner ClientHello may require
+their length. Thus, each extension in the inner ClientHello may require
 different amounts of padding. This padding may be fully determined by the
 client's configuration or may require server input.<a href="#section-6.1.3-1" class="pilcrow">¶</a></p>
 <p id="section-6.1.3-2">By way of example, clients typically support a small number of application
@@ -2335,11 +2337,11 @@ the False Start optimization <span>[<a href="#RFC7918" class="cite xref">RFC7918
 authentication and the handshake complete successfully, the client MUST perform
 the processing described below then abort the connection with an "ech_required"
 alert before sending any application data to the server.<a href="#section-6.1.6-2" class="pilcrow">¶</a></p>
-<p id="section-6.1.6-3">If the server provided "retry_configs" and if at least one of the values
-contains a version supported by the client, the client can regard the ECH keys
-as securely replaced by the server. It SHOULD retry the handshake with a new
-transport connection, using the retry configurations supplied by the
-server.<a href="#section-6.1.6-3" class="pilcrow">¶</a></p>
+<p id="section-6.1.6-3">If the server provided "retry_configs" and if at least one of the
+values contains a version supported by the client, the client can
+regard the ECH configuration as securely replaced by the server. It
+SHOULD retry the handshake with a new transport connection, using the
+retry configurations supplied by the server.<a href="#section-6.1.6-3" class="pilcrow">¶</a></p>
 <p id="section-6.1.6-4">Clients can implement a new transport connection in a way that best
 suits their deployment. For example, clients can reuse the same IP address
 when establishing the new transport connection or they can choose to use a
@@ -2388,12 +2390,13 @@ the appropriate alert.<a href="#section-6.1.7-2.1.1" class="pilcrow">¶</a></p>
 empty Certificate message, denoting no client certificate.<a href="#section-6.1.7-2.2.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-6.1.7-3">In verifying the client-facing server certificate, the client MUST interpret
-the public name as a DNS-based reference identity. Clients that incorporate DNS
-names and IP addresses into the same syntax (e.g. <span>[<a href="#RFC3986" class="cite xref">RFC3986</a>], <a href="https://rfc-editor.org/rfc/rfc3986#section-7.4" class="relref">Section 7.4</a></span> and
-<span>[<a href="#WHATWG-IPV4" class="cite xref">WHATWG-IPV4</a>]</span>) MUST reject names that would be interpreted as IPv4 addresses.
-Clients that enforce this by checking ECHConfig.contents.public_name do not need
-to repeat the check at this layer.<a href="#section-6.1.7-3" class="pilcrow">¶</a></p>
+<p id="section-6.1.7-3">In verifying the client-facing server certificate, the client MUST
+interpret the public name as a DNS-based reference identity
+<span>[<a href="#RFC6125" class="cite xref">RFC6125</a>]</span>. Clients that incorporate DNS names and IP addresses into
+the same syntax (e.g. <span><a href="https://rfc-editor.org/rfc/rfc3986#section-7.4" class="relref">Section 7.4</a> of [<a href="#RFC3986" class="cite xref">RFC3986</a>]</span> and <span>[<a href="#WHATWG-IPV4" class="cite xref">WHATWG-IPV4</a>]</span>)
+MUST reject names that would be interpreted as IPv4 addresses.
+Clients that enforce this by checking ECHConfig.contents.public_name
+do not need to repeat the check at this layer.<a href="#section-6.1.7-3" class="pilcrow">¶</a></p>
 <p id="section-6.1.7-4">Note that authenticating a connection for the public name does not authenticate
 it for the origin. The TLS implementation MUST NOT report such connections as
 successful to the application. It additionally MUST ignore all session tickets
@@ -2925,7 +2928,7 @@ on plaintext packet contents is one example of a passive attacker. In contrast,
 active attackers can also write packets into the network for malicious purposes,
 such as interfering with existing connections, probing servers, and querying
 DNS. In short, an active attacker corresponds to the conventional threat model
-for TLS 1.3 <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>.<a href="#section-10.1-1" class="pilcrow">¶</a></p>
+<span>[<a href="#RFC3552" class="cite xref">RFC3552</a>]</span> for TLS 1.3 <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>.<a href="#section-10.1-1" class="pilcrow">¶</a></p>
 <p id="section-10.1-2">Passive and active attackers can exist anywhere in the network, including
 between the client and client-facing server, as well as between the
 client-facing and backend servers when running ECH in Split Mode. However,
@@ -2955,10 +2958,10 @@ of correlation is out of scope for this document.<a href="#section-10.1-3.2.1" c
 TLS without ECH.<a href="#section-10.1-5.1.1" class="pilcrow">¶</a></p>
 </li>
           <li id="section-10.1-5.2">
-            <p id="section-10.1-5.2.1">Handshake privacy. TLS connection establishment to a host within an
-anonymity set is indistinguishable from a connection to any other host
-within the anonymity set. (The anonymity set is defined in
-<a href="#intro" class="auto internal xref">Section 1</a>.)<a href="#section-10.1-5.2.1" class="pilcrow">¶</a></p>
+            <p id="section-10.1-5.2.1">Handshake privacy. TLS connection establishment to a server name
+within an anonymity set is indistinguishable from a connection to
+any other server name within the anonymity set. (The anonymity set
+is defined in <a href="#intro" class="auto internal xref">Section 1</a>.)<a href="#section-10.1-5.2.1" class="pilcrow">¶</a></p>
 </li>
           <li id="section-10.1-5.3">
             <p id="section-10.1-5.3.1">Downgrade resistance. An attacker cannot downgrade a connection that
@@ -2967,17 +2970,18 @@ attempts to use ECH to one that does not use ECH.<a href="#section-10.1-5.3.1" c
         </ol>
 <p id="section-10.1-6">These properties were formally proven in <span>[<a href="#ECH-Analysis" class="cite xref">ECH-Analysis</a>]</span>.<a href="#section-10.1-6" class="pilcrow">¶</a></p>
 <p id="section-10.1-7">With regards to handshake privacy, client-facing server configuration
-determines the size of the anonymity set. For example, if a client-facing
-server uses distinct ECHConfig values for each host, then each anonymity set
-has size k = 1. Client-facing servers SHOULD deploy ECH in such a way so as to
-maximize the size of the anonymity set where possible. This means client-facing
-servers should use the same ECHConfig for as many hosts as possible. An
-attacker can distinguish two hosts that have different ECHConfig values based
-on the ECHClientHello.config_id value.<a href="#section-10.1-7" class="pilcrow">¶</a></p>
+determines the size of the anonymity set. For example, if a
+client-facing server uses distinct ECHConfig values for each server
+name, then each anonymity set has size k = 1. Client-facing servers
+SHOULD deploy ECH in such a way so as to maximize the size of the
+anonymity set where possible. This means client-facing servers should
+use the same ECHConfig for as many server names as possible. An
+attacker can distinguish two server names that have different
+ECHConfig values based on the ECHClientHello.config_id value.<a href="#section-10.1-7" class="pilcrow">¶</a></p>
 <p id="section-10.1-8">This also means public information in a TLS handshake should be
-consistent across hosts. For example, if a client-facing server
-services many backend origin hosts, only one of which supports some
-cipher suite, it may be possible to identify that host based on the
+consistent across server names. For example, if a client-facing server
+services many backend origin server names, only one of which supports some
+cipher suite, it may be possible to identify that server name based on the
 contents of unencrypted handshake message. Similarly, if a backend
 origin reuses KeyShare values, then that provides a unique identifier
 for that server.<a href="#section-10.1-8" class="pilcrow">¶</a></p>
@@ -3030,9 +3034,10 @@ this problem by flushing any DNS or ECHConfig state upon changing networks.<a hr
 <p id="section-10.3-3">ECHConfig rotation rate is also an issue for non-malicious servers,
 which may want to rotate keys frequently to limit exposure if the key
 is compromised. Rotating too frequently limits the client anonymity
-set. In practice, servers with high load are the best candidates
-to be client-facing servers and so anonymity sets will typically
-be large even with fairly fast rotation intervals.<a href="#section-10.3-3" class="pilcrow">¶</a></p>
+set. In practice, servers which service many server names and thus
+have high loads are the best candidates to be client-facing servers
+and so anonymity sets will typically involve many connections even
+with fairly fast rotation intervals.<a href="#section-10.3-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="ignored-configs">
@@ -3141,8 +3146,7 @@ about the server identity.<a href="#section-10.8-1" class="pilcrow">¶</a></p>
 which identifies the server. This may be done by handling HelloRetryRequest
 statefully, thus not sending cookies, or by using the same cookie construction
 for all backend servers.<a href="#section-10.8-2" class="pilcrow">¶</a></p>
-<p id="section-10.8-3">Note that, if the cookie includes a key name, analogous to Section 4 of
-<span>[<a href="#RFC5077" class="cite xref">RFC5077</a>]</span>, this may leak information if different backend servers issue
+<p id="section-10.8-3">Note that, if the cookie includes a key name, analogous to <span><a href="https://rfc-editor.org/rfc/rfc5077#section-4" class="relref">Section 4</a> of [<a href="#RFC5077" class="cite xref">RFC5077</a>]</span>, this may leak information if different backend servers issue
 cookies with different key names at the time of the connection. In particular,
 if the deployment operates in Split Mode, the backend servers may not share
 cookie encryption keys. Backend servers may mitigate this by either handling
@@ -3720,6 +3724,10 @@ with the following attributes, which are repeated for each registration:<a href=
         <dd>
 <span class="refAuthor">Klensin, J.</span>, <span class="refTitle">"Internationalized Domain Names for Applications (IDNA): Definitions and Document Framework"</span>, <span class="seriesInfo">RFC 5890</span>, <span class="seriesInfo">DOI 10.17487/RFC5890</span>, <time datetime="2010-08" class="refDate">August 2010</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc5890">https://www.rfc-editor.org/rfc/rfc5890</a>&gt;</span>. </dd>
 <dd class="break"></dd>
+<dt id="RFC6125">[RFC6125]</dt>
+        <dd>
+<span class="refAuthor">Saint-Andre, P.</span> and <span class="refAuthor">J. Hodges</span>, <span class="refTitle">"Representation and Verification of Domain-Based Application Service Identity within Internet Public Key Infrastructure Using X.509 (PKIX) Certificates in the Context of Transport Layer Security (TLS)"</span>, <span class="seriesInfo">RFC 6125</span>, <span class="seriesInfo">DOI 10.17487/RFC6125</span>, <time datetime="2011-03" class="refDate">March 2011</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc6125">https://www.rfc-editor.org/rfc/rfc6125</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 <dt id="RFC7918">[RFC7918]</dt>
         <dd>
 <span class="refAuthor">Langley, A.</span>, <span class="refAuthor">Modadugu, N.</span>, and <span class="refAuthor">B. Moeller</span>, <span class="refTitle">"Transport Layer Security (TLS) False Start"</span>, <span class="seriesInfo">RFC 7918</span>, <span class="seriesInfo">DOI 10.17487/RFC7918</span>, <time datetime="2016-08" class="refDate">August 2016</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7918">https://www.rfc-editor.org/rfc/rfc7918</a>&gt;</span>. </dd>
@@ -3768,6 +3776,10 @@ with the following attributes, which are repeated for each registration:<a href=
 <dt id="I-D.kazuho-protected-sni">[I-D.kazuho-protected-sni]</dt>
         <dd>
 <span class="refAuthor">Oku, K.</span>, <span class="refTitle">"TLS Extensions for Protecting SNI"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-kazuho-protected-sni-00</span>, <time datetime="2017-07-18" class="refDate">18 July 2017</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-kazuho-protected-sni-00">https://datatracker.ietf.org/doc/html/draft-kazuho-protected-sni-00</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC3552">[RFC3552]</dt>
+        <dd>
+<span class="refAuthor">Rescorla, E.</span> and <span class="refAuthor">B. Korver</span>, <span class="refTitle">"Guidelines for Writing RFC Text on Security Considerations"</span>, <span class="seriesInfo">BCP 72</span>, <span class="seriesInfo">RFC 3552</span>, <span class="seriesInfo">DOI 10.17487/RFC3552</span>, <time datetime="2003-07" class="refDate">July 2003</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc3552">https://www.rfc-editor.org/rfc/rfc3552</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC3986">[RFC3986]</dt>
         <dd>
