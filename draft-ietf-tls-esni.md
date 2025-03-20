@@ -82,7 +82,7 @@ left unencrypted in TLS 1.3.
 
 This document specifies a new TLS extension, called Encrypted Client Hello
 (ECH), that allows clients to encrypt their ClientHello to the TLS server.
-This protects the SNI and other potentially sensitive fields, such as the 
+This protects the SNI and other potentially sensitive fields, such as the
 Application Layer Protocol Negotiation (ALPN)
 list {{?RFC7301}}. Co-located servers with consistent externally visible TLS
 configurations and behavior, including supported versions and cipher suites and
@@ -560,7 +560,7 @@ DTLS.
 # Client Behavior
 
 Clients that implement the ECH extension behave in one of two ways: either they
-offer a real ECH extension, as described in {{real-ech}}; or they send a 
+offer a real ECH extension, as described in {{real-ech}}; or they send a
 Generate Random Extensions And Sustain Extensibility (GREASE) {{?RFC8701}}
 ECH extension, as described in {{grease-ech}}. Clients of the latter type do not
 negotiate ECH. Instead, they generate a dummy ECH extension that is ignored by
