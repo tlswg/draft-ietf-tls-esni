@@ -170,13 +170,14 @@ Table of Contents
    ECH is not in itself sufficient to protect the identity of the
    server.  The target domain may also be visible through other
    channels, such as plaintext client DNS queries or visible server IP
-   addresses.  However, DNS over HTTPS [RFC8484] and DNS over TLS/DTLS
-   [RFC7858] [RFC8094] provide mechanisms for clients to conceal DNS
-   lookups from network inspection, and many TLS servers host multiple
-   domains on the same IP address.  Private origins may also be deployed
-   behind a common provider, such as a reverse proxy.  In such
-   environments, the SNI remains the primary explicit signal available
-   to observers to determine the server's identity.
+   addresses.  However, encrypted DNS mechanisms such as DNS over HTTPS
+   [RFC8484], DNS over TLS/DTLS [RFC7858] [RFC8094], and DNS over QUIC
+   [RFC9250] provide mechanisms for clients to conceal DNS lookups from
+   network inspection, and many TLS servers host multiple domains on the
+   same IP address.  Private origins may also be deployed behind a
+   common provider, such as a reverse proxy.  In such environments, the
+   SNI remains the primary explicit signal available to observers to
+   determine the server's identity.
 
    ECH is supported in TLS 1.3 [RFC8446], DTLS 1.3 [RFC9147], and newer
    versions of the TLS and DTLS protocols.
@@ -1415,8 +1416,8 @@ Table of Contents
    ECH keys, or if a deployment of ECH must be rolled back on the
    server.
 
-   The retry mechanism repairs inconsistencies, provided the server is
-   authoritative for the public name.  If server and advertised keys
+   The retry mechanism repairs inconsistencies, provided the TLS server
+   has a certificate for the public name.  If server and advertised keys
    mismatch, the server will reject ECH and respond with
    "retry_configs".  If the server does not understand the
    "encrypted_client_hello" extension at all, it will ignore it as
@@ -1572,18 +1573,17 @@ Table of Contents
 
 10.2.  Unauthenticated and Plaintext DNS
 
-   In comparison to [I-D.kazuho-protected-sni], wherein DNS Resource
-   Records are signed via a server private key, ECH records have no
-   authenticity or provenance information.  This means that any attacker
-   which can inject DNS responses or poison DNS caches, which is a
-   common scenario in client access networks, can supply clients with
-   fake ECH records (so that the client encrypts data to them) or strip
-   the ECH record from the response.  However, in the face of an
-   attacker that controls DNS, no encryption scheme can work because the
-   attacker can replace the IP address, thus blocking client
-   connections, or substitute a unique IP address which is 1:1 with the
-   DNS name that was looked up (modulo DNS wildcards).  Thus, allowing
-   the ECH records in the clear does not make the situation
+   In comparison to [I-D.kazuho-protected-sni], wherein DNS RRs are
+   signed via a server private key, HTTPS records have no authenticity
+   or provenance information.  This means that any attacker which can
+   inject DNS responses or poison DNS caches, which is a common scenario
+   in client access networks, can supply clients with fake HTTPS records
+   (so that the client encrypts data to them) or strip the ECH record
+   from the response.  However, in the face of an attacker that controls
+   DNS, no encryption scheme can work because the attacker can replace
+   the IP address, thus blocking client connections, or substitute a
+   unique IP address for each DNS name that was looked up.  Thus,
+   allowing the HTTPS records in the clear does not make the situation
    significantly worse.
 
    Clearly, DNSSEC (if the client validates and hard fails) is a defense
@@ -1606,7 +1606,9 @@ Table of Contents
    targeting individual users for extended periods of time, e.g., using
    per-client ECHConfig structures delivered via HTTPS RRs with high
    TTLs, challenging.  Clients can help mitigate this problem by
-   flushing any DNS or ECHConfig state upon changing networks.
+   flushing any DNS or ECHConfig state upon changing networks (this may
+   not be possible if clients use the operating system resolver rather
+   than doing their own resolution).
 
    ECHConfig rotation rate is also an issue for non-malicious servers,
    which may want to rotate keys frequently to limit exposure if the key
@@ -1780,8 +1782,8 @@ Table of Contents
    the corresponding private key to decrypt a key.  Thus, when one ECH
    key is provided, sharing is optimally bound by the number of hosts
    that share an IP address.  Server operators may further limit sharing
-   by publishing different DNS records containing ECHConfig values with
-   different keys using a short TTL.
+   of private keys by publishing different DNS records containing
+   ECHConfig values with different public keys using a short TTL.
 
 10.10.3.  SNI-Based Denial-of-Service Attacks
 
@@ -1872,11 +1874,10 @@ Table of Contents
    server without the client-facing server decrypting and reencrypting
    the connection.
 
-   Conversely, assuming ECH records retrieved from DNS are
-   authenticated, e.g., via DNSSEC or fetched from a trusted Recursive
-   Resolver, spoofing a client-facing server operating in Split Mode is
-   not possible.  See Section 10.2 for more details regarding plaintext
-   DNS.
+   Conversely, assuming HTTPS records retrieved from DNS are
+   authenticated, e.g., via DNSSEC, spoofing a client-facing server
+   operating in Split Mode is not possible.  See Section 10.2 for more
+   details regarding plaintext DNS.
 
    Authenticating the ECHConfig structure naturally authenticates the
    included public name.  This also authenticates any retry signals from
@@ -2287,6 +2288,11 @@ Table of Contents
               Identification (SNI) Encryption in TLS", RFC 8744,
               DOI 10.17487/RFC8744, July 2020,
               <https://www.rfc-editor.org/rfc/rfc8744>.
+
+   [RFC9250]  Huitema, C., Dickinson, S., and A. Mankin, "DNS over
+              Dedicated QUIC Connections", RFC 9250,
+              DOI 10.17487/RFC9250, May 2022,
+              <https://www.rfc-editor.org/rfc/rfc9250>.
 
    [WHATWG-IPV4]
               "URL Living Standard - IPv4 Parser", May 2021,
