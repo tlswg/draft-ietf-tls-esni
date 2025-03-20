@@ -5,12 +5,12 @@
 tls                                                          E. Rescorla
 Internet-Draft                                               Independent
 Intended status: Standards Track                                  K. Oku
-Expires: 20 September 2025                                        Fastly
+Expires: 21 September 2025                                        Fastly
                                                              N. Sullivan
                                              Cryptography Consulting LLC
                                                               C. A. Wood
                                                               Cloudflare
-                                                           19 March 2025
+                                                           20 March 2025
 
 
                        TLS Encrypted Client Hello
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 20 September 2025.
+   This Internet-Draft will expire on 21 September 2025.
 
 Copyright Notice
 
@@ -1019,12 +1019,11 @@ Table of Contents
    code.
 
    Prior to attempting a connection, a client SHOULD validate the
-   ECHConfig to ensure that the public_name can be authenticated.
-   Clients SHOULD ignore any ECHConfig structure with a public_name that
-   is not a valid host name in preferred name syntax (see Section 2 of
-   [DNS-TERMS]).  That is, to be valid, the public_name needs to be a
-   dot-separated sequence of LDH labels, as defined in Section 2.3.1 of
-   [RFC5890], where:
+   ECHConfig.  Clients SHOULD ignore any ECHConfig structure with a
+   public_name that is not a valid host name in preferred name syntax
+   (see Section 2 of [DNS-TERMS]).  That is, to be valid, the
+   public_name needs to be a dot-separated sequence of LDH labels, as
+   defined in Section 2.3.1 of [RFC5890], where:
 
    *  the sequence does not begin or end with an ASCII dot, and
 
