@@ -1708,7 +1708,7 @@ to hide behind the client-facing server without the client-facing
 server decrypting and reencrypting the connection.
 
 Conversely, assuming HTTPS records retrieved from DNS are
-authenticated, e.g., via DNSSECo,
+authenticated, e.g., via DNSSEC,
 spoofing a client-facing server operating in Split Mode is not
 possible. See {{plaintext-dns}} for more details regarding plaintext
 DNS.
