@@ -99,7 +99,7 @@ ECH is not in itself sufficient to protect the identity of the server.
 The target domain may also be visible through other channels, such as
 plaintext client DNS queries or visible server IP addresses. However,
 encrypted DNS mechanisms such as
-DNS over HTTPS {{?RFC8484}}, DNS over TLS/DTLS {{?RFC7858}} {{?RFC8094}} and
+DNS over HTTPS {{?RFC8484}}, DNS over TLS/DTLS {{?RFC7858}} {{?RFC8094}}, and
 DNS over QUIC {{?RFC9250}}
 provide mechanisms for clients to conceal
 DNS lookups from network inspection, and many TLS servers host multiple domains
