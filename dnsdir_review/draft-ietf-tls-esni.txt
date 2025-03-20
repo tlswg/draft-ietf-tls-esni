@@ -1875,7 +1875,7 @@ Table of Contents
    the connection.
 
    Conversely, assuming HTTPS records retrieved from DNS are
-   authenticated, e.g., via DNSSECo, spoofing a client-facing server
+   authenticated, e.g., via DNSSEC, spoofing a client-facing server
    operating in Split Mode is not possible.  See Section 10.2 for more
    details regarding plaintext DNS.
 
