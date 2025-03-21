@@ -5,12 +5,12 @@
 tls                                                          E. Rescorla
 Internet-Draft                                               Independent
 Intended status: Standards Track                                  K. Oku
-Expires: 21 September 2025                                        Fastly
+Expires: 22 September 2025                                        Fastly
                                                              N. Sullivan
                                              Cryptography Consulting LLC
                                                               C. A. Wood
                                                               Cloudflare
-                                                           20 March 2025
+                                                           21 March 2025
 
 
                        TLS Encrypted Client Hello
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 21 September 2025.
+   This Internet-Draft will expire on 22 September 2025.
 
 Copyright Notice
 
@@ -253,9 +253,9 @@ Table of Contents
    configuration, using the key associated with the client-facing
    server.  This document defines the ECH configuration's format, but
    delegates DNS publication details to [RFC9460].  See [ECH-IN-DNS] for
-   specifics about how ECH configurations are advertised in HTTPS
-   records.  Other delivery mechanisms are also possible.  For example,
-   the client may have the ECH configuration preconfigured.
+   specifics about how ECH configurations are advertised in SVCB and
+   HTTPS records.  Other delivery mechanisms are also possible.  For
+   example, the client may have the ECH configuration preconfigured.
 
    When a client wants to establish a TLS session with some backend
    server, it constructs a private ClientHello, referred to as the
@@ -1573,25 +1573,25 @@ Table of Contents
 
 10.2.  Unauthenticated and Plaintext DNS
 
-   In comparison to [I-D.kazuho-protected-sni], wherein DNS RRs are
-   signed via a server private key, HTTPS records have no authenticity
-   or provenance information.  This means that any attacker which can
-   inject DNS responses or poison DNS caches, which is a common scenario
-   in client access networks, can supply clients with fake HTTPS records
-   (so that the client encrypts data to them) or strip the ECH record
-   from the response.  However, in the face of an attacker that controls
-   DNS, no encryption scheme can work because the attacker can replace
-   the IP address, thus blocking client connections, or substitute a
-   unique IP address for each DNS name that was looked up.  Thus,
-   allowing the HTTPS records in the clear does not make the situation
-   significantly worse.
+   ECH supports delivery of configurations through the DNS using SVCB or
+   HTTPS records, without requiring any verifiable authenticity or
+   provenance information [ECH-IN-DNS].  This means that any attacker
+   which can inject DNS responses or poison DNS caches, which is a
+   common scenario in client access networks, can supply clients with
+   fake ECH configurations (so that the client encrypts data to them) or
+   strip the ECH configurations from the response.  However, in the face
+   of an attacker that controls DNS, no encryption scheme can work
+   because the attacker can replace the IP address, thus blocking client
+   connections, or substitute a unique IP address for each DNS name that
+   was looked up.  Thus, using DNS records without additional
+   authentication does not make the situation significantly worse.
 
    Clearly, DNSSEC (if the client validates and hard fails) is a defense
    against this form of attack, but encrypted DNS transport is also a
    defense against DNS attacks by attackers on the local network, which
    is a common case where ClientHello and SNI encryption are desired.
    Moreover, as noted in the introduction, SNI encryption is less useful
-   without encryption of DNS queries in transit mechanisms.
+   without encryption of DNS queries in transit.
 
 10.3.  Client Tracking
 
@@ -1874,7 +1874,7 @@ Table of Contents
    server without the client-facing server decrypting and reencrypting
    the connection.
 
-   Conversely, assuming HTTPS records retrieved from DNS are
+   Conversely, if the DNS records used for configuration are
    authenticated, e.g., via DNSSEC, spoofing a client-facing server
    operating in Split Mode is not possible.  See Section 10.2 for more
    details regarding plaintext DNS.
