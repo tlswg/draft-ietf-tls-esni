@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-03-20T01:35:41.987436+00:00",
+  "timestamp": "2025-03-23T01:41:52.046098+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -13246,7 +13246,7 @@
       "id": "I_kwDOB-yxNc6qrhXv",
       "title": "Meaning of \"authenticated\" in name validation section",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/643",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "ckcr4lyf",
       "authorAssociation": "NONE",
       "assignees": [],
@@ -13255,8 +13255,8 @@
       ],
       "body": "First off, apologies for this issue right after #642 was merged. I thought I had left a comment there but apparently the feature in Github I used left a \"Pending\" comment that doesn't gets submitted till I complete my review. \n\nIn essence though, the change I wanted to ask about is:\n\nhttps://github.com/tlswg/draft-ietf-tls-esni/blob/29fe76cebd1b216d4f8c0bd16b8dc5e7ccdef9b8/draft-ietf-tls-esni.md?plain=1#L911-L912\n\nwhat does \"ensure that the public_name can be authenticated\" mean in this context? ",
       "createdAt": "2025-02-19T14:31:40Z",
-      "updatedAt": "2025-03-19T21:40:04Z",
-      "closedAt": null,
+      "updatedAt": "2025-03-20T04:47:44Z",
+      "closedAt": "2025-03-20T04:47:44Z",
       "comments": []
     }
   ],
@@ -58536,25 +58536,35 @@
       "id": "PR_kwDOB-yxNc6PWh3D",
       "title": "Remove extra confusing sentence. Fixes #643",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/644",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "@martinthomson @bemasc ",
       "createdAt": "2025-03-19T21:14:05Z",
-      "updatedAt": "2025-03-19T22:42:10Z",
+      "updatedAt": "2025-03-20T04:47:42Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "29fe76cebd1b216d4f8c0bd16b8dc5e7ccdef9b8",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "issue643_remove_extra_sentence",
       "headRefOid": "b55f3ee188ea6eb856c92c4520af65b63cd4d25d",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
-      "comments": [],
+      "closedAt": "2025-03-20T04:47:42Z",
+      "mergedAt": "2025-03-20T04:47:42Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "9c18433eedef39d5cb80e60a4767a8494af95fd3"
+      },
+      "comments": [
+        {
+          "author": "bemasc",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Yeah, I think this is correct.  \"Can be authenticated\" is a pretty hazy concept and possibly not correct.  The point is that `public_name` needs to be syntactically valid for the SNI extension field, so that the server can't cause the client to violate the SNI RFC.  IP addresses are excluded because of the syntax rule even though they _could_ be authenticated.",
+          "createdAt": "2025-03-20T04:44:49Z",
+          "updatedAt": "2025-03-20T04:44:49Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOB-yxNc6g9ZlN",
@@ -58576,52 +58586,84 @@
       "id": "PR_kwDOB-yxNc6PWktI",
       "title": "This addresses the issues in Stewart Bryant's review.",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/645",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "The final issue asked if we should replace the reference to RFC 5077 to RFC 8446, but this text is correct because the reference is to part of the internal example structure in 5077 and 8446 is just agnostic on token structure. 5077 is being used by way of analogy, not as a part of the protocol.",
       "createdAt": "2025-03-19T21:19:14Z",
-      "updatedAt": "2025-03-19T21:19:14Z",
+      "updatedAt": "2025-03-20T10:47:09Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "29fe76cebd1b216d4f8c0bd16b8dc5e7ccdef9b8",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "genart_review",
       "headRefOid": "bfd0e56fbe3577825b768b64444bdc61ebcbbacb",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2025-03-20T10:47:09Z",
+      "mergedAt": "2025-03-20T10:47:09Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "2da10c7d9b06d4af87c93f6be543d59b2d93b5e3"
+      },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6hBgVJ",
+          "commit": {
+            "abbreviatedOid": "bfd0e56"
+          },
+          "author": "seanturner",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2025-03-20T07:15:39Z",
+          "updatedAt": "2025-03-20T07:15:39Z",
+          "comments": []
+        }
+      ]
     },
     {
       "number": 646,
       "id": "PR_kwDOB-yxNc6PWwFb",
       "title": "DNS directorate review comments",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/646",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2025-03-19T21:43:08Z",
-      "updatedAt": "2025-03-19T21:46:54Z",
+      "updatedAt": "2025-03-20T20:31:26Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
-      "baseRefOid": "29fe76cebd1b216d4f8c0bd16b8dc5e7ccdef9b8",
+      "baseRefOid": "2824f744efe53e9db5bdf34dd41db03912dd112a",
       "headRepository": "tlswg/draft-ietf-tls-esni",
       "headRefName": "dnsdir_review",
-      "headRefOid": "11f1ef72d77c04a7fb341d6b149bdf13f8dc4c97",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "3e7fcb52cff25527e315a7e1b6c51743f61353b4",
+      "closedAt": "2025-03-20T20:31:25Z",
+      "mergedAt": "2025-03-20T20:31:25Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "3e7fcb52cff25527e315a7e1b6c51743f61353b4"
+      },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6hBgIi",
+          "commit": {
+            "abbreviatedOid": "11f1ef7"
+          },
+          "author": "seanturner",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2025-03-20T07:15:09Z",
+          "updatedAt": "2025-03-20T07:15:09Z",
+          "comments": []
+        }
+      ]
     },
     {
       "number": 647,
@@ -58656,26 +58698,84 @@
       "id": "PR_kwDOB-yxNc6PXdOj",
       "title": "Address ARTART review",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/648",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2025-03-19T23:45:41Z",
-      "updatedAt": "2025-03-19T23:45:42Z",
+      "updatedAt": "2025-03-20T10:46:48Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "8deb27649fe4d82ad004449006309a8ee8961531",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "artart_review",
       "headRefOid": "b24d9e4584ae10a4481237e3058f66661468a979",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2025-03-20T10:46:48Z",
+      "mergedAt": "2025-03-20T10:46:48Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "5f64f6818f68b42fcdf339f4b7780d23428e5b7f"
+      },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6hBfSb",
+          "commit": {
+            "abbreviatedOid": "b24d9e4"
+          },
+          "author": "seanturner",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2025-03-20T07:13:55Z",
+          "updatedAt": "2025-03-20T07:13:55Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 649,
+      "id": "PR_kwDOB-yxNc6PiCzy",
+      "title": "Update DNS-related security considerations text",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/649",
+      "state": "MERGED",
+      "author": "bemasc",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This change updates some text related to the security properties of DNS records.  It also removes a reference to a long-expired draft that is no longer relevant.",
+      "createdAt": "2025-03-20T21:38:45Z",
+      "updatedAt": "2025-03-21T20:30:34Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "a4220c12918111a9e96102809aadfd94f69a612a",
+      "headRepository": "bemasc/draft-ietf-tls-esni",
+      "headRefName": "patch-2",
+      "headRefOid": "0a63be2ea067c5a5a100907cc5f1c1f21b3b9299",
+      "closedAt": "2025-03-21T20:30:33Z",
+      "mergedAt": "2025-03-21T20:30:33Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "db371fc546e0c32596db20089825e2ae99d80c81"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6hXIsj",
+          "commit": {
+            "abbreviatedOid": "0a63be2"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2025-03-21T20:30:27Z",
+          "updatedAt": "2025-03-21T20:30:27Z",
+          "comments": []
+        }
+      ]
     }
   ]
 }
