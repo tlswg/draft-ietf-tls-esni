@@ -312,8 +312,9 @@ clients to indicate the key used for ClientHello encryption. {{config-ids}}
 describes how client-facing servers allocate this value.
 
 kem_id
-: The HPKE KEM identifier corresponding to `public_key`. Clients MUST ignore any
-`ECHConfig` structure with a key using a KEM they do not support.
+: The HPKE Key Encapsulation Mechanism (KEM) identifier corresponding
+to `public_key`. Clients MUST ignore any `ECHConfig` structure with a
+key using a KEM they do not support.
 
 public_key
 : The HPKE public key used by the client to encrypt ClientHelloInner.
@@ -371,6 +372,14 @@ codepoint with the high order bit set to 1.
 Clients MUST parse the extension list and check for unsupported mandatory
 extensions. If an unsupported mandatory extension is present, clients MUST
 ignore the `ECHConfig`.
+
+Any future information or hints that influence ClientHelloOuter SHOULD be
+specified as ECHConfig extensions. This is primarily because the outer
+ClientHello exists only in support of ECH. Namely, it is both an envelope for
+the encrypted inner ClientHello and enabler for authenticated key mismatch
+signals (see {{server-behavior}}). In contrast, the inner ClientHello is the
+true ClientHello used upon ECH negotiation.
+
 
 # The "encrypted_client_hello" Extension {#encrypted-client-hello}
 
@@ -568,7 +577,7 @@ ECH extension, as described in {{grease-ech}}. Clients of the latter type do not
 negotiate ECH. Instead, they generate a dummy ECH extension that is ignored by
 the server. (See {{dont-stick-out}} for an explanation.) The client offers ECH
 if it is in possession of a compatible ECH configuration and sends GREASE ECH
-otherwise.
+(see {{grease-ech}}) otherwise.
 
 ## Offering ECH {#real-ech}
 
@@ -856,8 +865,8 @@ SHOULD retry the handshake with a new transport connection, using the
 retry configurations supplied by the server.
 
 Clients can implement a new transport connection in a way that best
-suits their deployment. For example, clients can reuse the same IP address
-when establishing the new transport connection or they can choose to use a
+suits their deployment. For example, clients can reuse the same server
+IP address when establishing the new transport connection or they can choose to use a
 different IP address if provided with options from DNS. ECH does not mandate
 any specific implementation choices when establishing this new connection.
 
@@ -964,6 +973,10 @@ configuration.
 
 
 ## GREASE ECH {#grease-ech}
+
+The GREASE ECH mechanism allows a connection between and ECH-capable client
+and a non-ECH server to appear to use ECH, thus reducing the extent to
+which ECH connections stick out (see {{do-not-stick-out}}).
 
 ### Client Greasing
 
@@ -2001,15 +2014,6 @@ Notes:
 {: spacing="compact"}
 
 --- back
-
-# ECHConfig Extension Guidance {#config-extensions-guidance}
-
-Any future information or hints that influence ClientHelloOuter SHOULD be
-specified as ECHConfig extensions. This is primarily because the outer
-ClientHello exists only in support of ECH. Namely, it is both an envelope for
-the encrypted inner ClientHello and enabler for authenticated key mismatch
-signals (see {{server-behavior}}). In contrast, the inner ClientHello is the
-true ClientHello used upon ECH negotiation.
 
 --- back
 
