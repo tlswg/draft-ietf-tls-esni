@@ -357,17 +357,15 @@ known set.
 ## Configuration Extensions {#config-extensions}
 
 ECH configuration extensions are used to provide room for additional
-functionality as needed. See {{config-extensions-guidance}} for guidance on
-which types of extensions are appropriate for this structure.
-
-The format is as defined in {{ech-configuration}} and mirrors
-{{Section 4.2 of RFC8446}}. However, ECH configuration extension types are
-maintained by IANA as described in {{config-extensions-iana}}.
-ECH configuration extensions follow the same interpretation rules as TLS
-extensions: extensions MAY appear in any order, but there MUST NOT be more
-than one extension of the same type in the extensions block. Unlike TLS
-extensions, an extension can be tagged as mandatory by using an extension type
-codepoint with the high order bit set to 1.
+functionality as needed. The format is as defined in
+{{ech-configuration}} and mirrors {{Section 4.2 of RFC8446}}. However,
+ECH configuration extension types are maintained by IANA as described
+in {{config-extensions-iana}}.  ECH configuration extensions follow
+the same interpretation rules as TLS extensions: extensions MAY appear
+in any order, but there MUST NOT be more than one extension of the
+same type in the extensions block. Unlike TLS extensions, an extension
+can be tagged as mandatory by using an extension type codepoint with
+the high order bit set to 1.
 
 Clients MUST parse the extension list and check for unsupported mandatory
 extensions. If an unsupported mandatory extension is present, clients MUST
@@ -866,9 +864,10 @@ retry configurations supplied by the server.
 
 Clients can implement a new transport connection in a way that best
 suits their deployment. For example, clients can reuse the same server
-IP address when establishing the new transport connection or they can choose to use a
-different IP address if provided with options from DNS. ECH does not mandate
-any specific implementation choices when establishing this new connection.
+IP address when establishing the new transport connection or they can
+choose to use a different IP address if provided with options from
+DNS. ECH does not mandate any specific implementation choices when
+establishing this new connection.
 
 The retry configurations are meant to be used for retried connections. Further
 use of retry configurations could yield a tracking vector. In settings where
@@ -976,7 +975,7 @@ configuration.
 
 The GREASE ECH mechanism allows a connection between and ECH-capable client
 and a non-ECH server to appear to use ECH, thus reducing the extent to
-which ECH connections stick out (see {{do-not-stick-out}}).
+which ECH connections stick out (see {{dont-stick-out}}).
 
 ### Client Greasing
 
@@ -2012,8 +2011,6 @@ Reference:
 Notes:
 : Grease entries.
 {: spacing="compact"}
-
---- back
 
 --- back
 
