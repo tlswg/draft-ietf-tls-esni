@@ -13,18 +13,18 @@
        This document describes a mechanism in Transport Layer Security (TLS) for
 encrypting a ClientHello message under a server public key. 
     " name="description">
-<meta content="xml2rfc 3.28.0" name="generator">
+<meta content="xml2rfc 3.28.1" name="generator">
 <meta content="Internet-Draft" name="keyword">
 <meta content="draft-ietf-tls-esni-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.28.0
-    Python 3.12.9
+  xml2rfc 3.28.1
+    Python 3.12.10
     ConfigArgParse 1.7
     google-i18n-address 3.1.1
     intervaltree 3.1.0
     Jinja2 3.1.6
     lxml 5.3.0
-    platformdirs 4.3.6
+    platformdirs 4.3.7
     pycountry 24.6.1
     PyYAML 6.0.2
     requests 2.32.3
@@ -1048,11 +1048,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">TLS Encrypted Client Hello</td>
-<td class="right">March 2025</td>
+<td class="right">April 2025</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Rescorla, et al.</td>
-<td class="center">Expires 22 September 2025</td>
+<td class="center">Expires 31 October 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1065,12 +1065,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-tls-esni-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-03-21" class="published">21 March 2025</time>
+<time datetime="2025-04-29" class="published">29 April 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-09-22">22 September 2025</time></dd>
+<dd class="expires"><time datetime="2025-10-31">31 October 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1125,7 +1125,7 @@ encrypting a ClientHello message under a server public key.<a href="#section-abs
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 22 September 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 31 October 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1385,45 +1385,42 @@ encrypting a ClientHello message under a server public key.<a href="#section-abs
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13">
-            <p id="section-toc.1-1.13.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-echconfig-extension-guidanc" class="internal xref">ECHConfig Extension Guidance</a></p>
+            <p id="section-toc.1-1.13.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-linear-time-outer-extension" class="internal xref">Linear-time Outer Extension Processing</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.14">
-            <p id="section-toc.1-1.14.1"><a href="#appendix-B" class="auto internal xref">Appendix B</a>.  <a href="#name-linear-time-outer-extension" class="internal xref">Linear-time Outer Extension Processing</a></p>
+            <p id="section-toc.1-1.14.1"><a href="#appendix-B" class="auto internal xref">Appendix B</a>.  <a href="#name-acknowledgements" class="internal xref">Acknowledgements</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15">
-            <p id="section-toc.1-1.15.1"><a href="#appendix-C" class="auto internal xref">Appendix C</a>.  <a href="#name-acknowledgements" class="internal xref">Acknowledgements</a></p>
-</li>
-          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16">
-            <p id="section-toc.1-1.16.1"><a href="#appendix-D" class="auto internal xref">Appendix D</a>.  <a href="#name-change-log" class="internal xref">Change Log</a></p>
+            <p id="section-toc.1-1.15.1"><a href="#appendix-C" class="auto internal xref">Appendix C</a>.  <a href="#name-change-log" class="internal xref">Change Log</a></p>
 <ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16.2.1">
-                <p id="section-toc.1-1.16.2.1.1"><a href="#appendix-D.1" class="auto internal xref">D.1</a>.  <a href="#name-since-draft-ietf-tls-esni-1" class="internal xref">Since draft-ietf-tls-esni-16</a></p>
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.1">
+                <p id="section-toc.1-1.15.2.1.1"><a href="#appendix-C.1" class="auto internal xref">C.1</a>.  <a href="#name-since-draft-ietf-tls-esni-1" class="internal xref">Since draft-ietf-tls-esni-16</a></p>
 </li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16.2.2">
-                <p id="section-toc.1-1.16.2.2.1"><a href="#appendix-D.2" class="auto internal xref">D.2</a>.  <a href="#name-since-draft-ietf-tls-esni-15" class="internal xref">Since draft-ietf-tls-esni-15</a></p>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.2">
+                <p id="section-toc.1-1.15.2.2.1"><a href="#appendix-C.2" class="auto internal xref">C.2</a>.  <a href="#name-since-draft-ietf-tls-esni-15" class="internal xref">Since draft-ietf-tls-esni-15</a></p>
 </li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16.2.3">
-                <p id="section-toc.1-1.16.2.3.1"><a href="#appendix-D.3" class="auto internal xref">D.3</a>.  <a href="#name-since-draft-ietf-tls-esni-14" class="internal xref">Since draft-ietf-tls-esni-14</a></p>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.3">
+                <p id="section-toc.1-1.15.2.3.1"><a href="#appendix-C.3" class="auto internal xref">C.3</a>.  <a href="#name-since-draft-ietf-tls-esni-14" class="internal xref">Since draft-ietf-tls-esni-14</a></p>
 </li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16.2.4">
-                <p id="section-toc.1-1.16.2.4.1"><a href="#appendix-D.4" class="auto internal xref">D.4</a>.  <a href="#name-since-draft-ietf-tls-esni-13" class="internal xref">Since draft-ietf-tls-esni-13</a></p>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.4">
+                <p id="section-toc.1-1.15.2.4.1"><a href="#appendix-C.4" class="auto internal xref">C.4</a>.  <a href="#name-since-draft-ietf-tls-esni-13" class="internal xref">Since draft-ietf-tls-esni-13</a></p>
 </li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16.2.5">
-                <p id="section-toc.1-1.16.2.5.1"><a href="#appendix-D.5" class="auto internal xref">D.5</a>.  <a href="#name-since-draft-ietf-tls-esni-12" class="internal xref">Since draft-ietf-tls-esni-12</a></p>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.5">
+                <p id="section-toc.1-1.15.2.5.1"><a href="#appendix-C.5" class="auto internal xref">C.5</a>.  <a href="#name-since-draft-ietf-tls-esni-12" class="internal xref">Since draft-ietf-tls-esni-12</a></p>
 </li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16.2.6">
-                <p id="section-toc.1-1.16.2.6.1"><a href="#appendix-D.6" class="auto internal xref">D.6</a>.  <a href="#name-since-draft-ietf-tls-esni-11" class="internal xref">Since draft-ietf-tls-esni-11</a></p>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.6">
+                <p id="section-toc.1-1.15.2.6.1"><a href="#appendix-C.6" class="auto internal xref">C.6</a>.  <a href="#name-since-draft-ietf-tls-esni-11" class="internal xref">Since draft-ietf-tls-esni-11</a></p>
 </li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16.2.7">
-                <p id="section-toc.1-1.16.2.7.1"><a href="#appendix-D.7" class="auto internal xref">D.7</a>.  <a href="#name-since-draft-ietf-tls-esni-10" class="internal xref">Since draft-ietf-tls-esni-10</a></p>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.7">
+                <p id="section-toc.1-1.15.2.7.1"><a href="#appendix-C.7" class="auto internal xref">C.7</a>.  <a href="#name-since-draft-ietf-tls-esni-10" class="internal xref">Since draft-ietf-tls-esni-10</a></p>
 </li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16.2.8">
-                <p id="section-toc.1-1.16.2.8.1"><a href="#appendix-D.8" class="auto internal xref">D.8</a>.  <a href="#name-since-draft-ietf-tls-esni-0" class="internal xref">Since draft-ietf-tls-esni-09</a></p>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.8">
+                <p id="section-toc.1-1.15.2.8.1"><a href="#appendix-C.8" class="auto internal xref">C.8</a>.  <a href="#name-since-draft-ietf-tls-esni-0" class="internal xref">Since draft-ietf-tls-esni-09</a></p>
 </li>
             </ul>
 </li>
-          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.17">
-            <p id="section-toc.1-1.17.1"><a href="#appendix-E" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16">
+            <p id="section-toc.1-1.16.1"><a href="#appendix-D" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
 </li>
         </ul>
 </nav>
@@ -1722,8 +1719,9 @@ describes how client-facing servers allocate this value.<a href="#section-4-8.2.
         <dd class="break"></dd>
 <dt id="section-4-8.3">kem_id</dt>
         <dd style="margin-left: 1.5em" id="section-4-8.4">
-          <p id="section-4-8.4.1">The HPKE KEM identifier corresponding to <code>public_key</code>. Clients MUST ignore any
-<code>ECHConfig</code> structure with a key using a KEM they do not support.<a href="#section-4-8.4.1" class="pilcrow">¶</a></p>
+          <p id="section-4-8.4.1">The HPKE Key Encapsulation Mechanism (KEM) identifier corresponding
+to <code>public_key</code>. Clients MUST ignore any <code>ECHConfig</code> structure with a
+key using a KEM they do not support.<a href="#section-4-8.4.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="section-4-8.5">public_key</dt>
@@ -1776,19 +1774,24 @@ known set.<a href="#section-4.1-3" class="pilcrow">¶</a></p>
 <a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-configuration-extensions" class="section-name selfRef">Configuration Extensions</a>
         </h3>
 <p id="section-4.2-1">ECH configuration extensions are used to provide room for additional
-functionality as needed. See <a href="#config-extensions-guidance" class="auto internal xref">Appendix A</a> for guidance on
-which types of extensions are appropriate for this structure.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
-<p id="section-4.2-2">The format is as defined in <a href="#ech-configuration" class="auto internal xref">Section 4</a> and mirrors
-<span><a href="https://rfc-editor.org/rfc/rfc8446#section-4.2" class="relref">Section 4.2</a> of [<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>. However, ECH configuration extension types are
-maintained by IANA as described in <a href="#config-extensions-iana" class="auto internal xref">Section 11.3</a>.
-ECH configuration extensions follow the same interpretation rules as TLS
-extensions: extensions MAY appear in any order, but there MUST NOT be more
-than one extension of the same type in the extensions block. Unlike TLS
-extensions, an extension can be tagged as mandatory by using an extension type
-codepoint with the high order bit set to 1.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
-<p id="section-4.2-3">Clients MUST parse the extension list and check for unsupported mandatory
+functionality as needed. The format is as defined in
+<a href="#ech-configuration" class="auto internal xref">Section 4</a> and mirrors <span><a href="https://rfc-editor.org/rfc/rfc8446#section-4.2" class="relref">Section 4.2</a> of [<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>. However,
+ECH configuration extension types are maintained by IANA as described
+in <a href="#config-extensions-iana" class="auto internal xref">Section 11.3</a>.  ECH configuration extensions follow
+the same interpretation rules as TLS extensions: extensions MAY appear
+in any order, but there MUST NOT be more than one extension of the
+same type in the extensions block. Unlike TLS extensions, an extension
+can be tagged as mandatory by using an extension type codepoint with
+the high order bit set to 1.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.2-2">Clients MUST parse the extension list and check for unsupported mandatory
 extensions. If an unsupported mandatory extension is present, clients MUST
-ignore the <code>ECHConfig</code>.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
+ignore the <code>ECHConfig</code>.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
+<p id="section-4.2-3">Any future information or hints that influence ClientHelloOuter SHOULD be
+specified as ECHConfig extensions. This is primarily because the outer
+ClientHello exists only in support of ECH. Namely, it is both an envelope for
+the encrypted inner ClientHello and enabler for authenticated key mismatch
+signals (see <a href="#server-behavior" class="auto internal xref">Section 7</a>). In contrast, the inner ClientHello is the
+true ClientHello used upon ECH negotiation.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1978,7 +1981,7 @@ ClientHelloInner. This is discussed further in <a href="#decompression-amp" clas
 <p id="section-5.1-13">Implementations SHOULD construct the ClientHelloInner in linear
 time. Quadratic time implementations (such as may happen via naive
 copying) create a denial of service risk.
-<a href="#linear-outer-extensions" class="auto internal xref">Appendix B</a> describes a linear-time procedure that may be used
+<a href="#linear-outer-extensions" class="auto internal xref">Appendix A</a> describes a linear-time procedure that may be used
 for this purpose.<a href="#section-5.1-13" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -2014,7 +2017,7 @@ ECH extension, as described in <a href="#grease-ech" class="auto internal xref">
 negotiate ECH. Instead, they generate a dummy ECH extension that is ignored by
 the server. (See <a href="#dont-stick-out" class="auto internal xref">Section 10.10.4</a> for an explanation.) The client offers ECH
 if it is in possession of a compatible ECH configuration and sends GREASE ECH
-otherwise.<a href="#section-6-1" class="pilcrow">¶</a></p>
+(see <a href="#grease-ech" class="auto internal xref">Section 6.2</a>) otherwise.<a href="#section-6-1" class="pilcrow">¶</a></p>
 <div id="real-ech">
 <section id="section-6.1">
         <h3 id="name-offering-ech">
@@ -2347,10 +2350,11 @@ regard the ECH configuration as securely replaced by the server. It
 SHOULD retry the handshake with a new transport connection, using the
 retry configurations supplied by the server.<a href="#section-6.1.6-3" class="pilcrow">¶</a></p>
 <p id="section-6.1.6-4">Clients can implement a new transport connection in a way that best
-suits their deployment. For example, clients can reuse the same IP address
-when establishing the new transport connection or they can choose to use a
-different IP address if provided with options from DNS. ECH does not mandate
-any specific implementation choices when establishing this new connection.<a href="#section-6.1.6-4" class="pilcrow">¶</a></p>
+suits their deployment. For example, clients can reuse the same server
+IP address when establishing the new transport connection or they can
+choose to use a different IP address if provided with options from
+DNS. ECH does not mandate any specific implementation choices when
+establishing this new connection.<a href="#section-6.1.6-4" class="pilcrow">¶</a></p>
 <p id="section-6.1.6-5">The retry configurations are meant to be used for retried connections. Further
 use of retry configurations could yield a tracking vector. In settings where
 the client will otherwise already let the server track the client, e.g.,
@@ -2467,6 +2471,9 @@ configuration.<a href="#section-6.1.8-4" class="pilcrow">¶</a></p>
         <h3 id="name-grease-ech">
 <a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-grease-ech" class="section-name selfRef">GREASE ECH</a>
         </h3>
+<p id="section-6.2-1">The GREASE ECH mechanism allows a connection between and ECH-capable client
+and a non-ECH server to appear to use ECH, thus reducing the extent to
+which ECH connections stick out (see <a href="#dont-stick-out" class="auto internal xref">Section 10.10.4</a>).<a href="#section-6.2-1" class="pilcrow">¶</a></p>
 <div id="client-greasing">
 <section id="section-6.2.1">
           <h4 id="name-client-greasing">
@@ -3840,50 +3847,37 @@ with the following attributes, which are repeated for each registration:<a href=
 </div>
 </section>
 </div>
-<div id="config-extensions-guidance">
-<section id="appendix-A">
-      <h2 id="name-echconfig-extension-guidanc">
-<a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-echconfig-extension-guidanc" class="section-name selfRef">ECHConfig Extension Guidance</a>
-      </h2>
-<p id="appendix-A-1">Any future information or hints that influence ClientHelloOuter SHOULD be
-specified as ECHConfig extensions. This is primarily because the outer
-ClientHello exists only in support of ECH. Namely, it is both an envelope for
-the encrypted inner ClientHello and enabler for authenticated key mismatch
-signals (see <a href="#server-behavior" class="auto internal xref">Section 7</a>). In contrast, the inner ClientHello is the
-true ClientHello used upon ECH negotiation.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
-</section>
-</div>
 <div id="linear-outer-extensions">
-<section id="appendix-B">
+<section id="appendix-A">
       <h2 id="name-linear-time-outer-extension">
-<a href="#appendix-B" class="section-number selfRef">Appendix B. </a><a href="#name-linear-time-outer-extension" class="section-name selfRef">Linear-time Outer Extension Processing</a>
+<a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-linear-time-outer-extension" class="section-name selfRef">Linear-time Outer Extension Processing</a>
       </h2>
-<p id="appendix-B-1">The following procedure processes the "ech_outer_extensions" extension (see
+<p id="appendix-A-1">The following procedure processes the "ech_outer_extensions" extension (see
 <a href="#encoding-inner" class="auto internal xref">Section 5.1</a>) in linear time, ensuring that each referenced extension
-in the ClientHelloOuter is included at most once:<a href="#appendix-B-1" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="appendix-B-2">
-<li id="appendix-B-2.1">
-          <p id="appendix-B-2.1.1">Let I be initialized to zero and N be set to the number of extensions
-in ClientHelloOuter.<a href="#appendix-B-2.1.1" class="pilcrow">¶</a></p>
+in the ClientHelloOuter is included at most once:<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="appendix-A-2">
+<li id="appendix-A-2.1">
+          <p id="appendix-A-2.1.1">Let I be initialized to zero and N be set to the number of extensions
+in ClientHelloOuter.<a href="#appendix-A-2.1.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="appendix-B-2.2">
-          <p id="appendix-B-2.2.1">For each extension type, E, in OuterExtensions:<a href="#appendix-B-2.2.1" class="pilcrow">¶</a></p>
+        <li id="appendix-A-2.2">
+          <p id="appendix-A-2.2.1">For each extension type, E, in OuterExtensions:<a href="#appendix-A-2.2.1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="appendix-B-2.2.2.1">
-              <p id="appendix-B-2.2.2.1.1">If E is "encrypted_client_hello", abort the connection with an
-"illegal_parameter" alert and terminate this procedure.<a href="#appendix-B-2.2.2.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="appendix-A-2.2.2.1">
+              <p id="appendix-A-2.2.2.1.1">If E is "encrypted_client_hello", abort the connection with an
+"illegal_parameter" alert and terminate this procedure.<a href="#appendix-A-2.2.2.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="appendix-B-2.2.2.2">
-              <p id="appendix-B-2.2.2.2.1">While I is less than N and the I-th extension of
-ClientHelloOuter does not have type E, increment I.<a href="#appendix-B-2.2.2.2.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="appendix-A-2.2.2.2">
+              <p id="appendix-A-2.2.2.2.1">While I is less than N and the I-th extension of
+ClientHelloOuter does not have type E, increment I.<a href="#appendix-A-2.2.2.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="appendix-B-2.2.2.3">
-              <p id="appendix-B-2.2.2.3.1">If I is equal to N, abort the connection with an "illegal_parameter"
-alert and terminate this procedure.<a href="#appendix-B-2.2.2.3.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="appendix-A-2.2.2.3">
+              <p id="appendix-A-2.2.2.3.1">If I is equal to N, abort the connection with an "illegal_parameter"
+alert and terminate this procedure.<a href="#appendix-A-2.2.2.3.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="appendix-B-2.2.2.4">
-              <p id="appendix-B-2.2.2.4.1">Otherwise, the I-th extension of ClientHelloOuter has type E. Copy
-it to the EncodedClientHelloInner and increment I.<a href="#appendix-B-2.2.2.4.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="appendix-A-2.2.2.4">
+              <p id="appendix-A-2.2.2.4.1">Otherwise, the I-th extension of ClientHelloOuter has type E. Copy
+it to the EncodedClientHelloInner and increment I.<a href="#appendix-A-2.2.2.4.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 </li>
@@ -3891,194 +3885,194 @@ it to the EncodedClientHelloInner and increment I.<a href="#appendix-B-2.2.2.4.1
 </section>
 </div>
 <div id="acknowledgements">
-<section id="appendix-C">
+<section id="appendix-B">
       <h2 id="name-acknowledgements">
-<a href="#appendix-C" class="section-number selfRef">Appendix C. </a><a href="#name-acknowledgements" class="section-name selfRef">Acknowledgements</a>
+<a href="#appendix-B" class="section-number selfRef">Appendix B. </a><a href="#name-acknowledgements" class="section-name selfRef">Acknowledgements</a>
       </h2>
-<p id="appendix-C-1">This document draws extensively from ideas in <span>[<a href="#I-D.kazuho-protected-sni" class="cite xref">I-D.kazuho-protected-sni</a>]</span>, but
+<p id="appendix-B-1">This document draws extensively from ideas in <span>[<a href="#I-D.kazuho-protected-sni" class="cite xref">I-D.kazuho-protected-sni</a>]</span>, but
 is a much more limited mechanism because it depends on the DNS for the
 protection of the ECH key. Richard Barnes, Christian Huitema, Patrick McManus,
 Matthew Prince, Nick Sullivan, Martin Thomson, and David Benjamin also provided
-important ideas and contributions.<a href="#appendix-C-1" class="pilcrow">¶</a></p>
+important ideas and contributions.<a href="#appendix-B-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="change-log">
-<section id="appendix-D">
+<section id="appendix-C">
       <h2 id="name-change-log">
-<a href="#appendix-D" class="section-number selfRef">Appendix D. </a><a href="#name-change-log" class="section-name selfRef">Change Log</a>
+<a href="#appendix-C" class="section-number selfRef">Appendix C. </a><a href="#name-change-log" class="section-name selfRef">Change Log</a>
       </h2>
 <ul class="normal ulEmpty">
-<li class="normal ulEmpty" id="appendix-D-1.1">
-          <p id="appendix-D-1.1.1"><strong>RFC Editor's Note:</strong> Please remove this section prior to publication of a
-final version of this document.<a href="#appendix-D-1.1.1" class="pilcrow">¶</a></p>
+<li class="normal ulEmpty" id="appendix-C-1.1">
+          <p id="appendix-C-1.1.1"><strong>RFC Editor's Note:</strong> Please remove this section prior to publication of a
+final version of this document.<a href="#appendix-C-1.1.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="appendix-D-2">Issue and pull request numbers are listed with a leading octothorp.<a href="#appendix-D-2" class="pilcrow">¶</a></p>
+<p id="appendix-C-2">Issue and pull request numbers are listed with a leading octothorp.<a href="#appendix-C-2" class="pilcrow">¶</a></p>
 <div id="since-draft-ietf-tls-esni-16">
-<section id="appendix-D.1">
+<section id="appendix-C.1">
         <h3 id="name-since-draft-ietf-tls-esni-1">
-<a href="#appendix-D.1" class="section-number selfRef">D.1. </a><a href="#name-since-draft-ietf-tls-esni-1" class="section-name selfRef">Since draft-ietf-tls-esni-16</a>
+<a href="#appendix-C.1" class="section-number selfRef">C.1. </a><a href="#name-since-draft-ietf-tls-esni-1" class="section-name selfRef">Since draft-ietf-tls-esni-16</a>
         </h3>
 <ul class="normal">
-<li class="normal" id="appendix-D.1-1.1">
-            <p id="appendix-D.1-1.1.1">Keep-alive<a href="#appendix-D.1-1.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="appendix-C.1-1.1">
+            <p id="appendix-C.1-1.1.1">Keep-alive<a href="#appendix-C.1-1.1.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
 </div>
 <div id="since-draft-ietf-tls-esni-15">
-<section id="appendix-D.2">
+<section id="appendix-C.2">
         <h3 id="name-since-draft-ietf-tls-esni-15">
-<a href="#appendix-D.2" class="section-number selfRef">D.2. </a><a href="#name-since-draft-ietf-tls-esni-15" class="section-name selfRef">Since draft-ietf-tls-esni-15</a>
+<a href="#appendix-C.2" class="section-number selfRef">C.2. </a><a href="#name-since-draft-ietf-tls-esni-15" class="section-name selfRef">Since draft-ietf-tls-esni-15</a>
         </h3>
 <ul class="normal">
-<li class="normal" id="appendix-D.2-1.1">
-            <p id="appendix-D.2-1.1.1">Add CCS2022 reference and summary (#539)<a href="#appendix-D.2-1.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="appendix-C.2-1.1">
+            <p id="appendix-C.2-1.1.1">Add CCS2022 reference and summary (#539)<a href="#appendix-C.2-1.1.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
 </div>
 <div id="since-draft-ietf-tls-esni-14">
-<section id="appendix-D.3">
+<section id="appendix-C.3">
         <h3 id="name-since-draft-ietf-tls-esni-14">
-<a href="#appendix-D.3" class="section-number selfRef">D.3. </a><a href="#name-since-draft-ietf-tls-esni-14" class="section-name selfRef">Since draft-ietf-tls-esni-14</a>
+<a href="#appendix-C.3" class="section-number selfRef">C.3. </a><a href="#name-since-draft-ietf-tls-esni-14" class="section-name selfRef">Since draft-ietf-tls-esni-14</a>
         </h3>
 <ul class="normal">
-<li class="normal" id="appendix-D.3-1.1">
-            <p id="appendix-D.3-1.1.1">Keep-alive<a href="#appendix-D.3-1.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="appendix-C.3-1.1">
+            <p id="appendix-C.3-1.1.1">Keep-alive<a href="#appendix-C.3-1.1.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
 </div>
 <div id="since-draft-ietf-tls-esni-13">
-<section id="appendix-D.4">
+<section id="appendix-C.4">
         <h3 id="name-since-draft-ietf-tls-esni-13">
-<a href="#appendix-D.4" class="section-number selfRef">D.4. </a><a href="#name-since-draft-ietf-tls-esni-13" class="section-name selfRef">Since draft-ietf-tls-esni-13</a>
+<a href="#appendix-C.4" class="section-number selfRef">C.4. </a><a href="#name-since-draft-ietf-tls-esni-13" class="section-name selfRef">Since draft-ietf-tls-esni-13</a>
         </h3>
 <ul class="normal">
-<li class="normal" id="appendix-D.4-1.1">
-            <p id="appendix-D.4-1.1.1">Editorial improvements<a href="#appendix-D.4-1.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="appendix-C.4-1.1">
+            <p id="appendix-C.4-1.1.1">Editorial improvements<a href="#appendix-C.4-1.1.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
 </div>
 <div id="since-draft-ietf-tls-esni-12">
-<section id="appendix-D.5">
+<section id="appendix-C.5">
         <h3 id="name-since-draft-ietf-tls-esni-12">
-<a href="#appendix-D.5" class="section-number selfRef">D.5. </a><a href="#name-since-draft-ietf-tls-esni-12" class="section-name selfRef">Since draft-ietf-tls-esni-12</a>
+<a href="#appendix-C.5" class="section-number selfRef">C.5. </a><a href="#name-since-draft-ietf-tls-esni-12" class="section-name selfRef">Since draft-ietf-tls-esni-12</a>
         </h3>
 <ul class="normal">
-<li class="normal" id="appendix-D.5-1.1">
-            <p id="appendix-D.5-1.1.1">Abort on duplicate OuterExtensions (#514)<a href="#appendix-D.5-1.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="appendix-C.5-1.1">
+            <p id="appendix-C.5-1.1.1">Abort on duplicate OuterExtensions (#514)<a href="#appendix-C.5-1.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.5-1.2">
-            <p id="appendix-D.5-1.2.1">Improve EncodedClientHelloInner definition (#503)<a href="#appendix-D.5-1.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.5-1.2">
+            <p id="appendix-C.5-1.2.1">Improve EncodedClientHelloInner definition (#503)<a href="#appendix-C.5-1.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.5-1.3">
-            <p id="appendix-D.5-1.3.1">Clarify retry configuration usage (#498)<a href="#appendix-D.5-1.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.5-1.3">
+            <p id="appendix-C.5-1.3.1">Clarify retry configuration usage (#498)<a href="#appendix-C.5-1.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.5-1.4">
-            <p id="appendix-D.5-1.4.1">Expand on config_id generation implications (#491)<a href="#appendix-D.5-1.4.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.5-1.4">
+            <p id="appendix-C.5-1.4.1">Expand on config_id generation implications (#491)<a href="#appendix-C.5-1.4.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.5-1.5">
-            <p id="appendix-D.5-1.5.1">Server-side acceptance signal extension GREASE (#481)<a href="#appendix-D.5-1.5.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.5-1.5">
+            <p id="appendix-C.5-1.5.1">Server-side acceptance signal extension GREASE (#481)<a href="#appendix-C.5-1.5.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.5-1.6">
-            <p id="appendix-D.5-1.6.1">Refactor overview, client implementation, and middlebox
-sections (#480, #478, #475, #508)<a href="#appendix-D.5-1.6.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.5-1.6">
+            <p id="appendix-C.5-1.6.1">Refactor overview, client implementation, and middlebox
+sections (#480, #478, #475, #508)<a href="#appendix-C.5-1.6.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.5-1.7">
-            <p id="appendix-D.5-1.7.1">Editorial iprovements (#485, #488, #490, #495, #496, #499, #500,
-#501, #504, #505, #507, #510, #511)<a href="#appendix-D.5-1.7.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.5-1.7">
+            <p id="appendix-C.5-1.7.1">Editorial iprovements (#485, #488, #490, #495, #496, #499, #500,
+#501, #504, #505, #507, #510, #511)<a href="#appendix-C.5-1.7.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
 </div>
 <div id="since-draft-ietf-tls-esni-11">
-<section id="appendix-D.6">
+<section id="appendix-C.6">
         <h3 id="name-since-draft-ietf-tls-esni-11">
-<a href="#appendix-D.6" class="section-number selfRef">D.6. </a><a href="#name-since-draft-ietf-tls-esni-11" class="section-name selfRef">Since draft-ietf-tls-esni-11</a>
+<a href="#appendix-C.6" class="section-number selfRef">C.6. </a><a href="#name-since-draft-ietf-tls-esni-11" class="section-name selfRef">Since draft-ietf-tls-esni-11</a>
         </h3>
 <ul class="normal">
-<li class="normal" id="appendix-D.6-1.1">
-            <p id="appendix-D.6-1.1.1">Move ClientHello padding to the encoding (#443)<a href="#appendix-D.6-1.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="appendix-C.6-1.1">
+            <p id="appendix-C.6-1.1.1">Move ClientHello padding to the encoding (#443)<a href="#appendix-C.6-1.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.6-1.2">
-            <p id="appendix-D.6-1.2.1">Align codepoints (#464)<a href="#appendix-D.6-1.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.6-1.2">
+            <p id="appendix-C.6-1.2.1">Align codepoints (#464)<a href="#appendix-C.6-1.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.6-1.3">
-            <p id="appendix-D.6-1.3.1">Relax OuterExtensions checks for alignment with RFC8446 (#467)<a href="#appendix-D.6-1.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.6-1.3">
+            <p id="appendix-C.6-1.3.1">Relax OuterExtensions checks for alignment with RFC8446 (#467)<a href="#appendix-C.6-1.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.6-1.4">
-            <p id="appendix-D.6-1.4.1">Clarify HRR acceptance and rejection logic (#470)<a href="#appendix-D.6-1.4.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.6-1.4">
+            <p id="appendix-C.6-1.4.1">Clarify HRR acceptance and rejection logic (#470)<a href="#appendix-C.6-1.4.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.6-1.5">
-            <p id="appendix-D.6-1.5.1">Editorial improvements (#468, #465, #462, #461)<a href="#appendix-D.6-1.5.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.6-1.5">
+            <p id="appendix-C.6-1.5.1">Editorial improvements (#468, #465, #462, #461)<a href="#appendix-C.6-1.5.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
 </div>
 <div id="since-draft-ietf-tls-esni-10">
-<section id="appendix-D.7">
+<section id="appendix-C.7">
         <h3 id="name-since-draft-ietf-tls-esni-10">
-<a href="#appendix-D.7" class="section-number selfRef">D.7. </a><a href="#name-since-draft-ietf-tls-esni-10" class="section-name selfRef">Since draft-ietf-tls-esni-10</a>
+<a href="#appendix-C.7" class="section-number selfRef">C.7. </a><a href="#name-since-draft-ietf-tls-esni-10" class="section-name selfRef">Since draft-ietf-tls-esni-10</a>
         </h3>
 <ul class="normal">
-<li class="normal" id="appendix-D.7-1.1">
-            <p id="appendix-D.7-1.1.1">Make HRR confirmation and ECH acceptance explicit (#422, #423)<a href="#appendix-D.7-1.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="appendix-C.7-1.1">
+            <p id="appendix-C.7-1.1.1">Make HRR confirmation and ECH acceptance explicit (#422, #423)<a href="#appendix-C.7-1.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.7-1.2">
-            <p id="appendix-D.7-1.2.1">Relax computation of the acceptance signal (#420, #449)<a href="#appendix-D.7-1.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.7-1.2">
+            <p id="appendix-C.7-1.2.1">Relax computation of the acceptance signal (#420, #449)<a href="#appendix-C.7-1.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.7-1.3">
-            <p id="appendix-D.7-1.3.1">Simplify ClientHelloOuterAAD generation (#438, #442)<a href="#appendix-D.7-1.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.7-1.3">
+            <p id="appendix-C.7-1.3.1">Simplify ClientHelloOuterAAD generation (#438, #442)<a href="#appendix-C.7-1.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.7-1.4">
-            <p id="appendix-D.7-1.4.1">Allow empty enc in ECHClientHello (#444)<a href="#appendix-D.7-1.4.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.7-1.4">
+            <p id="appendix-C.7-1.4.1">Allow empty enc in ECHClientHello (#444)<a href="#appendix-C.7-1.4.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.7-1.5">
-            <p id="appendix-D.7-1.5.1">Authenticate ECHClientHello extensions position in ClientHelloOuterAAD (#410)<a href="#appendix-D.7-1.5.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.7-1.5">
+            <p id="appendix-C.7-1.5.1">Authenticate ECHClientHello extensions position in ClientHelloOuterAAD (#410)<a href="#appendix-C.7-1.5.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.7-1.6">
-            <p id="appendix-D.7-1.6.1">Allow clients to send a dummy PSK and early_data in ClientHelloOuter when
-applicable (#414, #415)<a href="#appendix-D.7-1.6.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.7-1.6">
+            <p id="appendix-C.7-1.6.1">Allow clients to send a dummy PSK and early_data in ClientHelloOuter when
+applicable (#414, #415)<a href="#appendix-C.7-1.6.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.7-1.7">
-            <p id="appendix-D.7-1.7.1">Compress ECHConfigContents (#409)<a href="#appendix-D.7-1.7.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.7-1.7">
+            <p id="appendix-C.7-1.7.1">Compress ECHConfigContents (#409)<a href="#appendix-C.7-1.7.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.7-1.8">
-            <p id="appendix-D.7-1.8.1">Validate ECHConfig.contents.public_name (#413, #456)<a href="#appendix-D.7-1.8.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.7-1.8">
+            <p id="appendix-C.7-1.8.1">Validate ECHConfig.contents.public_name (#413, #456)<a href="#appendix-C.7-1.8.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.7-1.9">
-            <p id="appendix-D.7-1.9.1">Validate ClientHelloInner contents (#411)<a href="#appendix-D.7-1.9.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.7-1.9">
+            <p id="appendix-C.7-1.9.1">Validate ClientHelloInner contents (#411)<a href="#appendix-C.7-1.9.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.7-1.10">
-            <p id="appendix-D.7-1.10.1">Note split-mode challenges for HRR (#418)<a href="#appendix-D.7-1.10.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.7-1.10">
+            <p id="appendix-C.7-1.10.1">Note split-mode challenges for HRR (#418)<a href="#appendix-C.7-1.10.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.7-1.11">
-            <p id="appendix-D.7-1.11.1">Editorial improvements (#428, #432, #439, #445, #458, #455)<a href="#appendix-D.7-1.11.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.7-1.11">
+            <p id="appendix-C.7-1.11.1">Editorial improvements (#428, #432, #439, #445, #458, #455)<a href="#appendix-C.7-1.11.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
 </div>
 <div id="since-draft-ietf-tls-esni-09">
-<section id="appendix-D.8">
+<section id="appendix-C.8">
         <h3 id="name-since-draft-ietf-tls-esni-0">
-<a href="#appendix-D.8" class="section-number selfRef">D.8. </a><a href="#name-since-draft-ietf-tls-esni-0" class="section-name selfRef">Since draft-ietf-tls-esni-09</a>
+<a href="#appendix-C.8" class="section-number selfRef">C.8. </a><a href="#name-since-draft-ietf-tls-esni-0" class="section-name selfRef">Since draft-ietf-tls-esni-09</a>
         </h3>
 <ul class="normal">
-<li class="normal" id="appendix-D.8-1.1">
-            <p id="appendix-D.8-1.1.1">Finalize HPKE dependency (#390)<a href="#appendix-D.8-1.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="appendix-C.8-1.1">
+            <p id="appendix-C.8-1.1.1">Finalize HPKE dependency (#390)<a href="#appendix-C.8-1.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.8-1.2">
-            <p id="appendix-D.8-1.2.1">Move from client-computed to server-chosen, one-byte config
-identifier (#376, #381)<a href="#appendix-D.8-1.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.8-1.2">
+            <p id="appendix-C.8-1.2.1">Move from client-computed to server-chosen, one-byte config
+identifier (#376, #381)<a href="#appendix-C.8-1.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.8-1.3">
-            <p id="appendix-D.8-1.3.1">Rename ECHConfigs to ECHConfigList (#391)<a href="#appendix-D.8-1.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.8-1.3">
+            <p id="appendix-C.8-1.3.1">Rename ECHConfigs to ECHConfigList (#391)<a href="#appendix-C.8-1.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="appendix-D.8-1.4">
-            <p id="appendix-D.8-1.4.1">Clarify some security and privacy properties (#385, #383)<a href="#appendix-D.8-1.4.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="appendix-C.8-1.4">
+            <p id="appendix-C.8-1.4.1">Clarify some security and privacy properties (#385, #383)<a href="#appendix-C.8-1.4.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -4086,7 +4080,7 @@ identifier (#376, #381)<a href="#appendix-D.8-1.2.1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="authors-addresses">
-<section id="appendix-E">
+<section id="appendix-D">
       <h2 id="name-authors-addresses">
 <a href="#name-authors-addresses" class="section-name selfRef">Authors' Addresses</a>
       </h2>

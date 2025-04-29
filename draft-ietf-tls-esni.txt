@@ -5,12 +5,12 @@
 tls                                                          E. Rescorla
 Internet-Draft                                               Independent
 Intended status: Standards Track                                  K. Oku
-Expires: 22 September 2025                                        Fastly
+Expires: 31 October 2025                                          Fastly
                                                              N. Sullivan
                                              Cryptography Consulting LLC
                                                               C. A. Wood
                                                               Cloudflare
-                                                           21 March 2025
+                                                           29 April 2025
 
 
                        TLS Encrypted Client Hello
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 22 September 2025.
+   This Internet-Draft will expire on 31 October 2025.
 
 Copyright Notice
 
@@ -128,18 +128,17 @@ Table of Contents
    12. References
      12.1.  Normative References
      12.2.  Informative References
-   Appendix A.  ECHConfig Extension Guidance
-   Appendix B.  Linear-time Outer Extension Processing
-   Appendix C.  Acknowledgements
-   Appendix D.  Change Log
-     D.1.  Since draft-ietf-tls-esni-16
-     D.2.  Since draft-ietf-tls-esni-15
-     D.3.  Since draft-ietf-tls-esni-14
-     D.4.  Since draft-ietf-tls-esni-13
-     D.5.  Since draft-ietf-tls-esni-12
-     D.6.  Since draft-ietf-tls-esni-11
-     D.7.  Since draft-ietf-tls-esni-10
-     D.8.  Since draft-ietf-tls-esni-09
+   Appendix A.  Linear-time Outer Extension Processing
+   Appendix B.  Acknowledgements
+   Appendix C.  Change Log
+     C.1.  Since draft-ietf-tls-esni-16
+     C.2.  Since draft-ietf-tls-esni-15
+     C.3.  Since draft-ietf-tls-esni-14
+     C.4.  Since draft-ietf-tls-esni-13
+     C.5.  Since draft-ietf-tls-esni-12
+     C.6.  Since draft-ietf-tls-esni-11
+     C.7.  Since draft-ietf-tls-esni-10
+     C.8.  Since draft-ietf-tls-esni-09
    Authors' Addresses
 
 1.  Introduction
@@ -381,9 +380,9 @@ Table of Contents
       for ClientHello encryption.  Section 4.1 describes how client-
       facing servers allocate this value.
 
-   kem_id  The HPKE KEM identifier corresponding to public_key.  Clients
-      MUST ignore any ECHConfig structure with a key using a KEM they do
-      not support.
+   kem_id  The HPKE Key Encapsulation Mechanism (KEM) identifier
+      corresponding to public_key.  Clients MUST ignore any ECHConfig
+      structure with a key using a KEM they do not support.
 
    public_key  The HPKE public key used by the client to encrypt
       ClientHelloInner.
@@ -425,21 +424,27 @@ Table of Contents
 4.2.  Configuration Extensions
 
    ECH configuration extensions are used to provide room for additional
-   functionality as needed.  See Appendix A for guidance on which types
-   of extensions are appropriate for this structure.
-
-   The format is as defined in Section 4 and mirrors Section 4.2 of
-   [RFC8446].  However, ECH configuration extension types are maintained
-   by IANA as described in Section 11.3.  ECH configuration extensions
-   follow the same interpretation rules as TLS extensions: extensions
-   MAY appear in any order, but there MUST NOT be more than one
-   extension of the same type in the extensions block.  Unlike TLS
-   extensions, an extension can be tagged as mandatory by using an
-   extension type codepoint with the high order bit set to 1.
+   functionality as needed.  The format is as defined in Section 4 and
+   mirrors Section 4.2 of [RFC8446].  However, ECH configuration
+   extension types are maintained by IANA as described in Section 11.3.
+   ECH configuration extensions follow the same interpretation rules as
+   TLS extensions: extensions MAY appear in any order, but there MUST
+   NOT be more than one extension of the same type in the extensions
+   block.  Unlike TLS extensions, an extension can be tagged as
+   mandatory by using an extension type codepoint with the high order
+   bit set to 1.
 
    Clients MUST parse the extension list and check for unsupported
    mandatory extensions.  If an unsupported mandatory extension is
    present, clients MUST ignore the ECHConfig.
+
+   Any future information or hints that influence ClientHelloOuter
+   SHOULD be specified as ECHConfig extensions.  This is primarily
+   because the outer ClientHello exists only in support of ECH.  Namely,
+   it is both an envelope for the encrypted inner ClientHello and
+   enabler for authenticated key mismatch signals (see Section 7).  In
+   contrast, the inner ClientHello is the true ClientHello used upon ECH
+   negotiation.
 
 5.  The "encrypted_client_hello" Extension
 
@@ -604,7 +609,7 @@ Table of Contents
 
    Implementations SHOULD construct the ClientHelloInner in linear time.
    Quadratic time implementations (such as may happen via naive copying)
-   create a denial of service risk.  Appendix B describes a linear-time
+   create a denial of service risk.  Appendix A describes a linear-time
    procedure that may be used for this purpose.
 
 5.2.  Authenticating the ClientHelloOuter
@@ -632,7 +637,7 @@ Table of Contents
    generate a dummy ECH extension that is ignored by the server.  (See
    Section 10.10.4 for an explanation.)  The client offers ECH if it is
    in possession of a compatible ECH configuration and sends GREASE ECH
-   otherwise.
+   (see Section 6.2) otherwise.
 
 6.1.  Offering ECH
 
@@ -956,11 +961,11 @@ Table of Contents
    retry configurations supplied by the server.
 
    Clients can implement a new transport connection in a way that best
-   suits their deployment.  For example, clients can reuse the same IP
-   address when establishing the new transport connection or they can
-   choose to use a different IP address if provided with options from
-   DNS.  ECH does not mandate any specific implementation choices when
-   establishing this new connection.
+   suits their deployment.  For example, clients can reuse the same
+   server IP address when establishing the new transport connection or
+   they can choose to use a different IP address if provided with
+   options from DNS.  ECH does not mandate any specific implementation
+   choices when establishing this new connection.
 
    The retry configurations are meant to be used for retried
    connections.  Further use of retry configurations could yield a
@@ -1071,6 +1076,10 @@ Table of Contents
    configuration.
 
 6.2.  GREASE ECH
+
+   The GREASE ECH mechanism allows a connection between and ECH-capable
+   client and a non-ECH server to appear to use ECH, thus reducing the
+   extent to which ECH connections stick out (see Section 10.10.4).
 
 6.2.1.  Client Greasing
 
@@ -2298,17 +2307,7 @@ Table of Contents
               "URL Living Standard - IPv4 Parser", May 2021,
               <https://url.spec.whatwg.org/#concept-ipv4-parser>.
 
-Appendix A.  ECHConfig Extension Guidance
-
-   Any future information or hints that influence ClientHelloOuter
-   SHOULD be specified as ECHConfig extensions.  This is primarily
-   because the outer ClientHello exists only in support of ECH.  Namely,
-   it is both an envelope for the encrypted inner ClientHello and
-   enabler for authenticated key mismatch signals (see Section 7).  In
-   contrast, the inner ClientHello is the true ClientHello used upon ECH
-   negotiation.
-
-Appendix B.  Linear-time Outer Extension Processing
+Appendix A.  Linear-time Outer Extension Processing
 
    The following procedure processes the "ech_outer_extensions"
    extension (see Section 5.1) in linear time, ensuring that each
@@ -2332,7 +2331,7 @@ Appendix B.  Linear-time Outer Extension Processing
        *  Otherwise, the I-th extension of ClientHelloOuter has type E.
           Copy it to the EncodedClientHelloInner and increment I.
 
-Appendix C.  Acknowledgements
+Appendix B.  Acknowledgements
 
    This document draws extensively from ideas in
    [I-D.kazuho-protected-sni], but is a much more limited mechanism
@@ -2341,30 +2340,30 @@ Appendix C.  Acknowledgements
    Nick Sullivan, Martin Thomson, and David Benjamin also provided
    important ideas and contributions.
 
-Appendix D.  Change Log
+Appendix C.  Change Log
 
       *RFC Editor's Note:* Please remove this section prior to
       publication of a final version of this document.
 
    Issue and pull request numbers are listed with a leading octothorp.
 
-D.1.  Since draft-ietf-tls-esni-16
+C.1.  Since draft-ietf-tls-esni-16
 
    *  Keep-alive
 
-D.2.  Since draft-ietf-tls-esni-15
+C.2.  Since draft-ietf-tls-esni-15
 
    *  Add CCS2022 reference and summary (#539)
 
-D.3.  Since draft-ietf-tls-esni-14
+C.3.  Since draft-ietf-tls-esni-14
 
    *  Keep-alive
 
-D.4.  Since draft-ietf-tls-esni-13
+C.4.  Since draft-ietf-tls-esni-13
 
    *  Editorial improvements
 
-D.5.  Since draft-ietf-tls-esni-12
+C.5.  Since draft-ietf-tls-esni-12
 
    *  Abort on duplicate OuterExtensions (#514)
 
@@ -2382,7 +2381,7 @@ D.5.  Since draft-ietf-tls-esni-12
    *  Editorial iprovements (#485, #488, #490, #495, #496, #499, #500,
       #501, #504, #505, #507, #510, #511)
 
-D.6.  Since draft-ietf-tls-esni-11
+C.6.  Since draft-ietf-tls-esni-11
 
    *  Move ClientHello padding to the encoding (#443)
 
@@ -2394,7 +2393,7 @@ D.6.  Since draft-ietf-tls-esni-11
 
    *  Editorial improvements (#468, #465, #462, #461)
 
-D.7.  Since draft-ietf-tls-esni-10
+C.7.  Since draft-ietf-tls-esni-10
 
    *  Make HRR confirmation and ECH acceptance explicit (#422, #423)
 
@@ -2420,7 +2419,7 @@ D.7.  Since draft-ietf-tls-esni-10
 
    *  Editorial improvements (#428, #432, #439, #445, #458, #455)
 
-D.8.  Since draft-ietf-tls-esni-09
+C.8.  Since draft-ietf-tls-esni-09
 
    *  Finalize HPKE dependency (#390)
 
