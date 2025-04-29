@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-03-30T01:44:09.786627+00:00",
+  "timestamp": "2025-04-29T01:42:43.451843+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -13257,6 +13257,22 @@
       "createdAt": "2025-02-19T14:31:40Z",
       "updatedAt": "2025-03-20T04:47:44Z",
       "closedAt": "2025-03-20T04:47:44Z",
+      "comments": []
+    },
+    {
+      "number": 651,
+      "id": "I_kwDOB-yxNc60TSMs",
+      "title": "Remove \"application profile\" text in 6.1",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/651",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "The following text appears in 6.1.\n\n   Note that these rules may change in the presence of an application\n   profile specifying otherwise.\n\nThis text just seems to add confusion, and I don't see when it would actually happen. I suggest we remove.",
+      "createdAt": "2025-04-28T13:32:53Z",
+      "updatedAt": "2025-04-28T13:32:53Z",
+      "closedAt": null,
       "comments": []
     }
   ],
@@ -58776,6 +58792,58 @@
           "comments": []
         }
       ]
+    },
+    {
+      "number": 650,
+      "id": "PR_kwDOB-yxNc6UKvWx",
+      "title": "Fairhurst editorial comments",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/650",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2025-04-28T13:27:32Z",
+      "updatedAt": "2025-04-28T13:40:25Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "db371fc546e0c32596db20089825e2ae99d80c81",
+      "headRepository": "ekr/draft-ietf-tls-esni",
+      "headRefName": "fairhurst_comments",
+      "headRefOid": "971b56e80e97d435d360befd2b5f8c7717aa6291",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 652,
+      "id": "PR_kwDOB-yxNc6UK5e8",
+      "title": "Clarify session ID for DTLS 1.3 and TLS 1.3",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/652",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2025-04-28T13:43:44Z",
+      "updatedAt": "2025-04-28T13:43:45Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "db371fc546e0c32596db20089825e2ae99d80c81",
+      "headRepository": "ekr/draft-ietf-tls-esni",
+      "headRefName": "clarify_dtls_legacy_session_id",
+      "headRefOid": "419dd524f34ec43a590242f9d0744e164d4f6bf7",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
     }
   ]
 }
