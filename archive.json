@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-04-29T01:42:43.451843+00:00",
+  "timestamp": "2025-05-01T01:50:26.545302+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -58798,26 +58798,42 @@
       "id": "PR_kwDOB-yxNc6UKvWx",
       "title": "Fairhurst editorial comments",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/650",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2025-04-28T13:27:32Z",
-      "updatedAt": "2025-04-28T13:40:25Z",
+      "updatedAt": "2025-04-29T18:45:17Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "db371fc546e0c32596db20089825e2ae99d80c81",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "fairhurst_comments",
       "headRefOid": "971b56e80e97d435d360befd2b5f8c7717aa6291",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2025-04-29T18:45:17Z",
+      "mergedAt": "2025-04-29T18:45:17Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "acb906c4f3e272ba3fea12675733eea5cd82106f"
+      },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6nK471",
+          "commit": {
+            "abbreviatedOid": "971b56e"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2025-04-29T18:45:11Z",
+          "updatedAt": "2025-04-29T18:45:11Z",
+          "comments": []
+        }
+      ]
     },
     {
       "number": 652,
@@ -58831,7 +58847,7 @@
       "labels": [],
       "body": "",
       "createdAt": "2025-04-28T13:43:44Z",
-      "updatedAt": "2025-04-28T13:43:45Z",
+      "updatedAt": "2025-04-29T23:17:34Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "db371fc546e0c32596db20089825e2ae99d80c81",
@@ -58843,7 +58859,48 @@
       "mergedBy": null,
       "mergeCommit": null,
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6nK5Wa",
+          "commit": {
+            "abbreviatedOid": "419dd52"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2025-04-29T18:45:59Z",
+          "updatedAt": "2025-04-29T18:46:03Z",
+          "comments": [
+            {
+              "originalPosition": 6,
+              "body": "```suggestion\r\n   compatibility mode is not used in DTLS 1.3, but following this rule will\r\n```",
+              "createdAt": "2025-04-29T18:45:59Z",
+              "updatedAt": "2025-04-29T18:46:03Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6nNXFS",
+          "commit": {
+            "abbreviatedOid": "419dd52"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2025-04-29T23:17:27Z",
+          "updatedAt": "2025-04-29T23:17:34Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "In addition to Chris' comment...\r\n\r\n```suggestion\r\n   mode (see {{Appendix D.4 of RFC8446}}) when ECH is negotiated. Note that\r\n```",
+              "createdAt": "2025-04-29T23:17:27Z",
+              "updatedAt": "2025-04-29T23:17:34Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
