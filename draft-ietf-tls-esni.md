@@ -906,7 +906,7 @@ interpret the public name as a DNS-based reference identity
 the same syntax (e.g. {{Section 7.4 of ?RFC3986}} and {{WHATWG-IPV4}})
 MUST reject names that would be interpreted as IPv4 addresses.
 Clients that enforce this by checking ECHConfig.contents.public_name
-do not need to repeat the check at this layer.
+do not need to repeat the check when processing ECH rejection.
 
 Note that authenticating a connection for the public name does not authenticate
 it for the origin. The TLS implementation MUST NOT report such connections as
@@ -1349,7 +1349,10 @@ Depending on implementation details and deployment settings, use cases
 which depend on plaintext TLS information may require fundamentally different
 approaches to continue working. For example, in managed enterprise settings,
 one approach may be to disable ECH entirely via group policy and for
-client implementations to honor this action.
+client implementations to honor this action. Server deployments which
+depend on SNI -- e.g., for load balancing -- may no longer function properly
+without updates; the nature of those updates is out of scope of this
+specification.
 
 In the context of {{rejected-ech}}, another approach may be to
 intercept and decrypt client TLS connections. The feasibility of alternative
@@ -1456,7 +1459,7 @@ against this form of attack, but encrypted DNS transport is also a
 defense against DNS attacks by attackers on the local network, which
 is a common case where ClientHello and SNI encryption are
 desired. Moreover, as noted in the introduction, SNI encryption is
-less useful without encryption of DNS queries in transit mechanisms.
+less useful without encryption of DNS queries in transport.
 
 ## Client Tracking
 
