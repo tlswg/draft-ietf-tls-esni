@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-05-01T01:50:26.545302+00:00",
+  "timestamp": "2025-05-08T01:44:16.747844+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -58901,6 +58901,58 @@
           ]
         }
       ]
+    },
+    {
+      "number": 653,
+      "id": "PR_kwDOB-yxNc6VLH4X",
+      "title": "Minor text tweaks in response to Med's review",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/653",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2025-05-06T21:35:38Z",
+      "updatedAt": "2025-05-06T21:35:39Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "acb906c4f3e272ba3fea12675733eea5cd82106f",
+      "headRepository": "ekr/draft-ietf-tls-esni",
+      "headRefName": "med_comments",
+      "headRefOid": "2058a0064c0721c77d88ea3949a162c1e1869e72",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 654,
+      "id": "PR_kwDOB-yxNc6VSNOm",
+      "title": "Bishop comments",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/654",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2025-05-07T14:31:13Z",
+      "updatedAt": "2025-05-07T14:31:14Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "acb906c4f3e272ba3fea12675733eea5cd82106f",
+      "headRepository": "ekr/draft-ietf-tls-esni",
+      "headRefName": "bishop_comments",
+      "headRefOid": "9ef728990b772ce7f5983fb9d4e4f736081891d4",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
     }
   ]
 }
