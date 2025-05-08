@@ -5,12 +5,12 @@
 tls                                                          E. Rescorla
 Internet-Draft                                               Independent
 Intended status: Standards Track                                  K. Oku
-Expires: 31 October 2025                                          Fastly
+Expires: 9 November 2025                                          Fastly
                                                              N. Sullivan
                                              Cryptography Consulting LLC
                                                               C. A. Wood
                                                               Cloudflare
-                                                           29 April 2025
+                                                              8 May 2025
 
 
                        TLS Encrypted Client Hello
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 31 October 2025.
+   This Internet-Draft will expire on 9 November 2025.
 
 Copyright Notice
 
@@ -1015,7 +1015,7 @@ Table of Contents
    the same syntax (e.g. Section 7.4 of [RFC3986] and [WHATWG-IPV4])
    MUST reject names that would be interpreted as IPv4 addresses.
    Clients that enforce this by checking ECHConfig.contents.public_name
-   do not need to repeat the check at this layer.
+   do not need to repeat the check when processing ECH rejection.
 
    Note that authenticating a connection for the public name does not
    authenticate it for the origin.  The TLS implementation MUST NOT
@@ -1482,7 +1482,9 @@ Table of Contents
    fundamentally different approaches to continue working.  For example,
    in managed enterprise settings, one approach may be to disable ECH
    entirely via group policy and for client implementations to honor
-   this action.
+   this action.  Server deployments which depend on SNI -- e.g., for
+   load balancing -- may no longer function properly without updates;
+   the nature of those updates is out of scope of this specification.
 
    In the context of Section 6.1.6, another approach may be to intercept
    and decrypt client TLS connections.  The feasibility of alternative
