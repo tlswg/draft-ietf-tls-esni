@@ -616,7 +616,7 @@ ClientHello, with the exception of the following rules:
 1. It MUST copy the legacy\_session\_id field from ClientHelloInner. This
    allows the server to echo the correct session ID for TLS 1.3's compatibility
    mode (see {{Appendix D.4 of RFC8446}}) when ECH is negotiated. Note
-   mode is not used in DTLS 1.3, but following this rule will
+   compatibility mode is not used in DTLS 1.3, but following this rule will
    produce the correct results for both TLS 1.3 and DTLS 1.3.
 1. It MAY copy any other field from the ClientHelloInner except
    ClientHelloInner.random. Instead, It MUST generate a fresh
