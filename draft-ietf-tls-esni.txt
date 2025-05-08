@@ -691,7 +691,9 @@ Table of Contents
    3.  It MUST copy the legacy_session_id field from ClientHelloInner.
        This allows the server to echo the correct session ID for TLS
        1.3's compatibility mode (see Appendix D.4 of [RFC8446]) when ECH
-       is negotiated.
+       is negotiated.  Note that compatibility mode is not used in DTLS
+       1.3, but following this rule will produce the correct results for
+       both TLS 1.3 and DTLS 1.3.
 
    4.  It MAY copy any other field from the ClientHelloInner except
        ClientHelloInner.random.  Instead, It MUST generate a fresh
@@ -1055,8 +1057,8 @@ Table of Contents
    then immediately rejects the resulting connection, it is most likely
    misconfigured.  However, if the server sends a "retry_config" and
    then the client tries to use that to connect some time later, it is
-   possible that the server has been forced to change its configuration
-   again and is now trying to recover.
+   possible that the server has changed its configuration again and is
+   now trying to recover.
 
    Any persisted information MUST be associated with the ECHConfig
    source used to bootstrap the connection, such as a DNS SVCB
