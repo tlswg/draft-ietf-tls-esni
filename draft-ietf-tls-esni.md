@@ -181,8 +181,8 @@ use ECH must publish this configuration, using the key associated
 with the client-facing server. This document
 defines the ECH configuration's format, but delegates DNS publication details
 to {{!RFC9460}}. See
-{{!ECH-IN-DNS=I-D.ietf-tls-svcb-ech}} for specifics about how ECH
-configurations are advertised in HTTPS records. Other delivery mechanisms are
+{{!ECH-IN-DNS=I-D.ietf-tls-svcb-ech}} for specifics about how ECH configurations
+are advertised in SVCB and HTTPS records. Other delivery mechanisms are
 also possible. For example, the client may have the ECH configuration
 preconfigured.
 
@@ -312,8 +312,9 @@ clients to indicate the key used for ClientHello encryption. {{config-ids}}
 describes how client-facing servers allocate this value.
 
 kem_id
-: The HPKE KEM identifier corresponding to `public_key`. Clients MUST ignore any
-`ECHConfig` structure with a key using a KEM they do not support.
+: The HPKE Key Encapsulation Mechanism (KEM) identifier corresponding
+to `public_key`. Clients MUST ignore any `ECHConfig` structure with a
+key using a KEM they do not support.
 
 public_key
 : The HPKE public key used by the client to encrypt ClientHelloInner.
@@ -356,21 +357,27 @@ known set.
 ## Configuration Extensions {#config-extensions}
 
 ECH configuration extensions are used to provide room for additional
-functionality as needed. See {{config-extensions-guidance}} for guidance on
-which types of extensions are appropriate for this structure.
-
-The format is as defined in {{ech-configuration}} and mirrors
-{{Section 4.2 of RFC8446}}. However, ECH configuration extension types are
-maintained by IANA as described in {{config-extensions-iana}}.
-ECH configuration extensions follow the same interpretation rules as TLS
-extensions: extensions MAY appear in any order, but there MUST NOT be more
-than one extension of the same type in the extensions block. Unlike TLS
-extensions, an extension can be tagged as mandatory by using an extension type
-codepoint with the high order bit set to 1.
+functionality as needed. The format is as defined in
+{{ech-configuration}} and mirrors {{Section 4.2 of RFC8446}}. However,
+ECH configuration extension types are maintained by IANA as described
+in {{config-extensions-iana}}.  ECH configuration extensions follow
+the same interpretation rules as TLS extensions: extensions MAY appear
+in any order, but there MUST NOT be more than one extension of the
+same type in the extensions block. Unlike TLS extensions, an extension
+can be tagged as mandatory by using an extension type codepoint with
+the high order bit set to 1.
 
 Clients MUST parse the extension list and check for unsupported mandatory
 extensions. If an unsupported mandatory extension is present, clients MUST
 ignore the `ECHConfig`.
+
+Any future information or hints that influence ClientHelloOuter SHOULD be
+specified as ECHConfig extensions. This is primarily because the outer
+ClientHello exists only in support of ECH. Namely, it is both an envelope for
+the encrypted inner ClientHello and enabler for authenticated key mismatch
+signals (see {{server-behavior}}). In contrast, the inner ClientHello is the
+true ClientHello used upon ECH negotiation.
+
 
 # The "encrypted_client_hello" Extension {#encrypted-client-hello}
 
@@ -568,7 +575,7 @@ ECH extension, as described in {{grease-ech}}. Clients of the latter type do not
 negotiate ECH. Instead, they generate a dummy ECH extension that is ignored by
 the server. (See {{dont-stick-out}} for an explanation.) The client offers ECH
 if it is in possession of a compatible ECH configuration and sends GREASE ECH
-otherwise.
+(see {{grease-ech}}) otherwise.
 
 ## Offering ECH {#real-ech}
 
@@ -856,10 +863,11 @@ SHOULD retry the handshake with a new transport connection, using the
 retry configurations supplied by the server.
 
 Clients can implement a new transport connection in a way that best
-suits their deployment. For example, clients can reuse the same IP address
-when establishing the new transport connection or they can choose to use a
-different IP address if provided with options from DNS. ECH does not mandate
-any specific implementation choices when establishing this new connection.
+suits their deployment. For example, clients can reuse the same server
+IP address when establishing the new transport connection or they can
+choose to use a different IP address if provided with options from
+DNS. ECH does not mandate any specific implementation choices when
+establishing this new connection.
 
 The retry configurations are meant to be used for retried connections. Further
 use of retry configurations could yield a tracking vector. In settings where
@@ -964,6 +972,10 @@ configuration.
 
 
 ## GREASE ECH {#grease-ech}
+
+The GREASE ECH mechanism allows a connection between and ECH-capable client
+and a non-ECH server to appear to use ECH, thus reducing the extent to
+which ECH connections stick out (see {{dont-stick-out}}).
 
 ### Client Greasing
 
@@ -1441,17 +1453,17 @@ requirements of {{?RFC8744}}. See {{dont-stick-out}} for details.
 
 ## Unauthenticated and Plaintext DNS {#plaintext-dns}
 
-In comparison to {{?I-D.kazuho-protected-sni}}, wherein DNS RRs are
-signed via a server private key, HTTPS records have no authenticity or
-provenance information. This means that any attacker which can inject
+ECH supports delivery of configurations through the DNS using SVCB or HTTPS
+records, without requiring any verifiable authenticity or provenance
+information {{ECH-IN-DNS}}. This means that any attacker which can inject
 DNS responses or poison DNS caches, which is a common scenario in
-client access networks, can supply clients with fake HTTPS records (so
-that the client encrypts data to them) or strip the ECH record from
+client access networks, can supply clients with fake ECH configurations (so
+that the client encrypts data to them) or strip the ECH configurations from
 the response. However, in the face of an attacker that controls DNS,
 no encryption scheme can work because the attacker can replace the IP
 address, thus blocking client connections, or substitute a unique IP
-address for each DNS name that was looked up.  Thus, allowing the
-HTTPS records in the clear does not make the situation significantly
+address for each DNS name that was looked up.  Thus, using DNS records
+without additional authentication does not make the situation significantly
 worse.
 
 Clearly, DNSSEC (if the client validates and hard fails) is a defense
@@ -1459,7 +1471,7 @@ against this form of attack, but encrypted DNS transport is also a
 defense against DNS attacks by attackers on the local network, which
 is a common case where ClientHello and SNI encryption are
 desired. Moreover, as noted in the introduction, SNI encryption is
-less useful without encryption of DNS queries in transport.
+less useful without encryption of DNS queries in transit.
 
 ## Client Tracking
 
@@ -1710,7 +1722,7 @@ the backend origin server, thereby allowing the backend origin server
 to hide behind the client-facing server without the client-facing
 server decrypting and reencrypting the connection.
 
-Conversely, assuming HTTPS records retrieved from DNS are
+Conversely, if the DNS records used for configuration are
 authenticated, e.g., via DNSSEC,
 spoofing a client-facing server operating in Split Mode is not
 possible. See {{plaintext-dns}} for more details regarding plaintext
@@ -2002,17 +2014,6 @@ Reference:
 Notes:
 : Grease entries.
 {: spacing="compact"}
-
---- back
-
-# ECHConfig Extension Guidance {#config-extensions-guidance}
-
-Any future information or hints that influence ClientHelloOuter SHOULD be
-specified as ECHConfig extensions. This is primarily because the outer
-ClientHello exists only in support of ECH. Namely, it is both an envelope for
-the encrypted inner ClientHello and enabler for authenticated key mismatch
-signals (see {{server-behavior}}). In contrast, the inner ClientHello is the
-true ClientHello used upon ECH negotiation.
 
 --- back
 
