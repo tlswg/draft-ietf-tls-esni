@@ -951,8 +951,8 @@ for this requirement is that if the server sends a "retry_config"
 and then immediately rejects the resulting connection, it is
 most likely misconfigured. However, if the server sends a "retry_config"
 and then the client tries to use that to connect some time
-later, it is possible that the server has been forced to
-change its configuration again and is now trying to recover.
+later, it is possible that the server has changed
+its configuration again and is now trying to recover.
 
 Any persisted information MUST be associated with the ECHConfig source
 used to bootstrap the connection, such as a DNS SVCB ServiceMode record
