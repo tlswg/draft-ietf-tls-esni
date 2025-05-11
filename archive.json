@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-05-08T01:44:16.747844+00:00",
+  "timestamp": "2025-05-11T01:49:13.904676+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -58840,24 +58840,26 @@
       "id": "PR_kwDOB-yxNc6UK5e8",
       "title": "Clarify session ID for DTLS 1.3 and TLS 1.3",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/652",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2025-04-28T13:43:44Z",
-      "updatedAt": "2025-04-29T23:17:34Z",
+      "updatedAt": "2025-05-08T17:55:34Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "db371fc546e0c32596db20089825e2ae99d80c81",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "clarify_dtls_legacy_session_id",
-      "headRefOid": "419dd524f34ec43a590242f9d0744e164d4f6bf7",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "932b8508ee48f38fbfd26e67f9e02d53e7d3970e",
+      "closedAt": "2025-05-08T17:55:34Z",
+      "mergedAt": "2025-05-08T17:55:34Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "d88047ad87a8594adece11b6e1a24b3c4b37de84"
+      },
       "comments": [],
       "reviews": [
         {
@@ -58907,52 +58909,84 @@
       "id": "PR_kwDOB-yxNc6VLH4X",
       "title": "Minor text tweaks in response to Med's review",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/653",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2025-05-06T21:35:38Z",
-      "updatedAt": "2025-05-06T21:35:39Z",
+      "updatedAt": "2025-05-08T03:03:23Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "acb906c4f3e272ba3fea12675733eea5cd82106f",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "med_comments",
-      "headRefOid": "2058a0064c0721c77d88ea3949a162c1e1869e72",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "9074f7408d47566791eb90bfa12d9f734ed5fe1e",
+      "closedAt": "2025-05-08T03:03:23Z",
+      "mergedAt": "2025-05-08T03:03:23Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "fc88e08e2f7a8352372f64553507cfadb5b5e9c6"
+      },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6oTfii",
+          "commit": {
+            "abbreviatedOid": "2058a00"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2025-05-08T03:02:42Z",
+          "updatedAt": "2025-05-08T03:02:42Z",
+          "comments": []
+        }
+      ]
     },
     {
       "number": 654,
       "id": "PR_kwDOB-yxNc6VSNOm",
       "title": "Bishop comments",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/654",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2025-05-07T14:31:13Z",
-      "updatedAt": "2025-05-07T14:31:14Z",
+      "updatedAt": "2025-05-08T03:03:47Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "acb906c4f3e272ba3fea12675733eea5cd82106f",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "bishop_comments",
       "headRefOid": "9ef728990b772ce7f5983fb9d4e4f736081891d4",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2025-05-08T03:03:46Z",
+      "mergedAt": "2025-05-08T03:03:46Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "6ee154cbd9e9fc407edd3bfbcff892b4cbcdcaca"
+      },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6oTfxD",
+          "commit": {
+            "abbreviatedOid": "9ef7289"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2025-05-08T03:03:42Z",
+          "updatedAt": "2025-05-08T03:03:42Z",
+          "comments": []
+        }
+      ]
     }
   ]
 }
