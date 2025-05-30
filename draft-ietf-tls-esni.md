@@ -646,9 +646,6 @@ ClientHello, with the exception of the following rules:
    allows servers that reject ECH and use ClientHelloOuter to safely ignore any
    early data sent by the client per {{RFC8446, Section 4.2.10}}.
 
-Note that these rules may change in the presence of an application profile
-specifying otherwise.
-
 The client might duplicate non-sensitive extensions in both messages. However,
 implementations need to take care to ensure that sensitive extensions are not
 offered in the ClientHelloOuter. See {{outer-clienthello}} for additional
