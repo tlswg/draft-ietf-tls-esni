@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-05-11T01:49:13.904676+00:00",
+  "timestamp": "2025-06-01T02:03:02.192536+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -58987,6 +58987,32 @@
           "comments": []
         }
       ]
+    },
+    {
+      "number": 655,
+      "id": "PR_kwDOB-yxNc6YSAz3",
+      "title": "Remove spurious application profile text",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/655",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "@martinthomson @seanturner ",
+      "createdAt": "2025-05-30T14:05:34Z",
+      "updatedAt": "2025-05-30T14:05:35Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "d88047ad87a8594adece11b6e1a24b3c4b37de84",
+      "headRepository": "ekr/draft-ietf-tls-esni",
+      "headRefName": "issue651_application_profile",
+      "headRefOid": "434be3046da7e0157c8bf6bb7dfca001a9a3d976",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
     }
   ]
 }
