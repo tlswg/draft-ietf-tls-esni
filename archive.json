@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-06-01T02:03:02.192536+00:00",
+  "timestamp": "2025-06-05T01:46:35.263495+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -59000,7 +59000,7 @@
       "labels": [],
       "body": "@martinthomson @seanturner ",
       "createdAt": "2025-05-30T14:05:34Z",
-      "updatedAt": "2025-05-30T14:05:35Z",
+      "updatedAt": "2025-06-03T21:40:38Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "d88047ad87a8594adece11b6e1a24b3c4b37de84",
@@ -59011,7 +59011,15 @@
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@seanturner ",
+          "createdAt": "2025-06-03T21:40:37Z",
+          "updatedAt": "2025-06-03T21:40:37Z"
+        }
+      ],
       "reviews": []
     }
   ]
