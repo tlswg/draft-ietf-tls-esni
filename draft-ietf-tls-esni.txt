@@ -5,12 +5,12 @@
 tls                                                          E. Rescorla
 Internet-Draft                                               Independent
 Intended status: Standards Track                                  K. Oku
-Expires: 9 November 2025                                          Fastly
+Expires: 12 December 2025                                         Fastly
                                                              N. Sullivan
                                              Cryptography Consulting LLC
                                                               C. A. Wood
                                                               Cloudflare
-                                                              8 May 2025
+                                                            10 June 2025
 
 
                        TLS Encrypted Client Hello
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 9 November 2025.
+   This Internet-Draft will expire on 12 December 2025.
 
 Copyright Notice
 
@@ -722,9 +722,6 @@ Table of Contents
        in ClientHelloOuter.  This allows servers that reject ECH and use
        ClientHelloOuter to safely ignore any early data sent by the
        client per [RFC8446], Section 4.2.10.
-
-   Note that these rules may change in the presence of an application
-   profile specifying otherwise.
 
    The client might duplicate non-sensitive extensions in both messages.
    However, implementations need to take care to ensure that sensitive
