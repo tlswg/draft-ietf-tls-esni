@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-06-05T01:46:35.263495+00:00",
+  "timestamp": "2025-06-12T01:47:06.816977+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -13264,16 +13264,24 @@
       "id": "I_kwDOB-yxNc60TSMs",
       "title": "Remove \"application profile\" text in 6.1",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/651",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "The following text appears in 6.1.\n\n   Note that these rules may change in the presence of an application\n   profile specifying otherwise.\n\nThis text just seems to add confusion, and I don't see when it would actually happen. I suggest we remove.",
       "createdAt": "2025-04-28T13:32:53Z",
-      "updatedAt": "2025-04-28T13:32:53Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2025-06-10T19:04:54Z",
+      "closedAt": "2025-06-10T19:04:53Z",
+      "comments": [
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Closed by #655.",
+          "createdAt": "2025-06-10T19:04:53Z",
+          "updatedAt": "2025-06-10T19:04:53Z"
+        }
+      ]
     }
   ],
   "pulls": [
@@ -58993,24 +59001,26 @@
       "id": "PR_kwDOB-yxNc6YSAz3",
       "title": "Remove spurious application profile text",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/655",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "@martinthomson @seanturner ",
       "createdAt": "2025-05-30T14:05:34Z",
-      "updatedAt": "2025-06-03T21:40:38Z",
+      "updatedAt": "2025-06-10T19:04:16Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "d88047ad87a8594adece11b6e1a24b3c4b37de84",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "issue651_application_profile",
       "headRefOid": "434be3046da7e0157c8bf6bb7dfca001a9a3d976",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2025-06-10T19:04:15Z",
+      "mergedAt": "2025-06-10T19:04:15Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "4ed3d76c452a5f3305a618a57d1072530003cab2"
+      },
       "comments": [
         {
           "author": "ekr",
@@ -59020,7 +59030,21 @@
           "updatedAt": "2025-06-03T21:40:37Z"
         }
       ],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6tu8RF",
+          "commit": {
+            "abbreviatedOid": "434be30"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2025-06-10T19:04:10Z",
+          "updatedAt": "2025-06-10T19:04:10Z",
+          "comments": []
+        }
+      ]
     }
   ]
 }
