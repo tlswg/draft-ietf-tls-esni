@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-06-12T01:47:06.816977+00:00",
+  "timestamp": "2025-07-10T01:51:27.027170+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -13282,6 +13282,22 @@
           "updatedAt": "2025-06-10T19:04:53Z"
         }
       ]
+    },
+    {
+      "number": 656,
+      "id": "I_kwDOB-yxNc6_hxyQ",
+      "title": "Recommended Padding Scheme uses L in two different ways",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/656",
+      "state": "OPEN",
+      "author": "davidben",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "The spec currently says:\n\n> In contrast, clients do not know the longest SNI value in the client-facing server's anonymity set without server input. Clients SHOULD use the ECHConfig's maximum_name_length field as follows, where L is the maximum_name_length value.\n>\n> [...instructions involving L...]\n>\n> Finally, the client SHOULD pad the entire message as follows:\n>\n> 1. Let L be the length of the EncodedClientHelloInner with all the padding computed so far.\n> 2. Let N = 31 - ((L - 1) % 32) and add N bytes of padding.\n\nThese are two different `L`s. Perhaps we rename the first `L` to `M` for \"maximum...\"?",
+      "createdAt": "2025-07-08T17:40:59Z",
+      "updatedAt": "2025-07-08T17:40:59Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
