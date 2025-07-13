@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-07-10T01:51:27.027170+00:00",
+  "timestamp": "2025-07-13T02:02:46.662896+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -59059,6 +59059,73 @@
           "createdAt": "2025-06-10T19:04:10Z",
           "updatedAt": "2025-06-10T19:04:10Z",
           "comments": []
+        }
+      ]
+    },
+    {
+      "number": 657,
+      "id": "PR_kwDOB-yxNc6eZ4rD",
+      "title": "Fix ECHConfigList range",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/657",
+      "state": "CLOSED",
+      "author": "tweksteen",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "From the paragraph just below: \"The ECHConfigList structure contains one or more ECHConfig structures in decreasing order of preference.\"",
+      "createdAt": "2025-07-11T01:36:16Z",
+      "updatedAt": "2025-07-11T05:02:21Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "4ed3d76c452a5f3305a618a57d1072530003cab2",
+      "headRepository": "tweksteen/draft-ietf-tls-esni",
+      "headRefName": "fix_range",
+      "headRefOid": "25210081fdff94d667e8af16a11294c9a27b2d56",
+      "closedAt": "2025-07-11T05:02:21Z",
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc6zTRId",
+          "commit": {
+            "abbreviatedOid": "2521008"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2025-07-11T01:59:22Z",
+          "updatedAt": "2025-07-11T01:59:22Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "This is a game we play often.  There's a view that says that you don't set bounds like this.  Because then you get someone (like me) coming along to say that the minimum size of a single ECHConfig is 4 bytes.",
+              "createdAt": "2025-07-11T01:59:22Z",
+              "updatedAt": "2025-07-11T01:59:22Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc6zU1iq",
+          "commit": {
+            "abbreviatedOid": "2521008"
+          },
+          "author": "tweksteen",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2025-07-11T05:02:19Z",
+          "updatedAt": "2025-07-11T05:02:19Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "Fair enough :) Thanks for the context.",
+              "createdAt": "2025-07-11T05:02:19Z",
+              "updatedAt": "2025-07-11T05:02:19Z"
+            }
+          ]
         }
       ]
     }
