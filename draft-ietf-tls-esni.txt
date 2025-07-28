@@ -5,12 +5,12 @@
 tls                                                          E. Rescorla
 Internet-Draft                                               Independent
 Intended status: Standards Track                                  K. Oku
-Expires: 12 December 2025                                         Fastly
+Expires: 29 January 2026                                          Fastly
                                                              N. Sullivan
                                              Cryptography Consulting LLC
                                                               C. A. Wood
                                                               Cloudflare
-                                                            10 June 2025
+                                                            28 July 2025
 
 
                        TLS Encrypted Client Hello
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 12 December 2025.
+   This Internet-Draft will expire on 29 January 2026.
 
 Copyright Notice
 
@@ -1076,7 +1076,7 @@ Table of Contents
 
 6.2.  GREASE ECH
 
-   The GREASE ECH mechanism allows a connection between and ECH-capable
+   The GREASE ECH mechanism allows a connection between an ECH-capable
    client and a non-ECH server to appear to use ECH, thus reducing the
    extent to which ECH connections stick out (see Section 10.10.4).
 
@@ -2174,9 +2174,9 @@ Table of Contents
    [ECH-IN-DNS]
               Schwartz, B. M., Bishop, M., and E. Nygren, "Bootstrapping
               TLS Encrypted ClientHello with DNS Service Bindings", Work
-              in Progress, Internet-Draft, draft-ietf-tls-svcb-ech-07,
-              12 February 2025, <https://datatracker.ietf.org/doc/html/
-              draft-ietf-tls-svcb-ech-07>.
+              in Progress, Internet-Draft, draft-ietf-tls-svcb-ech-08,
+              16 June 2025, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-tls-svcb-ech-08>.
 
    [HPKE]     Barnes, R., Bhargavan, K., Lipp, B., and C. Wood, "Hybrid
               Public Key Encryption", RFC 9180, DOI 10.17487/RFC9180,
