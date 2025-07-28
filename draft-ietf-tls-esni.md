@@ -972,7 +972,7 @@ configuration.
 
 ## GREASE ECH {#grease-ech}
 
-The GREASE ECH mechanism allows a connection between and ECH-capable client
+The GREASE ECH mechanism allows a connection between an ECH-capable client
 and a non-ECH server to appear to use ECH, thus reducing the extent to
 which ECH connections stick out (see {{dont-stick-out}}).
 
