@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-07-13T02:02:46.662896+00:00",
+  "timestamp": "2025-07-29T02:08:04.104637+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -59126,6 +59126,48 @@
               "updatedAt": "2025-07-11T05:02:19Z"
             }
           ]
+        }
+      ]
+    },
+    {
+      "number": 658,
+      "id": "PR_kwDOB-yxNc6g2lF3",
+      "title": "Fix typo",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/658",
+      "state": "MERGED",
+      "author": "tweksteen",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2025-07-28T00:35:24Z",
+      "updatedAt": "2025-07-28T03:00:11Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "4ed3d76c452a5f3305a618a57d1072530003cab2",
+      "headRepository": "tweksteen/draft-ietf-tls-esni",
+      "headRefName": "fix_typo",
+      "headRefOid": "a2bb13b430d168255ab5cfbf5684136c303e0889",
+      "closedAt": "2025-07-28T03:00:11Z",
+      "mergedAt": "2025-07-28T03:00:11Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "b5e5b4e097b6aba3ca16250596dc6b3e27e3e960"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc62Zc9L",
+          "commit": {
+            "abbreviatedOid": "a2bb13b"
+          },
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "Thanks.",
+          "createdAt": "2025-07-28T03:00:04Z",
+          "updatedAt": "2025-07-28T03:00:04Z",
+          "comments": []
         }
       ]
     }
