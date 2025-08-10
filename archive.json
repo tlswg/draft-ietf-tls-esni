@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-07-29T02:08:04.104637+00:00",
+  "timestamp": "2025-08-10T02:02:58.546681+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -55731,7 +55731,7 @@
       ],
       "body": "In this part of the text there would be a lot to say.\r\n\r\nFirst for non-English native speakers who are not familiar with the topic and in particular in operations or even to some degree in system architecture or network security domains, the text will be very difficult to read.\r\n\r\nIn fact think about someone in a Small and Medium Enterprises organization that has to ensure the security of its organization it will be close to impossible to connect the dots. How many dozen of millions of SMEs on the planet?\r\n\r\nAnyway, it is VERY hard to be more explicit in the context of this draft though I would be tempted to add examples and be more explicit on sub-contexts and on use cases e.g. put in hard BYOD will fail. but anyway this links to OUR Internet Draft on Deployment Considerations that suddenly makes a lot of sense as an expansion of this section from 1 page to 20+.\r\n\r\nOne could argue that there are many types of Middleboxes and they all will be affected by that (DPI, Firewalls, Proxies, etc.)\r\n\r\nHowever there is ONE section which is simply 1) wrong and 2) completely irrelevant is the last section which I removed. The only alternative would be to make a significant fix in that section and even if I fix it, it will add nothing to the fact that when a number of devices won't be able to access the SNI, they will break, period.\r\n\r\nSo I am happy to rework a section but the section will say that whilst in general the SNI is unreliable, in practice there are essential sub-context where is is not only VERY reliable but as well is a very valuable information for in-path actors who have many ways to check and validate and handle the unreliable part.",
       "createdAt": "2023-11-15T16:57:15Z",
-      "updatedAt": "2024-02-24T23:46:02Z",
+      "updatedAt": "2025-08-08T15:47:32Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "774dff4e3a49533e9510dc04a905a2638992f7e5",
@@ -55842,6 +55842,13 @@
           "body": "OK, given that this is not in security considerations and (1) the text here makes a claim which is disputed and (2) the effect of removing the text is to make the impact of ECH seem bigger than it did in the previous text which seems to be erring on the safe side, I'm going to merge this PR unless someone objects by 2/24.\r\n",
           "createdAt": "2024-02-17T15:32:10Z",
           "updatedAt": "2024-02-17T15:32:30Z"
+        },
+        {
+          "author": "Opendium",
+          "authorAssociation": "NONE",
+          "body": "> > I don't understand what (1) means\r\n> \r\n> dstip_client = destination as observed on client side of middlebox dstip_sni = gethostbyname(SNI) Option 1: if (dstip_sni != dstip_client) then reset connection. Option 2: dstip = dstip_sni, i.e. redirect the connection to dstip_sni, where \"redirect\" is implementation specific.\r\n\r\nNote: comparing IP addresses is problematic, especially where devices may be moving on/off network.\r\n\r\nExample:\r\n\r\n1. Device does an AAAA lookup against a DNS server for example.com.\r\n2. DNS server responds, example.com has an address 2001:DB8:1000::1000.\r\n3. Device connects to 2001:DB8:1000::1000, sends an SNI of example.com.\r\n4. Middlebox intercepts the connection, extracts the SNI.\r\n5. Middlebox does an AAAA lookup against a DNS server for example.com.\r\n6. DNS server responds, example.com has an address 2001:DB8:2000::2000.\r\n7. Middlebox compares the IP addresses, 2001:DB8:1000::1000 != 2001:DB8:2000::2000, so the connection is rejected.\r\n\r\nPossible reasons this can happen:\r\n\r\n1. The device and middlebox used different DNS servers and reached different authoritative servers, which returned different data.\r\n2. The device and middlebox used different DNS servers, which have returned cached records.  The cached RRs were originally retrieved from the authoritative servers at different times, resulting in one version of the cached RR being older than the other.  They may both still be valid (and still be within their respective TTLs), but pointing at different IP addresses.\r\n3. The device and middlebox used the same DNS server, but the cached RR expired between the device doing a lookup and the middlebox doing a lookup.\r\n\r\nThis can only be partially resolved by ensuring that the device and middlebox both use the same DNS server.  If you can snoop DNS traffic (which may not be possible if DoH is being used) then you can avoid the second lookup.  However, if the device moves on/off the network then this may not be possible.  e.g. a mobile phone may look up example.com when connected to the mobile network, then connect to the wifi network and continue to use the same IP address when communicating with example.com.  The middlebox (acting for the wifi network) will never see the original DNS lookup, and the RRs returned for a new lookup may be completely different.",
+          "createdAt": "2025-08-08T15:47:32Z",
+          "updatedAt": "2025-08-08T15:47:32Z"
         }
       ],
       "reviews": [
