@@ -215,7 +215,8 @@ See {{goals}} for more details about the ECH security and privacy goals.
 
 # Encrypted ClientHello Configuration {#ech-configuration}
 
-ECH uses Hybrid Public Key Encryption (HPKE) for public key encryption {{!HPKE=RFC9180}}.
+ECH uses Hybrid Public Key Encryption (HPKE) for public key encryption
+{{!HPKE=RFC9180}}.
 The ECH configuration is defined by the following `ECHConfig` structure.
 
 ~~~~
@@ -320,7 +321,8 @@ public_key
 : The HPKE public key used by the client to encrypt ClientHelloInner.
 
 cipher_suites
-: The list of HPKE Key Derivation Function (KDF) and Authenticated Encryption with Associated Data (AEAD) identifier pairs clients can use for encrypting
+: The list of HPKE Key Derivation Function (KDF) and Authenticated Encryption
+with Associated Data (AEAD) identifier pairs clients can use for encrypting
 ClientHelloInner. See {{real-ech}} for how clients choose from this list.
 
 The client-facing server advertises a sequence of ECH configurations to clients,
@@ -637,10 +639,11 @@ ClientHello, with the exception of the following rules:
 1. When the client offers the "pre_shared_key" extension in ClientHelloInner, it
    SHOULD also include a GREASE "pre_shared_key" extension in ClientHelloOuter,
    generated in the manner described in {{grease-psk}}. The client MUST NOT use
-   this extension to advertise a Pre-Shared Key (PSK) to the client-facing server. (See
-   {{flow-clienthello-malleability}}.) When the client includes a GREASE
-   "pre_shared_key" extension, it MUST also copy the "psk_key_exchange_modes"
-   from the ClientHelloInner into the ClientHelloOuter.
+   this extension to advertise a Pre-Shared Key (PSK) to the client-facing
+   server. (See {{flow-clienthello-malleability}}.) When the client includes a
+   GREASE "pre_shared_key" extension, it MUST also copy the
+   "psk_key_exchange_modes" from the ClientHelloInner into the
+   ClientHelloOuter.
 1. When the client offers the "early_data" extension in ClientHelloInner, it
    MUST also include the "early_data" extension in ClientHelloOuter. This
    allows servers that reject ECH and use ClientHelloOuter to safely ignore any
@@ -1469,8 +1472,9 @@ address for each DNS name that was looked up.  Thus, using DNS records
 without additional authentication does not make the situation significantly
 worse.
 
-Clearly, Domain Name System Security Extensions (DNSSEC) (if the client validates and hard fails) is a defense
-against this form of attack, but encrypted DNS transport is also a
+Clearly, Domain Name System Security Extensions (DNSSEC) (if the client
+validates and hard fails) is a defense against this form of attack, but
+encrypted DNS transport is also a
 defense against DNS attacks by attackers on the local network, which
 is a common case where ClientHello and SNI encryption are
 desired. Moreover, as noted in the introduction, SNI encryption is
