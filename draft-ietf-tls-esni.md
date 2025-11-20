@@ -75,7 +75,7 @@ encrypting a ClientHello message under a server public key.
 
 Although TLS 1.3 {{!RFC8446}} encrypts most of the handshake, including the
 server certificate, there are several ways in which an on-path attacker can
-learn private information about the connection. The plaintext Server Name
+learn private information about the connection.  The plaintext Server Name
 Indication (SNI) extension in ClientHello messages, which leaks the target
 domain for a given connection, is perhaps the most sensitive information
 left unencrypted in TLS 1.3.
@@ -90,21 +90,21 @@ how they respond to incoming client connections, form an anonymity set. (Note
 that implementation-specific choices, such as extension ordering within TLS
 messages or division of data into record-layer boundaries, can result in
 different externally visible behavior, even for servers with consistent TLS
-configurations.) Usage of this mechanism reveals that a client is connecting
+configurations.)  Use of this mechanism reveals that a client is connecting
 to a particular service provider, but does not reveal which server from the
 anonymity set terminates the connection. Deployment implications of this
 feature are discussed in {{deployment}}.
 
 ECH is not in itself sufficient to protect the identity of the server.
 The target domain may also be visible through other channels, such as
-plaintext client DNS queries or visible server IP addresses. However,
+plaintext client DNS queries or visible server IP addresses.  However,
 encrypted DNS mechanisms such as
 DNS over HTTPS {{?RFC8484}}, DNS over TLS/DTLS {{?RFC7858}} {{?RFC8094}}, and
 DNS over QUIC {{?RFC9250}}
-provide mechanisms for clients to conceal
+allow clients to conceal
 DNS lookups from network inspection, and many TLS servers host multiple domains
-on the same IP address. Private origins may also be deployed behind a common
-provider, such as a reverse proxy. In such environments, the SNI remains the
+on the same IP address.  Private origins may also be deployed behind a common
+provider, such as a reverse proxy.  In such environments, the SNI remains the
 primary explicit signal available to observers to determine the
 server's identity.
 
@@ -160,7 +160,7 @@ Client <----------------------------->|                     |
 
 In Split Mode, the provider is not the origin server for private domains.
 Rather, the DNS records for private domains point to the provider, and the
-provider's server relays the connection back to the origin server, who
+provider's server relays the connection back to the origin server, which
 terminates the TLS connection with the client. Importantly, the service provider
 does not have access to the plaintext of the connection beyond the unencrypted
 portions of the handshake.
@@ -215,7 +215,7 @@ See {{goals}} for more details about the ECH security and privacy goals.
 
 # Encrypted ClientHello Configuration {#ech-configuration}
 
-ECH uses HPKE for public key encryption {{!HPKE=RFC9180}}.
+ECH uses Hybrid Public Key Encryption (HPKE) for public key encryption {{!HPKE=RFC9180}}.
 The ECH configuration is defined by the following `ECHConfig` structure.
 
 ~~~~
@@ -320,7 +320,7 @@ public_key
 : The HPKE public key used by the client to encrypt ClientHelloInner.
 
 cipher_suites
-: The list of HPKE KDF and AEAD identifier pairs clients can use for encrypting
+: The list of HPKE Key Derivation Function (KDF) and Authenticated Encryption with Associated Data (AEAD) identifier pairs clients can use for encrypting
 ClientHelloInner. See {{real-ech}} for how clients choose from this list.
 
 The client-facing server advertises a sequence of ECH configurations to clients,
@@ -637,7 +637,7 @@ ClientHello, with the exception of the following rules:
 1. When the client offers the "pre_shared_key" extension in ClientHelloInner, it
    SHOULD also include a GREASE "pre_shared_key" extension in ClientHelloOuter,
    generated in the manner described in {{grease-psk}}. The client MUST NOT use
-   this extension to advertise a PSK to the client-facing server. (See
+   this extension to advertise a Pre-Shared Key (PSK) to the client-facing server. (See
    {{flow-clienthello-malleability}}.) When the client includes a GREASE
    "pre_shared_key" extension, it MUST also copy the "psk_key_exchange_modes"
    from the ClientHelloInner into the ClientHelloOuter.
@@ -1021,7 +1021,7 @@ which will never be registered. These can be used by servers to
 {{?RFC8701}}. This helps ensure clients process ECH extensions
 correctly. When constructing ECH configurations, servers SHOULD
 randomly select from reserved values with the high-order bit
-clear. Correctly-implemented client will ignore those extensions.
+clear.  Correctly-implemented clients will ignore those extensions.
 
 The reserved values with the high-order bit set are mandatory, as
 defined in {{config-extensions}}. Servers SHOULD randomly select from
@@ -1044,7 +1044,7 @@ message.  This can be accomplished in several ways, including:
 # Server Behavior {#server-behavior}
 
 As described in {{topologies}}, servers can play two roles, either as
-the client-facing server or as the back-end server.
+the client-facing server or as the backend server.
 Depending on the server role, the `ECHClientHello` will be different:
 
 * A client-facing server expects a `ECHClientHello.type` of `outer`, and
@@ -1322,7 +1322,7 @@ ClientHellos, as this allows a network attacker to disclose the contents of this
 ClientHello, including the SNI. It MAY attempt to use another server from the
 DNS results, if one is provided.
 
-In order to ensure that the retry mechanism works successfully servers
+In order to ensure that the retry mechanism works successfully, servers
 SHOULD ensure that every endpoint which might receive a TLS connection
 is provisioned with an appropriate certificate for the public name.
 This is especially important during periods of server reconfiguration
@@ -1377,6 +1377,10 @@ a compliant ECH application MUST implement the following HPKE cipher suite:
 - KEM: DHKEM(X25519, HKDF-SHA256) (see {{Section 7.1 of HPKE}})
 - KDF: HKDF-SHA256 (see {{Section 7.2 of HPKE}})
 - AEAD: AES-128-GCM (see {{Section 7.3 of HPKE}})
+
+<!-- [rfced] RFC 7322 recommends that IANA Considerations appear before
+Security Considerations.  Please confirm whether the current ordering
+is intentional. -->
 
 # Security Considerations
 
@@ -1465,7 +1469,7 @@ address for each DNS name that was looked up.  Thus, using DNS records
 without additional authentication does not make the situation significantly
 worse.
 
-Clearly, DNSSEC (if the client validates and hard fails) is a defense
+Clearly, Domain Name System Security Extensions (DNSSEC) (if the client validates and hard fails) is a defense
 against this form of attack, but encrypted DNS transport is also a
 defense against DNS attacks by attackers on the local network, which
 is a common case where ClientHello and SNI encryption are
@@ -1582,7 +1586,7 @@ client previously connected to and which is within the same anonymity set.
 {{Section 4.2.2 of RFC8446}} defines a cookie value that servers may send in
 HelloRetryRequest for clients to echo in the second ClientHello. While ECH
 encrypts the cookie in the second ClientHelloInner, the backend server's
-HelloRetryRequest is unencrypted.This means differences in cookies between
+HelloRetryRequest is unencrypted.  This means differences in cookies between
 backend servers, such as lengths or cleartext components, may leak information
 about the server identity.
 
@@ -1692,7 +1696,7 @@ do not noticeably vary to the attacker, i.e., they are not distinguishers:
 1. the length of messages; and
 1. the values of plaintext alert messages.
 
-This leaves a variety of practical differentiators out-of-scope. including,
+This leaves a variety of practical differentiators out-of-scope, including,
 though not limited to, the following:
 
 1. the value of the configuration identifier;
@@ -1965,9 +1969,9 @@ Extension Name:
 : Name of the ECHConfigExtension
 
 Recommended:
-: A "Y" or "N" value indicating if the extension is TLS WG recommends that the
-extension be supported. This column is assigned a value of "N" unless
-explicitly requested. Adding a value with a value of "Y" requires Standards
+: A "Y" or "N" value indicating whether the TLS WG recommends that the
+extension be supported.  This column is assigned a value of "N" unless
+explicitly requested.  Adding a value of "Y" requires Standards
 Action {{RFC8126}}.
 
 Reference:
@@ -1979,16 +1983,19 @@ Notes:
 
 New entries in the "ECHConfig Extension" registry are subject to the
 Specification Required registration policy ({{!RFC8126, Section
-4.6}}), with the policies described in {{!RFC8447, Section 17}}. IANA
+4.6}}), with the policies described in {{!RFC8447, Section 17}}.  IANA
 [shall add/has added] the following note to the TLS ECHConfig Extension
 registry:
+
+<!-- [rfced] Please resolve the "[shall add/has added]" placeholder
+above based on when this document is published. -->
 
    Note:  The role of the designated expert is described in RFC 8447.
       The designated expert [RFC8126] ensures that the specification is
       publicly available.  It is sufficient to have an Internet-Draft
       (that is posted and never published as an RFC) or a document from
       another standards body, industry consortium, university site, etc.
-      The expert may provide more in depth reviews, but their approval
+      The expert may provide more in-depth reviews, but their approval
       should not be taken as an endorsement of the extension.
 
 This document defines several Reserved values for ECH configuration extensions
@@ -2046,92 +2053,3 @@ is a much more limited mechanism because it depends on the DNS for the
 protection of the ECH key. Richard Barnes, Christian Huitema, Patrick McManus,
 Matthew Prince, Nick Sullivan, Martin Thomson, and David Benjamin also provided
 important ideas and contributions.
-
-# Change Log
-
-> **RFC Editor's Note:** Please remove this section prior to publication of a
-> final version of this document.
-
-Issue and pull request numbers are listed with a leading octothorp.
-
-## Since draft-ietf-tls-esni-16
-
-- Keep-alive
-
-## Since draft-ietf-tls-esni-15
-
-- Add CCS2022 reference and summary (#539)
-
-## Since draft-ietf-tls-esni-14
-
-- Keep-alive
-
-## Since draft-ietf-tls-esni-13
-
-- Editorial improvements
-
-## Since draft-ietf-tls-esni-12
-
-- Abort on duplicate OuterExtensions (#514)
-
-- Improve EncodedClientHelloInner definition (#503)
-
-- Clarify retry configuration usage (#498)
-
-- Expand on config_id generation implications (#491)
-
-- Server-side acceptance signal extension GREASE (#481)
-
-- Refactor overview, client implementation, and middlebox
-  sections (#480, #478, #475, #508)
-
-- Editorial iprovements (#485, #488, #490, #495, #496, #499, #500,
-  #501, #504, #505, #507, #510, #511)
-
-## Since draft-ietf-tls-esni-11
-
-- Move ClientHello padding to the encoding (#443)
-
-- Align codepoints (#464)
-
-- Relax OuterExtensions checks for alignment with RFC8446 (#467)
-
-- Clarify HRR acceptance and rejection logic (#470)
-
-- Editorial improvements (#468, #465, #462, #461)
-
-## Since draft-ietf-tls-esni-10
-
-- Make HRR confirmation and ECH acceptance explicit (#422, #423)
-
-- Relax computation of the acceptance signal (#420, #449)
-
-- Simplify ClientHelloOuterAAD generation (#438, #442)
-
-- Allow empty enc in ECHClientHello (#444)
-
-- Authenticate ECHClientHello extensions position in ClientHelloOuterAAD (#410)
-
-- Allow clients to send a dummy PSK and early_data in ClientHelloOuter when
-  applicable (#414, #415)
-
-- Compress ECHConfigContents (#409)
-
-- Validate ECHConfig.contents.public_name (#413, #456)
-
-- Validate ClientHelloInner contents (#411)
-
-- Note split-mode challenges for HRR (#418)
-
-- Editorial improvements (#428, #432, #439, #445, #458, #455)
-
-## Since draft-ietf-tls-esni-09
-
-- Finalize HPKE dependency (#390)
-
-- Move from client-computed to server-chosen, one-byte config
-  identifier (#376, #381)
-
-- Rename ECHConfigs to ECHConfigList (#391)
-
-- Clarify some security and privacy properties (#385, #383)
